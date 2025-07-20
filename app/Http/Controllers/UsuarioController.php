@@ -69,6 +69,7 @@ class UsuarioController extends Controller
             'email' => 'required|email|unique:users,email',
             'cedula' => 'required|string|unique:users,cedula|max:8',
             'telefono' => 'nullable|string|max:20',
+            'direccion' => 'nullable|string|max:500',
             'password' => 'required|string|min:6|confirmed',
             'modulo_id' => 'nullable|exists:modulos,id',
             'rol' => 'required|exists:roles,name',
@@ -90,6 +91,7 @@ class UsuarioController extends Controller
             'email' => $request->email,
             'cedula' => $request->cedula,
             'telefono' => $request->telefono,
+            'direccion' => $request->direccion,
             'password' => Hash::make($request->password),
             'modulo_id' => $request->modulo_id,
             'activo' => true,
@@ -128,6 +130,7 @@ class UsuarioController extends Controller
             'email' => 'required|email|unique:users,email,' . $usuario->id,
             'cedula' => 'required|string|unique:users,cedula,' . $usuario->id . '|max:8',
             'telefono' => 'nullable|string|max:20',
+            'direccion' => 'nullable|string|max:500',
             'modulo_id' => 'nullable|exists:modulos,id',
             'rol' => 'required|exists:roles,name',
             'activo' => 'boolean',
@@ -139,6 +142,7 @@ class UsuarioController extends Controller
             'email' => $request->email,
             'cedula' => $request->cedula,
             'telefono' => $request->telefono,
+            'direccion' => $request->direccion,
             'modulo_id' => $request->modulo_id,
             'activo' => $request->has('activo'),
         ]);
@@ -156,6 +160,10 @@ class UsuarioController extends Controller
 
         if ($usuario->id === auth()->id()) {
             return back()->withErrors(['error' => 'No puedes eliminarte a ti mismo']);
+        }
+
+        if ($usuario->id === 1) {
+            return back()->withErrors(['error' => 'No puedes eliminar este usuario, porque es el administrador']);
         }
 
         $usuario->delete();
@@ -180,7 +188,7 @@ class UsuarioController extends Controller
             'apellido' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . $usuario->id,
             'telefono' => 'nullable|string|max:20',
-            'direccion' => 'nullable|string|max:500', // Agregar validación para dirección
+            'direccion' => 'nullable|string|max:500',
         ]);
 
         $usuario->update([
@@ -188,7 +196,7 @@ class UsuarioController extends Controller
             'apellido' => $request->apellido,
             'email' => $request->email,
             'telefono' => $request->telefono,
-            'direccion' => $request->direccion, // Agregar dirección si existe en la BD
+            'direccion' => $request->direccion,
         ]);
 
         return back()->with('success', 'Perfil actualizado exitosamente');

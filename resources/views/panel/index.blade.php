@@ -190,6 +190,11 @@
                             <p><strong>Interfaz:</strong> Bootstrap 4</p>
                         </div>
                     </div>
+                    <div class="row">
+                        <div class="col-12 text-center">
+                            Creado y diseñado por el Cabo (P.A.) Eduardo González Gadea (Dirección de Tesorería) en el año 2025
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

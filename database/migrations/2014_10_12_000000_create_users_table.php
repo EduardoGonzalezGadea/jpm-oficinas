@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('apellido');
             $table->string('email')->unique();
             $table->string('telefono')->nullable();
+            $table->text('direccion')->nullable();
             $table->string('cedula')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
