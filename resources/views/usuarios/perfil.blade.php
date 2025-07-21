@@ -7,7 +7,7 @@
     <div class="col-lg-8 mx-auto">
         <div class="card shadow-sm">
             <div class="card-header bg-primary text-white">
-                <h4 class="mb-0">
+                <h4 class="mb-0 ml-2">
                     <i class="fas fa-user-edit"></i> Mi Perfil
                 </h4>
             </div>

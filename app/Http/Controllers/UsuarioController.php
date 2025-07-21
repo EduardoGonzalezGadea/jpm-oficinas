@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Models\Modulo;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Spatie\Permission\Models\Role;
 
 class UsuarioController extends Controller
@@ -110,11 +111,11 @@ class UsuarioController extends Controller
             ->with('success', 'Usuario creado exitosamente');
     }
 
-    public function show(User $user)
+    public function show(User $usuario)
     {
         $this->authorize('ver_usuarios');
 
-        return view('usuarios.show', compact('user'));
+        return view('usuarios.show', compact('usuario'));
     }
 
     public function edit(User $usuario)
@@ -253,23 +254,66 @@ class UsuarioController extends Controller
         return back()->with('success', 'Contraseña cambiada exitosamente');
     }
 
-    public function resetPassword(User $user)
+    public function resetPassword(Request $request, User $usuario)
+    {
+        // Autorización: Asegúrate de que el usuario autenticado tiene permiso para gestionar usuarios.
+        $this->authorize('gestionar_usuarios');
+
+        try {
+            // Actualizar la contraseña del usuario a '123456'
+            $usuario->update([
+                'password' => Hash::make('123456')
+            ]);
+
+            // Comprobar si la solicitud es una petición AJAX
+            if ($request->ajax()) {
+                // Si es AJAX, devolver una respuesta JSON de éxito.
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Contraseña restablecida a: 123456',
+                    'usuario' => $usuario
+                ], 200);
+            }
+
+            // Si no es AJAX (es una solicitud web normal), redirigir con un mensaje de éxito.
+            return redirect()->route('usuarios.index')
+                ->with('success', 'Contraseña restablecida a: 123456');
+        } catch (\Exception $e) {
+            // Opcional: Registrar el error para depuración
+            Log::error('Error al restablecer la contraseña del usuario ' . $usuario->id . ': ' . $e->getMessage());
+
+            // Manejar errores para solicitudes AJAX
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Ha ocurrido un error al restablecer la contraseña.',
+                    'error' => $e->getMessage() // Opcional: para depuración, no mostrar en producción
+                ], 500); // Código de estado HTTP 500 Internal Server Error
+            }
+
+            // Manejar errores para solicitudes web normales
+            return redirect()->back() // Redirige a la página anterior
+                ->with('error', 'Ha ocurrido un error al restablecer la contraseña. Inténtalo de nuevo.');
+        }
+    }
+
+    public function toggleStatus(Request $request, User $usuario)
     {
         $this->authorize('gestionar_usuarios');
 
-        $user->update([
-            'password' => Hash::make('123456')
-        ]);
+        $usuario->update(['activo' => !$usuario->activo]);
 
-        return redirect()->route('usuarios.index')
-            ->with('success', 'Contraseña restablecida a: 123456');
-    }
+        // Comprobar si la solicitud es una petición AJAX
+        if ($request->ajax()) {
+            // Si es AJAX, devolver una respuesta JSON de éxito.
+            return response()->json([
+                'success' => true,
+                'message' => 'Usuario ' . ($usuario->activo ? 'activado' : 'desactivado') . ' exitosamente.',
+                'user' => $usuario
+            ], 200);
+        }
 
-    public function toggleStatus(User $user)
-    {
-        $user->update(['activo' => !$user->activo]);
-
-        $status = $user->activo ? 'activado' : 'desactivado';
+        $status = $usuario->activo ? 'activado' : 'desactivado';
         return redirect()->route('usuarios.index')
             ->with('success', "Usuario {$status} exitosamente.");
     }

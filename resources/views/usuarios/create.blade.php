@@ -8,7 +8,7 @@
         <div class="col-12">
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <h4 class="mb-0">
+                    <h4 class="mb-0 ml-2">
                         <strong>Crear Nuevo Usuario</strong>
                     </h4>
                     <a href="{{ route('usuarios.index') }}" class="btn btn-secondary">

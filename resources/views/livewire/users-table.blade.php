@@ -29,7 +29,7 @@
         </div>
         <div class="col-md-2">
             <button wire:click="resetFilters" class="btn btn-secondary btn-block">
-                <i class="fas fa-refresh"></i> Limpiar
+                <i class="fas fa-eraser"></i> Limpiar
             </button>
         </div>
     </div>
@@ -97,7 +97,7 @@
                                 <!-- Botón para restablecer contraseña -->
                                 <form action="{{ route('usuarios.reset-password', $user) }}" method="POST"
                                     style="display: inline-block;"
-                                    onsubmit="return confirm('¿Está seguro de restablecer la contraseña a 123456?')">
+                                    onsubmit="resetPassword({{ $user }}); return false;">
                                     @csrf
                                     <button type="submit" class="btn btn-sm btn-secondary"
                                         title="Restablecer contraseña">
@@ -108,7 +108,7 @@
                                 <!-- Botón para cambiar estado -->
                                 <form action="{{ route('usuarios.toggle-status', $user) }}" method="POST"
                                     style="display: inline-block;"
-                                    onsubmit="return confirm('¿Está seguro de cambiar el estado del usuario?')">
+                                    onsubmit="toggleStatus({{ $user }}); return false;">
                                     @csrf
                                     @method('PATCH')
                                     <button type="submit"
@@ -155,3 +155,97 @@
         </div>
     </div>
 </div>
+
+<script>
+    // Función para restablecer la contraseña
+    function resetPassword(user) {
+        Swal.fire({
+            title: 'Restablecer contraseña',
+            text: '¿Está seguro de restablecer la contraseña a 123456?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Restablecer',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Realizar la solicitud para restablecer la contraseña
+                $.ajax({
+                    url: route('usuarios.reset-password', {
+                        usuario: user
+                    }),
+                    type: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    success: function(response) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Contraseña restablecida',
+                            text: 'La contraseña ha sido restablecida a 123456',
+                            timer: 2000,
+                            confirmButtonText: 'Aceptar'
+                        });
+                    },
+                    error: function(xhr, status, error) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'No se pudo restablecer la contraseña',
+                            timer: 2000,
+                            confirmButtonText: 'Aceptar'
+                        });
+                    }
+                });
+            }
+        });
+    }
+
+    // Función para cambiar el estado del usuario
+    function toggleStatus(user) {
+        console.log(user);
+        Swal.fire({
+            title: 'Cambiar estado',
+            text: `¿Está seguro de cambiar el estado del usuario?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Sí, cambiar estado',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Realizar la solicitud para restablecer la contraseña
+                $.ajax({
+                    url: route('usuarios.toggle-status', {
+                        usuario: user
+                    }),
+                    type: 'PATCH',
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                    },
+                    success: function(response) {
+                        Swal.fire({
+                            title: 'Estado cambiado',
+                            text: 'El estado del usuario ha sido cambiado con éxito.',
+                            icon: 'success',
+                            timer: 3000,
+                            confirmButtonText: 'Aceptar'
+                        });
+                        Livewire.emit('userStatusUpdated');
+                    },
+                    error: function(xhr, status, error) {
+                        Swal.fire({
+                            title: 'Error',
+                            text: 'Ha ocurrido un error al cambiar el estado del usuario.',
+                            icon: 'error',
+                            timer: 3000,
+                            confirmButtonText: 'Aceptar'
+                        });
+                    }
+                });
+            }
+        });
+    }
+</script>

@@ -13,6 +13,8 @@ class UsersTable extends Component
 
     protected $paginationTheme = 'bootstrap';
 
+    protected $listeners = ['userStatusUpdated' => '$refresh']; // Opcional: Para recargar la tabla completa
+
     public $search = '';
     public $statusFilter = 'all';
     public $moduleFilter = 'all';

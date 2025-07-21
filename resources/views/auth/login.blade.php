@@ -5,12 +5,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+
     <title>Iniciar Sesión - JPM Oficinas</title>
+    
+    <!-- Lógica para el tema dinámico -->
+    <script src="{{ asset('js/theme-change.js') }}"></script>
 
     <!-- Bootstrap 4 CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="{{ asset('libs/bootstrap-4.6.2-dist/css/bootstrap.min.css') }}" rel="stylesheet">
+    <!-- Hoja de estilos del tema dinámico -->
+    @php
+        $themePath = request()->cookie('theme_path', 'libs/bootswatch@4.6.2/dist/cosmo/bootstrap.min.css');
+    @endphp
+    @if ($themePath)
+        <link id="bootswatch-theme" rel="stylesheet" href="{{ asset($themePath) }}">
+    @endif
     <!-- Font Awesome -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+    <link href="{{ asset('libs/fontawesome-free-5.15.4-web/css/all.min.css') }}" rel="stylesheet">
 
     <style>
         body {
@@ -182,8 +193,9 @@
     </div>
 
     <!-- Bootstrap 4 JS -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ asset('libs/jquery/js/jquery-3.6.0.min.js') }}"></script>
+    <script src="{{ asset('libs/bootstrap-4.6.2-dist/js/bootstrap.bundle.min.js') }}"></script>
+    <script src="{{ asset('libs/fontawesome-free-5.15.4-web/js/all.min.js') }}"></script>
 </body>
 
 </html>

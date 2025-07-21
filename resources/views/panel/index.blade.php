@@ -49,16 +49,16 @@
                         <div class="row">
                             @can('ver_usuarios')
                                 <div class="col-md-4 mb-3">
-                                    <a href="{{ route('usuarios.index') }}" class="btn btn-outline-primary btn-block btn-lg">
-                                        <i class="fas fa-users fa-2x d-block mb-2"></i>
-                                        Gestionar Usuarios
+                                    <a href="{{ route('usuarios.index') }}"
+                                        class="btn btn-outline-primary btn-block btn-lg d-flex flex-column justify-content-center align-items-center">
+                                        <i class="fas fa-users fa-2x mb-2"></i> Gestionar Usuarios
                                     </a>
                                 </div>
                             @endcan
 
                             @can('operador_tesoreria')
                                 <div class="col-md-4 mb-3">
-                                    <a href="{{ route('tesoreria.index') }}" class="btn btn-outline-info btn-block btn-lg">
+                                    <a href="{{ route('tesoreria.index') }}" class="btn btn-outline-info btn-block btn-lg d-flex flex-column justify-content-center align-items-center">
                                         <i class="fas fa-coins fa-2x d-block mb-2"></i>
                                         Módulo Tesorería
                                     </a>
@@ -68,7 +68,7 @@
                             @can('operador_contabilidad')
                                 <div class="col-md-4 mb-3">
                                     <a href="{{ route('contabilidad.index') }}"
-                                        class="btn btn-outline-warning btn-block btn-lg">
+                                        class="btn btn-outline-warning btn-block btn-lg d-flex flex-column justify-content-center align-items-center">
                                         <i class="fas fa-calculator fa-2x d-block mb-2"></i>
                                         Módulo Contabilidad
                                     </a>
@@ -77,7 +77,7 @@
 
                             <div class="col-md-4 mb-3">
                                 <a href="{{ route('usuarios.miPerfil') }}"
-                                    class="btn btn-outline-primary text-black btn-block btn-lg">
+                                    class="btn btn-outline-primary text-black btn-block btn-lg d-flex flex-column justify-content-center align-items-center">
                                     <i class="fas fa-user-edit fa-2x d-block mb-2"></i>
                                     Mi Perfil
                                 </a>
@@ -144,47 +144,47 @@
                                 @endhasrole
 
                                 @can('operador_tesoreria')
-                                <div class="col-lg-3 col-md-6 mb-3">
-                                    <div class="card border-left-info shadow h-100">
-                                        <div class="card-body">
-                                            <div class="row no-gutters align-items-center">
-                                                <div class="col mr-2">
-                                                    <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
-                                                        Tesorería
+                                    <div class="col-lg-3 col-md-6 mb-3">
+                                        <div class="card border-left-info shadow h-100">
+                                            <div class="card-body">
+                                                <div class="row no-gutters align-items-center">
+                                                    <div class="col mr-2">
+                                                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                                            Tesorería
+                                                        </div>
+                                                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                                            {{ $estadisticas['usuarios_tesoreria'] }} usuarios
+                                                        </div>
                                                     </div>
-                                                    <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                                        {{ $estadisticas['usuarios_tesoreria'] }} usuarios
+                                                    <div class="col-auto">
+                                                        <i class="fas fa-coins fa-2x text-gray-300"></i>
                                                     </div>
-                                                </div>
-                                                <div class="col-auto">
-                                                    <i class="fas fa-coins fa-2x text-gray-300"></i>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
                                 @endcan
 
                                 @can('operador_contabilidad')
-                                <div class="col-lg-3 col-md-6 mb-3">
-                                    <div class="card border-left-warning shadow h-100">
-                                        <div class="card-body">
-                                            <div class="row no-gutters align-items-center">
-                                                <div class="col mr-2">
-                                                    <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
-                                                        Contabilidad
+                                    <div class="col-lg-3 col-md-6 mb-3">
+                                        <div class="card border-left-warning shadow h-100">
+                                            <div class="card-body">
+                                                <div class="row no-gutters align-items-center">
+                                                    <div class="col mr-2">
+                                                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                                            Contabilidad
+                                                        </div>
+                                                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                                            {{ $estadisticas['usuarios_contabilidad'] }} usuarios
+                                                        </div>
                                                     </div>
-                                                    <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                                        {{ $estadisticas['usuarios_contabilidad'] }} usuarios
+                                                    <div class="col-auto">
+                                                        <i class="fas fa-calculator fa-2x text-gray-300"></i>
                                                     </div>
-                                                </div>
-                                                <div class="col-auto">
-                                                    <i class="fas fa-calculator fa-2x text-gray-300"></i>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
                                 @endcan
                             </div>
                         </div>

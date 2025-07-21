@@ -8,6 +8,7 @@ use App\Http\Controllers\RolePermissionController;
 use App\Http\Controllers\ModuloController;
 use App\Http\Controllers\TesoreriaController;
 use App\Http\Controllers\ContabilidadController;
+use App\Http\Controllers\ThemeController;
 
 /*
 |--------------------------------------------------------------------------
@@ -24,6 +25,10 @@ use App\Http\Controllers\ContabilidadController;
 Route::get('/', function () {
     return view('welcome');
 })->name('home');
+
+// Cambiar tema
+Route::post('/tema/cambiar', [ThemeController::class, 'switchTheme'])->name('theme.switch');
+
 
 // Rutas de autenticación (no requieren JWT)
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
