@@ -2,14 +2,19 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\Modulo;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
 
 class UsuarioController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('jwt.verify');
+    }
+
     public function index(Request $request)
     {
         $this->authorize('ver_usuarios');
@@ -37,8 +42,8 @@ class UsuarioController extends Controller
             });
         }
 
-        // Si es supervisor, solo puede ver usuarios de su módulo
-        if (auth()->user()->esSupervisor() && !auth()->user()->esAdministrador()) {
+        // Si es gerente o supervisor, solo puede ver usuarios de su módulo
+        if (auth()->user()->esGerente() || auth()->user()->esSupervisor() && !auth()->user()->esAdministrador()) {
             $query->where('modulo_id', auth()->user()->modulo_id);
         }
 
@@ -56,7 +61,7 @@ class UsuarioController extends Controller
         $modulos = Modulo::activos()->get();
         $roles = Role::all();
 
-        return view('usuarios.crear', compact('modulos', 'roles'));
+        return view('usuarios.create', compact('modulos', 'roles'));
     }
 
     public function store(Request $request)
@@ -67,8 +72,8 @@ class UsuarioController extends Controller
             'nombre' => 'required|string|max:255',
             'apellido' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
-            'cedula' => 'required|string|unique:users,cedula|max:8',
-            'telefono' => 'nullable|string|max:20',
+            'cedula' => 'nullable|string|unique:users,cedula|max:15',
+            'telefono' => 'nullable|string|max:30',
             'direccion' => 'nullable|string|max:500',
             'password' => 'required|string|min:6|confirmed',
             'modulo_id' => 'nullable|exists:modulos,id',
@@ -78,7 +83,6 @@ class UsuarioController extends Controller
             'apellido.required' => 'El apellido es obligatorio',
             'email.required' => 'El email es obligatorio',
             'email.unique' => 'Ya existe un usuario con este email',
-            'cedula.required' => 'La cédula es obligatoria',
             'cedula.unique' => 'Ya existe un usuario con esta cédula',
             'password.required' => 'La contraseña es obligatoria',
             'password.confirmed' => 'Las contraseñas no coinciden',
@@ -97,27 +101,46 @@ class UsuarioController extends Controller
             'activo' => true,
         ]);
 
-        $usuario->assignRole($request->rol);
+        // Asignar rol
+        if ($request->has('rol')) {
+            $usuario->assignRole($request->rol);
+        }
 
         return redirect()->route('usuarios.index')
             ->with('success', 'Usuario creado exitosamente');
     }
 
-    public function show(User $usuario)
+    public function show(User $user)
     {
         $this->authorize('ver_usuarios');
 
-        return view('usuarios.mostrar', compact('usuario'));
+        return view('usuarios.show', compact('user'));
     }
 
     public function edit(User $usuario)
     {
         $this->authorize('editar_usuarios');
 
-        $modulos = Modulo::activos()->get();
-        $roles = Role::all();
+        if(auth()->user()->esAdministrador()) {
+            $modulos = Modulo::activos()->get();
+        } else {
+            $modulos = Modulo::activos()->where('id', auth()->user()->modulo_id)->get();
+        }
 
-        return view('usuarios.editar', compact('usuario', 'modulos', 'roles'));
+        if(auth()->user()->esAdministrador()) {
+            $roles = Role::all();
+        } else {
+            $userRoleName = $usuario->getRoleNames()->first();
+            $parts = explode('_', $userRoleName, 2);
+            $moduleIdentifier = $parts[1];
+
+            $roles = Role::where('name', '!=', 'administrador')
+                        ->where('name', 'like', '%' . $moduleIdentifier . '%')
+                        ->get();
+        }
+        $usuarioRoles = $usuario->roles->pluck('name')->toArray();
+
+        return view('usuarios.edit', compact('usuario', 'modulos', 'roles', 'usuarioRoles'));
     }
 
     public function update(Request $request, User $usuario)
@@ -128,11 +151,11 @@ class UsuarioController extends Controller
             'nombre' => 'required|string|max:255',
             'apellido' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . $usuario->id,
-            'cedula' => 'required|string|unique:users,cedula,' . $usuario->id . '|max:8',
-            'telefono' => 'nullable|string|max:20',
+            'cedula' => 'nullable|string|unique:users,cedula,' . $usuario->id . '|max:15',
+            'telefono' => 'nullable|string|max:30',
             'direccion' => 'nullable|string|max:500',
             'modulo_id' => 'nullable|exists:modulos,id',
-            'rol' => 'required|exists:roles,name',
+            'roles' => 'required|exists:roles,name',
             'activo' => 'boolean',
         ]);
 
@@ -147,8 +170,12 @@ class UsuarioController extends Controller
             'activo' => $request->has('activo'),
         ]);
 
-        // Actualizar rol
-        $usuario->syncRoles([$request->rol]);
+        // Sincronizar roles
+        if ($request->has('roles')) {
+            $usuario->syncRoles([$request->roles]);
+        } else {
+            $usuario->syncRoles([]);
+        }
 
         return redirect()->route('usuarios.index')
             ->with('success', 'Usuario actualizado exitosamente');
@@ -187,7 +214,7 @@ class UsuarioController extends Controller
             'nombre' => 'required|string|max:255',
             'apellido' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . $usuario->id,
-            'telefono' => 'nullable|string|max:20',
+            'telefono' => 'nullable|string|max:30',
             'direccion' => 'nullable|string|max:500',
         ]);
 
@@ -202,7 +229,7 @@ class UsuarioController extends Controller
         return back()->with('success', 'Perfil actualizado exitosamente');
     }
 
-    public function cambiarContraseña(Request $request)
+    public function cambiarContrasena(Request $request)
     {
         $request->validate([
             'contraseña_actual' => 'required', // Corregir nombre del campo
@@ -224,5 +251,26 @@ class UsuarioController extends Controller
         ]);
 
         return back()->with('success', 'Contraseña cambiada exitosamente');
+    }
+
+    public function resetPassword(User $user)
+    {
+        $this->authorize('gestionar_usuarios');
+
+        $user->update([
+            'password' => Hash::make('123456')
+        ]);
+
+        return redirect()->route('usuarios.index')
+            ->with('success', 'Contraseña restablecida a: 123456');
+    }
+
+    public function toggleStatus(User $user)
+    {
+        $user->update(['activo' => !$user->activo]);
+
+        $status = $user->activo ? 'activado' : 'desactivado';
+        return redirect()->route('usuarios.index')
+            ->with('success', "Usuario {$status} exitosamente.");
     }
 }

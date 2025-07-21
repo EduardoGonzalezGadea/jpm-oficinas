@@ -15,61 +15,105 @@ class RoleAndPermissionSeeder extends Seeder
 
         // Crear permisos
         $permisos = [
+            'acceso_administrador',
+            'acceso_gerente',
+            'acceso_supervisor',
             'gestionar_usuarios',
             'crear_usuarios',
             'editar_usuarios',
             'eliminar_usuarios',
             'ver_usuarios',
-            'gestionar_tesoreria',
-            'gestionar_contabilidad',
             'cambiar_propia_contraseña',
             'editar_propio_perfil',
+            'gestionar_tesoreria',
+            'supervisar_tesoreria',
+            'operador_tesoreria',
+            'gestionar_contabilidad',
+            'supervisar_contabilidad',
+            'operador_contabilidad',
         ];
 
         foreach ($permisos as $permiso) {
-            Permission::create(['name' => $permiso]);
+            Permission::firstOrCreate(['name' => $permiso]);
         }
 
         // Crear roles
-        $administrador = Role::create(['name' => 'administrador']);
-        $supervisor_tesoreria = Role::create(['name' => 'supervisor_tesoreria']);
-        $supervisor_contabilidad = Role::create(['name' => 'supervisor_contabilidad']);
-        $usuario_tesoreria = Role::create(['name' => 'usuario_tesoreria']);
-        $usuario_contabilidad = Role::create(['name' => 'usuario_contabilidad']);
+        $administrador = Role::firstOrCreate(['name' => 'administrador']);
+
+        $gerente_tesoreria = Role::firstOrCreate(['name' => 'gerente_tesoreria']);
+        $supervisor_tesoreria = Role::firstOrCreate(['name' => 'supervisor_tesoreria']);
+        $usuario_tesoreria = Role::firstOrCreate(['name' => 'usuario_tesoreria']);
+
+        $gerente_contabilidad = Role::firstOrCreate(['name' => 'gerente_contabilidad']);
+        $supervisor_contabilidad = Role::firstOrCreate(['name' => 'supervisor_contabilidad']);
+        $usuario_contabilidad = Role::firstOrCreate(['name' => 'usuario_contabilidad']);
 
         // Asignar permisos a roles
 
         // Administrador: todos los permisos
         $administrador->givePermissionTo(Permission::all());
 
-        // Supervisores: pueden gestionar usuarios de su módulo
-        $supervisor_tesoreria->givePermissionTo([
+        // Gerentes: pueden gestionar usuarios de su módulo
+        $gerente_tesoreria->givePermissionTo([
+            'operador_tesoreria',
+            'acceso_gerente',
+            'gestionar_usuarios',
             'crear_usuarios',
             'editar_usuarios',
+            'eliminar_usuarios',
             'ver_usuarios',
             'gestionar_tesoreria',
             'cambiar_propia_contraseña',
-            'editar_propio_perfil'
+            'editar_propio_perfil',
         ]);
 
-        $supervisor_contabilidad->givePermissionTo([
+        $gerente_contabilidad->givePermissionTo([
+            'operador_contabilidad',
+            'acceso_gerente',
+            'gestionar_usuarios',
             'crear_usuarios',
             'editar_usuarios',
+            'eliminar_usuarios',
             'ver_usuarios',
             'gestionar_contabilidad',
             'cambiar_propia_contraseña',
-            'editar_propio_perfil'
+            'editar_propio_perfil',
+        ]);
+
+        // Supervisores: pueden gestionar usuarios de su módulo
+        $supervisor_tesoreria->givePermissionTo([
+            'operador_tesoreria',
+            'acceso_supervisor',
+            'gestionar_usuarios',
+            'crear_usuarios',
+            'editar_usuarios',
+            'ver_usuarios',
+            'supervisar_tesoreria',
+            'cambiar_propia_contraseña',
+            'editar_propio_perfil',
+        ]);
+
+        $supervisor_contabilidad->givePermissionTo([
+            'operador_contabilidad',
+            'acceso_supervisor',
+            'gestionar_usuarios',
+            'crear_usuarios',
+            'editar_usuarios',
+            'ver_usuarios',
+            'supervisar_contabilidad',
+            'cambiar_propia_contraseña',
+            'editar_propio_perfil',
         ]);
 
         // Usuarios normales: solo su módulo
         $usuario_tesoreria->givePermissionTo([
-            'gestionar_tesoreria',
+            'operador_tesoreria',
             'cambiar_propia_contraseña',
             'editar_propio_perfil'
         ]);
 
         $usuario_contabilidad->givePermissionTo([
-            'gestionar_contabilidad',
+            'operador_contabilidad',
             'cambiar_propia_contraseña',
             'editar_propio_perfil'
         ]);

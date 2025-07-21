@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -52,25 +51,41 @@ class User extends Authenticatable implements JWTSubject
         return $this->belongsTo(Modulo::class);
     }
 
+    // Helper methods
+    public function esAdministrador()
+    {
+        return $this->hasPermissionTo('acceso_administrador');
+    }
+
+    public function esGerente()
+    {
+        return $this->hasPermissionTo('acceso_gerente');
+    }
+
+    public function esSupervisor()
+    {
+        return $this->hasPermissionTo('acceso_supervisor');
+    }
+
+    public function puedeGestionarUsuarios()
+    {
+        return $this->esAdministrador() || $this->esGerente() || $this->esSupervisor();
+    }
+
+    // Accessors
+    public function getNombreCompletoAttribute()
+    {
+        return $this->nombre . ' ' . $this->apellido;
+    }
+
     // Scopes
     public function scopeActivos($query)
     {
         return $query->where('activo', true);
     }
 
-    // Helper methods
-    public function esAdministrador()
+    public function scopeInactivos($query)
     {
-        return $this->hasRole('administrador');
-    }
-
-    public function esSupervisor()
-    {
-        return $this->hasRole('supervisor');
-    }
-
-    public function puedeGestionarUsuarios()
-    {
-        return $this->esAdministrador() || $this->esSupervisor();
+        return $query->where('activo', false);
     }
 }

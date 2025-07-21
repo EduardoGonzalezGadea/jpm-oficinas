@@ -25,6 +25,11 @@ class AuthServiceProvider extends ServiceProvider
     {
         $this->registerPolicies();
 
-        //
+        // -----------------------------------------------------------------
+        // GATE PERSONALIZADO PARA "CUALQUIERA" (OR) de los permisos
+        Gate::define('acceso_preferencial_modular', function ($user) {
+            // El método hasAnyPermission es parte del trait HasRoles de Spatie
+            return $user->hasAnyPermission(['acceso_gerente', 'acceso_supervisor']);
+        });
     }
 }

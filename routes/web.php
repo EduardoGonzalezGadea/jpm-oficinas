@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PanelController;
 use App\Http\Controllers\UsuarioController;
+use App\Http\Controllers\RolePermissionController;
 use App\Http\Controllers\ModuloController;
 use App\Http\Controllers\TesoreriaController;
 use App\Http\Controllers\ContabilidadController;
@@ -30,9 +31,10 @@ Route::post('/login', [AuthController::class, 'login']);
 
 // Rutas protegidas por JWT
 Route::middleware(['jwt.verify'])->group(function () {
+    // Cerrar sesión
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-    // Panel
+    // Panel principal
     Route::get('/panel', [PanelController::class, 'index'])->name('panel');
 
     // Gestión de Usuarios
@@ -45,7 +47,9 @@ Route::middleware(['jwt.verify'])->group(function () {
         // Rutas del perfil propio (ANTES de las rutas con {usuario})
         Route::get('/mi-perfil', [UsuarioController::class, 'miPerfil'])->name('miPerfil');
         Route::put('/actualizar-perfil', [UsuarioController::class, 'actualizarPerfil'])->name('actualizarPerfil');
-        Route::put('/cambiar-contrasena', [UsuarioController::class, 'cambiarContraseña'])->name('cambiarContraseña');
+        Route::put('/cambiar-contrasena', [UsuarioController::class, 'cambiarContrasena'])->name('cambiarContraseña');
+        Route::post('/{usuario}/resetear-contrasena', [UsuarioController::class, 'resetPassword'])->name('reset-password');
+        Route::patch('/{usuario}/cambiar-estado', [UsuarioController::class, 'toggleStatus'])->name('toggle-status');
 
         // Rutas con parámetros (DESPUÉS de las rutas específicas)
         Route::get('/{usuario}', [UsuarioController::class, 'show'])->name('show');
@@ -53,6 +57,22 @@ Route::middleware(['jwt.verify'])->group(function () {
         Route::put('/{usuario}', [UsuarioController::class, 'update'])->name('update');
         Route::delete('/{usuario}', [UsuarioController::class, 'destroy'])->name('destroy');
     });
+
+    // Rutas de roles
+    Route::get('roles', [RolePermissionController::class, 'rolesIndex'])->name('roles.index');
+    Route::get('roles/crear', [RolePermissionController::class, 'createRole'])->name('roles.create');
+    Route::post('roles', [RolePermissionController::class, 'storeRole'])->name('roles.store');
+    Route::get('roles/{role}/editar', [RolePermissionController::class, 'editRole'])->name('roles.edit');
+    Route::put('roles/{role}', [RolePermissionController::class, 'updateRole'])->name('roles.update');
+    Route::delete('roles/{role}', [RolePermissionController::class, 'destroyRole'])->name('roles.destroy');
+
+    // Rutas de permisos
+    Route::get('permisos', [RolePermissionController::class, 'permissionsIndex'])->name('permissions.index');
+    Route::get('permisos/create', [RolePermissionController::class, 'createPermission'])->name('permissions.create');
+    Route::post('permisos', [RolePermissionController::class, 'storePermission'])->name('permissions.store');
+    Route::get('permisos/{permission}/editar', [RolePermissionController::class, 'editPermission'])->name('permissions.edit');
+    Route::put('permisos/{permission}', [RolePermissionController::class, 'updatePermission'])->name('permissions.update');
+    Route::delete('permisos/{permission}', [RolePermissionController::class, 'destroyPermission'])->name('permissions.destroy');
 
     // Gestión de Módulos
     // Route::prefix('modulos')->name('modulos.')->group(function () {
