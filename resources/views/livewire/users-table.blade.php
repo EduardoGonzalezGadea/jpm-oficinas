@@ -14,7 +14,9 @@
         </div>
         <div class="col-md-2">
             <select wire:model="moduleFilter" class="form-control">
-                <option value="all">Todos los módulos</option>
+                @if ($modulos->count() > 1)
+                    <option value="all">Todos los módulos</option>
+                @endif
                 @foreach ($modulos as $modulo)
                     <option value="{{ $modulo->id }}">{{ $modulo->nombre }}</option>
                 @endforeach
@@ -85,38 +87,45 @@
                         </td>
                         <td>
                             <div class="btn-group" role="group">
+                                {{-- Botón para ver --}}
                                 <a href="{{ route('usuarios.show', $user) }}" class="btn btn-sm btn-info"
                                     title="Ver">
                                     <i class="fas fa-eye"></i>
                                 </a>
+
+                                <!-- Botón para editar -->
                                 <a href="{{ route('usuarios.edit', $user) }}" class="btn btn-sm btn-warning"
                                     title="Editar">
                                     <i class="fas fa-edit"></i>
                                 </a>
 
                                 <!-- Botón para restablecer contraseña -->
-                                <form action="{{ route('usuarios.reset-password', $user) }}" method="POST"
-                                    style="display: inline-block;"
-                                    onsubmit="resetPassword({{ $user }}); return false;">
-                                    @csrf
-                                    <button type="submit" class="btn btn-sm btn-secondary"
-                                        title="Restablecer contraseña">
-                                        <i class="fas fa-key"></i>
-                                    </button>
-                                </form>
+                                @if ($user->id !== 1)
+                                    <form action="{{ route('usuarios.reset-password', $user) }}" method="POST"
+                                        style="display: inline-block;"
+                                        onsubmit="resetPassword({{ $user }}); return false;">
+                                        @csrf
+                                        <button type="submit" class="btn btn-sm btn-secondary"
+                                            title="Restablecer contraseña">
+                                            <i class="fas fa-key"></i>
+                                        </button>
+                                    </form>
+                                @endif
 
                                 <!-- Botón para cambiar estado -->
-                                <form action="{{ route('usuarios.toggle-status', $user) }}" method="POST"
-                                    style="display: inline-block;"
-                                    onsubmit="toggleStatus({{ $user }}); return false;">
-                                    @csrf
-                                    @method('PATCH')
-                                    <button type="submit"
-                                        class="btn btn-sm {{ $user->activo ? 'btn-warning' : 'btn-success' }}"
-                                        title="{{ $user->activo ? 'Desactivar' : 'Activar' }}">
-                                        <i class="fas {{ $user->activo ? 'fa-user-slash' : 'fa-user-check' }}"></i>
-                                    </button>
-                                </form>
+                                @if ($user->id !== 1)
+                                    <form action="{{ route('usuarios.toggle-status', $user) }}" method="POST"
+                                        style="display: inline-block;"
+                                        onsubmit="toggleStatus({{ $user }}); return false;">
+                                        @csrf
+                                        @method('PATCH')
+                                        <button type="submit"
+                                            class="btn btn-sm {{ $user->activo ? 'btn-warning' : 'btn-success' }}"
+                                            title="{{ $user->activo ? 'Desactivar' : 'Activar' }}">
+                                            <i class="fas {{ $user->activo ? 'fa-user-slash' : 'fa-user-check' }}"></i>
+                                        </button>
+                                    </form>
+                                @endif
 
                                 <!-- Botón para eliminar -->
                                 @if (auth()->id() !== $user->id && $user->id !== 1)

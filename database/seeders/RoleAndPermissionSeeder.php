@@ -15,9 +15,12 @@ class RoleAndPermissionSeeder extends Seeder
 
         // Crear permisos
         $permisos = [
+            // Accesos por categoría
             'acceso_administrador',
             'acceso_gerente',
             'acceso_supervisor',
+
+            // Módulo Usuarios
             'gestionar_usuarios',
             'crear_usuarios',
             'editar_usuarios',
@@ -25,12 +28,31 @@ class RoleAndPermissionSeeder extends Seeder
             'ver_usuarios',
             'cambiar_propia_contraseña',
             'editar_propio_perfil',
+
+            // Módulo Tesorería
             'gestionar_tesoreria',
             'supervisar_tesoreria',
             'operador_tesoreria',
+
+            // Módulo Contabilidad
             'gestionar_contabilidad',
             'supervisar_contabilidad',
             'operador_contabilidad',
+
+            // Módulo Roles
+            'roles.index',
+            'roles.create',
+            'roles.edit',
+            'roles.destroy',
+            'roles.show',
+            'roles.assign',
+
+            // Módulo Permisos
+            'permissions.index',
+            'permissions.create',
+            'permissions.edit',
+            'permissions.destroy',
+            'permissions.show',
         ];
 
         foreach ($permisos as $permiso) {
