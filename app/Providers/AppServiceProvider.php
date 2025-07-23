@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\Route;
 use Livewire\Livewire;
 
 class AppServiceProvider extends ServiceProvider
@@ -30,9 +31,8 @@ class AppServiceProvider extends ServiceProvider
             $host = request()->getHost();
             $path = rtrim(dirname(request()->server('SCRIPT_NAME')), '/');
 
-            if(strpos($host, 'localhost') !== false) {
-                config(['livewire.asset_url' => $protocol . $host . '/oficinas/public']);
-            }
+            config(['livewire.asset_url' => $protocol . $host . '/oficinas/public']);
+            
             config(['app.url' => $protocol . $host . $path . '/oficinas/public']);
         }
     }

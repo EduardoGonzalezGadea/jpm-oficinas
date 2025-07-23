@@ -63,9 +63,10 @@
     <script src="{{ asset('libs/bootstrap-4.6.2-dist/js/bootstrap.bundle.min.js') }}"></script>
     <script src="{{ asset('libs/fontawesome-free-5.15.4-web/js/all.min.js') }}"></script>
     <script src="{{ asset('libs/sweetalert2/dist/sweetalert2.all.min.js') }}"></script>
+    
+    @yield('scripts')
 
     @livewireScripts
-    @yield('scripts')
 </body>
 
 </html>
