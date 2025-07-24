@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Spatie\Permission\Models\Role;
+use Spatie\Permission\Models\Permission;
 
 class UsuarioController extends Controller
 {
@@ -52,7 +53,19 @@ class UsuarioController extends Controller
         $modulos = Modulo::activos()->get();
         $roles = Role::all();
 
-        return view('usuarios.index', compact('usuarios', 'modulos', 'roles'));
+        // Datos adicionales para estadísticas
+        $totalPermissions = Permission::count();
+        $totalRoles = Role::count();
+        $totalUsers = User::count();
+
+        return view('usuarios.index', compact(
+            'usuarios', 
+            'modulos', 
+            'roles',
+            'totalPermissions',
+            'totalRoles',
+            'totalUsers',
+        ));
     }
 
     public function create()

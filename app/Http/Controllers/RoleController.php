@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
+use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
@@ -23,11 +24,32 @@ class RoleController extends Controller
      */
     public function index()
     {
-        $roles = Role::with(['permissions', 'users'])
+        // Filtros
+        $query = Role::with(['permissions', 'users']);
+
+        // Si es gerente o supervisor, solo puede ver roles utilizados en su módulo
+        if (!auth()->user()->esAdministrador()) {
+            $query->whereHas('users', function ($q) {
+                $q->where('modulo_id', auth()->user()->modulo_id);
+            });
+        }
+
+        // Obtener los roles
+        $roles = $query->latest()
             ->orderBy('created_at', 'desc')
             ->paginate(10);
 
-        return view('roles.index', compact('roles'));
+        // Datos adicionales para estadísticas
+        $totalPermissions = Permission::count();
+        $totalRoles = Role::count();
+        $totalUsers = User::count();
+
+        return view('roles.index', compact(
+            'roles',
+            'totalPermissions',
+            'totalRoles',
+            'totalUsers',
+        ));
     }
 
     /**

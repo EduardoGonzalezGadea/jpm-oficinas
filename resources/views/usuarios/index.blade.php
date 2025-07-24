@@ -37,7 +37,7 @@
                                     <h5>Roles Activos</h5>
                                     <h3>{{ $totalRoles ?? 0 }}</h3>
                                     <a href="{{ route('roles.index') }}" class="btn btn-sm btn-outline-light mt-2">
-                                        Ver todos <i class="fas fa-arrow-right"></i>
+                                        Gestionar <i class="fas fa-arrow-right"></i>
                                     </a>
                                 </div>
                             </div>
@@ -47,9 +47,9 @@
                                 <div class="card-body text-center">
                                     <i class="fas fa-key fa-2x mb-2"></i>
                                     <h5>Permisos</h5>
-                                    <h3>{{ $totalPermisos ?? 0 }}</h3>
+                                    <h3>{{ $totalPermissions ?? 0 }}</h3>
                                     <a href="{{ route('permissions.index') }}" class="btn btn-sm btn-outline-light mt-2">
-                                        Ver todos <i class="fas fa-arrow-right"></i>
+                                        Gestionar <i class="fas fa-arrow-right"></i>
                                     </a>
                                 </div>
                             </div>
@@ -59,11 +59,17 @@
                                 <div class="card-body text-center">
                                     <i class="fas fa-users fa-2x mb-2"></i>
                                     <h5>Total Usuarios</h5>
-                                    <h3 id="totalUsuarios">-</h3>
+                                    <h3 id="totalUsuarios" class="mt-3 mb-3">{{ $totalUsers ?? 0 }}</h3>
                                     <div class="mt-2 text-sm">Gestión completa</div>
                                 </div>
                             </div>
                         </div>
+                        <small>
+                            <em>
+                                <i class="fas fa-info-circle"></i>
+                                Las estadísticas se actualizan en tiempo real y son totales generales de la información almacenada en la base de datos.
+                            </em>
+                        </small>
                     </div>
 
                     {{-- Livewire component for the users table --}}

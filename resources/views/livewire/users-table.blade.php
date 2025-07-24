@@ -1,4 +1,6 @@
 <div>
+    {{-- SweetAlert2 CSS y JS ya están cargados en el layout principal --}}
+
     <!-- Filtros -->
     <div class="row mb-3">
         <div class="col-md-4">
@@ -35,6 +37,31 @@
             </button>
         </div>
     </div>
+
+    <!-- Mensajes de sesión (SweetAlert2) -->
+    @if (session()->has('success'))
+        <script>
+            Swal.fire({
+                icon: 'success',
+                title: 'Éxito',
+                text: '{{ session('success') }}',
+                timer: 3000,
+                showConfirmButton: false
+            });
+        </script>
+    @endif
+
+    @if (session()->has('error'))
+        <script>
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: '{{ session('error') }}',
+                timer: 3000,
+                showConfirmButton: false
+            });
+        </script>
+    @endif
 
     <!-- Tabla -->
     <div class="table-responsive">
@@ -101,50 +128,36 @@
 
                                 <!-- Botón para restablecer contraseña -->
                                 @if ($user->id !== 1)
-                                    <form action="{{ route('usuarios.reset-password', $user) }}" method="POST"
-                                        style="display: inline-block;"
-                                        onsubmit="resetPassword({{ $user }}); return false;">
-                                        @csrf
-                                        <button type="submit" class="btn btn-sm btn-secondary"
-                                            title="Restablecer contraseña">
-                                            <i class="fas fa-key"></i>
-                                        </button>
-                                    </form>
+                                    <button type="button" class="btn btn-sm btn-secondary"
+                                        title="Restablecer contraseña" onclick="confirmResetPassword({{ $user->id }})">
+                                        <i class="fas fa-key"></i>
+                                    </button>
                                 @endif
 
                                 <!-- Botón para cambiar estado -->
                                 @if ($user->id !== 1)
-                                    <form action="{{ route('usuarios.toggle-status', $user) }}" method="POST"
-                                        style="display: inline-block;"
-                                        onsubmit="toggleStatus({{ $user }}); return false;">
-                                        @csrf
-                                        @method('PATCH')
-                                        <button type="submit"
-                                            class="btn btn-sm {{ $user->activo ? 'btn-warning' : 'btn-success' }}"
-                                            title="{{ $user->activo ? 'Desactivar' : 'Activar' }}">
-                                            <i class="fas {{ $user->activo ? 'fa-user-slash' : 'fa-user-check' }}"></i>
-                                        </button>
-                                    </form>
+                                    <button type="button"
+                                        class="btn btn-sm {{ $user->activo ? 'btn-warning' : 'btn-success' }}"
+                                        title="{{ $user->activo ? 'Desactivar' : 'Activar' }}"
+                                        onclick="confirmToggleStatus({{ $user->id }})">
+                                        <i class="fas {{ $user->activo ? 'fa-user-slash' : 'fa-user-check' }}"></i>
+                                    </button>
                                 @endif
 
                                 <!-- Botón para eliminar -->
-                                @if (auth()->id() !== $user->id && $user->id !== 1)
-                                    <form action="{{ route('usuarios.destroy', $user) }}" method="POST"
-                                        style="display: inline-block;"
-                                        onsubmit="return confirm('¿Está seguro de eliminar este usuario? Esta acción no se puede deshacer.')">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-sm btn-danger" title="Eliminar">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </form>
+                                {{-- La condición ahora usa $currentAuthId del componente --}}
+                                @if ($currentAuthId !== $user->id && $user->id !== 1)
+                                    <button type="button" class="btn btn-sm btn-danger" title="Eliminar"
+                                        onclick="confirmDelete({{ $user->id }})">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
                                 @endif
                             </div>
                         </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="9" class="text-center">No se encontraron usuarios.</td>
+                        <td colspan="7" class="text-center">No se encontraron usuarios.</td>
                     </tr>
                 @endforelse
             </tbody>
@@ -164,10 +177,10 @@
         </div>
     </div>
 
-    {{-- Scripts --}}
+    {{-- Scripts para SweetAlert2 y Livewire --}}
     <script>
-        // Función para restablecer la contraseña
-        function resetPassword(user) {
+        // Función para confirmar y restablecer la contraseña
+        function confirmResetPassword(userId) {
             Swal.fire({
                 title: 'Restablecer contraseña',
                 text: '¿Está seguro de restablecer la contraseña a 123456?',
@@ -179,41 +192,14 @@
                 cancelButtonText: 'Cancelar'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    // Realizar la solicitud para restablecer la contraseña
-                    $.ajax({
-                        url: route('usuarios.reset-password', {
-                            usuario: user
-                        }),
-                        type: 'POST',
-                        headers: {
-                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                        },
-                        success: function(response) {
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Contraseña restablecida',
-                                text: 'La contraseña ha sido restablecida a 123456',
-                                timer: 2000,
-                                confirmButtonText: 'Aceptar'
-                            });
-                        },
-                        error: function(xhr, status, error) {
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Error',
-                                text: 'No se pudo restablecer la contraseña',
-                                timer: 2000,
-                                confirmButtonText: 'Aceptar'
-                            });
-                        }
-                    });
+                    // Emitir evento Livewire para llamar al método del componente
+                    Livewire.emit('resetUserPassword', userId);
                 }
             });
         }
 
-        // Función para cambiar el estado del usuario
-        function toggleStatus(user) {
-            console.log(user);
+        // Función para confirmar y cambiar el estado del usuario
+        function confirmToggleStatus(userId) {
             Swal.fire({
                 title: 'Cambiar estado',
                 text: `¿Está seguro de cambiar el estado del usuario?`,
@@ -225,35 +211,27 @@
                 cancelButtonText: 'Cancelar'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    // Realizar la solicitud para restablecer la contraseña
-                    $.ajax({
-                        url: route('usuarios.toggle-status', {
-                            usuario: user
-                        }),
-                        type: 'PATCH',
-                        headers: {
-                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
-                        },
-                        success: function(response) {
-                            Swal.fire({
-                                title: 'Estado cambiado',
-                                text: 'El estado del usuario ha sido cambiado con éxito.',
-                                icon: 'success',
-                                timer: 3000,
-                                confirmButtonText: 'Aceptar'
-                            });
-                            Livewire.emit('userStatusUpdated');
-                        },
-                        error: function(xhr, status, error) {
-                            Swal.fire({
-                                title: 'Error',
-                                text: 'Ha ocurrido un error al cambiar el estado del usuario.',
-                                icon: 'error',
-                                timer: 3000,
-                                confirmButtonText: 'Aceptar'
-                            });
-                        }
-                    });
+                    // Emitir evento Livewire para llamar al método del componente
+                    Livewire.emit('toggleUserStatus', userId);
+                }
+            });
+        }
+
+        // Función para confirmar la eliminación
+        function confirmDelete(userId) {
+            Swal.fire({
+                title: '¿Está seguro?',
+                text: '¡No podrás revertir esto!',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Sí, eliminarlo!',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Emitir evento Livewire para llamar al método del componente
+                    Livewire.emit('deleteUser', userId);
                 }
             });
         }
