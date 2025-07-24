@@ -79,7 +79,7 @@ class AuthController extends Controller
         $cookie = cookie('jwt_token', $token, $minutes, '/', null, false, true); // httpOnly = true
 
         return redirect()->intended('/panel')
-            ->with('success', 'Bienvenido ' . $user->name)
+            ->with('success', 'Sesión iniciada exitosamente')
             ->withCookie($cookie);
     }
 

@@ -7,7 +7,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <title>Iniciar Sesión - JPM Oficinas</title>
-    
+
     <!-- Lógica para el tema dinámico -->
     <script src="{{ asset('js/theme-change.js') }}"></script>
 
@@ -155,7 +155,7 @@
                                     </div>
                                     <input type="email" class="form-control @error('email') is-invalid @enderror"
                                         id="email" name="email" value="{{ old('email') }}"
-                                        placeholder="Ingresa tu correro electrónico" required>
+                                        placeholder="Ingresa tu correro electrónico" required autocomplete="email">
                                 </div>
                             </div>
 
@@ -168,7 +168,8 @@
                                         </span>
                                     </div>
                                     <input type="password" class="form-control @error('password') is-invalid @enderror"
-                                        id="password" name="password" placeholder="Ingresa tu contraseña" required>
+                                        id="password" name="password" placeholder="Ingresa tu contraseña" required
+                                        autocomplete="password">
                                 </div>
                             </div>
 
