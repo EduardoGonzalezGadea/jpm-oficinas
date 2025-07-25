@@ -96,7 +96,6 @@
                 </div>
             </li>
 
-
             @can('ver_usuarios')
                 <li class="nav-item">
                     <a class="nav-link" href="{{ route('usuarios.index') }}">
@@ -106,10 +105,22 @@
             @endcan
 
             @can('operador_tesoreria')
-                <li class="nav-item">
+                {{-- <li class="nav-item">
                     <a class="nav-link" href="{{ route('tesoreria.index') }}">
                         <i class="fas fa-coins"></i> Tesorería
                     </a>
+                </li> --}}
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownThemes" role="button"
+                        data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        Tesorería
+                    </a>
+                    <div class="dropdown-menu" aria-labelledby="navbarDropdownThemes">
+                        {{-- Link Caja Chica --}}
+                        <a class="dropdown-item" href="{{ route('tesoreria.caja-chica.index') }}">
+                            <i class="fas fa-coins"></i> Caja Chica
+                        </a>
+                    </div>
                 </li>
             @endcan
 

@@ -12,6 +12,13 @@
                 </div>
                 
                 <div class="card-body">
+                    @if(session('error'))
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            {{ session('error') }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    @endif
+
                     <form action="{{ route('permissions.store') }}" method="POST">
                         @csrf
                         
@@ -22,14 +29,14 @@
                                    id="name" 
                                    name="name" 
                                    value="{{ old('name') }}" 
-                                   placeholder="ej: crear-usuarios, editar-posts"
+                                   placeholder="ej: usuarios.create, productos.edit"
                                    required>
                             @error('name')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                             <div class="form-text">
-                                Use formato kebab-case (palabras separadas por guiones). 
-                                Ejemplo: crear-usuarios, ver-reportes
+                                Use formato punto para separar módulo y acción. 
+                                Ejemplo: usuarios.create, productos.edit, reportes.index
                             </div>
                         </div>
 
@@ -52,7 +59,7 @@
                         <div class="mb-3">
                             <label class="form-label">Asignar a Roles (opcional)</label>
                             <div class="row">
-                                @foreach($roles as $role)
+                                @forelse($roles as $role)
                                     <div class="col-md-4 mb-2">
                                         <div class="form-check">
                                             <input class="form-check-input" 
@@ -66,8 +73,24 @@
                                             </label>
                                         </div>
                                     </div>
-                                @endforeach
+                                @empty
+                                    <div class="col-12">
+                                        <p class="text-muted">No hay roles disponibles</p>
+                                    </div>
+                                @endforelse
                             </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Descripción (opcional)</label>
+                            <textarea class="form-control @error('description') is-invalid @enderror" 
+                                      id="description" 
+                                      name="description" 
+                                      rows="3"
+                                      placeholder="Breve descripción del permiso">{{ old('description') }}</textarea>
+                            @error('description')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
                         </div>
 
                         <div class="row">
@@ -88,4 +111,40 @@
         </div>
     </div>
 </div>
+
+<script>
+// Validación en tiempo real del nombre del permiso
+document.getElementById('name').addEventListener('blur', function() {
+    const name = this.value;
+    if (name) {
+        fetch(`{{ route('api.validate.permission') }}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            },
+            body: JSON.stringify({ name: name })
+        })
+        .then(response => response.json())
+        .then(data => {
+            const input = document.getElementById('name');
+            const feedback = input.parentNode.querySelector('.invalid-feedback');
+            
+            if (data.valid) {
+                input.classList.remove('is-invalid');
+                input.classList.add('is-valid');
+                if (feedback) feedback.style.display = 'none';
+            } else {
+                input.classList.remove('is-valid');
+                input.classList.add('is-invalid');
+                if (feedback) {
+                    feedback.textContent = data.message;
+                    feedback.style.display = 'block';
+                }
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    }
+});
+</script>
 @endsection

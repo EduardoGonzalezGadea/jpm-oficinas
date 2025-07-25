@@ -5,11 +5,11 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PanelController;
 use App\Http\Controllers\UsuarioController;
 use App\Http\Controllers\RoleController;
-use App\Http\Controllers\RolePermissionController;
 use App\Http\Controllers\ModuloController;
 use App\Http\Controllers\TesoreriaController;
 use App\Http\Controllers\ContabilidadController;
 use App\Http\Controllers\PermissionController;
+use App\Http\Controllers\Tesoreria\CajaChicaController;
 use App\Http\Controllers\ThemeController;
 
 /*
@@ -142,18 +142,7 @@ Route::middleware(['jwt.verify'])->group(function () {
         Route::get('/{permission}/roles', [PermissionController::class, 'roles'])->name('roles');
         Route::post('/{permission}/roles', [PermissionController::class, 'assignToRole'])->name('assign-role');
     });
-
-    // ------------------------------------------------------------------------
-    // GESTIÓN DE ROLES Y PERMISOS (Controlador combinado si lo usas)
-    // ------------------------------------------------------------------------
-    Route::prefix('role-permissions')->name('role.permissions.')->group(function () {
-        Route::get('/', [RolePermissionController::class, 'index'])->name('index');
-        Route::post('/assign', [RolePermissionController::class, 'assign'])->name('assign');
-        Route::post('/revoke', [RolePermissionController::class, 'revoke'])->name('revoke');
-        Route::post('/sync', [RolePermissionController::class, 'sync'])->name('sync');
-        Route::get('/matrix', [RolePermissionController::class, 'matrix'])->name('matrix');
-    });
-
+    
     // ------------------------------------------------------------------------
     // GESTIÓN DE MÓDULOS (Comentado actualmente)
     // ------------------------------------------------------------------------
@@ -204,6 +193,12 @@ Route::middleware(['jwt.verify'])->group(function () {
         Route::post('/validate/role-name', [RoleController::class, 'validateName'])->name('validate.role');
         Route::post('/validate/permission-name', [PermissionController::class, 'validateName'])->name('validate.permission');
     });
+
+    // ------------------------------------------------------------------------
+    // TESORERÍA - CAJA CHICA
+    // ------------------------------------------------------------------------
+        Route::get('/tesoreria/caja-chica', [CajaChicaController::class, 'index'])->name('tesoreria.caja-chica.index');
+        // Otras rutas si se necesitan controladores adicionales
 });
 
 // ============================================================================

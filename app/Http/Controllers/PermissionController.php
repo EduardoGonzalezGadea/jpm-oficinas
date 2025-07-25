@@ -25,7 +25,7 @@ class PermissionController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Permission::query();
+        $query = Permission::with('roles');
 
         // Filtro por búsqueda
         if ($request->filled('search')) {
@@ -75,7 +75,10 @@ class PermissionController extends Controller
             ->pluck('module')
             ->toArray();
 
-        return view('permisos.create', compact('existingModules'));
+        // Obtener todos los roles para asignación opcional
+        $roles = Role::orderBy('name')->get();
+
+        return view('permisos.create', compact('existingModules', 'roles'));
     }
 
     /**
@@ -91,6 +94,9 @@ class PermissionController extends Controller
                 'unique:permissions,name',
                 'regex:/^[a-zA-Z0-9_\.]+$/'
             ],
+            'guard_name' => 'required|string|in:web,api',
+            'roles' => 'sometimes|array',
+            'roles.*' => 'exists:roles,id',
             'description' => 'nullable|string|max:500'
         ], [
             'name.required' => 'El nombre del permiso es obligatorio.',
@@ -103,13 +109,15 @@ class PermissionController extends Controller
 
             $permission = Permission::create([
                 'name' => strtolower(trim($request->name)),
-                'guard_name' => 'web'
+                'guard_name' => $request->guard_name ?? 'web'
             ]);
 
-            // Si especificamos descripción, la guardamos en un campo personalizado o meta
-            if ($request->filled('description')) {
-                // Aquí puedes guardar la descripción en una tabla adicional si la necesitas
-                // o usar un campo description si lo agregas a la migración
+            // Asignar roles si se especificaron
+            if ($request->filled('roles')) {
+                $roles = Role::whereIn('id', $request->roles)->get();
+                foreach ($roles as $role) {
+                    $role->givePermissionTo($permission);
+                }
             }
 
             DB::commit();
@@ -164,7 +172,10 @@ class PermissionController extends Controller
             ->pluck('module')
             ->toArray();
 
-        return view('permisos.edit', compact('permission', 'existingModules'));
+        // Obtener todos los roles
+        $roles = Role::orderBy('name')->get();
+
+        return view('permisos.edit', compact('permission', 'existingModules', 'roles'));
     }
 
     /**
@@ -180,6 +191,9 @@ class PermissionController extends Controller
                 Rule::unique('permissions')->ignore($permission->id),
                 'regex:/^[a-zA-Z0-9_\.]+$/'
             ],
+            'guard_name' => 'required|string|in:web,api',
+            'roles' => 'sometimes|array',
+            'roles.*' => 'exists:roles,id',
             'description' => 'nullable|string|max:500'
         ], [
             'name.required' => 'El nombre del permiso es obligatorio.',
@@ -191,8 +205,31 @@ class PermissionController extends Controller
             DB::beginTransaction();
 
             $permission->update([
-                'name' => strtolower(trim($request->name))
+                'name' => strtolower(trim($request->name)),
+                'guard_name' => $request->guard_name ?? 'web'
             ]);
+
+            // Sincronizar roles
+            $currentRoles = $permission->roles->pluck('id')->toArray();
+            $newRoles = $request->roles ?? [];
+
+            // Remover roles que ya no están seleccionados
+            $rolesToRemove = array_diff($currentRoles, $newRoles);
+            foreach ($rolesToRemove as $roleId) {
+                $role = Role::find($roleId);
+                if ($role) {
+                    $role->revokePermissionTo($permission);
+                }
+            }
+
+            // Agregar nuevos roles
+            $rolesToAdd = array_diff($newRoles, $currentRoles);
+            foreach ($rolesToAdd as $roleId) {
+                $role = Role::find($roleId);
+                if ($role) {
+                    $role->givePermissionTo($permission);
+                }
+            }
 
             DB::commit();
 
@@ -482,5 +519,42 @@ class PermissionController extends Controller
                 'message' => 'Error al limpiar permisos: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * Buscar permisos para el autocompletado
+     */
+    public function searchPermissions(Request $request)
+    {
+        $search = $request->get('q', '');
+
+        $permissions = Permission::where('name', 'like', '%' . $search . '%')
+            ->orderBy('name')
+            ->limit(20)
+            ->get(['id', 'name']);
+
+        return response()->json($permissions);
+    }
+
+    /**
+     * Validar nombre de permiso en tiempo real
+     */
+    public function validateName(Request $request)
+    {
+        $name = $request->get('name');
+        $permissionId = $request->get('permission_id');
+
+        $query = Permission::where('name', $name);
+
+        if ($permissionId) {
+            $query->where('id', '!=', $permissionId);
+        }
+
+        $exists = $query->exists();
+
+        return response()->json([
+            'valid' => !$exists,
+            'message' => $exists ? 'Este nombre de permiso ya existe.' : 'Nombre disponible.'
+        ]);
     }
 }
