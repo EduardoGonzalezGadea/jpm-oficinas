@@ -9,12 +9,11 @@ use App\Models\Tesoreria\Movimiento;
 use App\Models\Tesoreria\Pago;
 use App\Models\Tesoreria\Dependencia;
 use App\Models\Tesoreria\Acreedor;
-use Illuminate\Support\Collection; // Importar Collection
+use Illuminate\Support\Collection;
 
 class Index extends Component
 {
     // --- Propiedades Públicas ---
-    // Añadir anotaciones @var para mejor compatibilidad con IDEs
     /** @var string $mesActual */
     public $mesActual;
     /** @var int $anioActual */
@@ -54,9 +53,6 @@ class Index extends Component
 
     // --- Ciclo de Vida del Componente ---
 
-    /**
-     * Inicializa las propiedades cuando se crea la instancia del componente.
-     */
     public function mount()
     {
         $this->mesActual = now()->locale('es_ES')->isoFormat('MMMM');
@@ -68,7 +64,6 @@ class Index extends Component
 
         $this->anioActual = now()->year;
         $this->fechaHasta = now()->format('d/m/Y');
-        // Inicializar colecciones vacías para evitar errores de tipo
         $this->tablaCajaChica = collect();
         $this->tablaPendientesDetalle = collect();
         $this->tablaPagos = collect();
@@ -142,11 +137,6 @@ class Index extends Component
             ->get();
     }
 
-    /**
-     * Carga la tabla de Totales.
-     * Lógica recalculada basada en los datos ya cargados en las propiedades del componente
-     * y en los accessors definidos en el modelo Pendiente.
-     */
     public function cargarTablaTotales()
     {
         $this->tablaTotales = [];
@@ -213,10 +203,7 @@ class Index extends Component
             $this->tablaTotales['Saldo Pagos Directos'] = $stPagos;
 
             // 5. Saldo Total (stSaldo)
-            // Lógica del JS: montoCajaChica - SUM(stPendientes) - SUM(stRendidos) - SUM(stExtras)
-            // Pero también se debe considerar el Saldo Pagos Directos como un compromiso.
-            // El Saldo Pagos Directos representa dinero que se ha entregado pero no recuperado,
-            // por lo tanto, disminuye el efectivo disponible.
+            // Incluye el descuento de Saldo Pagos Directos
             $stSaldo = $stCajaChica - $stPendientes - $stRendidos - $stExtras - $stPagos;
             $this->tablaTotales['Saldo Total'] = $stSaldo;
         } catch (\Exception $e) {
@@ -244,6 +231,21 @@ class Index extends Component
         }
     }
 
+    /**
+     * Prepara y solicita la apertura del modal de nuevo fondo.
+     */
+    public function mostrarModalNuevoFondo()
+    {
+        // Pre-cargar datos para el formulario del modal
+        $this->nuevoFondo['mes'] = $this->mesActual;
+        $this->nuevoFondo['anio'] = $this->anioActual;
+        $this->nuevoFondo['monto'] = '350000'; // Valor por defecto
+
+        // Emitir evento al navegador para que JS muestre el modal
+        // O mejor aún, emitir al componente específico
+        $this->emitTo('tesoreria.caja-chica.modal-nuevo-fondo', 'mostrarModalNuevoFondo');
+    }
+    
     public function exportarExcel()
     {
         $html = view('livewire.tesoreria.caja-chica.partials.excel-totales', [

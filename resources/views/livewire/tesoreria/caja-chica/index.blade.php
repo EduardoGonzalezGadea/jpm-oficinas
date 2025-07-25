@@ -21,7 +21,6 @@
     <div class="form-row mb-3">
         <div class="col-md-3">
             <label for="mesSelector">Mes:</label>
-            <!-- Selector de Mes -->
             <select id="mesSelector" class="form-control" wire:model.live="mesActual">
                 <option value="enero">Enero</option>
                 <option value="febrero">Febrero</option>
@@ -45,7 +44,8 @@
             <button class="btn btn-primary" wire:click="cargarDatos">Actualizar</button>
         </div>
         <div class="col-md-3 align-self-end">
-            <button class="btn btn-success" wire:click="$dispatch('mostrarModalNuevoFondo')">Nuevo Fondo</button>
+            <!-- Corregido: wire:click llama al método PHP -->
+            <button class="btn btn-success" wire:click="mostrarModalNuevoFondo">Nuevo Fondo</button>
             <button class="btn btn-info ml-2" wire:click="prepararModalNuevoPendiente">Nuevo Pendiente</button>
         </div>
     </div>
@@ -86,7 +86,6 @@
     <table class="table table-striped table-bordered" id="tablaPendientesDetalle">
         <thead class="thead-light">
             <tr>
-                <!-- Alineación corregida según el JS original -->
                 <th class="text-right">N&deg;</th>
                 <th class="text-center">FECHA</th>
                 <th class="text-center">DEPENDENCIA</th>
@@ -100,7 +99,6 @@
         <tbody>
             @forelse ($tablaPendientesDetalle as $item)
                 <tr wire:key="pendiente-{{ $item->idPendientes }}">
-                    <!-- Alineación corregida según el JS original -->
                     <td class="text-right">{{ $item->pendiente }}</td>
                     <td class="text-center">{{ $item->fechaPendientes ? $item->fechaPendientes->format('d/m/Y') : '' }}</td>
                     <td class="text-center">{{ $item->dependencia->dependencia ?? '' }}</td>
@@ -177,7 +175,6 @@
              @forelse ($tablaTotales as $concepto => $valor)
                  <tr>
                      <td>{{ $concepto }}</td>
-                     <!-- Alineación a la derecha y formato de número -->
                      <td class="text-right">{{ is_numeric($valor) ? number_format($valor, 2, ',', '.') : $valor }}</td>
                  </tr>
              @empty
@@ -188,60 +185,40 @@
         </tbody>
     </table>
 
-    <!-- Incluir el componente ModalNuevoPendiente -->
-    <!-- Asegúrate de que la ruta del componente sea correcta -->
-    <livewire:tesoreria.caja-chica.modal-nuevo-pendiente />
-
-    <!-- Modales (para otros componentes, si es necesario) -->
+    <!-- Incluir los componentes de modales -->
     <livewire:tesoreria.caja-chica.modal-nuevo-fondo />
+    <livewire:tesoreria.caja-chica.modal-nuevo-pendiente />
 
     @push('scripts')
     <script>
         document.addEventListener('livewire:init', function () {
-            // Inicializar datepicker si es necesario y está disponible
-            // Asegúrate de que jQuery UI esté cargado
+            // Inicializar datepicker si es necesario
             Livewire.on('contentChanged', function () {
                 if ($.fn.datepicker) {
-                    $('.datepicker').not('.hasDatepicker').datepicker({ // .not('.hasDatepicker') evita reinicializar
+                    $('.datepicker').not('.hasDatepicker').datepicker({
                         dateFormat: 'dd/mm/yy',
                         changeMonth: true,
                         changeYear: true,
-                        onSelect: function(dateText) {
-                             // Livewire maneja el modelo automáticamente
-                             // @this.set('fechaHasta', dateText);
-                        }
                     });
                 }
             });
 
-            // Escuchar eventos para abrir modales de otros componentes (ej: ModalNuevoFondo)
-            Livewire.on('mostrarModalNuevoFondo', function () {
+            // --- Listener para mostrar el modal de nuevo fondo ---
+            Livewire.on('mostrar-modal-nuevo-fondo', function () {
+                // console.log('Evento JS: mostrar-modal-nuevo-fondo recibido');
                 if ($('#modalNuevoFondo').length) {
                     $('#modalNuevoFondo').modal('show');
+                } else {
+                     console.error('Error: Elemento #modalNuevoFondo no encontrado en el DOM.');
                 }
             });
 
-            Livewire.on('cerrarModalNuevoFondo', function () {
+            Livewire.on('cerrar-modal-nuevo-fondo', function () {
+                // console.log('Evento JS: cerrar-modal-nuevo-fondo recibido');
                 if ($('#modalNuevoFondo').length) {
                     $('#modalNuevoFondo').modal('hide');
                 }
             });
-
-            // --- Manejo del modal de nuevo pendiente ---
-            // Si decides usar eventos JS para mostrar/ocultar el modal del componente hijo,
-            // puedes escucharlos aquí. Pero si el componente hijo maneja su propia visibilidad,
-            // esto puede no ser necesario.
-            // Livewire.on('mostrarModalNuevoPendiente', function () {
-            //     if ($('#modalNuevoPendiente').length) {
-            //         $('#modalNuevoPendiente').modal('show');
-            //     }
-            // });
-
-            // Livewire.on('cerrarModalNuevoPendiente', function () {
-            //     if ($('#modalNuevoPendiente').length) {
-            //         $('#modalNuevoPendiente').modal('hide');
-            //     }
-            // });
 
         });
     </script>
