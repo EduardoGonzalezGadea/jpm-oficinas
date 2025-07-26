@@ -43,11 +43,12 @@
         <div class="col-md-2 align-self-end">
             <button class="btn btn-primary" wire:click="cargarDatos">Actualizar</button>
         </div>
-        <div class="col-md-6 align-self-end">
-            <!-- Corregido: wire:click llama al método PHP -->
-            <button class="btn btn-success" wire:click="mostrarModalNuevoFondo">Nuevo Fondo</button>
-            <button class="btn btn-info ml-2" wire:click="prepararModalNuevoPendiente">Nuevo Pendiente</button>
-            <button class="btn btn-warning ml-2" wire:click="prepararModalNuevoPago">Nuevo Pago</button>
+        <div class="col-md-6 align-self-end mt-2">
+            <div class="btn-group d-flex" role="group">
+                <button class="btn btn-success flex-fill" wire:click="mostrarModalNuevoFondo">Nuevo Fondo</button>
+                <button class="btn btn-info flex-fill" wire:click="prepararModalNuevoPendiente">Nuevo Pendiente</button>
+                <button class="btn btn-warning flex-fill" wire:click="prepararModalNuevoPago">Nuevo Pago</button>
+            </div>
         </div>
     </div>
 
@@ -82,6 +83,57 @@
                         seleccionados.</td>
                 </tr>
             @endforelse
+        </tbody>
+    </table>
+
+    <!-- Tabla Totales (Movida entre Fondo Permanente y Pendientes) -->
+    <div class="d-flex justify-content-between align-items-center mt-4 mb-3">
+        <h4 class="mb-0">Totales</h4>
+        <div class="form-inline">
+            <label for="fechaHastaInput" class="mr-2">Fecha Hasta:</label>
+            <input type="text" id="fechaHastaInput" class="form-control datepicker mr-2" wire:model.live="fechaHasta"
+                readonly style="width: 120px;">
+            <button class="btn btn-secondary btn-sm mr-2"
+                wire:click="$set('fechaHasta', now()->format('d/m/Y'))">Limpiar</button>
+            <button class="btn btn-success" wire:click="exportarExcel">
+                <i class="fas fa-file-excel"></i> Exportar a Excel
+            </button>
+        </div>
+    </div>
+    <table class="table table-bordered" id="tablaTotales">
+        <thead class="thead-dark">
+            <tr>
+                <th class="text-center">CajaChica</th>
+                <th class="text-center">Pendientes</th>
+                <th class="text-center">Rendido</th>
+                <th class="text-center">Extras</th>
+                <th class="text-center">Pagos</th>
+                <th class="text-center">Recuperar</th>
+                <th class="text-center">Saldo</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td class="text-right">{{ isset($tablaTotales['Monto Caja Chica']) ? number_format($tablaTotales['Monto Caja Chica'], 2, ',', '.') : '0,00' }}</td>
+                <td class="text-right">{{ isset($tablaTotales['Total Pendientes']) ? number_format($tablaTotales['Total Pendientes'], 2, ',', '.') : '0,00' }}</td>
+                <td class="text-right">{{ isset($tablaTotales['Total Rendidos']) ? number_format($tablaTotales['Total Rendidos'], 2, ',', '.') : '0,00' }}</td>
+                <td class="text-right">{{ isset($tablaTotales['Total Extras']) ? number_format($tablaTotales['Total Extras'], 2, ',', '.') : '0,00' }}</td>
+                <td class="text-right">{{ isset($tablaTotales['Saldo Pagos Directos']) ? number_format($tablaTotales['Saldo Pagos Directos'], 2, ',', '.') : '0,00' }}</td>
+                <td class="text-right">{{ 
+                    number_format(
+                        (isset($tablaTotales['Total Rendidos']) ? floatval($tablaTotales['Total Rendidos']) : 0) + 
+                        (isset($tablaTotales['Total Extras']) ? floatval($tablaTotales['Total Extras']) : 0) + 
+                        (isset($tablaTotales['Saldo Pagos Directos']) ? floatval($tablaTotales['Saldo Pagos Directos']) : 0), 
+                        2, ',', '.'
+                    ) 
+                }}</td>
+                <td class="text-right">{{ isset($tablaTotales['Saldo Total']) ? number_format($tablaTotales['Saldo Total'], 2, ',', '.') : '0,00' }}</td>
+            </tr>
+            @if(empty($tablaTotales))
+                <tr>
+                    <td colspan="7" class="text-center">No hay datos de totales.</td>
+                </tr>
+            @endif
         </tbody>
     </table>
 
@@ -191,39 +243,7 @@
         </tbody>
     </table>
 
-    <!-- Tabla Totales -->
-    <h4 class="mt-4">Totales</h4>
-
-    <div class="form-group mb-3">
-        <label for="fechaHastaInput">Fecha Hasta:</label>
-        <input type="text" id="fechaHastaInput" class="form-control datepicker" wire:model.live="fechaHasta"
-            readonly>
-        <button class="btn btn-secondary btn-sm mt-1"
-            wire:click="$set('fechaHasta', now()->format('d/m/Y'))">Limpiar</button>
-        <button class="btn btn-success ml-2" wire:click="exportarExcel">
-            <i class="fas fa-file-excel"></i> Exportar a Excel
-        </button>
-    </div>
-    <table class="table table-bordered" id="tablaTotales">
-        <thead class="thead-dark">
-            <tr>
-                <th>Concepto</th>
-                <th class="text-right">Valor</th>
-            </tr>
-        </thead>
-        <tbody>
-            @forelse ($tablaTotales as $concepto => $valor)
-                <tr>
-                    <td>{{ $concepto }}</td>
-                    <td class="text-right">{{ is_numeric($valor) ? number_format($valor, 2, ',', '.') : $valor }}</td>
-                </tr>
-            @empty
-                <tr>
-                    <td colspan="2" class="text-center">No hay datos de totales.</td>
-                </tr>
-            @endforelse
-        </tbody>
-    </table>
+    <!-- La tabla de Totales se ha movido entre el Fondo Permanente y los Pendientes -->
 
     <!-- Incluir los componentes de modales -->
     <livewire:tesoreria.caja-chica.modal-nuevo-fondo />

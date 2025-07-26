@@ -5,10 +5,18 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
+    <link rel="icon" type="image/x-icon" href="{{ asset('images/icons/jpm.png') }}">
+
     <title>JPM Oficinas</title>
 
     <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="{{ asset('libs/bootstrap-4.6.2-dist/css/bootstrap.min.css') }}">
+
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="{{ asset('libs/fontawesome-free-5.15.4-web/css/all.min.css') }}">
 
     <!-- Styles -->
     <style>
@@ -400,30 +408,189 @@
     <style>
         body {
             font-family: 'Nunito', sans-serif;
+            background-color: #f8f9fa;
+        }
+
+        .welcome-container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            padding: 2rem;
+            padding-top: 3rem;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            width: 100%;
+        }
+
+        .logo-container img {
+            max-width: 120px;
+            margin-right: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        .logo-text {
+            flex-grow: 1;
+            text-align: center;
+            padding-right: 120px;
+            /* Para compensar el ancho del logo y mantener el texto centrado en el espacio restante */
+        }
+
+        .logo-text h1 {
+            margin-bottom: 0.5rem;
+            font-size: 1.8rem;
+        }
+
+        .logo-text p {
+            margin-bottom: 0.25rem;
+            line-height: 1.3;
+        }
+
+        .card {
+            border: none;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            height: 100%;
+        }
+
+        .card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-header {
+            background-color: #343a40;
+            color: white;
+            border-radius: 8px 8px 0 0 !important;
+            padding: 0.8rem 1rem;
+            text-align: left;
+        }
+
+        .btn-primary {
+            background-color: #007bff;
+            border-color: #007bff;
+            padding: 0.6rem 1.2rem;
+            font-weight: 600;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            background-color: #0069d9;
+            border-color: #0062cc;
+            transform: scale(1.03);
+        }
+
+        .footer {
+            margin-top: 1rem;
+            text-align: center;
+            color: #6c757d;
+            font-size: 0.85rem;
+        }
+
+        @media (max-width: 767.98px) {
+            .welcome-container {
+                padding: 1rem;
+                padding-top: 1.5rem;
+            }
+
+            .logo-container img {
+                max-width: 80px;
+            }
+
+            .logo-text {
+                padding-right: 80px;
+                /* Ajustar el padding para dispositivos móviles */
+            }
+
+            .logo-text h1 {
+                font-size: 1.5rem;
+            }
         }
     </style>
 </head>
 
 <body class="antialiased">
-    <div
-        class="relative flex items-top justify-center min-h-screen bg-gray-100 dark:bg-gray-900 sm:items-center py-4 sm:pt-0">
-        @if (Route::has('login'))
-            <div class="hidden fixed top-0 right-0 px-6 py-4 sm:block">
-                @auth
-                    <a href="{{ url('/home') }}" class="text-sm text-gray-700 dark:text-gray-500 underline">Ir al panel
-                        principal</a>
-                @else
-                    <a href="{{ route('login') }}" class="text-sm text-gray-700 dark:text-gray-500 underline">Abrir
-                        sesión</a>
+    <div class="welcome-container">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-10 mx-auto">
+                    <div class="logo-container">
+                        <img src="{{ asset('images/icons/jpm.png') }}" alt="JPM Logo" class="img-fluid">
+                        <div class="logo-text">
+                            <h1>JPM Oficinas</h1>
+                            <p class="lead mb-1">Sistema de Gestión de Oficinas</p>
+                            <p class="small mb-0">República Oriental del Uruguay - Ministerio del Interior</p>
+                            <p class="small">Jefatura de Policía de Montevideo</p>
+                        </div>
+                    </div>
 
-                    @if (Route::has('register'))
-                        <a href="{{ route('register') }}"
-                            class="ml-4 text-sm text-gray-700 dark:text-gray-500 underline">Registrar un nuevo usuario</a>
-                    @endif
-                @endauth
+                    <div class="row mt-3">
+                        <div class="col-md-7">
+                            <div class="card mb-4">
+                                <div class="card-header">
+                                    <h5 class="mb-0"><i class="fas fa-sign-in-alt mr-2"></i>Acceso al Sistema</h5>
+                                </div>
+                                <div class="card-body p-4">
+                                    <p class="mb-3">Bienvenido al sistema de gestión de oficinas de la Jefatura de
+                                        Policía de Montevideo.</p>
+                                    <div class="text-center">
+                                        <a href="{{ route('login') }}" class="btn btn-primary btn-lg">
+                                            <i class="fas fa-lock mr-2"></i>Iniciar Sesión
+                                        </a>
+
+                                        @if (Route::has('register'))
+                                            <div class="mt-2">
+                                                <a href="{{ route('register') }}" class="text-muted small">
+                                                    <i class="fas fa-user-plus mr-1"></i>Registrar nuevo usuario
+                                                </a>
+                                            </div>
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-5">
+                            <div class="card mb-4">
+                                <div class="card-header">
+                                    <h5 class="mb-0"><i class="fas fa-info-circle mr-2"></i>Información</h5>
+                                </div>
+                                <div class="card-body p-4">
+                                    <p class="small mb-2"><i class="fas fa-check-circle text-success mr-1"></i> 
+                                        Autorización y gestión de Usuarios
+                                    </p>
+                                    <p class="small mb-2"><i class="fas fa-check-circle text-success mr-1"></i> 
+                                        Diferentes estilos de visualización
+                                    </p>
+                                    <p class="small mb-2"><i class="fas fa-check-circle text-success mr-1"></i>
+                                        Varios módulos de diversas oficinas
+                                    </p>
+                                    <p class="small mb-0"><i class="fas fa-check-circle text-success mr-1"></i> 
+                                        Información general del sistema
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="footer mt-2">
+                        <p class="small mb-1"><i class="fas fa-code mr-1"></i> Desarrollado por el Cabo (P.A.) Eduardo
+                            González Gadea - Dirección de Tesorería</p>
+                        <p class="small mb-0">&copy; {{ date('Y') }} - Jefatura de Policía de Montevideo</p>
+                    </div>
+                </div>
             </div>
-        @endif
+        </div>
     </div>
+
+    <!-- jQuery and Bootstrap JS -->
+    <script src="{{ asset('libs/jquery/jquery.min.js') }}"></script>
+    <script src="{{ asset('libs/bootstrap-4.6.2-dist/js/bootstrap.bundle.min.js') }}"></script>
 </body>
 
 </html>

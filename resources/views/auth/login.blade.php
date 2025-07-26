@@ -36,6 +36,12 @@
             max-width: 400px;
             width: 100%;
         }
+        
+        @media (max-height: 700px) {
+            .login-container {
+                max-width: 360px;
+            }
+        }
 
         .card {
             border: none;
@@ -48,16 +54,16 @@
             color: white;
             border-radius: 15px 15px 0 0 !important;
             text-align: center;
-            padding: 2rem;
+            padding: 1.5rem;
         }
 
         .card-body {
-            padding: 2rem;
+            padding: 1.5rem;
         }
 
         .form-control {
             border-radius: 8px;
-            padding: 0.75rem;
+            padding: 0.6rem;
             border: 1px solid #ddd;
         }
 
@@ -70,8 +76,9 @@
             background: linear-gradient(45deg, #007bff, #0056b3);
             border: none;
             border-radius: 8px;
-            padding: 0.75rem;
+            padding: 0.6rem;
             font-weight: 600;
+            font-size: 1rem;
         }
 
         .btn-primary:hover {
@@ -80,8 +87,8 @@
         }
 
         .login-icon {
-            font-size: 3rem;
-            margin-bottom: 1rem;
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
         }
 
         .input-group-text {
@@ -94,6 +101,32 @@
             border-left: none;
             border-radius: 0 8px 8px 0;
         }
+        
+        .form-group {
+            margin-bottom: 0.75rem;
+        }
+        
+        @media (max-height: 700px) {
+            .card-header {
+                padding: 1rem;
+            }
+            .card-body {
+                padding: 1rem;
+            }
+            .login-icon {
+                font-size: 2rem;
+                margin-bottom: 0.25rem;
+            }
+            .form-group {
+                margin-bottom: 0.5rem;
+            }
+            .form-control {
+                padding: 0.5rem;
+            }
+            .text-center.mt-4 {
+                margin-top: 0.5rem !important;
+            }
+        }
     </style>
 </head>
 
@@ -103,13 +136,17 @@
             <div class="login-container">
                 <div class="card">
                     <div class="card-header">
-                        <div class="login-icon">
-                            <i class="fas fa-building"></i>
+                        <div class="d-flex align-items-center justify-content-center">
+                            <div class="login-icon mr-2">
+                                <i class="fas fa-building"></i>
+                            </div>
+                            <div class="text-left">
+                                <h4 class="mb-0">JPM Oficinas</h4>
+                                <small>República Oriental del Uruguay</small>
+                                <small class="d-block">Ministerio del Interior</small>
+                                <small class="d-block">Jefatura de Policía de Montevideo</small>
+                            </div>
                         </div>
-                        <h4 class="mb-0">JPM Oficinas</h4>
-                        <small>República Oriental del Uruguay</small><br>
-                        <small>Ministerio del Interior</small><br>
-                        <small>Jefatura de Policía de Montevideo</small>
                     </div>
 
                     <div class="card-body">
@@ -145,7 +182,7 @@
                         <form method="POST" action="{{ route('login') }}">
                             @csrf
 
-                            <div class="form-group">
+                            <div class="form-group" style="margin-bottom: 0.75rem;">
                                 <label for="email">Correo Electrónico</label>
                                 <div class="input-group">
                                     <div class="input-group-prepend">
@@ -181,7 +218,7 @@
                             </div>
                         </form>
 
-                        <div class="text-center mt-4">
+                        <div class="text-center mt-2">
                             <small class="text-muted">
                                 <i class="fas fa-shield-alt"></i>
                                 Sistema seguro con autenticación JWT

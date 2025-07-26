@@ -222,6 +222,11 @@
                                 Creado por el Cabo (P.A.) Eduardo González Gadea (Dirección de Tesorería) en el año 2025
                             </div>
                         </div>
+                        <div class="row mt-2">
+                            <div class="col-12 text-center">
+                                Ministerio del Interior | Jefatura de Policía de Montevideo
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
