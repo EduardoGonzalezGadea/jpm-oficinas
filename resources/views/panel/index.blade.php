@@ -47,20 +47,12 @@
                     </div>
                     <div class="card-body">
                         <div class="row">
-                            @can('ver_usuarios')
-                                <div class="col-md-4 mb-3">
-                                    <a href="{{ route('usuarios.index') }}"
-                                        class="btn btn-outline-primary btn-block btn-lg d-flex flex-column justify-content-center align-items-center">
-                                        <i class="fas fa-users fa-2x mb-2"></i> Gestionar Usuarios
-                                    </a>
-                                </div>
-                            @endcan
-
                             @can('operador_tesoreria')
                                 <div class="col-md-4 mb-3">
-                                    <a href="{{ route('tesoreria.index') }}" class="btn btn-outline-info btn-block btn-lg d-flex flex-column justify-content-center align-items-center">
+                                    <a href="{{ route('tesoreria.caja-chica.index') }}"
+                                        class="btn btn-outline-info btn-block btn-lg d-flex flex-column justify-content-center align-items-center">
                                         <i class="fas fa-coins fa-2x d-block mb-2"></i>
-                                        Módulo Tesorería
+                                        Tesorería | Caja Chica
                                     </a>
                                 </div>
                             @endcan
@@ -71,6 +63,15 @@
                                         class="btn btn-outline-warning btn-block btn-lg d-flex flex-column justify-content-center align-items-center">
                                         <i class="fas fa-calculator fa-2x d-block mb-2"></i>
                                         Módulo Contabilidad
+                                    </a>
+                                </div>
+                            @endcan
+
+                            @can('ver_usuarios')
+                                <div class="col-md-4 mb-3">
+                                    <a href="{{ route('usuarios.index') }}"
+                                        class="btn btn-outline-warning btn-block btn-lg d-flex flex-column justify-content-center align-items-center">
+                                        <i class="fas fa-users fa-2x mb-2"></i> Gestionar Usuarios
                                     </a>
                                 </div>
                             @endcan

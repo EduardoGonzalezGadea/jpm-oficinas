@@ -19,7 +19,7 @@
 
     <!-- Selector de Fecha/Mes/Año -->
     <div class="form-row mb-3">
-        <div class="col-md-3">
+        <div class="col-md-2">
             <label for="mesSelector">Mes:</label>
             <select id="mesSelector" class="form-control" wire:model.live="mesActual">
                 <option value="enero">Enero</option>
@@ -43,7 +43,7 @@
         <div class="col-md-2 align-self-end">
             <button class="btn btn-primary" wire:click="cargarDatos">Actualizar</button>
         </div>
-        <div class="col-md-3 align-self-end">
+        <div class="col-md-6 align-self-end">
             <!-- Corregido: wire:click llama al método PHP -->
             <button class="btn btn-success" wire:click="mostrarModalNuevoFondo">Nuevo Fondo</button>
             <button class="btn btn-info ml-2" wire:click="prepararModalNuevoPendiente">Nuevo Pendiente</button>
