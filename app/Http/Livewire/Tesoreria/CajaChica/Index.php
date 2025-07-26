@@ -49,6 +49,7 @@ class Index extends Component
         'cargarDependencias',
         'fondoCreado' => 'cargarDatos',
         'pendienteCreado' => 'cargarDatos',
+        'pagoCreado' => 'cargarDatos',
     ];
 
     // --- Ciclo de Vida del Componente ---
@@ -245,7 +246,27 @@ class Index extends Component
         // O mejor aún, emitir al componente específico
         $this->emitTo('tesoreria.caja-chica.modal-nuevo-fondo', 'mostrarModalNuevoFondo');
     }
+
+    /**
+     * Prepara y solicita la apertura del modal de nuevo pago directo.
+     */
+    public function prepararModalNuevoPago()
+    {
+        if ($this->cajaChicaSeleccionada) {
+            $this->emitTo('tesoreria.caja-chica.modal-nuevo-pago', 'mostrarModalNuevoPago', $this->cajaChicaSeleccionada->idCajaChica);
+        } else {
+            session()->flash('error', 'No se ha determinado Fondo Permanente para el mes y año de trabajo actual.');
+        }
+    }
     
+    /**
+     * Exporta los totales actuales a un archivo Excel.
+     *
+     * Envia una respuesta HTTP con el contenido HTML del archivo Excel.
+     * El archivo se llama "TOTALES_CAJA_CHICA.xls" y se puede abrir con Microsoft Excel o LibreOffice Calc.
+     *
+     * @return \Illuminate\Http\Response
+     */
     public function exportarExcel()
     {
         $html = view('livewire.tesoreria.caja-chica.partials.excel-totales', [

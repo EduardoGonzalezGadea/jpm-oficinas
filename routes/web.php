@@ -9,6 +9,7 @@ use App\Http\Controllers\ModuloController;
 use App\Http\Controllers\TesoreriaController;
 use App\Http\Controllers\ContabilidadController;
 use App\Http\Controllers\PermissionController;
+use App\Http\Controllers\Tesoreria\CajaChica\ImpresionController;
 use App\Http\Controllers\Tesoreria\CajaChicaController;
 use App\Http\Controllers\ThemeController;
 
@@ -142,7 +143,7 @@ Route::middleware(['jwt.verify'])->group(function () {
         Route::get('/{permission}/roles', [PermissionController::class, 'roles'])->name('roles');
         Route::post('/{permission}/roles', [PermissionController::class, 'assignToRole'])->name('assign-role');
     });
-    
+
     // ------------------------------------------------------------------------
     // GESTIÓN DE MÓDULOS (Comentado actualmente)
     // ------------------------------------------------------------------------
@@ -197,8 +198,12 @@ Route::middleware(['jwt.verify'])->group(function () {
     // ------------------------------------------------------------------------
     // TESORERÍA - CAJA CHICA
     // ------------------------------------------------------------------------
-        Route::get('/tesoreria/caja-chica', [CajaChicaController::class, 'index'])->name('tesoreria.caja-chica.index');
-        // Otras rutas si se necesitan controladores adicionales
+    Route::get('/tesoreria/caja-chica', [CajaChicaController::class, 'index'])->name('tesoreria.caja-chica.index');
+    // Rutas para impresión
+    Route::get('/tesoreria/caja-chica/imprimir/pendiente/{id}', [ImpresionController::class, 'imprimirPendiente'])
+        ->name('tesoreria.caja-chica.imprimir.pendiente');
+    Route::get('/tesoreria/caja-chica/imprimir/pago/{id}', [ImpresionController::class, 'imprimirPago'])
+        ->name('tesoreria.caja-chica.imprimir.pago');
 });
 
 // ============================================================================

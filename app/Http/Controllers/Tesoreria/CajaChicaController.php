@@ -14,7 +14,7 @@ class CajaChicaController extends Controller
      */
     public function index()
     {
-        return view('tesoreria.cajaChica.index');
+        return view('tesoreria.caja-chica.index');
     }
 
     /**
