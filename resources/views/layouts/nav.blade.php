@@ -96,20 +96,7 @@
                 </div>
             </li>
 
-            @can('ver_usuarios')
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ route('usuarios.index') }}">
-                        <i class="fas fa-users"></i> Usuarios
-                    </a>
-                </li>
-            @endcan
-
             @can('operador_tesoreria')
-                {{-- <li class="nav-item">
-                    <a class="nav-link" href="{{ route('tesoreria.index') }}">
-                        <i class="fas fa-coins"></i> Tesorería
-                    </a>
-                </li> --}}
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownThemes" role="button"
                         data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -134,6 +121,14 @@
         </ul>
 
         <ul class="navbar-nav">
+            @can('ver_usuarios')
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ route('usuarios.index') }}">
+                        <i class="fas fa-users"></i> Usuarios
+                    </a>
+                </li>
+            @endcan
+
             <li class="nav-item dropdown">
                 <a class="nav-link dropdown-toggle" href="#" role="button" data-toggle="dropdown">
                     <i class="fas fa-user"></i> {{ auth()->user()->nombre }} {{ auth()->user()->apellido }}

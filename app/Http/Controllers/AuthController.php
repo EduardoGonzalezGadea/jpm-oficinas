@@ -11,6 +11,7 @@ use PHPOpenSourceSaver\JWTAuth\Exceptions\JWTException;
 use PHPOpenSourceSaver\JWTAuth\Exceptions\TokenExpiredException;
 use PHPOpenSourceSaver\JWTAuth\Exceptions\TokenInvalidException;
 use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 
 class AuthController extends Controller
 {
@@ -62,6 +63,10 @@ class AuthController extends Controller
 
         // Obtener usuario autenticado
         $user = JWTAuth::user();
+
+        // Inicia una sesión de Laravel tradicional para este usuario.
+        // Esto creará la cookie de sesión que Livewire necesita.
+        Auth::login($user);
 
         if ($request->expectsJson()) {
             return response()->json([
@@ -159,11 +164,11 @@ class AuthController extends Controller
                 'permissions' => $user->getAllPermissions()->pluck('name')
             ]);
         } catch (TokenExpiredException $e) {
-            return response()->json(['error' => 'Token expirado'], 401);
+            return response()->json(['error' => 'La sesión ha expirado'], 401);
         } catch (TokenInvalidException $e) {
-            return response()->json(['error' => 'Token inválido'], 401);
+            return response()->json(['error' => 'La sesión es inválida'], 401);
         } catch (JWTException $e) {
-            return response()->json(['error' => 'Token no encontrado'], 401);
+            return response()->json(['error' => 'La sesión ha expirado o es inválida'], 401);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Error del servidor'], 500);
         }
@@ -226,9 +231,9 @@ class AuthController extends Controller
             $oldToken = JWTAuth::getToken();
             if (!$oldToken) {
                 if ($request->expectsJson()) {
-                    return response()->json(['error' => 'Token no encontrado'], 401);
+                    return response()->json(['error' => 'No se pudo reactivar la sesión'], 401);
                 }
-                return redirect()->route('login')->with('error', 'Token no encontrado');
+                return redirect()->route('login')->with('error', 'No se pudo reactivar la sesión');
             }
 
             $token = JWTAuth::refresh($oldToken);

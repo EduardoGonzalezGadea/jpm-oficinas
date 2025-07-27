@@ -22,10 +22,25 @@ class Pendiente extends Model
         'montoPendientes',
     ];
 
+
+    /**
+     * The attributes that should be cast.
+     *
+     * Esto le indica a Laravel cómo convertir los atributos.
+     * Al usar 'date:Y-m-d', nos aseguramos de que siempre que se acceda a esta
+     * propiedad, se formatee correctamente para un <input type="date">.
+     *
+     * @var array
+     */
     protected $casts = [
-        'fechaPendientes' => 'date',
+        'fechaPendientes' => 'date:Y-m-d',
     ];
 
+    /**
+     * Las columnas que deben ser tratadas como fechas.
+     * Esto es necesario para que Laravel maneje correctamente las fechas
+     * y las convierta a objetos Carbon al acceder a ellas.
+     */
     protected $dates = ['deleted_at']; // <-- Especificar la columna deleted_at
 
     // Relaciones

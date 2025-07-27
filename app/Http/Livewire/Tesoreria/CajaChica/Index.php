@@ -44,13 +44,42 @@ class Index extends Component
         'montoPendientes' => '',
     ];
 
+    // Variables para el modal de edición de fondo
+    public $showEditFondoModal = false;
+    public $editandoFondo = [
+        'id' => null,
+        'mes' => '',
+        'anio' => '',
+        'monto' => '',
+        'montoOriginal' => ''
+    ];
+
     // --- Listeners ---
     protected $listeners = [
         'cargarDependencias',
         'fondoCreado' => 'cargarDatos',
+        'fondoActualizado' => 'cargarDatos',
         'pendienteCreado' => 'cargarDatos',
         'pagoCreado' => 'cargarDatos',
     ];
+
+    // Reglas de validación para editar fondo
+    protected function rules()
+    {
+        return [
+            'editandoFondo.monto' => 'required|numeric|min:0|max:99999999.99',
+        ];
+    }
+
+    protected function messages()
+    {
+        return [
+            'editandoFondo.monto.required' => 'El monto es obligatorio.',
+            'editandoFondo.monto.numeric' => 'El monto debe ser un número válido.',
+            'editandoFondo.monto.min' => 'El monto no puede ser negativo.',
+            'editandoFondo.monto.max' => 'El monto no puede exceder 99,999,999.99.',
+        ];
+    }
 
     // --- Ciclo de Vida del Componente ---
 
@@ -216,12 +245,93 @@ class Index extends Component
         }
     }
 
-    // --- Métodos de Acción ---
+    // --- Métodos de Acción para Editar Fondo ---
 
     public function editarFondo($idCajaChica, $montoActual)
     {
-        session()->flash('message', "Editar fondo ID: $idCajaChica, Monto: " . number_format($montoActual, 2, ',', '.'));
+        try {
+            $fondo = CajaChica::findOrFail($idCajaChica);
+
+            $this->editandoFondo = [
+                'id' => $idCajaChica,
+                'mes' => ucfirst($fondo->mes),
+                'anio' => $fondo->anio,
+                'monto' => number_format($montoActual, 2, '.', ''),
+                'montoOriginal' => number_format($montoActual, 2, '.', '')
+            ];
+
+            $this->showEditFondoModal = true;
+            $this->resetErrorBag();
+
+            // Emitir evento para focus en el campo monto
+            $this->dispatchBrowserEvent('modal-edit-fondo-opened');
+        } catch (\Exception $e) {
+            session()->flash('error', 'Error al cargar los datos del fondo: ' . $e->getMessage());
+        }
     }
+
+    public function actualizarFondo()
+    {
+        $this->validate();
+
+        try {
+            $fondo = CajaChica::findOrFail($this->editandoFondo['id']);
+            $montoAnterior = $fondo->montoCajaChica;
+            $montoNuevo = floatval($this->editandoFondo['monto']);
+
+            // Verificar si realmente hay cambios
+            if (abs($montoAnterior - $montoNuevo) < 0.01) {
+                $this->cerrarModalEditFondo();
+                session()->flash('message', 'No se realizaron cambios en el monto del fondo.');
+                return;
+            }
+
+            $fondo->montoCajaChica = $montoNuevo;
+            $fondo->save();
+
+            // Recargar datos
+            $this->cargarDatos();
+            $this->cerrarModalEditFondo();
+
+            $mensaje = sprintf(
+                'Fondo actualizado exitosamente. Monto anterior: $%s, Monto nuevo: $%s',
+                number_format($montoAnterior, 2, ',', '.'),
+                number_format($montoNuevo, 2, ',', '.')
+            );
+
+            session()->flash('message', $mensaje);
+
+            // Emitir evento para notificación
+            $this->dispatchBrowserEvent('fondo-actualizado', [
+                'message' => 'Fondo actualizado exitosamente',
+                'montoAnterior' => $montoAnterior,
+                'montoNuevo' => $montoNuevo
+            ]);
+        } catch (\Exception $e) {
+            session()->flash('error', 'Error al actualizar el fondo: ' . $e->getMessage());
+        }
+    }
+
+    public function cerrarModalEditFondo()
+    {
+        $this->showEditFondoModal = false;
+        $this->editandoFondo = [
+            'id' => null,
+            'mes' => '',
+            'anio' => '',
+            'monto' => '',
+            'montoOriginal' => ''
+        ];
+        $this->resetErrorBag();
+    }
+
+    // Validación en tiempo real del monto
+    public function updatedEditandoFondoMonto()
+    {
+        $this->validateOnly('editandoFondo.monto');
+    }
+
+    // --- Métodos de Acción Existentes ---
 
     public function prepararModalNuevoPendiente()
     {
@@ -258,7 +368,7 @@ class Index extends Component
             session()->flash('error', 'No se ha determinado Fondo Permanente para el mes y año de trabajo actual.');
         }
     }
-    
+
     /**
      * Exporta los totales actuales a un archivo Excel.
      *
@@ -285,7 +395,6 @@ class Index extends Component
     }
 
     // --- Funciones auxiliares ---
-
     private function mesAnterior($mesActual)
     {
         $meses = [
@@ -313,7 +422,6 @@ class Index extends Component
     }
 
     // --- Renderizado ---
-
     public function render()
     {
         return view('livewire.tesoreria.caja-chica.index');

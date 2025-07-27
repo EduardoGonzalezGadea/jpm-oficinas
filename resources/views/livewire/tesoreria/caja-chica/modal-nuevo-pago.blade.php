@@ -6,7 +6,10 @@
                 <div class="modal-content" style="max-height: 95vh; display: flex; flex-direction: column;">
                     <form wire:submit.prevent="guardar">
                         <div class="modal-header bg-info text-white flex-shrink-0">
-                            <h5 class="modal-title">Nuevo Pago Directo</h5>
+                            <h5 class="modal-title">
+                                 <i class="far fa-handshake"></i>
+                                Nuevo Pago Directo
+                            </h5>
                             <button type="button" class="close text-white" wire:click="cerrarModal" aria-label="Close">
                                 <span aria-hidden="true">&times;</span>
                             </button>
@@ -44,7 +47,7 @@
                             <div class="form-group">
                                 <label for="pagoEgreso">Egreso:</label>
                                 <input type="text" class="form-control @error('egresoPagos') is-invalid @enderror"
-                                       id="pagoEgreso" wire:model.defer="egresoPagos" required>
+                                       id="pagoEgreso" wire:model.defer="egresoPagos" required autofocus>
                                 @error('egresoPagos')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror

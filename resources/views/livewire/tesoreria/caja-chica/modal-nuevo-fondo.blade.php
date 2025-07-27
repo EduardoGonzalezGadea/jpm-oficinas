@@ -7,7 +7,10 @@
                 <div class="modal-content">
                     <form wire:submit.prevent="guardar">
                         <div class="modal-header bg-success text-white">
-                            <h5 class="modal-title">Nuevo Fondo Permanente</h5>
+                            <h5 class="modal-title">
+                                <i class="fas fa-comment-dollar"></i>
+                                Nuevo Fondo Permanente
+                            </h5>
                             <button type="button" class="close text-white" wire:click="cerrarModal"
                                 aria-label="Close"><span aria-hidden="true">&times;</span></button>
                         </div>
@@ -24,7 +27,7 @@
                             @endif
                             <div class="form-group"><label for="fondoMes">Mes:</label>
                                 <select class="form-control @error('mes') is-invalid @enderror" id="fondoMes"
-                                    wire:model.defer="mes" required>
+                                    wire:model.defer="mes" required autofocus>
                                     <option value="">Seleccionar Mes...</option>
                                     <option value="enero">Enero</option>
                                     <option value="febrero">Febrero</option>

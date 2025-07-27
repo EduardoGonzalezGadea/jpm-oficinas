@@ -11,6 +11,7 @@ use App\Http\Controllers\ContabilidadController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\Tesoreria\CajaChica\ImpresionController;
 use App\Http\Controllers\Tesoreria\CajaChicaController;
+use App\Http\Controllers\Tesoreria\CajaChica\PendienteController;
 use App\Http\Controllers\ThemeController;
 
 /*
@@ -199,6 +200,8 @@ Route::middleware(['jwt.verify'])->group(function () {
     // TESORERÍA - CAJA CHICA
     // ------------------------------------------------------------------------
     Route::get('/tesoreria/caja-chica', [CajaChicaController::class, 'index'])->name('tesoreria.caja-chica.index');
+    Route::get('tesoreria/caja-chica/pendientes/{id}/editar', [PendienteController::class, 'edit'])
+        ->name('tesoreria.caja-chica.pendientes.editar');
     // Rutas para impresión
     Route::get('/tesoreria/caja-chica/imprimir/pendiente/{id}', [ImpresionController::class, 'imprimirPendiente'])
         ->name('tesoreria.caja-chica.imprimir.pendiente');

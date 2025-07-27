@@ -45,9 +45,18 @@
         </div>
         <div class="col-md-6 align-self-end mt-2">
             <div class="btn-group d-flex" role="group">
-                <button class="btn btn-success flex-fill" wire:click="mostrarModalNuevoFondo">Nuevo Fondo</button>
-                <button class="btn btn-info flex-fill" wire:click="prepararModalNuevoPendiente">Nuevo Pendiente</button>
-                <button class="btn btn-warning flex-fill" wire:click="prepararModalNuevoPago">Nuevo Pago</button>
+                <button class="btn btn-success flex-fill" wire:click="mostrarModalNuevoFondo">
+                    <i class="fas fa-comment-dollar"></i>
+                    Nuevo Fondo
+                </button>
+                <button class="btn btn-info flex-fill" wire:click="prepararModalNuevoPendiente">
+                    <i class="fas fa-money-bill"></i>
+                    Nuevo Pendiente
+                </button>
+                <button class="btn btn-warning flex-fill" wire:click="prepararModalNuevoPago">
+                    <i class="far fa-handshake"></i>
+                    Nuevo Pago
+                </button>
             </div>
         </div>
     </div>
@@ -66,12 +75,13 @@
         <tbody>
             @forelse ($tablaCajaChica as $item)
                 <tr wire:key="cajachica-{{ $item->idCajaChica }}">
-                    <td class="text-center">{{ $item->mes }}</td>
-                    <td class="text-center">{{ $item->anio }}</td>
-                    <td class="text-center classCajaChicaActual">{{ number_format($item->montoCajaChica, 2, ',', '.') }}
+                    <td class="text-center font-weight-bold">{{ $item->mes }}</td>
+                    <td class="text-center font-weight-bold">{{ $item->anio }}</td>
+                    <td class="text-center font-weight-bold classCajaChicaActual">
+                        {{ number_format($item->montoCajaChica, 2, ',', '.') }}
                     </td>
                     <td class="text-center noImprimir">
-                        <button class="btn btn-sm btn-warning"
+                        <button class="btn btn-sm btn-success"
                             wire:click="editarFondo({{ $item->idCajaChica }}, {{ $item->montoCajaChica }})">
                             <i class="fas fa-pencil-alt"></i> Editar
                         </button>
@@ -86,8 +96,76 @@
         </tbody>
     </table>
 
-    <!-- Tabla Totales (Movida entre Fondo Permanente y Pendientes) -->
-    <div class="d-flex justify-content-between align-items-center mt-4 mb-3">
+    <!-- Modal de Edición de Fondo -->
+    @if ($showEditFondoModal)
+        <div class="modal fade show" id="modalEditarFondo" tabindex="-1" role="dialog" aria-labelledby="modalEditarFondoLabel" 
+             style="display: block;" aria-modal="true">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <div class="modal-header bg-success text-white">
+                        <h5 class="modal-title" id="modalEditarFondoLabel">
+                            <i class="fas fa-pencil-alt mr-2"></i>Editar Fondo Permanente
+                        </h5>
+                        <button type="button" class="close" wire:click="cerrarModalEditFondo" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <form wire:submit.prevent="actualizarFondo">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <label for="editMes" class="form-label">Mes:</label>
+                                    <input type="text" class="form-control" id="editMes" 
+                                           value="{{ $editandoFondo['mes'] }}" readonly>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="editAnio" class="form-label">Año:</label>
+                                    <input type="text" class="form-control" id="editAnio" 
+                                           value="{{ $editandoFondo['anio'] }}" readonly>
+                                </div>
+                            </div>
+                            <div class="row mt-3">
+                                <div class="col-md-12">
+                                    <label for="editMonto" class="form-label">Monto: <span class="text-danger">*</span></label>
+                                    <div class="input-group">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">$</span>
+                                        </div>
+                                        <input type="number" 
+                                               class="form-control @error('editandoFondo.monto') is-invalid @enderror" 
+                                               id="editMonto" 
+                                               wire:model.live="editandoFondo.monto"
+                                               step="0.01" 
+                                               min="0" 
+                                               max="99999999.99" 
+                                               placeholder="Ingrese el nuevo monto">
+                                    </div>
+                                    @error('editandoFondo.monto')
+                                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                                    @enderror
+                                    <small class="form-text text-muted">
+                                        Monto original: ${{ number_format($editandoFondo['montoOriginal'], 2, ',', '.') }}
+                                    </small>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" wire:click="cerrarModalEditFondo">
+                            <i class="fas fa-times mr-1"></i>Cancelar
+                        </button>
+                        <button type="button" class="btn btn-success" wire:click="actualizarFondo">
+                            <i class="fas fa-save mr-1"></i>Actualizar Fondo
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal-backdrop fade show"></div>
+    @endif
+
+    <!-- Tabla Totales -->
+    <div class="d-flex justify-content-between align-items-center mt-4">
         <h4 class="mb-0">Totales</h4>
         <div class="form-inline">
             <label for="fechaHastaInput" class="mr-2">Fecha Hasta:</label>
@@ -95,43 +173,56 @@
                 readonly style="width: 120px;">
             <button class="btn btn-secondary btn-sm mr-2"
                 wire:click="$set('fechaHasta', now()->format('d/m/Y'))">Limpiar</button>
-            <button class="btn btn-success" wire:click="exportarExcel">
+            {{-- <button class="btn btn-info" wire:click="exportarExcel">
                 <i class="fas fa-file-excel"></i> Exportar a Excel
-            </button>
+            </button> --}}
         </div>
     </div>
     <table class="table table-bordered" id="tablaTotales">
         <thead class="thead-dark">
             <tr>
-                <th class="text-center">CajaChica</th>
-                <th class="text-center">Pendientes</th>
-                <th class="text-center">Rendido</th>
-                <th class="text-center">Extras</th>
-                <th class="text-center">Pagos</th>
-                <th class="text-center">Recuperar</th>
-                <th class="text-center">Saldo</th>
+                <th class="text-center align-middle">Fondo Total</th>
+                <th class="text-center align-middle">Pendientes</th>
+                <th class="text-center align-middle">Rendidos</th>
+                <th class="text-center align-middle">Extras</th>
+                <th class="text-center align-middle">Pagos</th>
+                <th class="text-center align-middle">Recuperar</th>
+                <th class="text-center align-middle">Saldo Efectivo</th>
             </tr>
         </thead>
         <tbody>
             <tr>
-                <td class="text-right">{{ isset($tablaTotales['Monto Caja Chica']) ? number_format($tablaTotales['Monto Caja Chica'], 2, ',', '.') : '0,00' }}</td>
-                <td class="text-right">{{ isset($tablaTotales['Total Pendientes']) ? number_format($tablaTotales['Total Pendientes'], 2, ',', '.') : '0,00' }}</td>
-                <td class="text-right">{{ isset($tablaTotales['Total Rendidos']) ? number_format($tablaTotales['Total Rendidos'], 2, ',', '.') : '0,00' }}</td>
-                <td class="text-right">{{ isset($tablaTotales['Total Extras']) ? number_format($tablaTotales['Total Extras'], 2, ',', '.') : '0,00' }}</td>
-                <td class="text-right">{{ isset($tablaTotales['Saldo Pagos Directos']) ? number_format($tablaTotales['Saldo Pagos Directos'], 2, ',', '.') : '0,00' }}</td>
-                <td class="text-right">{{ 
-                    number_format(
-                        (isset($tablaTotales['Total Rendidos']) ? floatval($tablaTotales['Total Rendidos']) : 0) + 
-                        (isset($tablaTotales['Total Extras']) ? floatval($tablaTotales['Total Extras']) : 0) + 
-                        (isset($tablaTotales['Saldo Pagos Directos']) ? floatval($tablaTotales['Saldo Pagos Directos']) : 0), 
-                        2, ',', '.'
-                    ) 
-                }}</td>
-                <td class="text-right">{{ isset($tablaTotales['Saldo Total']) ? number_format($tablaTotales['Saldo Total'], 2, ',', '.') : '0,00' }}</td>
+                <td class="text-center align-middle font-weight-bold">
+                    {{ isset($tablaTotales['Monto Caja Chica']) ? number_format($tablaTotales['Monto Caja Chica'], 2, ',', '.') : '0,00' }}
+                </td>
+                <td class="text-center align-middle font-weight-bold">
+                    {{ isset($tablaTotales['Total Pendientes']) ? number_format($tablaTotales['Total Pendientes'], 2, ',', '.') : '0,00' }}
+                </td>
+                <td class="text-center align-middle font-weight-bold">
+                    {{ isset($tablaTotales['Total Rendidos']) ? number_format($tablaTotales['Total Rendidos'], 2, ',', '.') : '0,00' }}
+                </td>
+                <td class="text-center align-middle font-weight-bold">
+                    {{ isset($tablaTotales['Total Extras']) ? number_format($tablaTotales['Total Extras'], 2, ',', '.') : '0,00' }}
+                </td>
+                <td class="text-center align-middle font-weight-bold">
+                    {{ isset($tablaTotales['Saldo Pagos Directos']) ? number_format($tablaTotales['Saldo Pagos Directos'], 2, ',', '.') : '0,00' }}
+                </td>
+                <td class="text-center align-middle font-weight-bold">
+                    {{ number_format(
+                        (isset($tablaTotales['Total Rendidos']) ? floatval($tablaTotales['Total Rendidos']) : 0) +
+                            (isset($tablaTotales['Total Extras']) ? floatval($tablaTotales['Total Extras']) : 0) +
+                            (isset($tablaTotales['Saldo Pagos Directos']) ? floatval($tablaTotales['Saldo Pagos Directos']) : 0),
+                        2, ',', '.', ) }}
+                </td>
+                <td class="text-center align-middle font-weight-bold">
+                    <h5 class="m-0 font-weight-bold">
+                        {{ isset($tablaTotales['Saldo Total']) ? number_format($tablaTotales['Saldo Total'], 2, ',', '.') : '0,00' }}
+                    </h5>
+                </td>
             </tr>
-            @if(empty($tablaTotales))
+            @if (empty($tablaTotales))
                 <tr>
-                    <td colspan="7" class="text-center">No hay datos de totales.</td>
+                    <td colspan="7" class="text-center align-middle">No hay datos de totales.</td>
                 </tr>
             @endif
         </tbody>
@@ -156,23 +247,25 @@
         <tbody>
             @forelse ($tablaPendientesDetalle as $item)
                 <tr wire:key="pendiente-{{ $item->idPendientes }}">
-                    <td class="text-right">{{ $item->pendiente }}</td>
-                    <td class="text-center">{{ $item->fechaPendientes ? $item->fechaPendientes->format('d/m/Y') : '' }}
+                    <td class="text-right font-weight-bold">{{ $item->pendiente }}</td>
+                    <td class="text-center">
+                        {{ $item->fechaPendientes ? $item->fechaPendientes->format('d/m/Y') : '' }}
                     </td>
                     <td class="text-center">{{ $item->dependencia->dependencia ?? '' }}</td>
                     <td class="text-right">{{ number_format($item->montoPendientes, 2, ',', '.') }}</td>
                     <td class="text-right">{{ number_format($item->extra, 2, ',', '.') }}</td>
                     <td class="text-right">{{ number_format($item->tot_reintegrado, 2, ',', '.') }}</td>
                     <td class="text-right">{{ number_format($item->tot_recuperado, 2, ',', '.') }}</td>
-                    <td class="text-right">{{ number_format($item->saldo, 2, ',', '.') }}</td>
-                    {{-- Acciones --}}
+                    <td class="text-right {{ $item->saldo > 0 ? 'text-warning font-weight-bold' : '' }}">
+                        {{ number_format($item->saldo, 2, ',', '.') }}
+                    </td>
                     <td class="text-center noImprimir align-middle">
                         <input type='hidden' name='selIdPendientes' value='{{ $item->idPendientes }}'>
                         <div class='btn-group' role='group'>
-                            <!-- Botones existentes -->
-                            <button name='btnEditar' type='button' class='btn btn-sm btn-dark mr-1' title='Editar'><i
-                                    class='fas fa-pencil-alt'></i></button>
-                            <!-- Nuevo botón de impresión -->
+                            <a href="{{ route('tesoreria.caja-chica.pendientes.editar', $item->idPendientes) }}"
+                                class="btn btn-sm btn-dark mr-1" title="Editar Pendiente">
+                                <i class="fas fa-pencil-alt"></i>
+                            </a>
                             <a href="{{ route('tesoreria.caja-chica.imprimir.pendiente', $item->idPendientes) }}"
                                 target="_blank" class="btn btn-sm btn-dark mr-1" title="Imprimir Pendiente">
                                 <i class="fas fa-print"></i>
@@ -182,7 +275,7 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="8" class="text-center">No hay datos de Pendientes para el mes y año seleccionados.
+                    <td colspan="9" class="text-center">No hay datos de Pendientes para el mes y año seleccionados.
                     </td>
                 </tr>
             @endforelse
@@ -194,39 +287,34 @@
     <table class="table table-striped table-bordered" id="tablaPagos">
         <thead class="thead-light">
             <tr>
-                <th class="text-center">FECHA EGRESO</th>
-                <th class="text-center">EGRESO</th>
-                <th class="text-center">ACREEDOR</th>
-                <th>CONCEPTO</th>
-                <th class="text-right">MONTO</th>
-                <th class="text-center">FECHA INGRESO</th>
-                <th class="text-center">INGRESO</th>
-                <th class="text-right">RECUPERADO</th>
-                <th class="text-right">SALDO</th>
-                <th class="text-center noImprimir">ACCIONES</th>
+                <th class="text-center align-middle">FCH.EG.</th>
+                <th class="text-center align-middle">EGRESO</th>
+                <th class="text-center align-middle">ACREEDOR</th>
+                <th class="text-center align-middle">CONCEPTO</th>
+                <th class="text-center align-middle">MONTO</th>
+                <th class="text-center align-middle">RECUPERADO</th>
+                <th class="text-center align-middle">SALDO</th>
+                <th class="text-center align-middle d-print-none">ACCIONES</th>
             </tr>
         </thead>
         <tbody>
             @forelse ($tablaPagos as $item)
                 <tr wire:key="pago-{{ $item->idPagos }}">
-                    <td class="text-center">
+                    <td class="text-center align-middle">
                         {{ $item->fechaEgresoPagos ? $item->fechaEgresoPagos->format('d/m/Y') : '' }}</td>
-                    <td class="text-center">{{ $item->egresoPagos }}</td>
+                    <td class="text-center align-middle font-weight-bold">{{ $item->egresoPagos }}</td>
                     <td class="text-center">{{ $item->acreedor->acreedor ?? '' }}</td>
                     <td>{{ $item->conceptoPagos }}</td>
-                    <td class="text-right">{{ number_format($item->montoPagos, 2, ',', '.') }}</td>
-                    <td class="text-center">
-                        {{ $item->fechaIngresoPagos ? $item->fechaIngresoPagos->format('d/m/Y') : '' }}</td>
-                    <td class="text-center">{{ $item->ingresoPagos }}</td>
-                    <td class="text-right">{{ number_format($item->recuperadoPagos, 2, ',', '.') }}</td>
-                    <td class="text-right">{{ number_format($item->saldo_pagos, 2, ',', '.') }}</td>
-                    <td class="text-center noImprimir align-middle">
+                    <td class="text-right align-middle">{{ number_format($item->montoPagos, 2, ',', '.') }}</td>
+                    <td class="text-right align-middle">{{ number_format($item->recuperadoPagos, 2, ',', '.') }}</td>
+                    <td class="text-right align-middle {{ $item->saldo_pagos > 0 ? 'text-warning font-weight-bold' : '' }}">
+                        {{ number_format($item->saldo_pagos, 2, ',', '.') }}
+                    </td>
+                    <td class="text-center align-middle d-print-none">
                         <input type='hidden' name='selIdPagos' value='{{ $item->idPagos }}'>
                         <div class='btn-group' role='group'>
-                            <!-- Botones existentes -->
                             <button name='btnEditar' type='button' class='btn btn-sm btn-dark mr-1'
                                 title='Editar'><i class='fas fa-pencil-alt'></i></button>
-                            <!-- Nuevo botón de impresión -->
                             <a href="{{ route('tesoreria.caja-chica.imprimir.pago', $item->idPagos) }}"
                                 target="_blank" class="btn btn-sm btn-dark mr-1" title="Imprimir Pago Directo">
                                 <i class="fas fa-print"></i>
@@ -236,14 +324,12 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="9" class="text-center">No hay datos de Pagos Directos para el mes y año
+                    <td colspan="8" class="text-center">No hay datos de Pagos Directos para el mes y año
                         seleccionados.</td>
                 </tr>
             @endforelse
         </tbody>
     </table>
-
-    <!-- La tabla de Totales se ha movido entre el Fondo Permanente y los Pendientes -->
 
     <!-- Incluir los componentes de modales -->
     <livewire:tesoreria.caja-chica.modal-nuevo-fondo />
@@ -264,9 +350,23 @@
                     }
                 });
 
+                // Focus automático en el campo monto cuando se abre el modal
+                Livewire.on('modal-edit-fondo-opened', function() {
+                    setTimeout(() => {
+                        document.getElementById('editMonto').focus();
+                        document.getElementById('editMonto').select();
+                    }, 300);
+                });
+
+                // Prevenir cierre del modal con Escape o click fuera
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape' && document.getElementById('modalEditarFondo')) {
+                        @this.cerrarModalEditFondo();
+                    }
+                });
+
                 // --- Listener para mostrar el modal de nuevo fondo ---
                 Livewire.on('mostrar-modal-nuevo-fondo', function() {
-                    // console.log('Evento JS: mostrar-modal-nuevo-fondo recibido');
                     if ($('#modalNuevoFondo').length) {
                         $('#modalNuevoFondo').modal('show');
                     } else {
@@ -275,12 +375,16 @@
                 });
 
                 Livewire.on('cerrar-modal-nuevo-fondo', function() {
-                    // console.log('Evento JS: cerrar-modal-nuevo-fondo recibido');
                     if ($('#modalNuevoFondo').length) {
                         $('#modalNuevoFondo').modal('hide');
                     }
                 });
 
+                // Listener para eventos de actualización
+                Livewire.on('fondo-actualizado', function(data) {
+                    console.log('Fondo actualizado:', data);
+                    // Aquí puedes agregar notificaciones adicionales si necesitas
+                });
             });
         </script>
     @endpush

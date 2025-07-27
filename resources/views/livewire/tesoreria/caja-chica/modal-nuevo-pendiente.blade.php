@@ -5,7 +5,10 @@
             <div class="modal-content">
                 <form wire:submit.prevent="guardar">
                     <div class="modal-header bg-primary text-white">
-                        <h5 class="modal-title">Nuevo Pendiente</h5>
+                        <h5 class="modal-title">
+                            <i class="fas fa-money-bill"></i>
+                            Nuevo Pendiente
+                        </h5>
                         <button type="button" class="close text-white" wire:click="cerrarModal">
                             <span>&times;</span>
                         </button>
@@ -37,7 +40,7 @@
                         <div class="form-group">
                             <label for="pendienteFecha">Fecha:</label>
                             <input type="date" class="form-control @error('fechaPendientes') is-invalid @enderror" 
-                                   id="pendienteFecha" wire:model.defer="fechaPendientes" required>
+                                   id="pendienteFecha" wire:model.defer="fechaPendientes" required value="{{ now()->format('Y-m-d') }}">
                             @error('fechaPendientes') 
                                 <div class="invalid-feedback">{{ $message }}</div> 
                             @enderror
@@ -46,7 +49,7 @@
                         <div class="form-group">
                             <label for="pendienteDependencia">Dependencia:</label>
                             <select class="form-control @error('relDependencia') is-invalid @enderror" 
-                                    id="pendienteDependencia" wire:model.defer="relDependencia" required>
+                                    id="pendienteDependencia" wire:model.defer="relDependencia" required autofocus>
                                 <option value="">Seleccionar...</option>
                                 @foreach($dependencias as $dep)
                                     <option value="{{ $dep->idDependencias }}">{{ $dep->dependencia }}</option>

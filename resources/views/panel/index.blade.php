@@ -224,7 +224,7 @@
                         </div>
                         <div class="row mt-2">
                             <div class="col-12 text-center">
-                                Ministerio del Interior | Jefatura de Policía de Montevideo
+                                República Oriental del Uruguay | Ministerio del Interior | Jefatura de Policía de Montevideo
                             </div>
                         </div>
                     </div>
