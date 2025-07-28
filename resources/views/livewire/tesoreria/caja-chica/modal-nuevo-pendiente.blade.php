@@ -13,7 +13,7 @@
                             <span>&times;</span>
                         </button>
                     </div>
-                    <div class="modal-body">
+                    <div class="modal-body" style="flex-grow: 1; overflow-y: auto; max-height: 70vh;">
                         @if (session()->has('error'))
                             <div class="alert alert-danger">
                                 {{ session('error') }}

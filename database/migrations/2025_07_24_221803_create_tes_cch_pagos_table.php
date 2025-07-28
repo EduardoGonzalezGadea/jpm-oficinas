@@ -18,6 +18,7 @@ return new class extends Migration
             $table->decimal('montoPagos', 15, 2);
             $table->date('fechaIngresoPagos')->nullable();
             $table->string('ingresoPagos', 50)->nullable();
+            $table->string('ingresoPagosBSE', 50)->nullable();
             $table->decimal('recuperadoPagos', 15, 2)->default(0);
             $table->timestamps();
             $table->softDeletes(); // <-- Agregado

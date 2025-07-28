@@ -100,7 +100,7 @@
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownThemes" role="button"
                         data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                        Tesorería
+                        <i class="fas fa-dollar-sign"></i> Tesorería
                     </a>
                     <div class="dropdown-menu" aria-labelledby="navbarDropdownThemes">
                         {{-- Link Caja Chica --}}

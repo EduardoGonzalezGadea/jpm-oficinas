@@ -36,7 +36,10 @@ class ImpresionController extends Controller
     {
         $pago = Pago::with(['cajaChica', 'acreedor'])->findOrFail($id);
 
-        return view('tesoreria.caja-chica.imprimir.pago', compact('pago'));
+        // Calcular el monto en letras
+        $montoEnLetras = $this->numeroALetras($pago->montoPagos);
+
+        return view('tesoreria.caja-chica.imprimir.pago', compact('pago', 'montoEnLetras'));
     }
 
     // --- Función para convertir números a letras ---
@@ -54,14 +57,23 @@ class ImpresionController extends Controller
 
         $enteroEnLetras = $this->convertirGrupo($entero);
 
-        // Manejar singular/plural de "PESO"
-        $moneda = ($entero == 1) ? 'PESO' : 'PESOS';
+        // Manejar singular/plural de "PESO URUGUAYO"
+        $moneda = ($entero == 1) ? 'PESO URUGUAYO' : 'PESOS URUGUAYOS';
 
-        return trim($enteroEnLetras) . ' ' . $moneda . ' ' . $decimal . '/100 MN';
+        // Si el número es negativo, agregar "MENOS"
+        if ($num < 0) {
+            $enteroEnLetras = 'MENOS ' . $enteroEnLetras;
+        }
+        // Formatear el resultado final
+        if ($decimal == '00') {
+            return trim($enteroEnLetras) . ' ' . $moneda;
+        }
+
+        return trim($enteroEnLetras) . ' ' . $moneda . ' CON ' . $decimal . ' CENTÉSIMOS';
     }
 
     private function convertirGrupo($n)
-    {
+    { 
         // Listas de palabras
         $unidades = ['', 'UNO', 'DOS', 'TRES', 'CUATRO', 'CINCO', 'SEIS', 'SIETE', 'OCHO', 'NUEVE'];
         $especiales = ['DIEZ', 'ONCE', 'DOCE', 'TRECE', 'CATORCE', 'QUINCE', 'DIECISEIS', 'DIECISIETE', 'DIECIOCHO', 'DIECINUEVE'];

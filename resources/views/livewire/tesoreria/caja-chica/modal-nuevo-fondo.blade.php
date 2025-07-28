@@ -6,7 +6,7 @@
             <div class="modal-dialog" role="document">
                 <div class="modal-content">
                     <form wire:submit.prevent="guardar">
-                        <div class="modal-header bg-success text-white">
+                        <div class="modal-header bg-warning text-white">
                             <h5 class="modal-title">
                                 <i class="fas fa-comment-dollar"></i>
                                 Nuevo Fondo Permanente
@@ -63,7 +63,7 @@
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" wire:click="cerrarModal">Cancelar</button>
-                            <button type="submit" class="btn btn-success" wire:loading.attr="disabled"><span
+                            <button type="submit" class="btn btn-warning" wire:loading.attr="disabled"><span
                                     wire:loading.remove>Guardar Fondo</span><span
                                     wire:loading>Guardando...</span></button>
                         </div>

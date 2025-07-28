@@ -19,43 +19,40 @@
 
     <!-- Selector de Fecha/Mes/Año -->
     <div class="form-row mb-3">
-        <div class="col-md-2">
-            <label for="mesSelector">Mes:</label>
-            <select id="mesSelector" class="form-control" wire:model.live="mesActual">
-                <option value="enero">Enero</option>
-                <option value="febrero">Febrero</option>
-                <option value="marzo">Marzo</option>
-                <option value="abril">Abril</option>
-                <option value="mayo">Mayo</option>
-                <option value="junio">Junio</option>
-                <option value="julio">Julio</option>
-                <option value="agosto">Agosto</option>
-                <option value="setiembre">Setiembre</option>
-                <option value="octubre">Octubre</option>
-                <option value="noviembre">Noviembre</option>
-                <option value="diciembre">Diciembre</option>
-            </select>
+        <div class="col-md-5">
+            <div class="input-group">
+                <div class="input-group-prepend">
+                    <span class="input-group-text">Mes y Año</span>
+                </div>
+                <select id="mesSelector" class="form-control" wire:model.live="mesActual">
+                    <option value="enero">Enero</option>
+                    <option value="febrero">Febrero</option>
+                    <option value="marzo">Marzo</option>
+                    <option value="abril">Abril</option>
+                    <option value="mayo">Mayo</option>
+                    <option value="junio">Junio</option>
+                    <option value="julio">Julio</option>
+                    <option value="agosto">Agosto</option>
+                    <option value="setiembre">Setiembre</option>
+                    <option value="octubre">Octubre</option>
+                    <option value="noviembre">Noviembre</option>
+                    <option value="diciembre">Diciembre</option>
+                </select>
+                <input type="number" id="anioSelector" class="form-control" wire:model.live="anioActual">
+            </div>
         </div>
-        <div class="col-md-2">
-            <label for="anioSelector">Año:</label>
-            <input type="number" id="anioSelector" class="form-control" wire:model.live="anioActual">
-        </div>
-        <div class="col-md-2 align-self-end">
+        <div class="col-md-2 align-self-end d-print-none">
             <button class="btn btn-primary" wire:click="cargarDatos">Actualizar</button>
         </div>
-        <div class="col-md-6 align-self-end mt-2">
+        <div class="col-md-5 align-self-end d-print-none">
             <div class="btn-group d-flex" role="group">
-                <button class="btn btn-success flex-fill" wire:click="mostrarModalNuevoFondo">
+                <button class="btn btn-warning flex-fill" wire:click="mostrarModalNuevoFondo">
                     <i class="fas fa-comment-dollar"></i>
-                    Nuevo Fondo
+                    Fondo Permanente
                 </button>
-                <button class="btn btn-info flex-fill" wire:click="prepararModalNuevoPendiente">
-                    <i class="fas fa-money-bill"></i>
-                    Nuevo Pendiente
-                </button>
-                <button class="btn btn-warning flex-fill" wire:click="prepararModalNuevoPago">
-                    <i class="far fa-handshake"></i>
-                    Nuevo Pago
+                <button class="btn btn-primary flex-fill" wire:click="">
+                    <i class="fas fa-money-check"></i>
+                    Recuperar todo
                 </button>
             </div>
         </div>
@@ -69,7 +66,7 @@
                 <th class="text-center">Mes</th>
                 <th class="text-center">Año</th>
                 <th class="text-center">Monto</th>
-                <th class="text-center noImprimir">Acciones</th>
+                <th class="text-center d-print-none">Acciones</th>
             </tr>
         </thead>
         <tbody>
@@ -80,7 +77,7 @@
                     <td class="text-center font-weight-bold classCajaChicaActual">
                         {{ number_format($item->montoCajaChica, 2, ',', '.') }}
                     </td>
-                    <td class="text-center noImprimir">
+                    <td class="text-center d-print-none">
                         <button class="btn btn-sm btn-success"
                             wire:click="editarFondo({{ $item->idCajaChica }}, {{ $item->montoCajaChica }})">
                             <i class="fas fa-pencil-alt"></i> Editar
@@ -98,8 +95,8 @@
 
     <!-- Modal de Edición de Fondo -->
     @if ($showEditFondoModal)
-        <div class="modal fade show" id="modalEditarFondo" tabindex="-1" role="dialog" aria-labelledby="modalEditarFondoLabel" 
-             style="display: block;" aria-modal="true">
+        <div class="modal fade show" id="modalEditarFondo" tabindex="-1" role="dialog"
+            aria-labelledby="modalEditarFondoLabel" style="display: block;" aria-modal="true">
             <div class="modal-dialog modal-dialog-centered" role="document">
                 <div class="modal-content">
                     <div class="modal-header bg-success text-white">
@@ -115,36 +112,34 @@
                             <div class="row">
                                 <div class="col-md-6">
                                     <label for="editMes" class="form-label">Mes:</label>
-                                    <input type="text" class="form-control" id="editMes" 
-                                           value="{{ $editandoFondo['mes'] }}" readonly>
+                                    <input type="text" class="form-control" id="editMes"
+                                        value="{{ $editandoFondo['mes'] }}" readonly>
                                 </div>
                                 <div class="col-md-6">
                                     <label for="editAnio" class="form-label">Año:</label>
-                                    <input type="text" class="form-control" id="editAnio" 
-                                           value="{{ $editandoFondo['anio'] }}" readonly>
+                                    <input type="text" class="form-control" id="editAnio"
+                                        value="{{ $editandoFondo['anio'] }}" readonly>
                                 </div>
                             </div>
                             <div class="row mt-3">
                                 <div class="col-md-12">
-                                    <label for="editMonto" class="form-label">Monto: <span class="text-danger">*</span></label>
+                                    <label for="editMonto" class="form-label">Monto: <span
+                                            class="text-danger">*</span></label>
                                     <div class="input-group">
                                         <div class="input-group-prepend">
                                             <span class="input-group-text">$</span>
                                         </div>
-                                        <input type="number" 
-                                               class="form-control @error('editandoFondo.monto') is-invalid @enderror" 
-                                               id="editMonto" 
-                                               wire:model.live="editandoFondo.monto"
-                                               step="0.01" 
-                                               min="0" 
-                                               max="99999999.99" 
-                                               placeholder="Ingrese el nuevo monto">
+                                        <input type="number"
+                                            class="form-control @error('editandoFondo.monto') is-invalid @enderror"
+                                            id="editMonto" wire:model.live="editandoFondo.monto" step="0.01"
+                                            min="0" max="99999999.99" placeholder="Ingrese el nuevo monto">
                                     </div>
                                     @error('editandoFondo.monto')
                                         <div class="invalid-feedback d-block">{{ $message }}</div>
                                     @enderror
                                     <small class="form-text text-muted">
-                                        Monto original: ${{ number_format($editandoFondo['montoOriginal'], 2, ',', '.') }}
+                                        Monto original:
+                                        ${{ number_format($editandoFondo['montoOriginal'], 2, ',', '.') }}
                                     </small>
                                 </div>
                             </div>
@@ -169,8 +164,8 @@
         <h4 class="mb-0">Totales</h4>
         <div class="form-inline">
             <label for="fechaHastaInput" class="mr-2">Fecha Hasta:</label>
-            <input type="text" id="fechaHastaInput" class="form-control datepicker mr-2" wire:model.live="fechaHasta"
-                readonly style="width: 120px;">
+            <input type="text" id="fechaHastaInput" class="form-control datepicker mr-2"
+                wire:model.live="fechaHasta" readonly style="width: 120px;">
             <button class="btn btn-secondary btn-sm mr-2"
                 wire:click="$set('fechaHasta', now()->format('d/m/Y'))">Limpiar</button>
             {{-- <button class="btn btn-info" wire:click="exportarExcel">
@@ -212,7 +207,10 @@
                         (isset($tablaTotales['Total Rendidos']) ? floatval($tablaTotales['Total Rendidos']) : 0) +
                             (isset($tablaTotales['Total Extras']) ? floatval($tablaTotales['Total Extras']) : 0) +
                             (isset($tablaTotales['Saldo Pagos Directos']) ? floatval($tablaTotales['Saldo Pagos Directos']) : 0),
-                        2, ',', '.', ) }}
+                        2,
+                        ',',
+                        '.',
+                    ) }}
                 </td>
                 <td class="text-center align-middle font-weight-bold">
                     <h5 class="m-0 font-weight-bold">
@@ -229,37 +227,48 @@
     </table>
 
     <!-- Tabla Pendientes Detalle -->
-    <h4 class="mt-4">Pendientes</h4>
+    <div class="row d-flex justify-content-between align-items-center">
+        <div class="col-md-6 d-flex align-items-center">
+            <h4 class="mt-4">Pendientes</h4>
+        </div>
+        <div class="col-md-6 text-right d-print-none">
+            <button class="btn btn-info" wire:click="prepararModalNuevoPendiente">
+                <i class="fas fa-money-bill"></i>
+                Nuevo Pendiente
+            </button>
+        </div>
+    </div>
+
     <table class="table table-striped table-bordered" id="tablaPendientesDetalle">
         <thead class="thead-light">
             <tr>
-                <th class="text-right">N&deg;</th>
-                <th class="text-center">FECHA</th>
-                <th class="text-center">DEPENDENCIA</th>
-                <th class="text-right">MONTO</th>
-                <th class="text-right">EXTRA</th>
-                <th class="text-right">REINTEGRADO</th>
-                <th class="text-right">RECUPERADO</th>
-                <th class="text-right">SALDO</th>
-                <th class="text-center noImprimir">ACCIONES</th>
+                <th class="text-center align-middle">N&deg;</th>
+                <th class="text-center align-middle">FECHA</th>
+                <th class="text-center align-middle">DEPENDENCIA</th>
+                <th class="text-center align-middle">MONTO</th>
+                <th class="text-center align-middle">EXTRA</th>
+                <th class="text-center align-middle">REINTEGRADO</th>
+                <th class="text-center align-middle">RECUPERADO</th>
+                <th class="text-center align-middle">SALDO</th>
+                <th class="text-center align-middle d-print-none">ACCIONES</th>
             </tr>
         </thead>
         <tbody>
             @forelse ($tablaPendientesDetalle as $item)
                 <tr wire:key="pendiente-{{ $item->idPendientes }}">
-                    <td class="text-right font-weight-bold">{{ $item->pendiente }}</td>
-                    <td class="text-center">
+                    <td class="text-right align-middle font-weight-bold">{{ $item->pendiente }}</td>
+                    <td class="text-center align-middle">
                         {{ $item->fechaPendientes ? $item->fechaPendientes->format('d/m/Y') : '' }}
                     </td>
-                    <td class="text-center">{{ $item->dependencia->dependencia ?? '' }}</td>
-                    <td class="text-right">{{ number_format($item->montoPendientes, 2, ',', '.') }}</td>
-                    <td class="text-right">{{ number_format($item->extra, 2, ',', '.') }}</td>
-                    <td class="text-right">{{ number_format($item->tot_reintegrado, 2, ',', '.') }}</td>
-                    <td class="text-right">{{ number_format($item->tot_recuperado, 2, ',', '.') }}</td>
-                    <td class="text-right {{ $item->saldo > 0 ? 'text-warning font-weight-bold' : '' }}">
+                    <td class="text-center align-middle">{{ $item->dependencia->dependencia ?? '' }}</td>
+                    <td class="text-right align-middle">{{ number_format($item->montoPendientes, 2, ',', '.') }}</td>
+                    <td class="text-right align-middle">{{ number_format($item->extra, 2, ',', '.') }}</td>
+                    <td class="text-right align-middle">{{ number_format($item->tot_reintegrado, 2, ',', '.') }}</td>
+                    <td class="text-right align-middle">{{ number_format($item->tot_recuperado, 2, ',', '.') }}</td>
+                    <td class="text-right align-middle {{ $item->saldo > 0 ? 'text-warning font-weight-bold' : '' }}">
                         {{ number_format($item->saldo, 2, ',', '.') }}
                     </td>
-                    <td class="text-center noImprimir align-middle">
+                    <td class="text-center align-middle d-print-none">
                         <input type='hidden' name='selIdPendientes' value='{{ $item->idPendientes }}'>
                         <div class='btn-group' role='group'>
                             <a href="{{ route('tesoreria.caja-chica.pendientes.editar', $item->idPendientes) }}"
@@ -283,7 +292,18 @@
     </table>
 
     <!-- Tabla Pagos -->
-    <h4 class="mt-4">Pagos Directos</h4>
+    <div class="row d-flex justify-content-between align-items-center">
+        <div class="col-md-6 d-flex align-items-center">
+            <h4 class="mt-4">Pagos Directos</h4>
+        </div>
+        <div class="col-md-6 text-right d-print-none">
+            <button class="btn btn-warning" wire:click="prepararModalNuevoPago">
+                <i class="far fa-handshake"></i>
+                Nuevo Pago
+            </button>
+        </div>
+    </div>
+
     <table class="table table-striped table-bordered" id="tablaPagos">
         <thead class="thead-light">
             <tr>
@@ -303,18 +323,26 @@
                     <td class="text-center align-middle">
                         {{ $item->fechaEgresoPagos ? $item->fechaEgresoPagos->format('d/m/Y') : '' }}</td>
                     <td class="text-center align-middle font-weight-bold">{{ $item->egresoPagos }}</td>
-                    <td class="text-center">{{ $item->acreedor->acreedor ?? '' }}</td>
+                    <td class="text-center align-middle">{{ $item->acreedor->acreedor ?? '' }}</td>
                     <td>{{ $item->conceptoPagos }}</td>
                     <td class="text-right align-middle">{{ number_format($item->montoPagos, 2, ',', '.') }}</td>
                     <td class="text-right align-middle">{{ number_format($item->recuperadoPagos, 2, ',', '.') }}</td>
-                    <td class="text-right align-middle {{ $item->saldo_pagos > 0 ? 'text-warning font-weight-bold' : '' }}">
+                    <td
+                        class="text-right align-middle 
+                        {{ $item->saldo_pagos > 0 ? 
+                            'text-warning font-weight-bold' : 
+                            ($item->ingresoPagosBSE == null && $item->acreedor->acreedor == 'Banco de Seguros del Estado' ? 
+                            'text-danger font-weight-bold' : '') 
+                        }}">
                         {{ number_format($item->saldo_pagos, 2, ',', '.') }}
                     </td>
                     <td class="text-center align-middle d-print-none">
                         <input type='hidden' name='selIdPagos' value='{{ $item->idPagos }}'>
                         <div class='btn-group' role='group'>
-                            <button name='btnEditar' type='button' class='btn btn-sm btn-dark mr-1'
-                                title='Editar'><i class='fas fa-pencil-alt'></i></button>
+                            <button type="button" class="btn btn-sm btn-dark mr-1"
+                                wire:click="$emit('mostrarModalEditarPago', {{ $item->idPagos }})" title="Editar">
+                                <i class="fas fa-pencil-alt"></i>
+                            </button>
                             <a href="{{ route('tesoreria.caja-chica.imprimir.pago', $item->idPagos) }}"
                                 target="_blank" class="btn btn-sm btn-dark mr-1" title="Imprimir Pago Directo">
                                 <i class="fas fa-print"></i>
@@ -335,6 +363,8 @@
     <livewire:tesoreria.caja-chica.modal-nuevo-fondo />
     <livewire:tesoreria.caja-chica.modal-nuevo-pendiente />
     <livewire:tesoreria.caja-chica.modal-nuevo-pago />
+
+    <livewire:tesoreria.caja-chica.modal-editar-pago />
 
     @push('scripts')
         <script>

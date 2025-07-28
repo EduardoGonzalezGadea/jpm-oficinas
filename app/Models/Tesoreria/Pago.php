@@ -23,6 +23,7 @@ class Pago extends Model
         'montoPagos',
         'fechaIngresoPagos',
         'ingresoPagos',
+        'ingresoPagosBSE',
         'recuperadoPagos',
     ];
 
@@ -31,7 +32,7 @@ class Pago extends Model
         'fechaIngresoPagos' => 'date',
     ];
 
-    protected $dates = ['deleted_at']; // <-- Especificar la columna deleted_at
+    protected $dates = ['deleted_at'];
 
     // Relaciones
     public function cajaChica()
