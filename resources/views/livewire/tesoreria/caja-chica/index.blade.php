@@ -162,17 +162,23 @@
     <!-- Tabla Totales -->
     <div class="d-flex justify-content-between align-items-center mt-4">
         <h4 class="mb-0">Totales</h4>
-        <div class="form-inline">
+        <div class="form-inline d-print-none">
             <label for="fechaHastaInput" class="mr-2">Fecha Hasta:</label>
-            <input type="text" id="fechaHastaInput" class="form-control datepicker mr-2"
-                wire:model.live="fechaHasta" readonly style="width: 120px;">
-            <button class="btn btn-secondary btn-sm mr-2"
-                wire:click="$set('fechaHasta', now()->format('d/m/Y'))">Limpiar</button>
-            {{-- <button class="btn btn-info" wire:click="exportarExcel">
-                <i class="fas fa-file-excel"></i> Exportar a Excel
-            </button> --}}
+            <input type="date" id="fechaHastaInput" class="form-control mr-2"
+                wire:model.live="fechaHasta">
+            <button class="btn btn-secondary btn-sm mr-2" wire:click="establecerFechaHoy">
+                <i class="fas fa-calendar-day"></i> Hoy
+            </button>
         </div>
     </div>
+    
+    <!-- Indicador de fecha actual -->
+    {{-- <div class="alert alert-info mb-3">
+        <i class="fas fa-info-circle mr-2"></i>
+        <strong>Mostrando datos hasta:</strong> 
+        {{ \Carbon\Carbon::createFromFormat('Y-m-d', $fechaHasta)->format('d/m/Y') }}
+    </div> --}}
+
     <table class="table table-bordered" id="tablaTotales">
         <thead class="thead-dark">
             <tr>
@@ -246,9 +252,10 @@
                 <th class="text-center align-middle">FECHA</th>
                 <th class="text-center align-middle">DEPENDENCIA</th>
                 <th class="text-center align-middle">MONTO</th>
+                <th class="text-center align-middle">RENDIDO</th>
                 <th class="text-center align-middle">EXTRA</th>
-                <th class="text-center align-middle">REINTEGRADO</th>
-                <th class="text-center align-middle">RECUPERADO</th>
+                <th class="text-center align-middle">REINTEG.</th>
+                <th class="text-center align-middle">RECUPER.</th>
                 <th class="text-center align-middle">SALDO</th>
                 <th class="text-center align-middle d-print-none">ACCIONES</th>
             </tr>
@@ -262,11 +269,12 @@
                     </td>
                     <td class="text-center align-middle">{{ $item->dependencia->dependencia ?? '' }}</td>
                     <td class="text-right align-middle">{{ number_format($item->montoPendientes, 2, ',', '.') }}</td>
-                    <td class="text-right align-middle">{{ number_format($item->extra, 2, ',', '.') }}</td>
-                    <td class="text-right align-middle">{{ number_format($item->tot_reintegrado, 2, ',', '.') }}</td>
-                    <td class="text-right align-middle">{{ number_format($item->tot_recuperado, 2, ',', '.') }}</td>
-                    <td class="text-right align-middle {{ $item->saldo > 0 ? 'text-warning font-weight-bold' : '' }}">
-                        {{ number_format($item->saldo, 2, ',', '.') }}
+                    <td class="text-right align-middle">{{ number_format($item->tot_rendido ?? 0, 2, ',', '.') }}</td>
+                    <td class="text-right align-middle">{{ number_format($item->extra ?? 0, 2, ',', '.') }}</td>
+                    <td class="text-right align-middle">{{ number_format($item->tot_reintegrado ?? 0, 2, ',', '.') }}</td>
+                    <td class="text-right align-middle">{{ number_format($item->tot_recuperado ?? 0, 2, ',', '.') }}</td>
+                    <td class="text-right align-middle {{ ($item->saldo ?? 0) > 0 ? 'text-warning font-weight-bold' : '' }}">
+                        {{ number_format($item->saldo ?? 0, 2, ',', '.') }}
                     </td>
                     <td class="text-center align-middle d-print-none">
                         <input type='hidden' name='selIdPendientes' value='{{ $item->idPendientes }}'>
@@ -284,7 +292,8 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="9" class="text-center">No hay datos de Pendientes para el mes y año seleccionados.
+                    <td colspan="10" class="text-center">No hay datos de Pendientes para el mes y año seleccionados
+                        hasta la fecha {{ \Carbon\Carbon::createFromFormat('Y-m-d', $fechaHasta)->format('d/m/Y') }}.
                     </td>
                 </tr>
             @endforelse
@@ -312,7 +321,7 @@
                 <th class="text-center align-middle">ACREEDOR</th>
                 <th class="text-center align-middle">CONCEPTO</th>
                 <th class="text-center align-middle">MONTO</th>
-                <th class="text-center align-middle">RECUPERADO</th>
+                <th class="text-center align-middle">RECUPER.</th>
                 <th class="text-center align-middle">SALDO</th>
                 <th class="text-center align-middle d-print-none">ACCIONES</th>
             </tr>
@@ -329,12 +338,12 @@
                     <td class="text-right align-middle">{{ number_format($item->recuperadoPagos, 2, ',', '.') }}</td>
                     <td
                         class="text-right align-middle 
-                        {{ $item->saldo_pagos > 0 ? 
+                        {{ ($item->saldo_pagos ?? 0) > 0 ? 
                             'text-warning font-weight-bold' : 
-                            ($item->ingresoPagosBSE == null && $item->acreedor->acreedor == 'Banco de Seguros del Estado' ? 
+                            (($item->ingresoPagosBSE ?? null) == null && ($item->acreedor->acreedor ?? '') == 'Banco de Seguros del Estado' ? 
                             'text-danger font-weight-bold' : '') 
                         }}">
-                        {{ number_format($item->saldo_pagos, 2, ',', '.') }}
+                        {{ number_format($item->saldo_pagos ?? 0, 2, ',', '.') }}
                     </td>
                     <td class="text-center align-middle d-print-none">
                         <input type='hidden' name='selIdPagos' value='{{ $item->idPagos }}'>
@@ -353,7 +362,8 @@
             @empty
                 <tr>
                     <td colspan="8" class="text-center">No hay datos de Pagos Directos para el mes y año
-                        seleccionados.</td>
+                        seleccionados hasta la fecha {{ \Carbon\Carbon::createFromFormat('Y-m-d', $fechaHasta)->format('d/m/Y') }}.
+                    </td>
                 </tr>
             @endforelse
         </tbody>
@@ -414,6 +424,34 @@
                 Livewire.on('fondo-actualizado', function(data) {
                     console.log('Fondo actualizado:', data);
                     // Aquí puedes agregar notificaciones adicionales si necesitas
+                });
+
+                // Indicador visual de carga cuando cambian los datos
+                const fechaInput = document.getElementById('fechaHastaInput');
+                if (fechaInput) {
+                    fechaInput.addEventListener('change', function() {
+                        // Mostrar indicador de carga
+                        const tablas = ['tablaTotales', 'tablaPendientesDetalle', 'tablaPagos'];
+                        tablas.forEach(function(tablaId) {
+                            const tabla = document.getElementById(tablaId);
+                            if (tabla) {
+                                tabla.style.opacity = '0.6';
+                                tabla.style.pointerEvents = 'none';
+                            }
+                        });
+                    });
+                }
+
+                // Restaurar vista cuando se complete la carga
+                Livewire.hook('message.processed', (message, component) => {
+                    const tablas = ['tablaTotales', 'tablaPendientesDetalle', 'tablaPagos'];
+                    tablas.forEach(function(tablaId) {
+                        const tabla = document.getElementById(tablaId);
+                        if (tabla) {
+                            tabla.style.opacity = '1';
+                            tabla.style.pointerEvents = 'auto';
+                        }
+                    });
                 });
             });
         </script>

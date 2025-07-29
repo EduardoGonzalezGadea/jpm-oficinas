@@ -10,6 +10,7 @@ use App\Models\Tesoreria\Pago;
 use App\Models\Tesoreria\Dependencia;
 use App\Models\Tesoreria\Acreedor;
 use Illuminate\Support\Collection;
+use Carbon\Carbon;
 
 class Index extends Component
 {
@@ -93,7 +94,7 @@ class Index extends Component
         }
 
         $this->anioActual = now()->year;
-        $this->fechaHasta = now()->format('d/m/Y');
+        $this->fechaHasta = now()->format('Y-m-d');
         $this->tablaCajaChica = collect();
         $this->tablaPendientesDetalle = collect();
         $this->tablaPagos = collect();
@@ -115,7 +116,7 @@ class Index extends Component
 
     public function updatedFechaHasta()
     {
-        $this->cargarTablaTotales();
+        $this->cargarDatos();
     }
 
     // --- Métodos de Carga de Datos ---
@@ -148,10 +149,54 @@ class Index extends Component
             return;
         }
 
-        $this->tablaPendientesDetalle = Pendiente::where('relCajaChica', $this->cajaChicaSeleccionada->idCajaChica)
-            ->with(['dependencia', 'movimientos'])
-            ->orderBy('pendiente', 'ASC')
-            ->get();
+        try {
+            $fechaHastaCarbon = Carbon::createFromFormat('Y-m-d', $this->fechaHasta)->endOfDay();
+
+            // Usamos withSum para delegar los cálculos a la base de datos
+            // Esto es más eficiente y garantiza que el filtro de fecha se aplique correctamente.
+            $pendientesQuery = Pendiente::where('relCajaChica', $this->cajaChicaSeleccionada->idCajaChica)
+                ->where(function ($query) use ($fechaHastaCarbon) {
+                    $query->whereNull('fechaPendientes')
+                        ->orWhere('fechaPendientes', '<=', $fechaHastaCarbon);
+                })
+                ->with('dependencia') // Mantenemos la carga de la dependencia
+                ->orderBy('pendiente', 'ASC');
+
+            // Agregamos las sumas condicionales
+            $pendientesQuery->withSum(['movimientos' => function ($query) use ($fechaHastaCarbon) {
+                $query->where('fechaMovimientos', '<=', $fechaHastaCarbon);
+            }], 'rendido');
+
+            $pendientesQuery->withSum(['movimientos' => function ($query) use ($fechaHastaCarbon) {
+                $query->where('fechaMovimientos', '<=', $fechaHastaCarbon);
+            }], 'reintegrado');
+
+            $pendientesQuery->withSum(['movimientos' => function ($query) use ($fechaHastaCarbon) {
+                $query->where('fechaMovimientos', '<=', $fechaHastaCarbon);
+            }], 'recuperado');
+
+            $this->tablaPendientesDetalle = $pendientesQuery->get();
+
+            // Ahora, calculamos los valores derivados usando los totales ya agregados
+            foreach ($this->tablaPendientesDetalle as $pendiente) {
+                // Eloquent nombra las columnas agregadas como 'relacion_sum_columna'
+                // y maneja los valores nulos, convirtiéndolos a 0.
+                $pendiente->tot_rendido = $pendiente->movimientos_sum_rendido ?? 0;
+                $pendiente->tot_reintegrado = $pendiente->movimientos_sum_reintegrado ?? 0;
+                $pendiente->tot_recuperado = $pendiente->movimientos_sum_recuperado ?? 0;
+
+                // Calcular EXTRA (lógica sin cambios)
+                $totalGastado = $pendiente->tot_rendido + $pendiente->tot_reintegrado;
+                $diferencia = $totalGastado - $pendiente->montoPendientes;
+                $pendiente->extra = $diferencia > 0 ? $diferencia : 0;
+
+                // Calcular saldo (lógica sin cambios)
+                $pendiente->saldo = $pendiente->montoPendientes - ($pendiente->tot_reintegrado + $pendiente->tot_recuperado);
+            }
+        } catch (\Exception $e) {
+            session()->flash('error', 'Error al cargar pendientes: ' . $e->getMessage());
+            $this->tablaPendientesDetalle = collect();
+        }
     }
 
     public function cargarTablaPagos()
@@ -161,10 +206,28 @@ class Index extends Component
             return;
         }
 
-        $this->tablaPagos = Pago::where('relCajaChica_Pagos', $this->cajaChicaSeleccionada->idCajaChica)
-            ->with('acreedor')
-            ->orderBy('fechaEgresoPagos', 'ASC')
-            ->get();
+        try {
+            $fechaHastaCarbon = Carbon::createFromFormat('Y-m-d', $this->fechaHasta)->endOfDay();
+
+            $this->tablaPagos = Pago::where('relCajaChica_Pagos', $this->cajaChicaSeleccionada->idCajaChica)
+                ->where('fechaEgresoPagos', '<=', $fechaHastaCarbon) // Solo pagos realizados hasta la fecha
+                ->with('acreedor')
+                ->orderBy('fechaEgresoPagos', 'ASC')
+                ->get();
+
+            // Calcular saldo para cada pago basado en la fecha de recuperación
+            foreach ($this->tablaPagos as $pago) {
+                // El saldo es el monto total a menos que la recuperación se haya hecho ANTES de la fecha de corte.
+                $montoRecuperado = 0;
+                if ($pago->fechaIngresoPagos && $pago->fechaIngresoPagos <= $fechaHastaCarbon) {
+                    $montoRecuperado = $pago->recuperadoPagos;
+                }
+                $pago->saldo_pagos = $pago->montoPagos - $montoRecuperado;
+            }
+        } catch (\Exception $e) {
+            session()->flash('error', 'Error al cargar pagos: ' . $e->getMessage());
+            $this->tablaPagos = collect();
+        }
     }
 
     public function cargarTablaTotales()
@@ -178,73 +241,84 @@ class Index extends Component
         try {
             if (empty($this->fechaHasta)) {
                 session()->flash('error', 'Fecha "Hasta" no proporcionada.');
-                $this->tablaTotales = [];
                 return;
             }
 
-            $fechaHastaCarbon = \Carbon\Carbon::createFromFormat('d/m/Y', $this->fechaHasta)->endOfDay();
+            $fechaHastaCarbon = Carbon::createFromFormat('Y-m-d', $this->fechaHasta)->endOfDay();
             $idCajaChica = $this->cajaChicaSeleccionada->idCajaChica;
-            $stCajaChica = floatval($this->cajaChicaSeleccionada->montoCajaChica);
-            $this->tablaTotales['Monto Caja Chica'] = $stCajaChica;
+            $montoCajaChica = floatval($this->cajaChicaSeleccionada->montoCajaChica);
 
-            // --- Cálculos para Pendientes ---
-            $stPendientes = 0;
-            $stRendidos = 0;
-            $stExtras = 0;
+            $this->tablaTotales['Monto Caja Chica'] = $montoCajaChica;
 
-            foreach ($this->tablaPendientesDetalle as $pendiente) {
-                $montoPend = floatval($pendiente->montoPendientes);
-                $totRendido = floatval($pendiente->tot_rendido);
-                $totReintegrado = floatval($pendiente->tot_reintegrado);
-                $totRecuperado = floatval($pendiente->tot_recuperado);
-                $tExtra = floatval($pendiente->extra);
+            // --- Cálculos Directos desde la BD para PENDIENTES (CORREGIDO) ---
 
-                // 2. Total Pendientes (stPendientes)
-                if ($montoPend > ($totRendido + $totReintegrado)) {
-                    $stPendientes += ($montoPend - ($totRendido + $totReintegrado));
-                }
+            $pendientesFiltradosQuery = Pendiente::where('relCajaChica', $idCajaChica)
+                ->where(function ($query) use ($fechaHastaCarbon) {
+                    $query->whereNull('fechaPendientes')
+                        ->orWhere('fechaPendientes', '<=', $fechaHastaCarbon);
+                });
 
-                // 3. Total Rendidos (stRendidos)
-                if ($totRendido > $totRecuperado) {
-                    $stRendidos += ($totRendido - $totRecuperado - $tExtra);
-                }
+            $totalMontoPendientesFiltrado = (clone $pendientesFiltradosQuery)->sum('montoPendientes');
+            $idsPendientesFiltrados = (clone $pendientesFiltradosQuery)->pluck('idPendientes');
 
-                // 4. Total Extras (stExtras)
-                if ($totRecuperado < $totRendido) {
-                    $stExtras += $tExtra;
-                }
+            $totalRendidoFiltrado = 0;
+            $totalReintegradoFiltrado = 0;
+            $totalRecuperadoFiltrado = 0;
+
+            if ($idsPendientesFiltrados->isNotEmpty()) {
+                $movimientosQuery = Movimiento::whereIn('relPendiente', $idsPendientesFiltrados)
+                    ->where('fechaMovimientos', '<=', $fechaHastaCarbon);
+
+                $totalRendidoFiltrado = (clone $movimientosQuery)->sum('rendido');
+                $totalReintegradoFiltrado = (clone $movimientosQuery)->sum('reintegrado');
+                $totalRecuperadoFiltrado = (clone $movimientosQuery)->sum('recuperado');
             }
+
+            $stExtras = $this->tablaPendientesDetalle->sum('extra');
+
+            $totalGastadoFiltrado = $totalRendidoFiltrado + $totalReintegradoFiltrado;
+            $stPendientes = $totalMontoPendientesFiltrado - $totalGastadoFiltrado;
+            $stPendientes = $stPendientes > 0 ? $stPendientes : 0;
+
+            $stRendidos = $totalRendidoFiltrado - $totalRecuperadoFiltrado;
+            $stRendidos = max(0, $stRendidos - $stExtras); // max(0, ...) es una forma más limpia de asegurar que no sea negativo
 
             $this->tablaTotales['Total Pendientes'] = $stPendientes;
             $this->tablaTotales['Total Rendidos'] = $stRendidos;
             $this->tablaTotales['Total Extras'] = $stExtras;
 
-            // --- Cálculos para Pagos Directos ---
-            $pagosFiltrados = $this->tablaPagos->filter(function ($pago) use ($fechaHastaCarbon) {
-                return $pago->fechaEgresoPagos && \Carbon\Carbon::parse($pago->fechaEgresoPagos)->lte($fechaHastaCarbon);
-            });
+            // --- Cálculos para Pagos Directos (CORREGIDO) ---
 
-            // 6. Saldo Pagos Directos (stPagos)
-            $stPagos = 0;
-            foreach ($pagosFiltrados as $pago) {
-                $saldoPagoIndividual = floatval($pago->montoPagos) - floatval($pago->recuperadoPagos);
-                $stPagos += $saldoPagoIndividual;
-            }
+            // 1. Sumar el monto de TODOS los pagos cuyo egreso fue HASTA la fecha.
+            $totalMontoPagos = Pago::where('relCajaChica_Pagos', $idCajaChica)
+                ->where('fechaEgresoPagos', '<=', $fechaHastaCarbon)
+                ->sum('montoPagos');
+
+            // 2. Sumar el monto recuperado de TODOS los pagos cuya fecha de RECUPERACIÓN fue HASTA la fecha.
+            //    También nos aseguramos de que el pago en sí mismo haya ocurrido hasta la fecha.
+            $totalRecuperadoPagos = Pago::where('relCajaChica_Pagos', $idCajaChica)
+                ->where('fechaEgresoPagos', '<=', $fechaHastaCarbon)
+                ->whereNotNull('fechaIngresoPagos')
+                ->where('fechaIngresoPagos', '<=', $fechaHastaCarbon)
+                ->sum('recuperadoPagos');
+
+            // 3. El saldo es la diferencia.
+            $stPagos = $totalMontoPagos - $totalRecuperadoPagos;
             $this->tablaTotales['Saldo Pagos Directos'] = $stPagos;
 
-            // 5. Saldo Total (stSaldo)
-            // Incluye el descuento de Saldo Pagos Directos
-            $stSaldo = $stCajaChica - $stPendientes - $stRendidos - $stExtras - $stPagos;
+
+            // --- Saldo Total (Ahora es correcto) ---
+            $stSaldo = $montoCajaChica - $stPendientes - $stRendidos - $stExtras - $stPagos;
             $this->tablaTotales['Saldo Total'] = $stSaldo;
         } catch (\Exception $e) {
-            session()->flash('error', 'Error al calcular los totales. Por favor, revise los datos o contacte al administrador.');
+            session()->flash('error', 'Error al calcular los totales: ' . $e->getMessage());
             $this->tablaTotales = [];
         } catch (\Error $e) {
             session()->flash('error', 'Error fatal al calcular los totales. Por favor, contacte al administrador.');
             $this->tablaTotales = [];
         }
     }
-
+        
     // --- Métodos de Acción para Editar Fondo ---
 
     public function editarFondo($idCajaChica, $montoActual)
@@ -370,12 +444,16 @@ class Index extends Component
     }
 
     /**
+     * Establecer fecha hasta a hoy
+     */
+    public function establecerFechaHoy()
+    {
+        $this->fechaHasta = now()->format('Y-m-d');
+        $this->cargarDatos();
+    }
+
+    /**
      * Exporta los totales actuales a un archivo Excel.
-     *
-     * Envia una respuesta HTTP con el contenido HTML del archivo Excel.
-     * El archivo se llama "TOTALES_CAJA_CHICA.xls" y se puede abrir con Microsoft Excel o LibreOffice Calc.
-     *
-     * @return \Illuminate\Http\Response
      */
     public function exportarExcel()
     {

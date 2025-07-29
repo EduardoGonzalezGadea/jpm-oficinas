@@ -14,7 +14,7 @@ class UsuarioController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('jwt.verify');
+        // $this->middleware('jwt.verify');
     }
 
     public function index(Request $request)
@@ -80,7 +80,7 @@ class UsuarioController extends Controller
 
     public function store(Request $request)
     {
-        $this->authorize('crear_usuarios');
+        // $this->authorize('crear_usuarios');
 
         $request->validate([
             'nombre' => 'required|string|max:255',
@@ -102,6 +102,8 @@ class UsuarioController extends Controller
             'password.confirmed' => 'Las contraseñas no coinciden',
             'rol.required' => 'Debe seleccionar un rol',
         ]);
+
+        dd($request->all());
 
         $usuario = User::create([
             'nombre' => $request->nombre,
