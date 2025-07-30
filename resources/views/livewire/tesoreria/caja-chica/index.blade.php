@@ -403,12 +403,11 @@
                     <td class="text-right align-middle">{{ number_format($item->recuperadoPagos, 2, ',', '.') }}</td>
                     <td
                         class="text-right align-middle 
-                        {{ ($item->saldo_pagos ?? 0) > 0 ? 
-                            'text-warning font-weight-bold' : 
-                            (($item->ingresoPagosBSE ?? null) == null && ($item->acreedor->acreedor ?? '') == 'Banco de Seguros del Estado' ? 
-                            'text-danger font-weight-bold' : '') 
-                        }}">
+                        {{ ($item->saldo_pagos ?? 0) > 0 ? 'text-warning font-weight-bold' : '' }}">
                         {{ number_format($item->saldo_pagos ?? 0, 2, ',', '.') }}
+                        @if (($item->ingresoPagosBSE ?? null) == null && ($item->acreedor->acreedor ?? '') == 'Banco de Seguros del Estado')
+                            <i class="fas fa-exclamation-triangle text-danger ml-1" title="Ingreso BSE no informado"></i>
+                        @endif
                     </td>
                     <td class="text-center align-middle d-print-none">
                         <input type='hidden' name='selIdPagos' value='{{ $item->idPagos }}'>

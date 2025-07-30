@@ -142,41 +142,33 @@ class Index extends Component
         }
 
         try {
-            $fechaHastaCarbon = Carbon::createFromFormat('Y-m-d', $this->fechaHasta)->endOfDay();
+            $fechaHastaStr = Carbon::createFromFormat('Y-m-d', $this->fechaHasta)->endOfDay()->toDateTimeString();
 
-            $pendientesQuery = Pendiente::where('relCajaChica', $this->cajaChicaSeleccionada->idCajaChica)
-                ->where(function ($query) use ($fechaHastaCarbon) {
-                    $query->whereNull('fechaPendientes')
-                        ->orWhere('fechaPendientes', '<=', $fechaHastaCarbon);
-                })
+            $pendientes = Pendiente::where('relCajaChica', $this->cajaChicaSeleccionada->idCajaChica)
+                ->where('fechaPendientes', '<=', $fechaHastaStr)
                 ->with('dependencia')
-                ->orderBy('pendiente', 'ASC');
+                ->selectRaw(
+                    'tes_cch_pendientes.*, 
+                    (SELECT SUM(rendido) FROM tes_cch_movimientos WHERE tes_cch_movimientos.relPendiente = tes_cch_pendientes.idPendientes AND fechaMovimientos <= ? AND deleted_at IS NULL) as tot_rendido,
+                    (SELECT SUM(reintegrado) FROM tes_cch_movimientos WHERE tes_cch_movimientos.relPendiente = tes_cch_pendientes.idPendientes AND fechaMovimientos <= ? AND deleted_at IS NULL) as tot_reintegrado,
+                    (SELECT SUM(recuperado) FROM tes_cch_movimientos WHERE tes_cch_movimientos.relPendiente = tes_cch_pendientes.idPendientes AND fechaMovimientos <= ? AND deleted_at IS NULL) as tot_recuperado',
+                    [$fechaHastaStr, $fechaHastaStr, $fechaHastaStr]
+                )
+                ->orderBy('pendiente', 'ASC')
+                ->get();
 
-            $pendientesQuery->withSum(['movimientos' => function ($query) use ($fechaHastaCarbon) {
-                $query->where('fechaMovimientos', '<=', $fechaHastaCarbon);
-            }], 'rendido');
-
-            $pendientesQuery->withSum(['movimientos' => function ($query) use ($fechaHastaCarbon) {
-                $query->where('fechaMovimientos', '<=', $fechaHastaCarbon);
-            }], 'reintegrado');
-
-            $pendientesQuery->withSum(['movimientos' => function ($query) use ($fechaHastaCarbon) {
-                $query->where('fechaMovimientos', '<=', $fechaHastaCarbon);
-            }], 'recuperado');
-
-            $this->tablaPendientesDetalle = $pendientesQuery->get();
-
-            foreach ($this->tablaPendientesDetalle as $pendiente) {
-                $pendiente->tot_rendido = $pendiente->movimientos_sum_rendido ?? 0;
-                $pendiente->tot_reintegrado = $pendiente->movimientos_sum_reintegrado ?? 0;
-                $pendiente->tot_recuperado = $pendiente->movimientos_sum_recuperado ?? 0;
+            $this->tablaPendientesDetalle = $pendientes->map(function ($pendiente) {
+                $pendiente->tot_rendido = $pendiente->tot_rendido ?? 0;
+                $pendiente->tot_reintegrado = $pendiente->tot_reintegrado ?? 0;
+                $pendiente->tot_recuperado = $pendiente->tot_recuperado ?? 0;
 
                 $totalGastado = $pendiente->tot_rendido + $pendiente->tot_reintegrado;
                 $diferencia = $totalGastado - $pendiente->montoPendientes;
                 $pendiente->extra = $diferencia > 0 ? $diferencia : 0;
 
                 $pendiente->saldo = $pendiente->montoPendientes - ($pendiente->tot_reintegrado + $pendiente->tot_recuperado);
-            }
+                return $pendiente;
+            });
         } catch (\Exception $e) {
             session()->flash('error', 'Error al cargar pendientes: ' . $e->getMessage());
             $this->tablaPendientesDetalle = collect();
@@ -191,21 +183,18 @@ class Index extends Component
         }
 
         try {
-            $fechaHastaCarbon = Carbon::createFromFormat('Y-m-d', $this->fechaHasta)->endOfDay();
+            $fechaHastaStr = Carbon::createFromFormat('Y-m-d', $this->fechaHasta)->endOfDay()->toDateTimeString();
 
             $this->tablaPagos = Pago::where('relCajaChica_Pagos', $this->cajaChicaSeleccionada->idCajaChica)
-                ->where('fechaEgresoPagos', '<=', $fechaHastaCarbon)
+                ->where('fechaEgresoPagos', '<=', $fechaHastaStr)
                 ->with('acreedor')
+                ->selectRaw(
+                    'tes_cch_pagos.*, 
+                    (montoPagos - CASE WHEN fechaIngresoPagos IS NOT NULL AND fechaIngresoPagos <= ? THEN recuperadoPagos ELSE 0 END) as saldo_pagos',
+                    [$fechaHastaStr]
+                )
                 ->orderBy('fechaEgresoPagos', 'ASC')
                 ->get();
-
-            foreach ($this->tablaPagos as $pago) {
-                $montoRecuperado = 0;
-                if ($pago->fechaIngresoPagos && $pago->fechaIngresoPagos <= $fechaHastaCarbon) {
-                    $montoRecuperado = $pago->recuperadoPagos;
-                }
-                $pago->saldo_pagos = $pago->montoPagos - $montoRecuperado;
-            }
         } catch (\Exception $e) {
             session()->flash('error', 'Error al cargar pagos: ' . $e->getMessage());
             $this->tablaPagos = collect();

@@ -39,24 +39,6 @@
     @endauth
 
     <main class="@auth container-fluid mt-4 @else container-fluid @endauth">
-        @if (session('success'))
-            <div class="alert alert-success alert-dismissible fade show">
-                {{ session('success') }}
-                <button type="button" class="close" data-dismiss="alert">
-                    <span>&times;</span>
-                </button>
-            </div>
-        @endif
-
-        @if (session('error'))
-            <div class="alert alert-danger alert-dismissible fade show">
-                {{ session('error') }}
-                <button type="button" class="close" data-dismiss="alert">
-                    <span>&times;</span>
-                </button>
-            </div>
-        @endif
-
         @yield('contenido')
     </main>
 
@@ -69,6 +51,36 @@
     @yield('scripts')
 
     @livewireScripts
+
+    <script>
+        // Listener para notificaciones de SweetAlert2
+        window.addEventListener('swal:success', event => {
+            const Toast = Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3500,
+                timerProgressBar: true,
+                didOpen: (toast) => {
+                    toast.addEventListener('mouseenter', Swal.stopTimer)
+                    toast.addEventListener('mouseleave', Swal.resumeTimer)
+                }
+            });
+            Toast.fire({
+                icon: 'success',
+                title: event.detail.text
+            });
+        });
+
+        window.addEventListener('swal:error', event => {
+            Swal.fire({
+                icon: 'error',
+                title: event.detail.title,
+                text: event.detail.text,
+                confirmButtonText: 'Cerrar'
+            });
+        });
+    </script>
 </body>
 
 </html>

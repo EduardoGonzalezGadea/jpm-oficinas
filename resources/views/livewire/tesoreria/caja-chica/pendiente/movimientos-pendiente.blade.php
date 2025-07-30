@@ -2,25 +2,6 @@
     <div class="row">
         <div class="col-md-12">
 
-            {{-- Mensajes de éxito/error --}}
-            @if (session()->has('success'))
-                <div class="alert alert-success alert-dismissible fade show" role="alert">
-                    {{ session('success') }}
-                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-            @endif
-
-            @if (session()->has('error'))
-                <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                    {{ session('error') }}
-                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-            @endif
-
             <div class="form-row mb-1 mt-3">
                 <div class="col-md-6">
                     <h4>Movimientos del Pendiente</h4>
@@ -180,7 +161,6 @@
 
                     <form wire:submit.prevent="guardarMovimiento">
                         <div class="modal-body">
-                            <input type="hidden" id="movimiento_monto_pendiente" value="{{ $pendiente->montoPendientes }}">
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="form-group">
@@ -226,9 +206,8 @@
                                             </div>
                                             <input type="number"
                                                 class="form-control @error('rendido') is-invalid @enderror"
-                                                id="movimiento_monto_rendido" wire:model.lazy="rendido" step="0.01"
-                                                min="0" placeholder="0.00"
-                                                oninput="calcularReintegrado()">
+                                                id="movimiento_monto_rendido" wire:model.debounce.300ms="rendido" step="0.01"
+                                                min="0" placeholder="0.00">
                                             @error('rendido')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
@@ -248,7 +227,7 @@
                                             </div>
                                             <input type="number"
                                                 class="form-control @error('reintegrado') is-invalid @enderror"
-                                                id="movimiento_monto_reintegrado" wire:model.live="reintegrado" step="0.01"
+                                                id="movimiento_monto_reintegrado" wire:model.lazy="reintegrado" step="0.01"
                                                 min="0" placeholder="0.00">
                                             @error('reintegrado')
                                                 <div class="invalid-feedback">{{ $message }}</div>
@@ -413,190 +392,16 @@
                     }
                 }, 150);
             });
-
-            // Toast notifications
-            window.addEventListener('show-toast', function(event) {
-                const {
-                    type,
-                    message
-                } = event.detail;
-
-                // Crear toast notification
-                const toastHtml = `
-                <div class="toast" role="alert" aria-live="assertive" aria-atomic="true" data-delay="5000">
-                    <div class="toast-header">
-                        <i class="fas fa-${type === 'success' ? 'check-circle text-success' : 'exclamation-circle text-danger'} mr-2"></i>
-                        <strong class="mr-auto">${type === 'success' ? 'Éxito' : 'Error'}</strong>
-                        <button type="button" class="ml-2 mb-1 close" data-dismiss="toast" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-                    <div class="toast-body">
-                        ${message}
-                    </div>
-                </div>
-            `;
-
-                // Agregar toast al contenedor (crear si no existe)
-                let toastContainer = document.querySelector('.toast-container');
-                if (!toastContainer) {
-                    toastContainer = document.createElement('div');
-                    toastContainer.className = 'toast-container';
-                    toastContainer.style.cssText =
-                    'position: fixed; top: 20px; right: 20px; z-index: 1060;';
-                    document.body.appendChild(toastContainer);
-                }
-
-                const toastElement = document.createElement('div');
-                toastElement.innerHTML = toastHtml;
-                toastContainer.appendChild(toastElement.firstElementChild);
-
-                // Mostrar toast
-                $('.toast').toast('show');
-
-                // Limpiar toasts después de mostrarlos
-                $('.toast').on('hidden.bs.toast', function() {
-                    this.remove();
-                });
-            });
-
-            // Validación en tiempo real para evitar que reintegrado + recuperado > rendido
-            function validateBalance() {
-                const rendido = parseFloat(document.getElementById('rendido')?.value) || 0;
-                const reintegrado = parseFloat(document.getElementById('reintegrado')?.value) || 0;
-                const recuperado = parseFloat(document.getElementById('recuperado')?.value) || 0;
-
-                const suma = reintegrado + recuperado;
-                const reintegradoInput = document.getElementById('reintegrado');
-                const recuperadoInput = document.getElementById('recuperado');
-
-                if (suma > rendido && rendido > 0) {
-                    if (reintegradoInput) {
-                        reintegradoInput.classList.add('is-invalid');
-                    }
-                    if (recuperadoInput) {
-                        recuperadoInput.classList.add('is-invalid');
-                    }
-
-                    // Mostrar mensaje de advertencia
-                    let warningDiv = document.querySelector('.balance-warning');
-                    if (!warningDiv && rendido > 0) {
-                        warningDiv = document.createElement('div');
-                        warningDiv.className = 'alert alert-warning balance-warning mt-2';
-                        warningDiv.innerHTML =
-                            '<i class="fas fa-exclamation-triangle"></i> La suma de reintegrado y recuperado no puede exceder el monto rendido.';
-                        document.querySelector('.modal-body').appendChild(warningDiv);
-                    }
-                } else {
-                    if (reintegradoInput) {
-                        reintegradoInput.classList.remove('is-invalid');
-                    }
-                    if (recuperadoInput) {
-                        recuperadoInput.classList.remove('is-invalid');
-                    }
-
-                    // Remover mensaje de advertencia
-                    const warningDiv = document.querySelector('.balance-warning');
-                    if (warningDiv) {
-                        warningDiv.remove();
-                    }
-                }
-            }
-
-            // Event listeners para validación en tiempo real
-            document.addEventListener('input', function(e) {
-                if (['rendido', 'reintegrado', 'recuperado'].includes(e.target.id)) {
-                    setTimeout(validateBalance, 100);
-                }
-            });
-
-            // Formatear números mientras se escriben
-            document.addEventListener('blur', function(e) {
-                if (e.target.type === 'number' && e.target.value) {
-                    const value = parseFloat(e.target.value);
-                    if (!isNaN(value)) {
-                        e.target.value = value.toFixed(2);
-                    }
-                }
-            });
-
-            // Prevenir envío del formulario si hay errores de balance
-            document.addEventListener('submit', function(e) {
-                if (e.target.closest('.modal')) {
-                    const rendido = parseFloat(document.getElementById('rendido')?.value) || 0;
-                    const reintegrado = parseFloat(document.getElementById('reintegrado')?.value) || 0;
-                    const recuperado = parseFloat(document.getElementById('recuperado')?.value) || 0;
-
-                    if ((reintegrado + recuperado) > rendido) {
-                        e.preventDefault();
-                        validateBalance();
-                    }
-                }
-            });
         });
-
-        // Funciones utilitarias
-        function formatCurrency(amount) {
-            return new Intl.NumberFormat('es-UY', {
-                style: 'currency',
-                currency: 'UYU',
-                minimumFractionDigits: 2
-            }).format(amount);
-        }
-
-        // Función para exportar datos (opcional)
-        function exportarMovimientos() {
-            // Esta función se puede implementar más tarde para exportar a Excel/PDF
-            console.log('Función de exportación - Por implementar');
-        }
-    </script>
-
-    <script>
-        function calcularReintegrado() {
-            const montoPendiente = parseFloat(document.getElementById('movimiento_monto_pendiente').value) || 0;
-            const montoRendido = parseFloat(document.getElementById('movimiento_monto_rendido').value) || 0;
-            const montoReintegradoInput = document.getElementById('movimiento_monto_reintegrado');
-
-            let montoReintegrado = montoPendiente - montoRendido;
-
-            if (montoReintegrado < 0) {
-                montoReintegrado = 0;
-            }
-
-            montoReintegradoInput.value = montoReintegrado.toFixed(2);
-
-            // Disparar el evento input para que Livewire actualice el valor
-            const event = new Event('input', { bubbles: true });
-            montoReintegradoInput.dispatchEvent(event);
-        }
     </script>
 
     {{-- Estilos adicionales --}}
     <style>
-        .toast-container .toast {
-            min-width: 300px;
-            margin-bottom: 10px;
+        .table td {
+            vertical-align: middle;
         }
-
-        .border-right {
-            border-right: 1px solid #dee2e6 !important;
-        }
-
-        @media (max-width: 768px) {
-            .border-right {
-                border-right: none !important;
-                border-bottom: 1px solid #dee2e6 !important;
-                margin-bottom: 15px;
-                padding-bottom: 15px;
-            }
-        }
-
         .modal-lg {
             max-width: 900px;
-        }
-
-        .modal-dialog-scrollable {
-            max-height: calc(100vh - 3.5rem);
         }
 
         .modal-dialog-scrollable .modal-content {
@@ -607,102 +412,8 @@
         .modal-dialog-scrollable .modal-body {
             overflow-y: auto;
             max-height: calc(100vh - 210px);
-            /* Ajustado para header y footer */
         }
 
-        @media (max-width: 576px) {
-            .modal-dialog-scrollable {
-                max-height: calc(100vh - 1rem);
-            }
-
-            .modal-dialog-scrollable .modal-content {
-                max-height: calc(100vh - 1rem);
-            }
-
-            .modal-dialog-scrollable .modal-body {
-                max-height: calc(100vh - 160px);
-            }
-
-            .modal-lg {
-                max-width: calc(100% - 1rem);
-                margin: 0.5rem;
-            }
-        }
-
-        .table td {
-            vertical-align: middle;
-        }
-
-        .btn-group .btn {
-            margin-right: 0;
-        }
-
-        .spinner-border-sm {
-            width: 0.875rem;
-            height: 0.875rem;
-        }
-
-        .alert-light {
-            background-color: #f8f9fa;
-            border-color: #e9ecef;
-        }
-
-        .form-text {
-            font-size: 0.775em;
-        }
-
-        .balance-warning {
-            animation: fadeIn 0.3s ease-in;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .table-hover tbody tr:hover {
-            background-color: rgba(0, 123, 255, .075);
-        }
-
-        .card-header {
-            background-color: #f8f9fa;
-            border-bottom: 1px solid #dee2e6;
-        }
-
-        .modal-dialog-centered {
-            display: flex;
-            align-items: center;
-            min-height: calc(100% - 1rem);
-        }
-
-        .modal-body {
-            padding: 1.5rem;
-        }
-
-        .modal-content {
-            border: none;
-            border-radius: 0.5rem;
-            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
-        }
-
-        .modal-header {
-            border-bottom: 1px solid #dee2e6;
-            padding: 1rem 1.5rem;
-        }
-
-        .modal-footer {
-            border-top: 1px solid #dee2e6;
-            padding: 1rem 1.5rem;
-        }
-
-        /* Scrollbar personalizada para el modal body */
         .modal-body::-webkit-scrollbar {
             width: 6px;
         }

@@ -35,7 +35,7 @@ class JWTVerify
             }
 
             if (!$token) {
-                return $this->unauthorized($request, 'Token no encontrado');
+                return $this->unauthorized($request, 'La sesión ha expirado');
             }
 
             // Establecer el token y autenticar
@@ -50,7 +50,7 @@ class JWTVerify
             $request->merge(['auth_user' => $user]);
             auth()->setUser($user);
         } catch (TokenExpiredException $e) {
-            return $this->unauthorized($request, 'Token expirado');
+            return $this->unauthorized($request, 'La sesión ha expirado');
         } catch (TokenInvalidException $e) {
             return $this->unauthorized($request, 'Token inválido');
         } catch (JWTException $e) {

@@ -153,20 +153,18 @@ class MovimientosPendiente extends Component
             $this->emit('movimientoActualizado');
             $this->cerrarModal();
 
-            session()->flash('success', $mensaje);
-
-            // Evento para notificación toast
-            $this->dispatchBrowserEvent('show-toast', [
-                'type' => 'success',
-                'message' => $mensaje
+            // Evento para notificación toast con SweetAlert2
+            $this->dispatchBrowserEvent('swal:success', [
+                'title' => '¡Éxito!',
+                'text' => $mensaje,
             ]);
         } catch (\Exception $e) {
             $error = 'Error al guardar el movimiento: ' . $e->getMessage();
-            session()->flash('error', $error);
-
-            $this->dispatchBrowserEvent('show-toast', [
-                'type' => 'error',
-                'message' => $error
+            
+            // Evento para notificación de error con SweetAlert2
+            $this->dispatchBrowserEvent('swal:error', [
+                'title' => 'Error',
+                'text' => $error,
             ]);
         } finally {
             $this->loading = false;
@@ -184,19 +182,19 @@ class MovimientosPendiente extends Component
             $this->emit('movimientoActualizado');
 
             $mensaje = 'Movimiento eliminado exitosamente.';
-            session()->flash('success', $mensaje);
-
-            $this->dispatchBrowserEvent('show-toast', [
-                'type' => 'success',
-                'message' => $mensaje
+            
+            // Evento para notificación con SweetAlert2
+            $this->dispatchBrowserEvent('swal:success', [
+                'title' => 'Eliminado',
+                'text' => $mensaje,
             ]);
         } catch (\Exception $e) {
             $error = 'Error al eliminar el movimiento: ' . $e->getMessage();
-            session()->flash('error', $error);
 
-            $this->dispatchBrowserEvent('show-toast', [
-                'type' => 'error',
-                'message' => $error
+            // Evento para notificación de error con SweetAlert2
+            $this->dispatchBrowserEvent('swal:error', [
+                'title' => 'Error',
+                'text' => $error,
             ]);
         }
     }
@@ -241,9 +239,13 @@ class MovimientosPendiente extends Component
     }
 
     // Métodos para validación en tiempo real
-    public function updatedRendido()
+    public function updatedRendido($value)
     {
         $this->validateOnly('rendido');
+        $montoPendiente = $this->pendiente->montoPendientes;
+        $rendido = is_numeric($value) ? (float)$value : 0;
+        $reintegro = $montoPendiente - $rendido;
+        $this->reintegrado = $reintegro > 0 ? $reintegro : 0;
     }
 
     public function updatedReintegrado()
