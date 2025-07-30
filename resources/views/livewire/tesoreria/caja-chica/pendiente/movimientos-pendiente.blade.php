@@ -60,7 +60,7 @@
                                 <td>{{ \Carbon\Carbon::parse($movimiento->fechaMovimientos)->format('d/m/Y') }}</td>
                                 <td>
                                     <span title="{{ $movimiento->documentos }}">
-                                        {{ $movimiento->documentos ? Str::limit($movimiento->documentos, 30) : 'N/A' }}
+                                        {{ $movimiento->documentos ? Str::limit($movimiento->documentos, 30) : 'Sin dato' }}
                                     </span>
                                 </td>
                                 <td class="text-right">
@@ -180,6 +180,7 @@
 
                     <form wire:submit.prevent="guardarMovimiento">
                         <div class="modal-body">
+                            <input type="hidden" id="movimiento_monto_pendiente" value="{{ $pendiente->montoPendientes }}">
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="form-group">
@@ -216,7 +217,7 @@
                             <div class="row">
                                 <div class="col-md-4">
                                     <div class="form-group">
-                                        <label for="rendido">
+                                        <label for="movimiento_monto_rendido">
                                             Monto Rendido <span class="text-danger">*</span>
                                         </label>
                                         <div class="input-group">
@@ -225,8 +226,9 @@
                                             </div>
                                             <input type="number"
                                                 class="form-control @error('rendido') is-invalid @enderror"
-                                                id="rendido" wire:model.lazy="rendido" step="0.01"
-                                                min="0" placeholder="0.00">
+                                                id="movimiento_monto_rendido" wire:model.lazy="rendido" step="0.01"
+                                                min="0" placeholder="0.00"
+                                                oninput="calcularReintegrado()">
                                             @error('rendido')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
@@ -239,14 +241,14 @@
 
                                 <div class="col-md-4">
                                     <div class="form-group">
-                                        <label for="reintegrado">Monto Reintegrado</label>
+                                        <label for="movimiento_monto_reintegrado">Monto Reintegrado</label>
                                         <div class="input-group">
                                             <div class="input-group-prepend">
                                                 <span class="input-group-text">$</span>
                                             </div>
                                             <input type="number"
                                                 class="form-control @error('reintegrado') is-invalid @enderror"
-                                                id="reintegrado" wire:model.lazy="reintegrado" step="0.01"
+                                                id="movimiento_monto_reintegrado" wire:model.live="reintegrado" step="0.01"
                                                 min="0" placeholder="0.00">
                                             @error('reintegrado')
                                                 <div class="invalid-feedback">{{ $message }}</div>
@@ -546,6 +548,26 @@
         function exportarMovimientos() {
             // Esta función se puede implementar más tarde para exportar a Excel/PDF
             console.log('Función de exportación - Por implementar');
+        }
+    </script>
+
+    <script>
+        function calcularReintegrado() {
+            const montoPendiente = parseFloat(document.getElementById('movimiento_monto_pendiente').value) || 0;
+            const montoRendido = parseFloat(document.getElementById('movimiento_monto_rendido').value) || 0;
+            const montoReintegradoInput = document.getElementById('movimiento_monto_reintegrado');
+
+            let montoReintegrado = montoPendiente - montoRendido;
+
+            if (montoReintegrado < 0) {
+                montoReintegrado = 0;
+            }
+
+            montoReintegradoInput.value = montoReintegrado.toFixed(2);
+
+            // Disparar el evento input para que Livewire actualice el valor
+            const event = new Event('input', { bubbles: true });
+            montoReintegradoInput.dispatchEvent(event);
         }
     </script>
 

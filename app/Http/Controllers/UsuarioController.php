@@ -89,21 +89,17 @@ class UsuarioController extends Controller
             'cedula' => 'nullable|string|unique:users,cedula|max:15',
             'telefono' => 'nullable|string|max:30',
             'direccion' => 'nullable|string|max:500',
-            'password' => 'required|string|min:6|confirmed',
             'modulo_id' => 'nullable|exists:modulos,id',
-            'rol' => 'required|exists:roles,name',
+            'roles' => 'required|array',
+            'roles.*' => 'exists:roles,name',
         ], [
             'nombre.required' => 'El nombre es obligatorio',
             'apellido.required' => 'El apellido es obligatorio',
             'email.required' => 'El email es obligatorio',
             'email.unique' => 'Ya existe un usuario con este email',
             'cedula.unique' => 'Ya existe un usuario con esta cédula',
-            'password.required' => 'La contraseña es obligatoria',
-            'password.confirmed' => 'Las contraseñas no coinciden',
-            'rol.required' => 'Debe seleccionar un rol',
+            'roles.required' => 'Debe seleccionar al menos un rol',
         ]);
-
-        dd($request->all());
 
         $usuario = User::create([
             'nombre' => $request->nombre,
@@ -112,14 +108,14 @@ class UsuarioController extends Controller
             'cedula' => $request->cedula,
             'telefono' => $request->telefono,
             'direccion' => $request->direccion,
-            'password' => Hash::make($request->password),
+            'password' => Hash::make('123456'), // Default password
             'modulo_id' => $request->modulo_id,
             'activo' => true,
         ]);
 
-        // Asignar rol
-        if ($request->has('rol')) {
-            $usuario->assignRole($request->rol);
+        // Asignar roles
+        if ($request->has('roles')) {
+            $usuario->syncRoles($request->roles);
         }
 
         return redirect()->route('usuarios.index')

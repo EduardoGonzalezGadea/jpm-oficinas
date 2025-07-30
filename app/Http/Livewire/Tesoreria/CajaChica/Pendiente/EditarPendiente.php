@@ -16,6 +16,8 @@ class EditarPendiente extends Component
     public $relDependencia;
     public $montoPendientes;
 
+    protected $listeners = ['movimientoActualizado' => 'render'];
+
     /**
      * Reglas de validación.
      */

@@ -10,31 +10,22 @@ use App\Models\Tesoreria\Pago;
 use App\Models\Tesoreria\Dependencia;
 use App\Models\Tesoreria\Acreedor;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
 class Index extends Component
 {
     // --- Propiedades Públicas ---
-    /** @var string $mesActual */
     public $mesActual;
-    /** @var int $anioActual */
     public $anioActual;
-    /** @var string $fechaHasta */
     public $fechaHasta;
 
-    /** @var Collection|array $tablaCajaChica */
     public $tablaCajaChica;
-    /** @var Collection|array $tablaPendientesDetalle */
     public $tablaPendientesDetalle;
-    /** @var Collection|array $tablaPagos */
     public $tablaPagos;
-    /** @var array $tablaTotales */
     public $tablaTotales = [];
 
-    // Para formularios
-    /** @var mixed $cajaChicaSeleccionada */
     public $cajaChicaSeleccionada = null;
-    /** @var Collection|array $dependencias */
     public $dependencias;
     public $nuevoFondo = ['mes' => '', 'anio' => '', 'monto' => ''];
     public $nuevoPendiente = [
@@ -45,17 +36,23 @@ class Index extends Component
         'montoPendientes' => '',
     ];
 
-    // Variables para el modal de edición de fondo
+    // Modal Editar Fondo
     public $showEditFondoModal = false;
     public $editandoFondo = [
-        'id' => null,
-        'mes' => '',
-        'anio' => '',
-        'monto' => '',
-        'montoOriginal' => ''
+        'id' => null, 'mes' => '', 'anio' => '', 'monto' => '', 'montoOriginal' => ''
     ];
 
-    // --- Listeners ---
+    // --- Propiedades para el Modal de Recuperación ---
+    public $showRecuperarModal = false;
+    public $recuperacion = [
+        'fecha' => '',
+        'numero_ingreso' => ''
+    ];
+    public $itemsParaRecuperar = [];
+    public $itemsSeleccionados = [];
+    public $totalARecuperar = 0.00;
+    public $seleccionarTodos = false;
+
     protected $listeners = [
         'cargarDependencias',
         'fondoCreado' => 'cargarDatos',
@@ -64,12 +61,19 @@ class Index extends Component
         'pagoCreado' => 'cargarDatos',
     ];
 
-    // Reglas de validación para editar fondo
     protected function rules()
     {
-        return [
+        $rules = [
             'editandoFondo.monto' => 'required|numeric|min:0|max:99999999.99',
         ];
+
+        if ($this->showRecuperarModal) {
+            $rules['recuperacion.fecha'] = 'required|date';
+            $rules['recuperacion.numero_ingreso'] = 'required|string|max:50';
+            $rules['itemsSeleccionados'] = 'required|array|min:1';
+        }
+
+        return $rules;
     }
 
     protected function messages()
@@ -79,10 +83,12 @@ class Index extends Component
             'editandoFondo.monto.numeric' => 'El monto debe ser un número válido.',
             'editandoFondo.monto.min' => 'El monto no puede ser negativo.',
             'editandoFondo.monto.max' => 'El monto no puede exceder 99,999,999.99.',
+            'recuperacion.fecha.required' => 'La fecha de recuperación es obligatoria.',
+            'recuperacion.numero_ingreso.required' => 'El número de ingreso es obligatorio.',
+            'itemsSeleccionados.required' => 'Debe seleccionar al menos un ítem para recuperar.',
+            'itemsSeleccionados.min' => 'Debe seleccionar al menos un ítem para recuperar.',
         ];
     }
-
-    // --- Ciclo de Vida del Componente ---
 
     public function mount()
     {
@@ -99,27 +105,13 @@ class Index extends Component
         $this->tablaPendientesDetalle = collect();
         $this->tablaPagos = collect();
         $this->dependencias = collect();
+        $this->itemsParaRecuperar = [];
         $this->cargarDatos();
     }
 
-    // --- Métodos de Actualización Automática ---
-
-    public function updatedMesActual()
-    {
-        $this->cargarDatos();
-    }
-
-    public function updatedAnioActual()
-    {
-        $this->cargarDatos();
-    }
-
-    public function updatedFechaHasta()
-    {
-        $this->cargarDatos();
-    }
-
-    // --- Métodos de Carga de Datos ---
+    public function updatedMesActual() { $this->cargarDatos(); }
+    public function updatedAnioActual() { $this->cargarDatos(); }
+    public function updatedFechaHasta() { $this->cargarDatos(); }
 
     public function cargarDatos()
     {
@@ -152,17 +144,14 @@ class Index extends Component
         try {
             $fechaHastaCarbon = Carbon::createFromFormat('Y-m-d', $this->fechaHasta)->endOfDay();
 
-            // Usamos withSum para delegar los cálculos a la base de datos
-            // Esto es más eficiente y garantiza que el filtro de fecha se aplique correctamente.
             $pendientesQuery = Pendiente::where('relCajaChica', $this->cajaChicaSeleccionada->idCajaChica)
                 ->where(function ($query) use ($fechaHastaCarbon) {
                     $query->whereNull('fechaPendientes')
                         ->orWhere('fechaPendientes', '<=', $fechaHastaCarbon);
                 })
-                ->with('dependencia') // Mantenemos la carga de la dependencia
+                ->with('dependencia')
                 ->orderBy('pendiente', 'ASC');
 
-            // Agregamos las sumas condicionales
             $pendientesQuery->withSum(['movimientos' => function ($query) use ($fechaHastaCarbon) {
                 $query->where('fechaMovimientos', '<=', $fechaHastaCarbon);
             }], 'rendido');
@@ -177,20 +166,15 @@ class Index extends Component
 
             $this->tablaPendientesDetalle = $pendientesQuery->get();
 
-            // Ahora, calculamos los valores derivados usando los totales ya agregados
             foreach ($this->tablaPendientesDetalle as $pendiente) {
-                // Eloquent nombra las columnas agregadas como 'relacion_sum_columna'
-                // y maneja los valores nulos, convirtiéndolos a 0.
                 $pendiente->tot_rendido = $pendiente->movimientos_sum_rendido ?? 0;
                 $pendiente->tot_reintegrado = $pendiente->movimientos_sum_reintegrado ?? 0;
                 $pendiente->tot_recuperado = $pendiente->movimientos_sum_recuperado ?? 0;
 
-                // Calcular EXTRA (lógica sin cambios)
                 $totalGastado = $pendiente->tot_rendido + $pendiente->tot_reintegrado;
                 $diferencia = $totalGastado - $pendiente->montoPendientes;
                 $pendiente->extra = $diferencia > 0 ? $diferencia : 0;
 
-                // Calcular saldo (lógica sin cambios)
                 $pendiente->saldo = $pendiente->montoPendientes - ($pendiente->tot_reintegrado + $pendiente->tot_recuperado);
             }
         } catch (\Exception $e) {
@@ -210,14 +194,12 @@ class Index extends Component
             $fechaHastaCarbon = Carbon::createFromFormat('Y-m-d', $this->fechaHasta)->endOfDay();
 
             $this->tablaPagos = Pago::where('relCajaChica_Pagos', $this->cajaChicaSeleccionada->idCajaChica)
-                ->where('fechaEgresoPagos', '<=', $fechaHastaCarbon) // Solo pagos realizados hasta la fecha
+                ->where('fechaEgresoPagos', '<=', $fechaHastaCarbon)
                 ->with('acreedor')
                 ->orderBy('fechaEgresoPagos', 'ASC')
                 ->get();
 
-            // Calcular saldo para cada pago basado en la fecha de recuperación
             foreach ($this->tablaPagos as $pago) {
-                // El saldo es el monto total a menos que la recuperación se haya hecho ANTES de la fecha de corte.
                 $montoRecuperado = 0;
                 if ($pago->fechaIngresoPagos && $pago->fechaIngresoPagos <= $fechaHastaCarbon) {
                     $montoRecuperado = $pago->recuperadoPagos;
@@ -250,8 +232,6 @@ class Index extends Component
 
             $this->tablaTotales['Monto Caja Chica'] = $montoCajaChica;
 
-            // --- Cálculos Directos desde la BD para PENDIENTES (CORREGIDO) ---
-
             $pendientesFiltradosQuery = Pendiente::where('relCajaChica', $idCajaChica)
                 ->where(function ($query) use ($fechaHastaCarbon) {
                     $query->whereNull('fechaPendientes')
@@ -281,33 +261,25 @@ class Index extends Component
             $stPendientes = $stPendientes > 0 ? $stPendientes : 0;
 
             $stRendidos = $totalRendidoFiltrado - $totalRecuperadoFiltrado;
-            $stRendidos = max(0, $stRendidos - $stExtras); // max(0, ...) es una forma más limpia de asegurar que no sea negativo
+            $stRendidos = max(0, $stRendidos - $stExtras);
 
             $this->tablaTotales['Total Pendientes'] = $stPendientes;
             $this->tablaTotales['Total Rendidos'] = $stRendidos;
             $this->tablaTotales['Total Extras'] = $stExtras;
 
-            // --- Cálculos para Pagos Directos (CORREGIDO) ---
-
-            // 1. Sumar el monto de TODOS los pagos cuyo egreso fue HASTA la fecha.
             $totalMontoPagos = Pago::where('relCajaChica_Pagos', $idCajaChica)
                 ->where('fechaEgresoPagos', '<=', $fechaHastaCarbon)
                 ->sum('montoPagos');
 
-            // 2. Sumar el monto recuperado de TODOS los pagos cuya fecha de RECUPERACIÓN fue HASTA la fecha.
-            //    También nos aseguramos de que el pago en sí mismo haya ocurrido hasta la fecha.
             $totalRecuperadoPagos = Pago::where('relCajaChica_Pagos', $idCajaChica)
                 ->where('fechaEgresoPagos', '<=', $fechaHastaCarbon)
                 ->whereNotNull('fechaIngresoPagos')
                 ->where('fechaIngresoPagos', '<=', $fechaHastaCarbon)
                 ->sum('recuperadoPagos');
 
-            // 3. El saldo es la diferencia.
             $stPagos = $totalMontoPagos - $totalRecuperadoPagos;
             $this->tablaTotales['Saldo Pagos Directos'] = $stPagos;
 
-
-            // --- Saldo Total (Ahora es correcto) ---
             $stSaldo = $montoCajaChica - $stPendientes - $stRendidos - $stExtras - $stPagos;
             $this->tablaTotales['Saldo Total'] = $stSaldo;
         } catch (\Exception $e) {
@@ -317,6 +289,149 @@ class Index extends Component
             session()->flash('error', 'Error fatal al calcular los totales. Por favor, contacte al administrador.');
             $this->tablaTotales = [];
         }
+    }
+
+    // --- Métodos para el Modal de Recuperación ---
+
+    public function openRecuperarModal()
+    {
+        if (!$this->cajaChicaSeleccionada) {
+            session()->flash('error', 'No hay una caja chica activa para este período.');
+            return;
+        }
+
+        $this->reset(['itemsParaRecuperar', 'itemsSeleccionados', 'totalARecuperar', 'seleccionarTodos']);
+        $this->recuperacion['fecha'] = now()->format('Y-m-d');
+        $this->recuperacion['numero_ingreso'] = '';
+
+        $pendientes = collect($this->tablaPendientesDetalle)->filter(function ($p) {
+            $saldoRendido = ($p['tot_rendido'] ?? 0) - ($p['tot_recuperado'] ?? 0);
+            return $saldoRendido > 0;
+        })->map(function ($p) {
+            $detalleDependencia = $p['dependencia']['dependencia'] ?? 'Sin dato';
+            return [
+                'id' => 'pendiente_' . $p['idPendientes'],
+                'tipo' => 'Pendiente',
+                'detalle' => $detalleDependencia . ' (N° ' . $p['pendiente'] . ')',
+                'saldo' => ($p['tot_rendido'] ?? 0) - ($p['tot_recuperado'] ?? 0),
+                'origen_id' => $p['idPendientes'],
+                'origen_type' => Pendiente::class,
+            ];
+        });
+
+        $pagos = collect($this->tablaPagos)->filter(function ($p) {
+            return ($p['saldo_pagos'] ?? 0) > 0;
+        })->map(function ($p) {
+            $detalleAcreedor = $p['acreedor']['acreedor'] ?? 'Sin dato';
+            return [
+                'id' => 'pago_' . $p['idPagos'],
+                'tipo' => 'Pago Directo',
+                'detalle' => $detalleAcreedor . ' - ' . $p['conceptoPagos'],
+                'saldo' => $p['saldo_pagos'] ?? 0,
+                'origen_id' => $p['idPagos'],
+                'origen_type' => Pago::class,
+            ];
+        });
+
+        $items = $pendientes->concat($pagos)->values();
+
+        if ($items->isEmpty()) {
+            session()->flash('message', 'No hay saldos pendientes de recuperar para el período y fecha seleccionados.');
+            return;
+        }
+        $this->itemsParaRecuperar = $items->toArray();
+        $this->showRecuperarModal = true;
+        $this->dispatchBrowserEvent('show-recuperar-modal');
+    }
+
+    public function updatedSeleccionarTodos($value)
+    {
+        if ($value) {
+            $this->itemsSeleccionados = collect($this->itemsParaRecuperar)->pluck('id')->toArray();
+        } else {
+            $this->itemsSeleccionados = [];
+        }
+        $this->recalcularTotal();
+    }
+
+    public function updatedItemsSeleccionados()
+    {
+        if (count($this->itemsSeleccionados) === count($this->itemsParaRecuperar)) {
+            $this->seleccionarTodos = true;
+        } else {
+            $this->seleccionarTodos = false;
+        }
+        $this->recalcularTotal();
+    }
+
+    public function recalcularTotal()
+    {
+        $this->totalARecuperar = collect($this->itemsParaRecuperar)
+            ->whereIn('id', $this->itemsSeleccionados)
+            ->sum('saldo');
+    }
+
+    public function guardarRecuperacion()
+    {
+        $this->validate([
+            'recuperacion.fecha' => 'required|date',
+            'recuperacion.numero_ingreso' => 'required|string|max:50',
+            'itemsSeleccionados' => 'required|array|min:1',
+        ], [
+            'recuperacion.fecha.required' => 'La fecha es obligatoria.',
+            'recuperacion.numero_ingreso.required' => 'El número de ingreso es obligatorio.',
+            'itemsSeleccionados.min' => 'Debe seleccionar al menos un ítem.',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            $fechaRecuperacion = $this->recuperacion['fecha'];
+            $nroIngreso = $this->recuperacion['numero_ingreso'];
+
+            $itemsCollection = collect($this->itemsParaRecuperar);
+
+            foreach ($this->itemsSeleccionados as $itemId) {
+                $item = $itemsCollection->firstWhere('id', $itemId);
+
+                if (!$item) continue;
+
+                if ($item['origen_type'] === Pendiente::class) {
+                    Movimiento::create([
+                        'relPendiente' => $item['origen_id'],
+                        'fechaMovimientos' => $fechaRecuperacion,
+                        'recuperado' => $item['saldo'],
+                        'ingresoNro' => $nroIngreso,
+                        'rendido' => 0,
+                        'reintegrado' => 0,
+                        'saldo' => 0,
+                    ]);
+                } elseif ($item['origen_type'] === Pago::class) {
+                    $pago = Pago::find($item['origen_id']);
+                    if ($pago) {
+                        $pago->recuperadoPagos = ($pago->recuperadoPagos ?? 0) + $item['saldo'];
+                        $pago->fechaIngresoPagos = $fechaRecuperacion;
+                        $pago->ingresoPagos = $nroIngreso;
+                        $pago->save();
+                    }
+                }
+            }
+
+            DB::commit();
+            $this->closeRecuperarModal();
+            $this->cargarDatos();
+            session()->flash('message', 'Recuperación guardada exitosamente.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            session()->flash('error', 'Error al guardar la recuperación: ' . $e->getMessage());
+        }
+    }
+
+    public function closeRecuperarModal()
+    {
+        $this->showRecuperarModal = false;
+        $this->reset(['recuperacion', 'itemsParaRecuperar', 'itemsSeleccionados', 'totalARecuperar', 'seleccionarTodos']);
+        $this->resetErrorBag();
     }
         
     // --- Métodos de Acción para Editar Fondo ---
@@ -337,7 +452,6 @@ class Index extends Component
             $this->showEditFondoModal = true;
             $this->resetErrorBag();
 
-            // Emitir evento para focus en el campo monto
             $this->dispatchBrowserEvent('modal-edit-fondo-opened');
         } catch (\Exception $e) {
             session()->flash('error', 'Error al cargar los datos del fondo: ' . $e->getMessage());
@@ -353,7 +467,6 @@ class Index extends Component
             $montoAnterior = $fondo->montoCajaChica;
             $montoNuevo = floatval($this->editandoFondo['monto']);
 
-            // Verificar si realmente hay cambios
             if (abs($montoAnterior - $montoNuevo) < 0.01) {
                 $this->cerrarModalEditFondo();
                 session()->flash('message', 'No se realizaron cambios en el monto del fondo.');
@@ -363,7 +476,6 @@ class Index extends Component
             $fondo->montoCajaChica = $montoNuevo;
             $fondo->save();
 
-            // Recargar datos
             $this->cargarDatos();
             $this->cerrarModalEditFondo();
 
@@ -375,7 +487,6 @@ class Index extends Component
 
             session()->flash('message', $mensaje);
 
-            // Emitir evento para notificación
             $this->dispatchBrowserEvent('fondo-actualizado', [
                 'message' => 'Fondo actualizado exitosamente',
                 'montoAnterior' => $montoAnterior,
@@ -399,7 +510,6 @@ class Index extends Component
         $this->resetErrorBag();
     }
 
-    // Validación en tiempo real del monto
     public function updatedEditandoFondoMonto()
     {
         $this->validateOnly('editandoFondo.monto');
@@ -416,24 +526,15 @@ class Index extends Component
         }
     }
 
-    /**
-     * Prepara y solicita la apertura del modal de nuevo fondo.
-     */
     public function mostrarModalNuevoFondo()
     {
-        // Pre-cargar datos para el formulario del modal
         $this->nuevoFondo['mes'] = $this->mesActual;
         $this->nuevoFondo['anio'] = $this->anioActual;
-        $this->nuevoFondo['monto'] = '350000'; // Valor por defecto
+        $this->nuevoFondo['monto'] = '350000';
 
-        // Emitir evento al navegador para que JS muestre el modal
-        // O mejor aún, emitir al componente específico
         $this->emitTo('tesoreria.caja-chica.modal-nuevo-fondo', 'mostrarModalNuevoFondo');
     }
 
-    /**
-     * Prepara y solicita la apertura del modal de nuevo pago directo.
-     */
     public function prepararModalNuevoPago()
     {
         if ($this->cajaChicaSeleccionada) {
@@ -443,18 +544,12 @@ class Index extends Component
         }
     }
 
-    /**
-     * Establecer fecha hasta a hoy
-     */
     public function establecerFechaHoy()
     {
         $this->fechaHasta = now()->format('Y-m-d');
         $this->cargarDatos();
     }
 
-    /**
-     * Exporta los totales actuales a un archivo Excel.
-     */
     public function exportarExcel()
     {
         $html = view('livewire.tesoreria.caja-chica.partials.excel-totales', [

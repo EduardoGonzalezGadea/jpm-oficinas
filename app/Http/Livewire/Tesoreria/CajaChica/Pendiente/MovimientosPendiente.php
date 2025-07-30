@@ -105,13 +105,27 @@ class MovimientosPendiente extends Component
     {
         $this->loading = true;
 
-        // Validación en tiempo real
+        // Validación básica de Livewire
         $this->validate();
 
-        // Validación adicional: suma de reintegrado + recuperado no debe exceder monto inicial del pendiente
-        if ($this->pendiente->montoPendientes < ($this->reintegrado + $this->recuperado)) {
-            $this->addError('reintegrado', 'La suma de reintegrado y recuperado no puede exceder el monto del pendiente.');
-            $this->addError('recuperado', 'La suma de reintegrado y recuperado no puede exceder el monto del pendiente.');
+        // Regla 1: El monto reintegrado nunca puede ser mayor que el monto del pendiente.
+        if ($this->reintegrado > $this->pendiente->montoPendientes) {
+            $this->addError('reintegrado', 'El monto reintegrado no puede superar el monto total del pendiente.');
+            $this->loading = false;
+            return;
+        }
+
+        // Regla 2: Si el monto reintegrado es mayor a cero, la suma de rendido + reintegrado no puede ser mayor al monto del pendiente.
+        if ($this->reintegrado > 0 && ($this->rendido + $this->reintegrado) > $this->pendiente->montoPendientes) {
+            $this->addError('rendido', 'Si hay reintegro, la suma de Rendido y Reintegrado no puede superar el monto del pendiente.');
+            $this->addError('reintegrado', 'Si hay reintegro, la suma de Rendido y Reintegrado no puede superar el monto del pendiente.');
+            $this->loading = false;
+            return;
+        }
+
+        // Regla 4: El monto recuperado nunca puede ser mayor que el monto rendido.
+        if ($this->recuperado > $this->rendido) {
+            $this->addError('recuperado', 'El monto recuperado no puede ser mayor que el monto rendido.');
             $this->loading = false;
             return;
         }
@@ -135,6 +149,8 @@ class MovimientosPendiente extends Component
             $movimiento->save();
 
             $this->cargarMovimientos();
+            $this->pendiente->refresh();
+            $this->emit('movimientoActualizado');
             $this->cerrarModal();
 
             session()->flash('success', $mensaje);
@@ -164,6 +180,9 @@ class MovimientosPendiente extends Component
             $movimiento->delete();
 
             $this->cargarMovimientos();
+            $this->pendiente->refresh();
+            $this->emit('movimientoActualizado');
+
             $mensaje = 'Movimiento eliminado exitosamente.';
             session()->flash('success', $mensaje);
 
@@ -250,11 +269,20 @@ class MovimientosPendiente extends Component
         $totalReintegrado = $this->movimientos->sum('reintegrado');
         $totalRecuperado = $this->movimientos->sum('recuperado');
 
+        $saldo = 0;
+        $totalRendidoReintegrado = $totalRendido + $totalReintegrado;
+
+        if ($totalRendidoReintegrado > $montoPendiente) {
+            $saldo = $totalRendido - $totalRecuperado;
+        } else {
+            $saldo = $montoPendiente - ($totalReintegrado + $totalRecuperado);
+        }
+
         return [
             'total_rendido' => $totalRendido,
             'total_reintegrado' => $totalReintegrado,
             'total_recuperado' => $totalRecuperado,
-            'saldo' => $montoPendiente - $totalReintegrado - $totalRecuperado
+            'saldo' => $saldo
         ];
     }
 }
