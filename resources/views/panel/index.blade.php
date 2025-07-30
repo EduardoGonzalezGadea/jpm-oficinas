@@ -50,7 +50,7 @@
                             @can('operador_tesoreria')
                                 <div class="col-md-4 mb-3">
                                     <a href="{{ route('tesoreria.caja-chica.index') }}"
-                                        class="btn btn-outline-info btn-block btn-lg d-flex flex-column justify-content-center align-items-center">
+                                        class="btn btn-outline-info btn-block btn-lg d-flex flex-column justify-content-center align-items-center btn-quick-access">
                                         <i class="fas fa-coins fa-2x d-block mb-2"></i>
                                         Tesorería | Caja Chica
                                     </a>
@@ -60,7 +60,7 @@
                             @can('operador_contabilidad')
                                 <div class="col-md-4 mb-3">
                                     <a href="{{ route('contabilidad.index') }}"
-                                        class="btn btn-outline-warning btn-block btn-lg d-flex flex-column justify-content-center align-items-center">
+                                        class="btn btn-outline-warning btn-block btn-lg d-flex flex-column justify-content-center align-items-center btn-quick-access">
                                         <i class="fas fa-calculator fa-2x d-block mb-2"></i>
                                         Módulo Contabilidad
                                     </a>
@@ -70,7 +70,7 @@
                             @can('ver_usuarios')
                                 <div class="col-md-4 mb-3">
                                     <a href="{{ route('usuarios.index') }}"
-                                        class="btn btn-outline-warning btn-block btn-lg d-flex flex-column justify-content-center align-items-center">
+                                        class="btn btn-outline-warning btn-block btn-lg d-flex flex-column justify-content-center align-items-center btn-quick-access">
                                         <i class="fas fa-users fa-2x mb-2"></i> Gestionar Usuarios
                                     </a>
                                 </div>
@@ -78,7 +78,7 @@
 
                             <div class="col-md-4 mb-3">
                                 <a href="{{ route('usuarios.miPerfil') }}"
-                                    class="btn btn-outline-primary text-black btn-block btn-lg d-flex flex-column justify-content-center align-items-center">
+                                    class="btn btn-outline-primary text-black btn-block btn-lg d-flex flex-column justify-content-center align-items-center btn-quick-access">
                                     <i class="fas fa-user-edit fa-2x d-block mb-2"></i>
                                     Mi Perfil
                                 </a>
@@ -260,6 +260,16 @@
 
         .shadow {
             box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15) !important;
+        }
+
+        .btn-quick-access {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .btn-quick-access:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
         }
     </style>
 @endsection
