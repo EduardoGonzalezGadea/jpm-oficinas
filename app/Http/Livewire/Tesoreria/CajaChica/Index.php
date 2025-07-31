@@ -149,10 +149,9 @@ class Index extends Component
                 ->with('dependencia')
                 ->selectRaw(
                     'tes_cch_pendientes.*, 
-                    (SELECT SUM(rendido) FROM tes_cch_movimientos WHERE tes_cch_movimientos.relPendiente = tes_cch_pendientes.idPendientes AND fechaMovimientos <= ? AND deleted_at IS NULL) as tot_rendido,
-                    (SELECT SUM(reintegrado) FROM tes_cch_movimientos WHERE tes_cch_movimientos.relPendiente = tes_cch_pendientes.idPendientes AND fechaMovimientos <= ? AND deleted_at IS NULL) as tot_reintegrado,
-                    (SELECT SUM(recuperado) FROM tes_cch_movimientos WHERE tes_cch_movimientos.relPendiente = tes_cch_pendientes.idPendientes AND fechaMovimientos <= ? AND deleted_at IS NULL) as tot_recuperado',
-                    [$fechaHastaStr, $fechaHastaStr, $fechaHastaStr]
+                    (SELECT SUM(rendido) FROM tes_cch_movimientos WHERE tes_cch_movimientos.relPendiente = tes_cch_pendientes.idPendientes AND deleted_at IS NULL) as tot_rendido,
+                    (SELECT SUM(reintegrado) FROM tes_cch_movimientos WHERE tes_cch_movimientos.relPendiente = tes_cch_pendientes.idPendientes AND deleted_at IS NULL) as tot_reintegrado,
+                    (SELECT SUM(recuperado) FROM tes_cch_movimientos WHERE tes_cch_movimientos.relPendiente = tes_cch_pendientes.idPendientes AND deleted_at IS NULL) as tot_recuperado'
                 )
                 ->orderBy('pendiente', 'ASC')
                 ->get();
@@ -190,8 +189,7 @@ class Index extends Component
                 ->with('acreedor')
                 ->selectRaw(
                     'tes_cch_pagos.*, 
-                    (montoPagos - CASE WHEN fechaIngresoPagos IS NOT NULL AND fechaIngresoPagos <= ? THEN recuperadoPagos ELSE 0 END) as saldo_pagos',
-                    [$fechaHastaStr]
+                    (montoPagos - CASE WHEN fechaIngresoPagos IS NOT NULL THEN recuperadoPagos ELSE 0 END) as saldo_pagos'
                 )
                 ->orderBy('fechaEgresoPagos', 'ASC')
                 ->get();
@@ -293,7 +291,22 @@ class Index extends Component
         $this->recuperacion['fecha'] = now()->format('Y-m-d');
         $this->recuperacion['numero_ingreso'] = '';
 
-        $pendientes = collect($this->tablaPendientesDetalle)->filter(function ($p) {
+        $fechaRecuperacionActual = now()->endOfDay()->toDateTimeString();
+
+        $pendientesRecuperacion = Pendiente::where('relCajaChica', $this->cajaChicaSeleccionada->idCajaChica)
+            ->where('fechaPendientes', '<=', $fechaRecuperacionActual)
+            ->with('dependencia')
+            ->selectRaw(
+                'tes_cch_pendientes.*, 
+                (SELECT SUM(rendido) FROM tes_cch_movimientos WHERE tes_cch_movimientos.relPendiente = tes_cch_pendientes.idPendientes AND fechaMovimientos <= ? AND deleted_at IS NULL) as tot_rendido,
+                (SELECT SUM(reintegrado) FROM tes_cch_movimientos WHERE tes_cch_movimientos.relPendiente = tes_cch_pendientes.idPendientes AND fechaMovimientos <= ? AND deleted_at IS NULL) as tot_reintegrado,
+                (SELECT SUM(recuperado) FROM tes_cch_movimientos WHERE tes_cch_movimientos.relPendiente = tes_cch_pendientes.idPendientes AND fechaMovimientos <= ? AND deleted_at IS NULL) as tot_recuperado',
+                [$fechaRecuperacionActual, $fechaRecuperacionActual, $fechaRecuperacionActual]
+            )
+            ->orderBy('pendiente', 'ASC')
+            ->get();
+
+        $pendientes = $pendientesRecuperacion->filter(function ($p) {
             $saldoRendido = ($p['tot_rendido'] ?? 0) - ($p['tot_recuperado'] ?? 0);
             return $saldoRendido > 0;
         })->map(function ($p) {
@@ -308,7 +321,18 @@ class Index extends Component
             ];
         });
 
-        $pagos = collect($this->tablaPagos)->filter(function ($p) {
+        $pagosRecuperacion = Pago::where('relCajaChica_Pagos', $this->cajaChicaSeleccionada->idCajaChica)
+            ->where('fechaEgresoPagos', '<=', $fechaRecuperacionActual)
+            ->with('acreedor')
+            ->selectRaw(
+                'tes_cch_pagos.*, 
+                (montoPagos - CASE WHEN fechaIngresoPagos IS NOT NULL AND fechaIngresoPagos <= ? THEN recuperadoPagos ELSE 0 END) as saldo_pagos',
+                [$fechaRecuperacionActual]
+            )
+            ->orderBy('fechaEgresoPagos', 'ASC')
+            ->get();
+
+        $pagos = $pagosRecuperacion->filter(function ($p) {
             return ($p['saldo_pagos'] ?? 0) > 0;
         })->map(function ($p) {
             $detalleAcreedor = $p['acreedor']['acreedor'] ?? 'Sin dato';

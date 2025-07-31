@@ -70,7 +70,7 @@
                             @can('ver_usuarios')
                                 <div class="col-md-4 mb-3">
                                     <a href="{{ route('usuarios.index') }}"
-                                        class="btn btn-outline-warning btn-block btn-lg d-flex flex-column justify-content-center align-items-center btn-quick-access">
+                                        class="btn btn-outline-success btn-block btn-lg d-flex flex-column justify-content-center align-items-center btn-quick-access">
                                         <i class="fas fa-users fa-2x mb-2"></i> Gestionar Usuarios
                                     </a>
                                 </div>

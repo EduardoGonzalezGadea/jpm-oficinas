@@ -22,6 +22,8 @@
     @if ($themePath)
         <link id="bootswatch-theme" rel="stylesheet" href="{{ asset($themePath) }}">
     @endif
+    <!-- Estilos personalizados -->
+    <link href="{{ asset('css/app.css') }}" rel="stylesheet">
     <!-- Font Awesome -->
     <link href="{{ asset('libs/fontawesome-free-5.15.4-web/css/all.min.css') }}" rel="stylesheet">
     {{-- SweetAlert2 --}}

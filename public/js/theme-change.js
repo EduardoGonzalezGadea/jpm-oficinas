@@ -2,16 +2,28 @@
  * Lógica para el cambio de tema dinámico de Bootswatch
  */
 document.addEventListener("DOMContentLoaded", () => {
-    const themeSwitcherLinks = document.querySelectorAll(
-        ".theme-switcher-link"
-    );
     const themeStylesheet = document.getElementById("bootswatch-theme");
+    const defaultThemePath = "libs/bootstrap-4.6.2-dist/css/bootstrap.min.css";
+    const defaultThemeName = "bootstrap-default";
 
     // Cargar el tema guardado en LocalStorage al iniciar
-    const savedTheme = localStorage.getItem("bootswatch-theme");
-    if (savedTheme && themeStylesheet) {
-        themeStylesheet.setAttribute("href", savedTheme);
+    let savedThemePath = localStorage.getItem("bootswatch-theme");
+    let savedThemeName = localStorage.getItem("bootswatch-theme-name");
+
+    if (!savedThemePath) {
+        // Si no hay tema en LocalStorage, usar el por defecto y guardarlo
+        savedThemePath = defaultThemePath;
+        savedThemeName = defaultThemeName;
+        localStorage.setItem("bootswatch-theme", savedThemePath);
+        localStorage.setItem("bootswatch-theme-name", savedThemeName);
     }
+
+    if (themeStylesheet) {
+        themeStylesheet.setAttribute("href", savedThemePath);
+    }
+
+    // Actualizar el indicador de activo en el menú al cargar la página
+    updateActiveThemeIndicator(savedThemeName);
 
     // Manejar el clic en los botones del selector
     const themeButtons = document.querySelectorAll(".theme-select-button");
@@ -33,11 +45,7 @@ document.addEventListener("DOMContentLoaded", () => {
             localStorage.setItem("bootswatch-theme-name", themeName);
 
             // 3. Actualizar la marca de 'activo' en la UI
-            document
-                .querySelectorAll(".theme-active-indicator")
-                .forEach((span) => (span.style.display = "none"));
-            this.querySelector(".theme-active-indicator").style.display =
-                "inline";
+            updateActiveThemeIndicator(themeName);
 
             // 4. (Opcional) Notificar al backend para guardar en sesión
             // Esto es útil si alguna lógica de renderizado en PHP depende del tema
@@ -53,4 +61,19 @@ document.addEventListener("DOMContentLoaded", () => {
             });
         });
     });
+
+    function updateActiveThemeIndicator(activeThemeName) {
+        document
+            .querySelectorAll(".theme-active-indicator")
+            .forEach((span) => (span.style.display = "none"));
+
+        document.querySelectorAll(".theme-select-button").forEach(button => {
+            if (button.dataset.themeName === activeThemeName) {
+                const indicator = button.querySelector(".theme-active-indicator");
+                if (indicator) {
+                    indicator.style.display = "inline";
+                }
+            }
+        });
+    }
 });

@@ -406,7 +406,7 @@
                         {{ ($item->saldo_pagos ?? 0) > 0 ? 'text-warning font-weight-bold' : '' }}">
                         {{ number_format($item->saldo_pagos ?? 0, 2, ',', '.') }}
                         @if (($item->ingresoPagosBSE ?? null) == null && ($item->acreedor->acreedor ?? '') == 'Banco de Seguros del Estado')
-                            <i class="fas fa-exclamation-triangle text-danger ml-1" title="Ingreso BSE no informado"></i>
+                            <i class="fas fa-exclamation-triangle text-danger ml-1" title="Ingreso BSE no encontrado"></i>
                         @endif
                     </td>
                     <td class="text-center align-middle d-print-none">

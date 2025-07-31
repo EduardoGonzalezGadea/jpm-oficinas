@@ -15,84 +15,67 @@
                     Estilo
                 </a>
                 <div class="dropdown-menu" aria-labelledby="navbarDropdownThemes">
-                    {{-- Tema por Defecto --}}
-                    <form action="{{ route('theme.switch') }}" method="POST" class="d-inline">
-                        @csrf
-                        <input type="hidden" name="theme" value="default">
-                        <button type="submit" class="dropdown-item">
-                            Por defecto
-                            {{-- Leemos la cookie. El valor por defecto es 'cerulean' para que algo esté marcado la primera vez --}}
-                            @if (request()->cookie('theme_name', 'cerulean') == 'default')
-                                <span class="text-success">✔</span>
-                            @endif
-                        </button>
-                    </form>
+                    {{-- Tema por Defecto (Bootstrap Original) --}}
+                    <button type="button" class="dropdown-item theme-select-button"
+                        data-theme-name="bootstrap-default"
+                        data-theme-path="{{ asset('libs/bootstrap-4.6.2-dist/css/bootstrap.min.css') }}">
+                        Por defecto
+                        <span class="text-success theme-active-indicator" style="display: none;">✔</span>
+                    </button>
 
                     <div class="dropdown-divider"></div>
                     <h6 class="dropdown-header">Temas Claros</h6>
 
                     {{-- Tema Cosmo --}}
-                    <form action="{{ route('theme.switch') }}" method="POST" class="d-inline">
-                        @csrf
-                        <input type="hidden" name="theme" value="cosmo">
-                        <button type="submit" class="dropdown-item">
-                            Cosmo
-                            @if (request()->cookie('theme_name', 'cosmo') == 'cosmo')
-                                <span class="text-success">✔</span>
-                            @endif
-                        </button>
-                    </form>
+                    <button type="button" class="dropdown-item theme-select-button"
+                        data-theme-name="cosmo"
+                        data-theme-path="{{ asset('libs/bootswatch@4.6.2/dist/cosmo/bootstrap.min.css') }}">
+                        Cosmo
+                        <span class="text-success theme-active-indicator" style="display: none;">✔</span>
+                    </button>
 
                     {{-- Tema Cerulean --}}
-                    <form action="{{ route('theme.switch') }}" method="POST" class="d-inline">
-                        @csrf
-                        <input type="hidden" name="theme" value="cerulean">
-                        <button type="submit" class="dropdown-item">
-                            Cerulean
-                            @if (request()->cookie('theme_name', 'cerulean') == 'cerulean')
-                                <span class="text-success">✔</span>
-                            @endif
-                        </button>
-                    </form>
+                    <button type="button" class="dropdown-item theme-select-button"
+                        data-theme-name="cerulean"
+                        data-theme-path="{{ asset('libs/bootswatch@4.6.2/dist/cerulean/bootstrap.min.css') }}">
+                        Cerulean
+                        <span class="text-success theme-active-indicator" style="display: none;">✔</span>
+                    </button>
 
                     {{-- Tema Litera --}}
-                    <form action="{{ route('theme.switch') }}" method="POST" class="d-inline">
-                        @csrf
-                        <input type="hidden" name="theme" value="litera">
-                        <button type="submit" class="dropdown-item">
-                            Litera
-                            @if (request()->cookie('theme_name') == 'litera')
-                                <span class="text-success">✔</span>
-                            @endif
-                        </button>
-                    </form>
+                    <button type="button" class="dropdown-item theme-select-button"
+                        data-theme-name="litera"
+                        data-theme-path="{{ asset('libs/bootswatch@4.6.2/dist/litera/bootstrap.min.css') }}">
+                        Litera
+                        <span class="text-success theme-active-indicator" style="display: none;">✔</span>
+                    </button>
+
+                    {{-- Tema Materia --}}
+                    <button type="button" class="dropdown-item theme-select-button"
+                        data-theme-name="material"
+                        data-theme-path="{{ asset('libs/bootswatch@4.6.2/dist/materia/bootstrap.min.css') }}">
+                        Materia
+                        <span class="text-success theme-active-indicator" style="display: none;">✔</span>
+                    </button>
 
                     <div class="dropdown-divider"></div>
                     <h6 class="dropdown-header">Temas Oscuros</h6>
 
                     {{-- Tema Cyborg --}}
-                    <form action="{{ route('theme.switch') }}" method="POST" class="d-inline">
-                        @csrf
-                        <input type="hidden" name="theme" value="cyborg">
-                        <button type="submit" class="dropdown-item">
-                            Cyborg
-                            @if (request()->cookie('theme_name') == 'cyborg')
-                                <span class="text-success">✔</span>
-                            @endif
-                        </button>
-                    </form>
+                    <button type="button" class="dropdown-item theme-select-button"
+                        data-theme-name="cyborg"
+                        data-theme-path="{{ asset('libs/bootswatch@4.6.2/dist/cyborg/bootstrap.min.css') }}">
+                        Cyborg
+                        <span class="text-success theme-active-indicator" style="display: none;">✔</span>
+                    </button>
 
                     {{-- Tema Darkly --}}
-                    <form action="{{ route('theme.switch') }}" method="POST" class="d-inline">
-                        @csrf
-                        <input type="hidden" name="theme" value="darkly">
-                        <button type="submit" class="dropdown-item">
-                            Darkly
-                            @if (request()->cookie('theme_name') == 'darkly')
-                                <span class="text-success">✔</span>
-                            @endif
-                        </button>
-                    </form>
+                    <button type="button" class="dropdown-item theme-select-button"
+                        data-theme-name="darkly"
+                        data-theme-path="{{ asset('libs/bootswatch@4.6.2/dist/darkly/bootstrap.min.css') }}">
+                        Darkly
+                        <span class="text-success theme-active-indicator" style="display: none;">✔</span>
+                    </button>
                 </div>
             </li>
 

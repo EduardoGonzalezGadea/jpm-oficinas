@@ -1,8 +1,12 @@
-
-.btn-quick-access {
-    transition: box-shadow 0.3s ease-in-out;
+.btn-quick-access:hover {
+    box-shadow: rgb(81, 124, 170) 0px 20px 30px -10px !important;
 }
 
-.btn-quick-access:hover {
-    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+.card-quick-access {
+    transition: transform 0.5s ease-in-out;
+}
+
+.card-quick-access:hover {
+    transform: translateY(-1px);
+    box-shadow: rgb(40, 60, 82) 0px 20px 30px -10px !important;
 }
