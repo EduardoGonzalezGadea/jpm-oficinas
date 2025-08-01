@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Models\User;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Gate;
+use Spatie\Permission\Models\Permission;
 
 class AuthServiceProvider extends ServiceProvider
 {
@@ -26,20 +27,40 @@ class AuthServiceProvider extends ServiceProvider
     {
         $this->registerPolicies();
 
-        // Depuración del Gate de Laravel
-        Gate::before(function ($user, $ability) {
-            // Para depuración, puedes habilitar esta línea para ver las comprobaciones de Gate
-            \Illuminate\Support\Facades\Log::info('Gate::before - User: ' . ($user ? $user->id : 'Guest') . ', Ability: ' . $ability);
-            // if ($user) {
-            //     return true; // Si hay un usuario autenticado, siempre permitir el acceso para depuración
-            // }
-        });
+        // Definir Gates automáticamente para todos los permisos
+        $this->registerPermissionGates();
 
-        // -----------------------------------------------------------------
-        // GATE PERSONALIZADO PARA "CUALQUIERA" (OR) de los permisos
-        Gate::define('acceso_preferencial_modular', function ($user) {
-            // El método hasAnyPermission es parte del trait HasRoles de Spatie
-            return $user->hasAnyPermission(['acceso_gerente', 'acceso_supervisor']);
+        Gate::before(function ($user, $ability) {
+            // Log para depuración (opcional)
+            \Illuminate\Support\Facades\Log::info('Gate::before - User: ' . ($user ? $user->id : 'Guest') . ', Ability: ' . $ability);
+
+            // Si el usuario tiene el permiso específico, permitir acceso
+            if ($user && $user->hasPermissionTo($ability)) {
+                return true;
+            }
+
+            // Si no tiene el permiso, continuar con la verificación normal de Gates
+            return null;
         });
+    }
+
+    /**
+     * Registra automáticamente Gates para todos los permisos de Spatie
+     */
+    protected function registerPermissionGates()
+    {
+        try {
+            // Obtener todos los permisos existentes
+            $permissions = Permission::all();
+
+            foreach ($permissions as $permission) {
+                Gate::define($permission->name, function ($user) use ($permission) {
+                    return $user->hasPermissionTo($permission->name);
+                });
+            }
+        } catch (\Exception $e) {
+            // En caso de que las tablas aún no existan (durante migraciones)
+            // No hacer nada
+        }
     }
 }

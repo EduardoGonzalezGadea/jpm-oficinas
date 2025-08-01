@@ -28,8 +28,16 @@
                 </div>
                 
                 <div class="card-body">
-                    <!-- Panel de estadísticas rápidas (opcional) -->
-                    <div class="row mb-4">
+                    {{-- Livewire component for the users table --}}
+                    @livewire('users-table')
+
+                    <!-- Panel de estadísticas rápidas -->
+                    <hr class="my-4">
+                            <h5 class="mb-0">
+                                <i class="fas fa-chart-bar mr-2"></i>
+                                Estadísticas Rápidas
+                            </h5>
+                    <div class="row mt-4">
                         <div class="col-md-4">
                             <div class="card bg-info text-white">
                                 <div class="card-body text-center">
@@ -71,9 +79,6 @@
                             </em>
                         </small>
                     </div>
-
-                    {{-- Livewire component for the users table --}}
-                    @livewire('users-table')
                 </div>
             </div>
         </div>

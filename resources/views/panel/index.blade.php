@@ -90,7 +90,7 @@
         </div>
 
         <!-- Tarjetas de Estadísticas -->
-        @can('acceso_preferencial_modular')
+        @can('ver_usuarios')
             <div class="row">
                 <div class="col-12">
                     <div class="card">
