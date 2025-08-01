@@ -26,24 +26,4 @@ class PanelController extends Controller
 
         return view('panel.index', compact('usuario', 'estadisticas'));
     }
-
-    public function debugPermissions()
-    {
-        $user = auth()->user();
-
-        if (!$user) {
-            return response()->json(['error' => 'Usuario no autenticado'], 401);
-        }
-
-        // Forzar la recarga de permisos para asegurar que estén actualizados
-        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
-        $user->load(['roles.permissions', 'permissions']);
-
-        return response()->json([
-            'user_id' => $user->id,
-            'user_name' => $user->name,
-            'roles' => $user->getRoleNames(),
-            'permissions' => $user->getAllPermissions()->pluck('name'),
-        ]);
-    }
 }

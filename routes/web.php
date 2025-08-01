@@ -56,9 +56,6 @@ Route::middleware(['web', 'jwt.verify'])->group(function () {
     // ------------------------------------------------------------------------
     Route::get('/panel', [PanelController::class, 'index'])->name('panel');
 
-    // Ruta de depuración para permisos
-    Route::get('/debug/permissions', [PanelController::class, 'debugPermissions'])->name('debug.permissions');
-
     // ------------------------------------------------------------------------
     // GESTIÓN DE USUARIOS
     // ------------------------------------------------------------------------
@@ -211,6 +208,20 @@ Route::middleware(['web', 'jwt.verify'])->group(function () {
             ->name('tesoreria.caja-chica.imprimir.pendiente');
         Route::get('/tesoreria/caja-chica/imprimir/pago/{id}', [ImpresionController::class, 'imprimirPago'])
             ->name('tesoreria.caja-chica.imprimir.pago');
+    });
+
+    // ------------------------------------------------------------------------
+    // TESORERÍA - VALORES
+    // ------------------------------------------------------------------------
+    Route::middleware(['permission:operador_tesoreria'])->group(function () {
+        Route::get('/tesoreria/valores', [ValorController::class, 'index'])->name('tesoreria.valores.index');
+        // Route::get('tesoreria/caja-chica/pendientes/{id}/editar', [PendienteController::class, 'edit'])
+        //     ->name('tesoreria.caja-chica.pendientes.editar');
+        // // Rutas para impresión
+        // Route::get('/tesoreria/caja-chica/imprimir/pendiente/{id}', [ImpresionController::class, 'imprimirPendiente'])
+        //     ->name('tesoreria.caja-chica.imprimir.pendiente');
+        // Route::get('/tesoreria/caja-chica/imprimir/pago/{id}', [ImpresionController::class, 'imprimirPago'])
+        //     ->name('tesoreria.caja-chica.imprimir.pago');
     });
 });
 

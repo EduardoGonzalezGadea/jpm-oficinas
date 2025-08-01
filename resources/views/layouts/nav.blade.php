@@ -79,6 +79,7 @@
                 </div>
             </li>
 
+            {{-- TESORERÍA --}}
             @can('operador_tesoreria')
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownThemes" role="button"
@@ -89,6 +90,10 @@
                         {{-- Link Caja Chica --}}
                         <a class="dropdown-item" href="{{ route('tesoreria.caja-chica.index') }}">
                             <i class="fas fa-coins"></i> Caja Chica
+                        </a>
+                        {{-- Link Valores --}}
+                        <a class="dropdown-item" href="{{ route('tesoreria.valores.index') }}">
+                            <i class="fas fa-check"></i> Valores
                         </a>
                     </div>
                 </li>
