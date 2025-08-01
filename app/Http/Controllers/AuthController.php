@@ -64,9 +64,30 @@ class AuthController extends Controller
         // Obtener usuario autenticado
         $user = JWTAuth::user();
 
-        // Inicia una sesión de Laravel tradicional para este usuario.
-        // Esto creará la cookie de sesión que Livewire necesita.
-        Auth::login($user);
+        // Cargar roles y permisos de manera eficiente
+        $user->load(['roles.permissions', 'permissions']);
+        
+        // Asegurar que los permisos estén en la sesión
+        session(['permissions' => $user->getAllPermissions()->pluck('name')]);
+        session(['roles' => $user->getRoleNames()]);
+        
+        // Forzar la recarga de permisos y almacenar en caché
+        $user->getPermissionsViaRoles();
+        $user->getDirectPermissions();
+        
+        // Refrescar la caché de permisos
+        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+        $user->getAllPermissions();
+        
+        // Asegurar que los permisos estén disponibles en la sesión actual
+        session()->save();
+
+        // Inicia una sesión de Laravel tradicional para este usuario
+        Auth::login($user, true); // Remember me = true
+        session()->put('auth.password_confirmed_at', time());
+        
+        // Regenerar la sesión para prevenir ataques de fijación de sesión
+        session()->regenerate(true);
 
         if ($request->expectsJson()) {
             return response()->json([
@@ -82,10 +103,20 @@ class AuthController extends Controller
         // Para peticiones web, guardar token en cookie y redirigir
         $minutes = config('jwt.ttl', 60);
         $cookie = cookie('jwt_token', $token, $minutes, '/', null, false, true); // httpOnly = true
+        
+        // Establecer el token en JWTAuth para la sesión actual
+        JWTAuth::setToken($token);
+        
+        // Asegurar que el usuario esté autenticado en la sesión web
+        if (!auth()->check()) {
+            auth()->login($user, true);
+            session()->put('auth.password_confirmed_at', time());
+            session()->regenerate(true);
+        }
 
         return redirect()->intended('/panel')
-            ->with('success', 'Sesión iniciada exitosamente')
-            ->withCookie($cookie);
+            ->withCookie($cookie)
+            ->with('success', 'Sesión iniciada exitosamente');
     }
 
     /**
@@ -141,9 +172,14 @@ class AuthController extends Controller
         $minutes = config('jwt.ttl', 60);
         $cookie = cookie('jwt_token', $token, $minutes, '/', null, false, true);
 
-        return redirect()->route('panel')
-            ->with('success', 'Cuenta creada exitosamente')
-            ->withCookie($cookie);
+        // Iniciar sesión al registrarse
+        Auth::login($user, true);
+        session()->put('auth.password_confirmed_at', time());
+        session()->regenerate(true);
+
+        return redirect()->route('panel.index')
+            ->withCookie($cookie)
+            ->with('success', 'Cuenta creada exitosamente');
     }
 
     /**

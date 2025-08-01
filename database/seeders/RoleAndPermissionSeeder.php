@@ -56,24 +56,24 @@ class RoleAndPermissionSeeder extends Seeder
         ];
 
         foreach ($permisos as $permiso) {
-            Permission::firstOrCreate(['name' => $permiso]);
+            Permission::firstOrCreate(['name' => $permiso, 'guard_name' => 'api']);
         }
 
         // Crear roles
-        $administrador = Role::firstOrCreate(['name' => 'administrador']);
+        $administrador = Role::firstOrCreate(['name' => 'administrador', 'guard_name' => 'api']);
 
-        $gerente_tesoreria = Role::firstOrCreate(['name' => 'gerente_tesoreria']);
-        $supervisor_tesoreria = Role::firstOrCreate(['name' => 'supervisor_tesoreria']);
-        $usuario_tesoreria = Role::firstOrCreate(['name' => 'usuario_tesoreria']);
+        $gerente_tesoreria = Role::firstOrCreate(['name' => 'gerente_tesoreria', 'guard_name' => 'api']);
+        $supervisor_tesoreria = Role::firstOrCreate(['name' => 'supervisor_tesoreria', 'guard_name' => 'api']);
+        $usuario_tesoreria = Role::firstOrCreate(['name' => 'usuario_tesoreria', 'guard_name' => 'api']);
 
-        $gerente_contabilidad = Role::firstOrCreate(['name' => 'gerente_contabilidad']);
-        $supervisor_contabilidad = Role::firstOrCreate(['name' => 'supervisor_contabilidad']);
-        $usuario_contabilidad = Role::firstOrCreate(['name' => 'usuario_contabilidad']);
+        $gerente_contabilidad = Role::firstOrCreate(['name' => 'gerente_contabilidad', 'guard_name' => 'api']);
+        $supervisor_contabilidad = Role::firstOrCreate(['name' => 'supervisor_contabilidad', 'guard_name' => 'api']);
+        $usuario_contabilidad = Role::firstOrCreate(['name' => 'usuario_contabilidad', 'guard_name' => 'api']);
 
         // Asignar permisos a roles
 
         // Administrador: todos los permisos
-        $administrador->givePermissionTo(Permission::all());
+        $administrador->givePermissionTo(Permission::all()->where('guard_name', 'api'));
 
         // Gerentes: pueden gestionar usuarios de su módulo
         $gerente_tesoreria->givePermissionTo([

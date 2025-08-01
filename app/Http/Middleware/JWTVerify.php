@@ -4,10 +4,11 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use PHPOpenSourceSaver\JWTAuth\Facades\JWTAuth;
-use PHPOpenSourceSaver\JWTAuth\Exceptions\JWTException;
 use PHPOpenSourceSaver\JWTAuth\Exceptions\TokenExpiredException;
 use PHPOpenSourceSaver\JWTAuth\Exceptions\TokenInvalidException;
+use PHPOpenSourceSaver\JWTAuth\Exceptions\JWTException;
 
 class JWTVerify
 {
@@ -15,67 +16,71 @@ class JWTVerify
      * Handle an incoming request.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  \Closure(\Illuminate\Http\Request): (\Illuminate\Http\Response|\Illuminate\Http\RedirectResponse)  $next
-     * @return \Illuminate\Http\Response|\Illuminate\Http\RedirectResponse
+     * @param  \Closure  $next
+     * @return mixed
      */
     public function handle(Request $request, Closure $next)
     {
+        // Si el usuario ya está autenticado a través de la sesión web, continuamos.
+        // Esto permite que el sistema de sesión normal de Laravel y Spatie funcionen como se espera.
+        if (Auth::guard('web')->check()) {
+            return $next($request);
+        }
+
+        // Si no hay sesión web, intentar autenticar con el token JWT (como un "recuérdame").
         try {
-            // Intentar obtener el token del header Authorization
-            $token = $request->bearerToken();
-
-            // Si no hay token en el header, intentar obtenerlo de las cookies
-            if (!$token) {
-                $token = $request->cookie('jwt_token');
-            }
-
-            // Si no hay token en ningún lado, intentar obtenerlo del parámetro token
-            if (!$token) {
-                $token = $request->get('token');
-            }
+            $token = $request->cookie('jwt_token');
 
             if (!$token) {
-                return $this->unauthorized($request, 'La sesión se ha cerrado');
+                return $this->unauthorized($request, 'Se requiere iniciar sesión.');
             }
 
-            // Establecer el token y autenticar
-            JWTAuth::setToken($token);
-            $user = JWTAuth::authenticate();
+            $user = JWTAuth::setToken($token)->authenticate();
 
             if (!$user) {
-                return $this->unauthorized($request, 'Usuario no encontrado');
+                return $this->unauthorized($request, 'Usuario no encontrado desde el token.');
             }
 
-            // Añadir el usuario autenticado al request
-            $request->merge(['auth_user' => $user]);
-            auth()->setUser($user);
+            // Iniciar la sesión web para el usuario.
+            Auth::guard('web')->login($user);
+
+            // Explicitly set the user for the default guard (which Spatie uses)
+            Auth::setUser($user);
+
+            // Cargar los permisos para esta nueva sesión.
+            app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+            $user->load(['roles.permissions', 'permissions']);
+
         } catch (TokenExpiredException $e) {
-            return $this->unauthorized($request, 'La sesión se ha cerrado');
-        } catch (TokenInvalidException $e) {
-            return $this->unauthorized($request, 'Token inválido');
-        } catch (JWTException $e) {
-            return $this->unauthorized($request, 'Error en el token JWT');
+            return $this->unauthorized($request, 'La sesión ha expirado. Por favor, inicie sesión de nuevo.');
+        } catch (TokenInvalidException | JWTException $e) {
+            return $this->unauthorized($request, 'La sesión es inválida. Por favor, inicie sesión de nuevo.');
         } catch (\Exception $e) {
-            return $this->unauthorized($request, 'Error de autenticación');
+            return $this->unauthorized($request, 'Error de autenticación.');
         }
 
         return $next($request);
     }
 
     /**
-     * Handle unauthorized access
+     * Maneja el acceso no autorizado.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  string  $message
+     * @return \Illuminate\Http\Response|\Illuminate\Http\RedirectResponse
      */
     private function unauthorized(Request $request, $message = 'No autorizado')
     {
-        // Si es una petición AJAX o API
+        Auth::guard('web')->logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
         if ($request->expectsJson() || $request->is('api/*')) {
-            return response()->json([
-                'error' => $message,
-                'code' => 401
-            ], 401);
+            return response()->json(['error' => $message], 401);
         }
 
-        // Para peticiones web, redirigir al login
-        return redirect()->route('login')->with('error', $message);
+        return redirect()->route('login')
+            ->with('error', $message)
+            ->withoutCookie('jwt_token');
     }
 }

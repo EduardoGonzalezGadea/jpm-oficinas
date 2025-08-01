@@ -6,6 +6,7 @@ use Illuminate\Database\Seeder;
 use App\Models\User;
 use App\Models\Modulo;
 use Illuminate\Support\Facades\Hash;
+use Spatie\Permission\Models\Role;
 
 class UserSeeder extends Seeder
 {
@@ -26,7 +27,8 @@ class UserSeeder extends Seeder
             'activo' => true,
             'modulo_id' => null,
         ]);
-        $admin->assignRole('administrador');
+        $adminRole = Role::findByName('administrador', 'api');
+        $admin->assignRole($adminRole);
 
         // Gerente Tesorería
         $gerente_tes = User::create([
@@ -39,7 +41,8 @@ class UserSeeder extends Seeder
             'activo' => true,
             'modulo_id' => $tesoreria->id,
         ]);
-        $gerente_tes->assignRole('gerente_tesoreria');
+        $gerente_tesoreriaRole = Role::findByName('gerente_tesoreria', 'api');
+        $gerente_tes->assignRole($gerente_tesoreriaRole);
 
         // Supervisor Tesorería
         $supervisor_tes = User::create([
@@ -52,7 +55,8 @@ class UserSeeder extends Seeder
             'activo' => true,
             'modulo_id' => $tesoreria->id,
         ]);
-        $supervisor_tes->assignRole('supervisor_tesoreria');
+        $supervisor_tesoreriaRole = Role::findByName('supervisor_tesoreria', 'api');
+        $supervisor_tes->assignRole($supervisor_tesoreriaRole);
 
         // Usuario Tesorería
         $usuario_tes = User::create([
@@ -65,7 +69,8 @@ class UserSeeder extends Seeder
             'activo' => true,
             'modulo_id' => $tesoreria->id,
         ]);
-        $usuario_tes->assignRole('usuario_tesoreria');
+        $usuario_tesoreriaRole = Role::findByName('usuario_tesoreria', 'api');
+        $usuario_tes->assignRole($usuario_tesoreriaRole);
 
         // Gerente Contabilidad
         $gerente_cont = User::create([
@@ -78,7 +83,8 @@ class UserSeeder extends Seeder
             'activo' => true,
             'modulo_id' => $contabilidad->id,
         ]);
-        $gerente_cont->assignRole('gerente_contabilidad');
+        $gerente_contabilidadRole = Role::findByName('gerente_contabilidad', 'api');
+        $gerente_cont->assignRole($gerente_contabilidadRole);
 
         // Supervisor Contabilidad
         $supervisor_cont = User::create([
@@ -91,7 +97,8 @@ class UserSeeder extends Seeder
             'activo' => true,
             'modulo_id' => $contabilidad->id,
         ]);
-        $supervisor_cont->assignRole('supervisor_contabilidad');
+        $supervisor_contabilidadRole = Role::findByName('supervisor_contabilidad', 'api');
+        $supervisor_cont->assignRole($supervisor_contabilidadRole);
 
         // Usuario Contabilidad
         $usuario_cont = User::create([
@@ -104,6 +111,7 @@ class UserSeeder extends Seeder
             'activo' => true,
             'modulo_id' => $contabilidad->id,
         ]);
-        $usuario_cont->assignRole('usuario_contabilidad');
+        $usuario_contabilidadRole = Role::findByName('usuario_contabilidad', 'api');
+        $usuario_cont->assignRole($usuario_contabilidadRole);
     }
 }

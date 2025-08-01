@@ -132,3 +132,23 @@
         </ul>
     </div>
 </nav>
+
+@auth
+    <div class="container mt-3">
+        <div class="alert alert-info">
+            <strong>Permisos del usuario:</strong>
+            @if(auth()->user()->getAllPermissions()->count() > 0)
+                <ul>
+                    @foreach(auth()->user()->getAllPermissions() as $permission)
+                        <li>{{ $permission->name }}</li>
+                    @endforeach
+                </ul>
+            @else
+                <p>No se encontraron permisos para este usuario.</p>
+            @endif
+            <hr>
+            <strong>Prueba de can('operador_tesoreria'):</strong>
+            <p>{{ \Illuminate\Support\Facades\Gate::allows('operador_tesoreria') ? 'TRUE' : 'FALSE' }}</p>
+        </div>
+    </div>
+@endauth

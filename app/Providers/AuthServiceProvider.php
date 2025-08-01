@@ -26,6 +26,15 @@ class AuthServiceProvider extends ServiceProvider
     {
         $this->registerPolicies();
 
+        // Depuración del Gate de Laravel
+        Gate::before(function ($user, $ability) {
+            // Para depuración, puedes habilitar esta línea para ver las comprobaciones de Gate
+            \Illuminate\Support\Facades\Log::info('Gate::before - User: ' . ($user ? $user->id : 'Guest') . ', Ability: ' . $ability);
+            // if ($user) {
+            //     return true; // Si hay un usuario autenticado, siempre permitir el acceso para depuración
+            // }
+        });
+
         // -----------------------------------------------------------------
         // GATE PERSONALIZADO PARA "CUALQUIERA" (OR) de los permisos
         Gate::define('acceso_preferencial_modular', function ($user) {

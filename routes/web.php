@@ -44,7 +44,7 @@ Route::post('/login', [AuthController::class, 'login']);
 // RUTAS PROTEGIDAS POR JWT
 // ============================================================================
 
-Route::middleware(['jwt.verify'])->group(function () {
+Route::middleware(['web', 'jwt.verify'])->group(function () {
 
     // ------------------------------------------------------------------------
     // AUTENTICACIÓN Y SESIÓN
@@ -55,6 +55,9 @@ Route::middleware(['jwt.verify'])->group(function () {
     // PANEL PRINCIPAL
     // ------------------------------------------------------------------------
     Route::get('/panel', [PanelController::class, 'index'])->name('panel');
+
+    // Ruta de depuración para permisos
+    Route::get('/debug/permissions', [PanelController::class, 'debugPermissions'])->name('debug.permissions');
 
     // ------------------------------------------------------------------------
     // GESTIÓN DE USUARIOS
@@ -199,14 +202,16 @@ Route::middleware(['jwt.verify'])->group(function () {
     // ------------------------------------------------------------------------
     // TESORERÍA - CAJA CHICA
     // ------------------------------------------------------------------------
-    Route::get('/tesoreria/caja-chica', [CajaChicaController::class, 'index'])->name('tesoreria.caja-chica.index');
-    Route::get('tesoreria/caja-chica/pendientes/{id}/editar', [PendienteController::class, 'edit'])
-        ->name('tesoreria.caja-chica.pendientes.editar');
-    // Rutas para impresión
-    Route::get('/tesoreria/caja-chica/imprimir/pendiente/{id}', [ImpresionController::class, 'imprimirPendiente'])
-        ->name('tesoreria.caja-chica.imprimir.pendiente');
-    Route::get('/tesoreria/caja-chica/imprimir/pago/{id}', [ImpresionController::class, 'imprimirPago'])
-        ->name('tesoreria.caja-chica.imprimir.pago');
+    Route::middleware(['permission:operador_tesoreria'])->group(function () {
+        Route::get('/tesoreria/caja-chica', [CajaChicaController::class, 'index'])->name('tesoreria.caja-chica.index');
+        Route::get('tesoreria/caja-chica/pendientes/{id}/editar', [PendienteController::class, 'edit'])
+            ->name('tesoreria.caja-chica.pendientes.editar');
+        // Rutas para impresión
+        Route::get('/tesoreria/caja-chica/imprimir/pendiente/{id}', [ImpresionController::class, 'imprimirPendiente'])
+            ->name('tesoreria.caja-chica.imprimir.pendiente');
+        Route::get('/tesoreria/caja-chica/imprimir/pago/{id}', [ImpresionController::class, 'imprimirPago'])
+            ->name('tesoreria.caja-chica.imprimir.pago');
+    });
 });
 
 // ============================================================================
