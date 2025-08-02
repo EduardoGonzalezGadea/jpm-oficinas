@@ -87,7 +87,8 @@
                                     <i class="fas fa-sort-{{ $sortDirection === 'asc' ? 'up' : 'down' }} ms-1"></i>
                                 @endif
                             </th>
-                            <th wire:click="sortBy('tipo_valor')" style="cursor: pointer;" class="text-nowrap text-center">
+                            <th wire:click="sortBy('tipo_valor')" style="cursor: pointer;"
+                                class="text-nowrap text-center">
                                 Tipo
                                 @if ($sortField === 'tipo_valor')
                                     <i class="fas fa-sort-{{ $sortDirection === 'asc' ? 'up' : 'down' }} ms-1"></i>
@@ -333,7 +334,8 @@
                                 <div class="card bg-warning text-white">
                                     <div class="card-body text-center">
                                         <h3 class="mb-1">
-                                            {{ number_format($selectedValor->resumen_stock['recibos_en_uso'] ?? 0) }}</h3>
+                                            {{ number_format($selectedValor->resumen_stock['recibos_en_uso'] ?? 0) }}
+                                        </h3>
                                         <small>Recibos en Uso</small>
                                     </div>
                                 </div>

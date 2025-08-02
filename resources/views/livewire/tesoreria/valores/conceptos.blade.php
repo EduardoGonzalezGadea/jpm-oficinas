@@ -373,18 +373,22 @@
 
         // Event listeners para eventos de Livewire
         window.addEventListener('show-create-edit-modal', function(event) {
+            console.log('Evento show-create-edit-modal recibido!', event);
             showModal('createEditModal');
         });
 
         window.addEventListener('hide-create-edit-modal', function(event) {
+            console.log('Evento hide-create-edit-modal recibido!', event);
             hideModal('createEditModal');
         });
 
         window.addEventListener('show-delete-modal', function(event) {
+            console.log('Evento show-delete-modal recibido!', event);
             showModal('deleteModal');
         });
 
         window.addEventListener('hide-delete-modal', function(event) {
+            console.log('Evento hide-delete-modal recibido!', event);
             hideModal('deleteModal');
         });
 

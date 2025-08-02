@@ -91,6 +91,7 @@ class Conceptos extends Component
     {
         $this->resetForm();
         $this->showCreateModal = true;
+        $this->dispatchBrowserEvent('show-create-edit-modal');
     }
 
     public function openEditModal($conceptoId)
@@ -106,12 +107,14 @@ class Conceptos extends Component
         $this->activo = $concepto->activo;
 
         $this->showEditModal = true;
+        $this->dispatchBrowserEvent('show-create-edit-modal');
     }
 
     public function openDeleteModal($conceptoId)
     {
         $this->selectedConcepto = ValorConcepto::findOrFail($conceptoId);
         $this->showDeleteModal = true;
+        $this->dispatchBrowserEvent('show-delete-modal');
     }
 
     public function create()
@@ -127,8 +130,7 @@ class Conceptos extends Component
             'activo' => $this->activo
         ]);
 
-        $this->showCreateModal = false;
-        $this->resetForm();
+        $this->closeModal();
         $this->emit('alert', ['type' => 'success', 'message' => 'Concepto creado exitosamente.']);
     }
 
@@ -145,8 +147,7 @@ class Conceptos extends Component
             'activo' => $this->activo
         ]);
 
-        $this->showEditModal = false;
-        $this->resetForm();
+        $this->closeModal();
         $this->emit('alert', ['type' => 'success', 'message' => 'Concepto actualizado exitosamente.']);
     }
 
@@ -158,12 +159,12 @@ class Conceptos extends Component
                 'type' => 'error',
                 'message' => 'No se puede eliminar el concepto porque tiene movimientos asociados.'
             ]);
-            $this->showDeleteModal = false;
+            $this->closeModal();
             return;
         }
 
         $this->selectedConcepto->delete();
-        $this->showDeleteModal = false;
+        $this->closeModal();
         $this->emit('alert', ['type' => 'success', 'message' => 'Concepto eliminado exitosamente.']);
     }
 
@@ -176,7 +177,17 @@ class Conceptos extends Component
         $this->emit('alert', ['type' => 'success', 'message' => "Concepto {$estado} exitosamente."]);
     }
 
-    private function resetForm()
+    public function closeModal()
+    {
+        $this->showCreateModal = false;
+        $this->showEditModal = false;
+        $this->showDeleteModal = false;
+        $this->resetForm();
+        $this->dispatchBrowserEvent('hide-create-edit-modal');
+        $this->dispatchBrowserEvent('hide-delete-modal');
+    }
+
+    public function resetForm()
     {
         $this->valores_id = '';
         $this->concepto = '';
