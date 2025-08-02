@@ -7,7 +7,7 @@
 <div class="container-fluid">
     <div class="row">
         {{-- Sidebar de navegación --}}
-        <div class="col-md-2 bg-light sidebar py-3">
+        <div class="col-md-2 sidebar py-3">
             <div class="sidebar-sticky">
                 <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-2 mb-3 text-muted">
                     <span>MÓDULO TESORERÍA</span>
