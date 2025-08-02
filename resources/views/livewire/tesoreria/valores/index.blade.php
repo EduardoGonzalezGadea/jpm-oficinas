@@ -11,40 +11,56 @@
 
     {{-- Filtros y búsqueda --}}
     <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="fas fa-filter me-2"></i>Filtros de Búsqueda</h5>
+        </div>
         <div class="card-body">
-            <div class="row g-3">
+            <div class="row d-flex justify-content-between align-items-center">
                 <div class="col-md-4">
-                    <label class="form-label">Buscar</label>
-                    <input type="text" class="form-control" wire:model="search"
-                        placeholder="Buscar por nombre o descripción...">
+                    <div class="form-group">
+                        <label class="form-label font-weight-bold col-form-label-sm">Buscar</label>
+                        <div class="input-group input-group-sm">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text"><i class="fas fa-search"></i></span>
+                            </div>
+                            <input type="text" class="form-control" wire:model="search"
+                                placeholder="Buscar por nombre o descripción...">
+                        </div>
+                    </div>
                 </div>
                 <div class="col-md-2">
-                    <label class="form-label">Tipo de Valor</label>
-                    <select class="form-select" wire:model="filterTipo">
-                        <option value="">Todos</option>
-                        <option value="pesos">Pesos</option>
-                        <option value="UR">UR</option>
-                        <option value="SVE">Sin Valor</option>
-                    </select>
+                    <div class="form-group">
+                        <label class="form-label font-weight-bold col-form-label-sm">Tipo de Valor</label>
+                        <select class="form-select form-control-sm" wire:model="filterTipo">
+                            <option value="">Todos</option>
+                            <option value="pesos">Pesos</option>
+                            <option value="UR">UR</option>
+                            <option value="SVE">Sin Valor</option>
+                        </select>
+                    </div>
                 </div>
                 <div class="col-md-2">
-                    <label class="form-label">Estado</label>
-                    <select class="form-select" wire:model="filterActivo">
-                        <option value="">Todos</option>
-                        <option value="1">Activos</option>
-                        <option value="0">Inactivos</option>
-                    </select>
+                    <div class="form-group">
+                        <label class="form-label font-weight-bold col-form-label-sm">Estado</label>
+                        <select class="form-select form-control-sm" wire:model="filterActivo">
+                            <option value="">Todos</option>
+                            <option value="1">Activos</option>
+                            <option value="0">Inactivos</option>
+                        </select>
+                    </div>
                 </div>
                 <div class="col-md-2">
-                    <label class="form-label">Por página</label>
-                    <select class="form-select" wire:model="perPage">
-                        <option value="10">10</option>
-                        <option value="25">25</option>
-                        <option value="50">50</option>
-                    </select>
+                    <div class="form-group">
+                        <label class="form-label font-weight-bold col-form-label-sm">Por página</label>
+                        <select class="form-select form-control-sm" wire:model="perPage">
+                            <option value="10">10</option>
+                            <option value="25">25</option>
+                            <option value="50">50</option>
+                        </select>
+                    </div>
                 </div>
-                <div class="col-md-2 d-flex align-items-end">
-                    <button type="button" class="btn btn-outline-secondary w-100" wire:click="$set('search', '')">
+                <div class="col-md-2">
+                    <button type="button" class="btn btn-outline-primary btn-sm" wire:click="$set('search', '')">
                         <i class="fas fa-times me-1"></i>Limpiar
                     </button>
                 </div>
@@ -59,28 +75,28 @@
                 <table class="table table-hover mb-0">
                     <thead class="table-light">
                         <tr>
-                            <th wire:click="sortBy('nombre')" style="cursor: pointer;">
+                            <th wire:click="sortBy('nombre')" style="cursor: pointer;" class="text-nowrap text-start">
                                 Nombre
                                 @if ($sortField === 'nombre')
                                     <i class="fas fa-sort-{{ $sortDirection === 'asc' ? 'up' : 'down' }} ms-1"></i>
                                 @endif
                             </th>
-                            <th wire:click="sortBy('recibos')" style="cursor: pointer;">
+                            <th wire:click="sortBy('recibos')" style="cursor: pointer;" class="text-nowrap text-center">
                                 Recibos/Libreta
                                 @if ($sortField === 'recibos')
                                     <i class="fas fa-sort-{{ $sortDirection === 'asc' ? 'up' : 'down' }} ms-1"></i>
                                 @endif
                             </th>
-                            <th wire:click="sortBy('tipo_valor')" style="cursor: pointer;">
+                            <th wire:click="sortBy('tipo_valor')" style="cursor: pointer;" class="text-nowrap text-center">
                                 Tipo
                                 @if ($sortField === 'tipo_valor')
                                     <i class="fas fa-sort-{{ $sortDirection === 'asc' ? 'up' : 'down' }} ms-1"></i>
                                 @endif
                             </th>
-                            <th>Valor</th>
-                            <th>Stock Disponible</th>
-                            <th>Estado</th>
-                            <th width="180">Acciones</th>
+                            <th class="text-nowrap text-center">Valor</th>
+                            <th class="text-nowrap text-center">Stock Disponible</th>
+                            <th class="text-nowrap text-center">Estado</th>
+                            <th width="180" class="text-nowrap text-center">Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -96,10 +112,10 @@
                                     </div>
                                 </td>
                                 <td>
-                                    <span class="badge bg-info">{{ number_format($valor->recibos) }}</span>
+                                    <span class="badge bg-info text-white">{{ number_format($valor->recibos) }}</span>
                                 </td>
                                 <td>
-                                    <span class="badge bg-secondary">{{ $valor->tipo_valor_texto }}</span>
+                                    <span class="badge bg-primary text-white">{{ $valor->tipo_valor_texto }}</span>
                                 </td>
                                 <td>
                                     @if ($valor->valor)
@@ -124,9 +140,9 @@
                                 </td>
                                 <td>
                                     @if ($valor->activo)
-                                        <span class="badge bg-success">Activo</span>
+                                        <span class="badge bg-success text-white">Activo</span>
                                     @else
-                                        <span class="badge bg-danger">Inactivo</span>
+                                        <span class="badge bg-danger text-white">Inactivo</span>
                                     @endif
                                 </td>
                                 <td>
