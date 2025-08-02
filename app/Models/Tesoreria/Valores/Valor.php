@@ -91,9 +91,9 @@ class Valor extends Model
     public function getRecibosEnUso(): int
     {
         return $this->conceptos()
-            ->join('tes_val_uso', 'tes_val_conceptos.id', '=', 'tes_val_uso.conceptos_id')
-            ->where('tes_val_uso.activo', true)
-            ->sum('tes_val_uso.recibos_disponibles');
+            ->join('tes_val_usos', 'tes_val_conceptos.id', '=', 'tes_val_usos.conceptos_id')
+            ->where('tes_val_usos.activo', true)
+            ->sum('tes_val_usos.recibos_disponibles');
     }
 
     public function getResumenStock(): array

@@ -1,6 +1,6 @@
 <nav class="navbar navbar-expand-md navbar-dark bg-dark">
     <a class="navbar-brand" href="{{ route('panel') }}">
-        <i class="fas fa-building"></i> JPM Oficinas
+        <i class="fas fa-building mr-2"></i> JPM Oficinas
     </a>
 
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav">
@@ -12,7 +12,7 @@
             <li class="nav-item dropdown">
                 <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownThemes" role="button"
                     data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                    Estilo
+                    <i class="fas fa-palette mr-2"></i>Estilo
                 </a>
                 <div class="dropdown-menu" aria-labelledby="navbarDropdownThemes">
                     {{-- Tema por Defecto (Bootstrap Original) --}}
@@ -82,18 +82,18 @@
             {{-- TESORERÍA --}}
             @can('operador_tesoreria')
                 <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownThemes" role="button"
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownTesoreria" role="button"
                         data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                        <i class="fas fa-dollar-sign"></i> Tesorería
+                        <i class="fas fa-dollar-sign mr-2"></i>Tesorería
                     </a>
-                    <div class="dropdown-menu" aria-labelledby="navbarDropdownThemes">
+                    <div class="dropdown-menu" aria-labelledby="navbarDropdownTesoreria">
                         {{-- Link Caja Chica --}}
                         <a class="dropdown-item" href="{{ route('tesoreria.caja-chica.index') }}">
-                            <i class="fas fa-coins"></i> Caja Chica
+                            <i class="fas fa-coins mr-2"></i>Caja Chica
                         </a>
                         {{-- Link Valores --}}
                         <a class="dropdown-item" href="{{ route('tesoreria.valores.index') }}">
-                            <i class="fas fa-check"></i> Valores
+                            <i class="fas fa-file-invoice mr-2"></i>Valores
                         </a>
                     </div>
                 </li>
@@ -102,7 +102,7 @@
             @can('operador_contabilidad')
                 <li class="nav-item">
                     <a class="nav-link" href="{{ route('contabilidad.index') }}">
-                        <i class="fas fa-calculator"></i> Contabilidad
+                        <i class="fas fa-calculator mr-2"></i>Contabilidad
                     </a>
                 </li>
             @endcan
@@ -112,24 +112,24 @@
             @can('ver_usuarios')
                 <li class="nav-item">
                     <a class="nav-link" href="{{ route('usuarios.index') }}">
-                        <i class="fas fa-users"></i> Usuarios
+                        <i class="fas fa-users mr-2"></i>Usuarios
                     </a>
                 </li>
             @endcan
 
             <li class="nav-item dropdown">
                 <a class="nav-link dropdown-toggle" href="#" role="button" data-toggle="dropdown">
-                    <i class="fas fa-user"></i> {{ auth()->user()->nombre }} {{ auth()->user()->apellido }}
+                    <i class="fas fa-user mr-2"></i>{{ auth()->user()->nombre }} {{ auth()->user()->apellido }}
                 </a>
                 <div class="dropdown-menu dropdown-menu-right">
                     <a href="{{ route('usuarios.miPerfil') }}" class="dropdown-item">
-                        <i class="fas fa-user-edit"></i> Mi Perfil
+                        <i class="fas fa-user-edit mr-2"></i>Mi Perfil
                     </a>
                     <div class="dropdown-divider"></div>
                     <form action="{{ route('logout') }}" method="POST" class="d-inline">
                         @csrf
                         <button type="submit" class="dropdown-item">
-                            <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+                            <i class="fas fa-sign-out-alt mr-2"></i>Cerrar Sesión
                         </button>
                     </form>
                 </div>

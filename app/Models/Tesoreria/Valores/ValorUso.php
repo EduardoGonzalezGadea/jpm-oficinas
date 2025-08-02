@@ -10,7 +10,7 @@ class ValorUso extends Model
 {
     use HasFactory;
 
-    protected $table = 'tes_val_uso';
+    protected $table = 'tes_val_usos';
 
     protected $fillable = [
         'conceptos_id',

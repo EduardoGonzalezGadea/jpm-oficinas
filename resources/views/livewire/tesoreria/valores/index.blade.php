@@ -2,7 +2,6 @@
     {{-- Encabezado --}}
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h4 class="mb-1">Control de Stock de Valores</h4>
             <p class="text-muted mb-0">Gestión de libretas de recibos y su stock disponible</p>
         </div>
         <button type="button" class="btn btn-primary" wire:click="openCreateModal">
@@ -16,7 +15,8 @@
             <div class="row g-3">
                 <div class="col-md-4">
                     <label class="form-label">Buscar</label>
-                    <input type="text" class="form-control" wire:model="search" placeholder="Buscar por nombre o descripción...">
+                    <input type="text" class="form-control" wire:model="search"
+                        placeholder="Buscar por nombre o descripción...">
                 </div>
                 <div class="col-md-2">
                     <label class="form-label">Tipo de Valor</label>
@@ -61,19 +61,19 @@
                         <tr>
                             <th wire:click="sortBy('nombre')" style="cursor: pointer;">
                                 Nombre
-                                @if($sortField === 'nombre')
+                                @if ($sortField === 'nombre')
                                     <i class="fas fa-sort-{{ $sortDirection === 'asc' ? 'up' : 'down' }} ms-1"></i>
                                 @endif
                             </th>
                             <th wire:click="sortBy('recibos')" style="cursor: pointer;">
                                 Recibos/Libreta
-                                @if($sortField === 'recibos')
+                                @if ($sortField === 'recibos')
                                     <i class="fas fa-sort-{{ $sortDirection === 'asc' ? 'up' : 'down' }} ms-1"></i>
                                 @endif
                             </th>
                             <th wire:click="sortBy('tipo_valor')" style="cursor: pointer;">
                                 Tipo
-                                @if($sortField === 'tipo_valor')
+                                @if ($sortField === 'tipo_valor')
                                     <i class="fas fa-sort-{{ $sortDirection === 'asc' ? 'up' : 'down' }} ms-1"></i>
                                 @endif
                             </th>
@@ -89,8 +89,9 @@
                                 <td>
                                     <div>
                                         <strong>{{ $valor->nombre }}</strong>
-                                        @if($valor->descripcion)
-                                            <br><small class="text-muted">{{ Str::limit($valor->descripcion, 50) }}</small>
+                                        @if ($valor->descripcion)
+                                            <br><small
+                                                class="text-muted">{{ Str::limit($valor->descripcion, 50) }}</small>
                                         @endif
                                     </div>
                                 </td>
@@ -101,28 +102,28 @@
                                     <span class="badge bg-secondary">{{ $valor->tipo_valor_texto }}</span>
                                 </td>
                                 <td>
-                                    @if($valor->valor)
+                                    @if ($valor->valor)
                                         ${{ number_format($valor->valor, 2) }}
                                     @else
                                         <span class="text-muted">N/A</span>
                                     @endif
                                 </td>
                                 <td>
-                                    @php
-                                        $stock = $valor->getStockDisponible();
-                                        $libretas = $valor->getLibretasCompletas();
-                                        $enUso = $valor->getRecibosEnUso();
-                                    @endphp
                                     <div class="d-flex flex-column">
-                                        <small><strong>{{ number_format($stock) }}</strong> recibos</small>
-                                        <small class="text-muted">{{ number_format($libretas) }} libretas completas</small>
-                                        @if($enUso > 0)
-                                            <small class="text-warning">{{ number_format($enUso) }} en uso</small>
+                                        <small><strong>{{ number_format($valor->resumen_stock['stock_total']) }}</strong>
+                                            recibos</small>
+                                        <small
+                                            class="text-muted">{{ number_format($valor->resumen_stock['libretas_completas']) }}
+                                            libretas completas</small>
+                                        @if ($valor->resumen_stock['recibos_en_uso'] > 0)
+                                            <small
+                                                class="text-warning">{{ number_format($valor->resumen_stock['recibos_en_uso']) }}
+                                                en uso</small>
                                         @endif
                                     </div>
                                 </td>
                                 <td>
-                                    @if($valor->activo)
+                                    @if ($valor->activo)
                                         <span class="badge bg-success">Activo</span>
                                     @else
                                         <span class="badge bg-danger">Inactivo</span>
@@ -130,18 +131,22 @@
                                 </td>
                                 <td>
                                     <div class="btn-group btn-group-sm" role="group">
-                                        <button type="button" class="btn btn-outline-info" wire:click="openStockModal({{ $valor->id }})" title="Ver Stock">
+                                        <button type="button" class="btn btn-outline-info"
+                                            wire:click="openStockModal({{ $valor->id }})" title="Ver Stock">
                                             <i class="fas fa-chart-bar"></i>
                                         </button>
-                                        <button type="button" class="btn btn-outline-primary" wire:click="openEditModal({{ $valor->id }})" title="Editar">
+                                        <button type="button" class="btn btn-outline-primary"
+                                            wire:click="openEditModal({{ $valor->id }})" title="Editar">
                                             <i class="fas fa-edit"></i>
                                         </button>
-                                        <button type="button" class="btn btn-outline-{{ $valor->activo ? 'warning' : 'success' }}" 
-                                                wire:click="toggleActive({{ $valor->id }})" 
-                                                title="{{ $valor->activo ? 'Desactivar' : 'Activar' }}">
+                                        <button type="button"
+                                            class="btn btn-outline-{{ $valor->activo ? 'warning' : 'success' }}"
+                                            wire:click="toggleActive({{ $valor->id }})"
+                                            title="{{ $valor->activo ? 'Desactivar' : 'Activar' }}">
                                             <i class="fas fa-{{ $valor->activo ? 'pause' : 'play' }}"></i>
                                         </button>
-                                        <button type="button" class="btn btn-outline-danger" wire:click="openDeleteModal({{ $valor->id }})" title="Eliminar">
+                                        <button type="button" class="btn btn-outline-danger"
+                                            wire:click="openDeleteModal({{ $valor->id }})" title="Eliminar">
                                             <i class="fas fa-trash"></i>
                                         </button>
                                     </div>
@@ -158,12 +163,13 @@
                     </tbody>
                 </table>
             </div>
-            
-            @if($valores->hasPages())
+
+            @if ($valores->hasPages())
                 <div class="card-footer">
                     <div class="d-flex justify-content-between align-items-center">
                         <div class="text-muted">
-                            Mostrando {{ $valores->firstItem() }} a {{ $valores->lastItem() }} de {{ $valores->total() }} resultados
+                            Mostrando {{ $valores->firstItem() }} a {{ $valores->lastItem() }} de
+                            {{ $valores->total() }} resultados
                         </div>
                         {{ $valores->links() }}
                     </div>
@@ -173,65 +179,78 @@
     </div>
 
     {{-- Modal Crear/Editar --}}
-    <div class="modal fade" id="createEditModal" tabindex="-1" wire:ignore.self
-         @if($showCreateModal || $showEditModal) style="display: block;" @endif>
+    <div class="modal fade" id="createEditModal" tabindex="-1" wire:ignore.self>
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">
                         {{ $showCreateModal ? 'Crear Nuevo Valor' : 'Editar Valor' }}
                     </h5>
-                    <button type="button" class="btn-close" wire:click="$set('showCreateModal', false); $set('showEditModal', false)"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <form>
                         <div class="row g-3">
                             <div class="col-md-8">
                                 <label class="form-label">Nombre <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control @error('nombre') is-invalid @enderror" 
-                                       wire:model="nombre" placeholder="Ej: Recibos de Agua">
-                                @error('nombre') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                <input type="text" class="form-control @error('nombre') is-invalid @enderror"
+                                    wire:model="nombre" placeholder="Ej: Recibos de Agua">
+                                @error('nombre')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
                             </div>
                             <div class="col-md-4">
-                                <label class="form-label">Recibos por Libreta <span class="text-danger">*</span></label>
-                                <input type="number" class="form-control @error('recibos') is-invalid @enderror" 
-                                       wire:model="recibos" placeholder="100" min="1">
-                                @error('recibos') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                <label class="form-label">Recibos por Libreta <span
+                                        class="text-danger">*</span></label>
+                                <input type="number" class="form-control @error('recibos') is-invalid @enderror"
+                                    wire:model="recibos" placeholder="100" min="1">
+                                @error('recibos')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Tipo de Valor <span class="text-danger">*</span></label>
-                                <select class="form-select @error('tipo_valor') is-invalid @enderror" wire:model="tipo_valor">
+                                <select class="form-select @error('tipo_valor') is-invalid @enderror"
+                                    wire:model="tipo_valor">
                                     <option value="pesos">Pesos</option>
                                     <option value="UR">Unidad Reajustable</option>
                                     <option value="SVE">Sin Valor Escrito</option>
                                 </select>
-                                @error('tipo_valor') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                @error('tipo_valor')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">Valor 
-                                    @if($tipo_valor !== 'SVE') <span class="text-danger">*</span> @endif
+                                <label class="form-label">Valor
+                                    @if ($tipo_valor !== 'SVE')
+                                        <span class="text-danger">*</span>
+                                    @endif
                                 </label>
                                 <div class="input-group">
                                     <span class="input-group-text">$</span>
-                                    <input type="number" step="0.01" class="form-control @error('valor') is-invalid @enderror" 
-                                           wire:model="valor" placeholder="0.00" 
-                                           @if($tipo_valor === 'SVE') disabled @endif>
+                                    <input type="number" step="0.01"
+                                        class="form-control @error('valor') is-invalid @enderror" wire:model="valor"
+                                        placeholder="0.00" @if ($tipo_valor === 'SVE') disabled @endif>
                                 </div>
-                                @error('valor') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                                @if($tipo_valor === 'SVE')
+                                @error('valor')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                                @if ($tipo_valor === 'SVE')
                                     <small class="text-muted">El valor no aplica para "Sin Valor Escrito"</small>
                                 @endif
                             </div>
                             <div class="col-12">
                                 <label class="form-label">Descripción</label>
-                                <textarea class="form-control @error('descripcion') is-invalid @enderror" 
-                                          wire:model="descripcion" rows="3" 
-                                          placeholder="Descripción opcional del valor..."></textarea>
-                                @error('descripcion') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                <textarea class="form-control @error('descripcion') is-invalid @enderror" wire:model="descripcion" rows="3"
+                                    placeholder="Descripción opcional del valor..."></textarea>
+                                @error('descripcion')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
                             </div>
                             <div class="col-12">
                                 <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" wire:model="activo" id="activo">
+                                    <input class="form-check-input" type="checkbox" wire:model="activo"
+                                        id="activo">
                                     <label class="form-check-label" for="activo">
                                         Activo
                                     </label>
@@ -241,10 +260,8 @@
                     </form>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" wire:click="$set('showCreateModal', false); $set('showEditModal', false)">
-                        Cancelar
-                    </button>
-                    @if($showCreateModal)
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    @if ($showCreateModal)
                         <button type="button" class="btn btn-primary" wire:click="create">
                             <i class="fas fa-save me-2"></i>Crear Valor
                         </button>
@@ -259,15 +276,16 @@
     </div>
 
     {{-- Modal Stock --}}
-    @if($showStockModal && $selectedValor)
-        <div class="modal fade show d-block" tabindex="-1">
-            <div class="modal-dialog modal-xl">
-                <div class="modal-content">
+    <div class="modal fade" id="stockModal" tabindex="-1" wire:ignore.self>
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                @if ($selectedValor)
                     <div class="modal-header">
                         <h5 class="modal-title">
                             <i class="fas fa-chart-bar me-2"></i>Resumen de Stock - {{ $selectedValor->nombre }}
                         </h5>
-                        <button type="button" class="btn-close" wire:click="$set('showStockModal', false)"></button>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"
+                            aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
                         {{-- Resumen General --}}
@@ -275,7 +293,12 @@
                             <div class="col-md-3">
                                 <div class="card bg-primary text-white">
                                     <div class="card-body text-center">
-                                        <h3 class="mb-1">{{ number_format($stockResumen['stock_total']) }}</h3>
+                                        @if ($selectedValor && isset($selectedValor->resumen_stock))
+                                            <h3 class="mb-1">
+                                                {{ number_format($selectedValor->resumen_stock['stock_total']) }}</h3>
+                                        @else
+                                            <h3 class="mb-1">0</h3>
+                                        @endif
                                         <small>Total Recibos</small>
                                     </div>
                                 </div>
@@ -283,7 +306,9 @@
                             <div class="col-md-3">
                                 <div class="card bg-success text-white">
                                     <div class="card-body text-center">
-                                        <h3 class="mb-1">{{ number_format($stockResumen['libretas_completas']) }}</h3>
+                                        <h3 class="mb-1">
+                                            {{ number_format($selectedValor->resumen_stock['libretas_completas'] ?? 0) }}
+                                        </h3>
                                         <small>Libretas Completas</small>
                                     </div>
                                 </div>
@@ -291,7 +316,8 @@
                             <div class="col-md-3">
                                 <div class="card bg-warning text-white">
                                     <div class="card-body text-center">
-                                        <h3 class="mb-1">{{ number_format($stockResumen['recibos_en_uso']) }}</h3>
+                                        <h3 class="mb-1">
+                                            {{ number_format($selectedValor->resumen_stock['recibos_en_uso'] ?? 0) }}</h3>
                                         <small>Recibos en Uso</small>
                                     </div>
                                 </div>
@@ -299,7 +325,9 @@
                             <div class="col-md-3">
                                 <div class="card bg-info text-white">
                                     <div class="card-body text-center">
-                                        <h3 class="mb-1">{{ number_format($stockResumen['recibos_disponibles']) }}</h3>
+                                        <h3 class="mb-1">
+                                            {{ number_format($selectedValor->resumen_stock['recibos_disponibles'] ?? 0) }}
+                                        </h3>
                                         <small>Recibos Disponibles</small>
                                     </div>
                                 </div>
@@ -307,7 +335,7 @@
                         </div>
 
                         {{-- Detalle por Concepto --}}
-                        @if($selectedValor->conceptosActivos->count() > 0)
+                        @if ($selectedValor->conceptosActivos->count() > 0)
                             <h6 class="mb-3">Detalle por Concepto</h6>
                             <div class="table-responsive">
                                 <table class="table table-sm">
@@ -322,12 +350,18 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        @foreach($selectedValor->conceptosActivos as $concepto)
+                                        @foreach ($selectedValor->conceptosActivos as $concepto)
                                             @php
                                                 $resumenConcepto = $concepto->getResumenUso();
-                                                $porcentaje = $resumenConcepto['total_asignados'] > 0 
-                                                    ? round(($resumenConcepto['total_utilizados'] / $resumenConcepto['total_asignados']) * 100, 1) 
-                                                    : 0;
+                                                $porcentaje =
+                                                    $resumenConcepto['total_asignados'] > 0
+                                                        ? round(
+                                                            ($resumenConcepto['total_utilizados'] /
+                                                                $resumenConcepto['total_asignados']) *
+                                                                100,
+                                                            1,
+                                                        )
+                                                        : 0;
                                             @endphp
                                             <tr>
                                                 <td>{{ $concepto->concepto }}</td>
@@ -336,8 +370,8 @@
                                                 <td>{{ number_format($resumenConcepto['total_utilizados']) }}</td>
                                                 <td>
                                                     <div class="progress" style="height: 20px;">
-                                                        <div class="progress-bar bg-{{ $porcentaje > 75 ? 'danger' : ($porcentaje > 50 ? 'warning' : 'success') }}" 
-                                                             style="width: {{ $porcentaje }}%">
+                                                        <div class="progress-bar bg-{{ $porcentaje > 75 ? 'danger' : ($porcentaje > 50 ? 'warning' : 'success') }}"
+                                                            style="width: {{ $porcentaje }}%">
                                                             {{ $porcentaje }}%
                                                         </div>
                                                     </div>
@@ -356,25 +390,24 @@
                         @endif
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" wire:click="$set('showStockModal', false)">
-                            Cerrar
-                        </button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
                     </div>
-                </div>
+                @endif
             </div>
         </div>
-    @endif
+    </div>
 
     {{-- Modal Eliminar --}}
-    @if($showDeleteModal && $selectedValor)
-        <div class="modal fade show d-block" tabindex="-1">
-            <div class="modal-dialog">
-                <div class="modal-content">
+    <div class="modal fade" id="deleteModal" tabindex="-1" wire:ignore.self>
+        <div class="modal-dialog">
+            <div class="modal-content">
+                @if ($selectedValor)
                     <div class="modal-header">
                         <h5 class="modal-title text-danger">
                             <i class="fas fa-exclamation-triangle me-2"></i>Confirmar Eliminación
                         </h5>
-                        <button type="button" class="btn-close" wire:click="$set('showDeleteModal', false)"></button>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"
+                            aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
                         <p>¿Está seguro que desea eliminar el valor <strong>{{ $selectedValor->nombre }}</strong>?</p>
@@ -384,20 +417,266 @@
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" wire:click="$set('showDeleteModal', false)">
-                            Cancelar
-                        </button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                         <button type="button" class="btn btn-danger" wire:click="delete">
                             <i class="fas fa-trash me-2"></i>Eliminar
                         </button>
                     </div>
-                </div>
+                @endif
             </div>
         </div>
-    @endif
+    </div>
 
-    {{-- Overlay para modales --}}
-    @if($showCreateModal || $showEditModal || $showDeleteModal || $showStockModal)
-        <div class="modal-backdrop fade show"></div>
-    @endif
+    {{-- Reemplaza todo el script anterior con este --}}
+    <script>
+        console.log('=== MODAL SCRIPT VANILLA JS ===');
+
+        // Función para abrir modal manualmente
+        function showModal(modalId) {
+            const modal = document.getElementById(modalId);
+            const backdrop = document.createElement('div');
+
+            if (!modal) {
+                console.error('Modal no encontrado:', modalId);
+                return;
+            }
+
+            console.log('Abriendo modal:', modalId);
+
+            // Crear backdrop
+            backdrop.className = 'modal-backdrop fade show';
+            backdrop.style.zIndex = '1040';
+            document.body.appendChild(backdrop);
+
+            // Mostrar modal
+            modal.style.display = 'block';
+            modal.style.zIndex = '1050';
+            modal.classList.add('show');
+            modal.setAttribute('aria-hidden', 'false');
+
+            // Agregar clase al body
+            document.body.classList.add('modal-open');
+            document.body.style.overflow = 'hidden';
+            document.body.style.paddingRight = '17px'; // Simular scrollbar
+
+            // Enfocar el modal
+            modal.focus();
+
+            // Configurar cierre con ESC
+            const closeOnEsc = function(e) {
+                if (e.key === 'Escape') {
+                    hideModal(modalId);
+                    document.removeEventListener('keydown', closeOnEsc);
+                }
+            };
+            document.addEventListener('keydown', closeOnEsc);
+
+            // Configurar cierre al hacer clic en backdrop
+            backdrop.addEventListener('click', function() {
+                hideModal(modalId);
+            });
+
+            // Configurar botones de cierre
+            const closeButtons = modal.querySelectorAll('[data-bs-dismiss="modal"], .btn-close');
+            closeButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    hideModal(modalId);
+                });
+            });
+        }
+
+        // Función para cerrar modal manualmente
+        function hideModal(modalId) {
+            const modal = document.getElementById(modalId);
+            const backdrop = document.querySelector('.modal-backdrop');
+
+            if (!modal) return;
+
+            console.log('Cerrando modal:', modalId);
+
+            // Ocultar modal
+            modal.style.display = 'none';
+            modal.classList.remove('show');
+            modal.setAttribute('aria-hidden', 'true');
+
+            // Remover backdrop
+            if (backdrop) {
+                backdrop.remove();
+            }
+
+            // Remover clases del body
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+        }
+
+        // Event listeners para eventos de Livewire
+        window.addEventListener('show-create-edit-modal', function(event) {
+            console.log('✅ Evento show-create-edit-modal recibido');
+            showModal('createEditModal');
+        });
+
+        window.addEventListener('hide-create-edit-modal', function(event) {
+            console.log('✅ Evento hide-create-edit-modal recibido');
+            hideModal('createEditModal');
+        });
+
+        window.addEventListener('show-stock-modal', function(event) {
+            console.log('✅ Evento show-stock-modal recibido');
+            showModal('stockModal');
+        });
+
+        window.addEventListener('hide-stock-modal', function(event) {
+            console.log('✅ Evento hide-stock-modal recibido');
+            hideModal('stockModal');
+        });
+
+        window.addEventListener('show-delete-modal', function(event) {
+            console.log('✅ Evento show-delete-modal recibido');
+            showModal('deleteModal');
+        });
+
+        window.addEventListener('hide-delete-modal', function(event) {
+            console.log('✅ Evento hide-delete-modal recibido');
+            hideModal('deleteModal');
+        });
+
+        // Función de test
+        window.testModal = function() {
+            console.log('TEST: Disparando evento show-create-edit-modal...');
+            window.dispatchEvent(new CustomEvent('show-create-edit-modal'));
+        };
+
+        // Configurar cuando Livewire esté listo
+        document.addEventListener('livewire:load', function() {
+            console.log('Livewire cargado, configurando eventos adicionales...');
+
+            // Escuchar eventos emit de Livewire
+            Livewire.on('log', message => {
+                console.log('📝 Log desde Livewire:', message);
+            });
+
+            // Limpiar formulario cuando se cierra el modal (simulando hidden.bs.modal)
+            const createEditModal = document.getElementById('createEditModal');
+            if (createEditModal) {
+                // Observador para detectar cuando el modal se cierra
+                const observer = new MutationObserver(function(mutations) {
+                    mutations.forEach(function(mutation) {
+                        if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
+                            const modal = mutation.target;
+                            if (modal.style.display === 'none' && !modal.classList.contains(
+                                    'show')) {
+                                // Modal se cerró, llamar resetForm
+                                console.log('Modal cerrado, llamando resetForm...');
+                                Livewire.find('{{ $_instance->id }}')?.call('resetForm');
+                            }
+                        }
+                    });
+                });
+
+                observer.observe(createEditModal, {
+                    attributes: true,
+                    attributeFilter: ['style', 'class']
+                });
+            }
+        });
+
+        console.log('=== SCRIPT VANILLA JS CARGADO ===');
+    </script>
+
+    {{-- Agrega este CSS en tu vista o layout --}}
+    <style>
+        /* Estilos para modales sin Bootstrap JS */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 1050;
+            width: 100%;
+            height: 100%;
+            overflow-x: hidden;
+            overflow-y: auto;
+            outline: 0;
+        }
+
+        .modal.show {
+            display: block !important;
+        }
+
+        .modal-dialog {
+            position: relative;
+            width: auto;
+            margin: 0.5rem;
+            pointer-events: none;
+            transform: translate(0, 0);
+            transition: transform 0.3s ease-out;
+        }
+
+        .modal.show .modal-dialog {
+            transform: translate(0, 0);
+        }
+
+        .modal-content {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            pointer-events: auto;
+            background-color: #fff;
+            background-clip: padding-box;
+            border: 1px solid rgba(0, 0, 0, 0.2);
+            border-radius: 0.3rem;
+            outline: 0;
+        }
+
+        .modal-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 1040;
+            width: 100vw;
+            height: 100vh;
+            background-color: #000;
+            opacity: 0.5;
+        }
+
+        .modal-backdrop.show {
+            opacity: 0.5;
+        }
+
+        body.modal-open {
+            overflow: hidden;
+        }
+
+        /* Centrar modales */
+        @media (min-width: 576px) {
+            .modal-dialog {
+                max-width: 500px;
+                margin: 1.75rem auto;
+            }
+
+            .modal-dialog.modal-lg {
+                max-width: 800px;
+            }
+
+            .modal-dialog.modal-xl {
+                max-width: 1140px;
+            }
+        }
+
+        /* Animaciones suaves */
+        .modal {
+            transition: opacity 0.15s linear;
+        }
+
+        .modal.fade .modal-dialog {
+            transition: transform 0.3s ease-out;
+            transform: translate(0, -50px);
+        }
+
+        .modal.show .modal-dialog {
+            transform: none;
+        }
+    </style>
+
 </div>

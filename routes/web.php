@@ -12,6 +12,7 @@ use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\Tesoreria\CajaChica\ImpresionController;
 use App\Http\Controllers\Tesoreria\CajaChicaController;
 use App\Http\Controllers\Tesoreria\CajaChica\PendienteController;
+use App\Http\Controllers\Tesoreria\Valores\ValorController;
 use App\Http\Controllers\ThemeController;
 
 /*
@@ -213,15 +214,22 @@ Route::middleware(['web', 'jwt.verify'])->group(function () {
     // ------------------------------------------------------------------------
     // TESORERÍA - VALORES
     // ------------------------------------------------------------------------
-    Route::middleware(['permission:operador_tesoreria'])->group(function () {
-        Route::get('/tesoreria/valores', [ValorController::class, 'index'])->name('tesoreria.valores.index');
-        // Route::get('tesoreria/caja-chica/pendientes/{id}/editar', [PendienteController::class, 'edit'])
-        //     ->name('tesoreria.caja-chica.pendientes.editar');
-        // // Rutas para impresión
-        // Route::get('/tesoreria/caja-chica/imprimir/pendiente/{id}', [ImpresionController::class, 'imprimirPendiente'])
-        //     ->name('tesoreria.caja-chica.imprimir.pendiente');
-        // Route::get('/tesoreria/caja-chica/imprimir/pago/{id}', [ImpresionController::class, 'imprimirPago'])
-        //     ->name('tesoreria.caja-chica.imprimir.pago');
+    Route::prefix('tesoreria/valores')->name('tesoreria.valores.')->middleware(['auth'])->group(function () {
+
+        // Rutas principales
+        Route::get('/', [ValorController::class, 'index'])->name('index');
+        Route::get('/conceptos', [ValorController::class, 'conceptos'])->name('conceptos');
+        Route::get('/entradas', [ValorController::class, 'entradas'])->name('entradas');
+        Route::get('/salidas', [ValorController::class, 'salidas'])->name('salidas');
+        Route::get('/stock', [ValorController::class, 'stock'])->name('stock');
+
+        // APIs y endpoints adicionales
+        Route::prefix('api')->name('api.')->group(function () {
+            Route::get('/stock-resumen/{valor}', [ValorController::class, 'getStockResumen'])->name('stock.resumen');
+            Route::post('/validar-rango', [ValorController::class, 'validarRango'])->name('validar.rango');
+            Route::get('/estadisticas', [ValorController::class, 'estadisticas'])->name('estadisticas');
+            Route::get('/exportar-stock', [ValorController::class, 'exportarStock'])->name('exportar.stock');
+        });
     });
 });
 

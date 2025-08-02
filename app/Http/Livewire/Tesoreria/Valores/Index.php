@@ -92,41 +92,64 @@ class Index extends Component
     {
         $this->resetForm();
         $this->showCreateModal = true;
+        $this->dispatchBrowserEvent('show-create-edit-modal');
     }
 
     public function openEditModal($valorId)
     {
-        $valor = Valor::findOrFail($valorId);
-        $this->selectedValor = $valor;
+        try {
+            $valor = Valor::findOrFail($valorId);
+            $this->selectedValor = $valor;
+            $this->selectedValor->resumen_stock = $this->selectedValor->getResumenStock();
 
-        $this->nombre = $valor->nombre;
-        $this->recibos = $valor->recibos;
-        $this->tipo_valor = $valor->tipo_valor;
-        $this->valor = $valor->valor;
-        $this->descripcion = $valor->descripcion;
-        $this->activo = $valor->activo;
+            $this->nombre = $valor->nombre;
+            $this->recibos = $valor->recibos;
+            $this->tipo_valor = $valor->tipo_valor;
+            $this->valor = $valor->valor;
+            $this->descripcion = $valor->descripcion;
+            $this->activo = $valor->activo;
 
-        $this->showEditModal = true;
+            $this->resetErrorBag();
+            $this->resetValidation();
+            $this->showCreateModal = false;
+            $this->showEditModal = true;
+
+            $this->dispatchBrowserEvent('show-create-edit-modal');
+        } catch (\Exception $e) {
+            $this->emit('alert', [
+                'type' => 'error',
+                'message' => 'Error al cargar los datos: ' . $e->getMessage()
+            ]);
+        }
     }
 
     public function openDeleteModal($valorId)
     {
         $this->selectedValor = Valor::findOrFail($valorId);
         $this->showDeleteModal = true;
+        $this->dispatchBrowserEvent('show-delete-modal');
     }
 
     public function openStockModal($valorId)
     {
-        $this->selectedValor = Valor::with(['conceptos.usosActivos'])->findOrFail($valorId);
-        $this->stockResumen = $this->selectedValor->getResumenStock();
-        $this->showStockModal = true;
+        try {
+            $this->selectedValor = Valor::with(['conceptos.usosActivos'])->findOrFail($valorId);
+            $this->selectedValor->resumen_stock = $this->selectedValor->getResumenStock();
+            $this->stockResumen = $this->selectedValor->resumen_stock;
+            $this->showStockModal = true;
+            $this->dispatchBrowserEvent('show-stock-modal');
+        } catch (\Exception $e) {
+            $this->emit('alert', [
+                'type' => 'error',
+                'message' => 'Error al cargar datos de stock: ' . $e->getMessage()
+            ]);
+        }
     }
 
     public function create()
     {
         $this->validate();
 
-        // Validar valor según tipo
         if ($this->tipo_valor !== 'SVE' && empty($this->valor)) {
             $this->addError('valor', 'El valor es obligatorio para este tipo.');
             return;
@@ -147,6 +170,7 @@ class Index extends Component
 
         $this->showCreateModal = false;
         $this->resetForm();
+        $this->dispatchBrowserEvent('hide-create-edit-modal');
         $this->emit('alert', ['type' => 'success', 'message' => 'Valor creado exitosamente.']);
     }
 
@@ -154,7 +178,6 @@ class Index extends Component
     {
         $this->validate();
 
-        // Validar valor según tipo
         if ($this->tipo_valor !== 'SVE' && empty($this->valor)) {
             $this->addError('valor', 'El valor es obligatorio para este tipo.');
             return;
@@ -175,36 +198,58 @@ class Index extends Component
 
         $this->showEditModal = false;
         $this->resetForm();
+        $this->dispatchBrowserEvent('hide-create-edit-modal');
         $this->emit('alert', ['type' => 'success', 'message' => 'Valor actualizado exitosamente.']);
     }
 
     public function delete()
     {
-        // Verificar si tiene movimientos
         if ($this->selectedValor->entradas()->count() > 0 || $this->selectedValor->salidas()->count() > 0) {
             $this->emit('alert', [
                 'type' => 'error',
                 'message' => 'No se puede eliminar el valor porque tiene movimientos asociados.'
             ]);
             $this->showDeleteModal = false;
+            $this->dispatchBrowserEvent('hide-delete-modal');
             return;
         }
 
         $this->selectedValor->delete();
         $this->showDeleteModal = false;
+        $this->dispatchBrowserEvent('hide-delete-modal');
         $this->emit('alert', ['type' => 'success', 'message' => 'Valor eliminado exitosamente.']);
     }
 
     public function toggleActive($valorId)
     {
-        $valor = Valor::findOrFail($valorId);
-        $valor->update(['activo' => !$valor->activo]);
+        try {
+            $valor = Valor::findOrFail($valorId);
+            $valor->update(['activo' => !$valor->activo]);
 
-        $estado = $valor->activo ? 'activado' : 'desactivado';
-        $this->emit('alert', ['type' => 'success', 'message' => "Valor {$estado} exitosamente."]);
+            $estado = $valor->activo ? 'activado' : 'desactivado';
+            $this->emit('alert', [
+                'type' => 'success',
+                'message' => "Valor {$estado} exitosamente."
+            ]);
+        } catch (\Exception $e) {
+            $this->emit('alert', [
+                'type' => 'error',
+                'message' => 'Error al cambiar el estado: ' . $e->getMessage()
+            ]);
+        }
     }
 
-    private function resetForm()
+    public function closeModal()
+    {
+        $this->showCreateModal = false;
+        $this->showEditModal = false;
+        $this->showDeleteModal = false;
+        $this->showStockModal = false;
+        $this->resetForm();
+        $this->dispatchBrowserEvent('hide-create-edit-modal');
+    }
+
+    public function resetForm()
     {
         $this->nombre = '';
         $this->recibos = '';
@@ -214,13 +259,14 @@ class Index extends Component
         $this->activo = true;
         $this->selectedValor = null;
         $this->resetErrorBag();
+        $this->resetValidation();
     }
 
     public function handleValorDeleted()
     {
         $this->emit('alert', ['type' => 'success', 'message' => 'Valor eliminado exitosamente.']);
     }
-
+    
     public function render()
     {
         $valores = Valor::query()
@@ -236,6 +282,11 @@ class Index extends Component
             })
             ->orderBy($this->sortField, $this->sortDirection)
             ->paginate($this->perPage);
+
+        $valores->getCollection()->transform(function ($valor) {
+            $valor->resumen_stock = $valor->getResumenStock();
+            return $valor;
+        });
 
         return view('livewire.tesoreria.valores.index', compact('valores'));
     }

@@ -17,6 +17,7 @@ class DatabaseSeeder extends Seeder
             ModuloSeeder::class,
             RoleAndPermissionSeeder::class,
             UserSeeder::class,
+            ValoresSeeder::class,
         ]);
     }
 }
