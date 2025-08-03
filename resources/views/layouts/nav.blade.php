@@ -1,4 +1,4 @@
-<nav class="navbar navbar-expand-md navbar-dark bg-dark">
+<nav class="navbar navbar-expand-md navbar-dark bg-dark barra-oscura" style="margin-bottom: 20px;">
     <a class="navbar-brand" href="{{ route('panel') }}">
         <i class="fas fa-building mr-2"></i> JPM Oficinas
     </a>
@@ -137,3 +137,38 @@
         </ul>
     </div>
 </nav>
+
+<style>
+/* La clase que aplicas a tu <nav> */
+.barra-oscura {
+  /* Establece la posición relativa para que el ::before se posicione correctamente */
+  position: relative;
+  /* Establece un z-index base para la barra de navegación. */
+  z-index: 10;
+}
+
+/* El pseudoelemento que oscurece el fondo */
+.barra-oscura::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: black;
+  mix-blend-mode: multiply;
+  opacity: 0.5;
+  /* Esto es lo que hace la magia:
+     - El z-index negativo lo coloca 'detrás' del contenido.
+     - Asegura que el ::before no capture los eventos de clic.
+  */
+  z-index: -1;
+}
+
+/* Opcional: Esto ayuda a que el texto siempre sea claro y legible */
+.barra-oscura .navbar-nav .nav-link {
+  color: white;
+  /* Opcional, para que el texto sea más fácil de leer sobre un fondo oscuro */
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+}
+</style>

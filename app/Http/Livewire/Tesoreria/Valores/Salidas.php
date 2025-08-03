@@ -119,7 +119,7 @@ class Salidas extends Component
     {
         if (!$this->valores_id) return;
 
-        $valor = Valor::find($this->values_id);
+        $valor = Valor::find($this->valores_id);
         if ($valor) {
             $this->stockDisponible = $valor->getStockDisponible();
         }
@@ -197,6 +197,12 @@ class Salidas extends Component
 
     public function updatingFilterFecha()
     {
+        $this->resetPage();
+    }
+
+    public function resetFilters()
+    {
+        $this->reset(['search', 'filterValor', 'filterConcepto', 'filterFecha', 'perPage']);
         $this->resetPage();
     }
 

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Tesoreria;
+namespace App\Http\Controllers\Tesoreria\CajaChica;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;

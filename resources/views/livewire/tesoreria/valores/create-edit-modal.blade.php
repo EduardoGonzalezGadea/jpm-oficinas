@@ -6,20 +6,22 @@
                     <h5 class="modal-title">
                         {{ $showCreateModal ? 'Crear Nuevo Valor' : 'Editar Valor' }}
                     </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
                 </div>
                 <div class="modal-body">
                     <form>
                         <div class="row g-3">
                             <div class="col-md-8">
                                 <label class="form-label">Nombre <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control @error('nombre') is-invalid @enderror" 
+                                <input type="text" class="form-control @error('nombre') is-invalid @enderror"
                                        wire:model="nombre" placeholder="Ej: Recibos de Agua">
                                 @error('nombre') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label">Recibos por Libreta <span class="text-danger">*</span></label>
-                                <input type="number" class="form-control @error('recibos') is-invalid @enderror" 
+                                <input type="number" class="form-control @error('recibos') is-invalid @enderror"
                                        wire:model="recibos" placeholder="100" min="1">
                                 @error('recibos') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
@@ -33,13 +35,13 @@
                                 @error('tipo_valor') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">Valor 
+                                <label class="form-label">Valor
                                     @if($tipo_valor !== 'SVE') <span class="text-danger">*</span> @endif
                                 </label>
                                 <div class="input-group">
                                     <span class="input-group-text">$</span>
-                                    <input type="number" step="0.01" class="form-control @error('valor') is-invalid @enderror" 
-                                           wire:model="valor" placeholder="0.00" 
+                                    <input type="number" step="0.01" class="form-control @error('valor') is-invalid @enderror"
+                                           wire:model="valor" placeholder="0.00"
                                            @if($tipo_valor === 'SVE') disabled @endif>
                                 </div>
                                 @error('valor') <div class="invalid-feedback">{{ $message }}</div> @enderror
@@ -49,8 +51,8 @@
                             </div>
                             <div class="col-12">
                                 <label class="form-label">Descripción</label>
-                                <textarea class="form-control @error('descripcion') is-invalid @enderror" 
-                                          wire:model="descripcion" rows="3" 
+                                <textarea class="form-control @error('descripcion') is-invalid @enderror"
+                                          wire:model="descripcion" rows="3"
                                           placeholder="Descripción opcional del valor..."></textarea>
                                 @error('descripcion') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>

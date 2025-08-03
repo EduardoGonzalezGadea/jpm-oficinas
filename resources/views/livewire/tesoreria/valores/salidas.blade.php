@@ -15,8 +15,8 @@
             <h5 class="mb-0"><i class="fas fa-filter me-2"></i>Filtros de Búsqueda</h5>
         </div>
         <div class="card-body">
-            <div class="row d-flex justify-content-between align-items-center">
-                <div class="col-md-3">
+            <div class="row">
+                <div class="col-12">
                     <div class="form-group">
                         <label class="form-label font-weight-bold col-form-label-sm">Buscar</label>
                         <div class="input-group input-group-sm">
@@ -24,26 +24,28 @@
                                 <span class="input-group-text"><i class="fas fa-search"></i></span>
                             </div>
                             <input type="text" class="form-control" wire:model="search"
-                                placeholder="Buscar por comprobante, interno, responsable...">
+                                placeholder="Buscar por comprobante, interno, responsable, concepto o valor...">
                         </div>
                     </div>
                 </div>
-                <div class="col-md-2">
+            </div>
+            <div class="row mt-3">
+                <div class="col-md-3">
                     <div class="form-group">
                         <label class="form-label font-weight-bold col-form-label-sm">Valor</label>
                         <select class="form-select form-control-sm" wire:model="filterValor">
-                            <option value="">Todos</option>
+                            <option value="">Todos los valores</option>
                             @foreach ($valores as $valor)
                                 <option value="{{ $valor->id }}">{{ $valor->nombre }}</option>
                             @endforeach
                         </select>
                     </div>
                 </div>
-                <div class="col-md-2">
+                <div class="col-md-4">
                     <div class="form-group">
                         <label class="form-label font-weight-bold col-form-label-sm">Concepto</label>
                         <select class="form-select form-control-sm" wire:model="filterConcepto">
-                            <option value="">Todos</option>
+                            <option value="">Todos los conceptos</option>
                             @foreach ($conceptos as $concepto)
                                 <option value="{{ $concepto->id }}">{{ $concepto->concepto }} ({{ $concepto->valor->nombre }})
                                 </option>
@@ -62,9 +64,9 @@
                         </select>
                     </div>
                 </div>
-                <div class="col-md-2">
+                <div class="col-md-1">
                     <div class="form-group">
-                        <label class="form-label font-weight-bold col-form-label-sm">Por página</label>
+                        <label class="form-label font-weight-bold col-form-label-sm">Pág.</label>
                         <select class="form-select form-control-sm" wire:model="perPage">
                             <option value="10">10</option>
                             <option value="25">25</option>
@@ -72,9 +74,9 @@
                         </select>
                     </div>
                 </div>
-                <div class="col-md-1">
-                    <button type="button" class="btn btn-outline-primary btn-sm" wire:click="$set('search', '')">
-                        <i class="fas fa-times me-1"></i>Limpiar
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="button" class="btn btn-primary btn-sm w-100" wire:click="resetFilters">
+                        <i class="fas fa-sync-alt me-1"></i>Limpiar
                     </button>
                 </div>
             </div>
@@ -126,7 +128,7 @@
                                 </td>
                                 <td class="text-center">{{ number_format($salida->desde) }} - {{ number_format($salida->hasta) }}</td>
                                 <td class="text-center">
-                                    <span class="badge bg-primary">{{ number_format($salida->total_recibos) }}</span>
+                                    <span class="badge bg-primary text-white">{{ number_format($salida->total_recibos) }}</span>
                                 </td>
                                 <td class="text-center">{{ $salida->responsable ?? 'N/A' }}</td>
                                 <td class="text-center">
@@ -180,7 +182,9 @@
                     <h5 class="modal-title">
                         {{ $showCreateModal ? 'Registrar Nueva Salida' : 'Editar Salida' }}
                     </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
                 </div>
                 <div class="modal-body">
                     <form>
@@ -313,8 +317,9 @@
                         <h5 class="modal-title text-danger">
                             <i class="fas fa-exclamation-triangle me-2"></i>Confirmar Eliminación
                         </h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"
-                            aria-label="Close"></button>
+                        <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
                     </div>
                     <div class="modal-body">
                         <p>¿Está seguro que desea eliminar la salida de <strong>{{ $selectedSalida->total_recibos }}</strong>
@@ -346,8 +351,9 @@
                         <h5 class="modal-title">
                             <i class="fas fa-info-circle me-2"></i>Detalles de Salida
                         </h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"
-                            aria-label="Close"></button>
+                        <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
                     </div>
                     <div class="modal-body">
                         <div class="row">
@@ -475,6 +481,16 @@
             hideModal('deleteModal');
         });
 
+        window.addEventListener('show-detail-modal', function(event) {
+            console.log('Evento show-detail-modal recibido!', event);
+            showModal('detailModal');
+        });
+
+        window.addEventListener('hide-detail-modal', function(event) {
+            console.log('Evento hide-detail-modal recibido!', event);
+            hideModal('detailModal');
+        });
+
         // Configurar cuando Livewire esté listo
         document.addEventListener('livewire:load', function() {
             // Limpiar formulario cuando se cierra el modal (simulando hidden.bs.modal)
@@ -592,6 +608,27 @@
 
         .modal.show .modal-dialog {
             transform: none;
+        }
+
+        .close {
+            float: right;
+            font-size: 1.5rem;
+            font-weight: 700;
+            line-height: 1;
+            color: #000;
+            text-shadow: 0 1px 0 #fff;
+            opacity: .5;
+        }
+
+        .close:hover {
+            color: #000;
+            text-decoration: none;
+        }
+
+        button.close {
+            padding: 0;
+            background-color: transparent;
+            border: 0;
         }
     </style>
 </div>

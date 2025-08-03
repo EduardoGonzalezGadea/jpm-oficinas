@@ -173,8 +173,9 @@
                         <h5 class="modal-title">
                             <i class="fas fa-chart-bar me-2"></i>Detalle de Stock: {{ $selectedValor->nombre }}
                         </h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"
-                            aria-label="Close"></button>
+                        <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true"><i class="fas fa-times"></i></span>
+                        </button>
                     </div>
                     <div class="modal-body">
                         {{-- Resumen General del Valor Seleccionado --}}
@@ -341,7 +342,7 @@
                                             <tr>
                                                 <td>
                                                     <span
-                                                        class="badge bg-{{ $movimiento['tipo'] === 'entrada' ? 'success' : 'danger' }}">
+                                                        class="badge text-white bg-{{ $movimiento['tipo'] === 'entrada' ? 'success' : 'danger' }}">
                                                         {{ ucfirst($movimiento['tipo']) }}
                                                     </span>
                                                 </td>

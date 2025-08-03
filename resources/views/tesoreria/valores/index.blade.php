@@ -1,5 +1,5 @@
 {{-- resources/views/tesoreria/valores/index.blade.php --}}
-@extends('layouts.tesoreria')
+@extends('layouts.valores')
 
 @section('breadcrumb')
     <li class="breadcrumb-item">Valores</li>

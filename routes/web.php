@@ -6,11 +6,11 @@ use App\Http\Controllers\PanelController;
 use App\Http\Controllers\UsuarioController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\ModuloController;
-use App\Http\Controllers\TesoreriaController;
+use App\Http\Controllers\Tesoreria\TesoreriaController;
 use App\Http\Controllers\ContabilidadController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\Tesoreria\CajaChica\ImpresionController;
-use App\Http\Controllers\Tesoreria\CajaChicaController;
+use App\Http\Controllers\Tesoreria\CajaChica\CajaChicaController;
 use App\Http\Controllers\Tesoreria\CajaChica\PendienteController;
 use App\Http\Controllers\Tesoreria\Valores\ValorController;
 use App\Http\Controllers\ThemeController;
@@ -166,9 +166,6 @@ Route::middleware(['web', 'jwt.verify'])->group(function () {
     // Tesorería
     Route::prefix('tesoreria')->name('tesoreria.')->group(function () {
         Route::get('/', [TesoreriaController::class, 'index'])->name('index');
-        // Agregar más rutas según necesidades
-        // Route::get('/reportes', [TesoreriaController::class, 'reportes'])->name('reportes');
-        // Route::get('/movimientos', [TesoreriaController::class, 'movimientos'])->name('movimientos');
     });
 
     // Contabilidad

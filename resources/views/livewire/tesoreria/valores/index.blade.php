@@ -203,7 +203,9 @@
                     <h5 class="modal-title">
                         {{ $showCreateModal ? 'Crear Nuevo Valor' : 'Editar Valor' }}
                     </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
                 </div>
                 <div class="modal-body">
                     <form>
@@ -301,8 +303,9 @@
                         <h5 class="modal-title">
                             <i class="fas fa-chart-bar me-2"></i>Resumen de Stock - {{ $selectedValor->nombre }}
                         </h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"
-                            aria-label="Close"></button>
+                        <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
                     </div>
                     <div class="modal-body">
                         {{-- Resumen General --}}
@@ -424,8 +427,9 @@
                         <h5 class="modal-title text-danger">
                             <i class="fas fa-exclamation-triangle me-2"></i>Confirmar Eliminación
                         </h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"
-                            aria-label="Close"></button>
+                        <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
                     </div>
                     <div class="modal-body">
                         <p>¿Está seguro que desea eliminar el valor <strong>{{ $selectedValor->nombre }}</strong>?</p>
@@ -694,6 +698,27 @@
 
         .modal.show .modal-dialog {
             transform: none;
+        }
+
+        .close {
+            float: right;
+            font-size: 1.5rem;
+            font-weight: 700;
+            line-height: 1;
+            color: #000;
+            text-shadow: 0 1px 0 #fff;
+            opacity: .5;
+        }
+
+        .close:hover {
+            color: #000;
+            text-decoration: none;
+        }
+
+        button.close {
+            padding: 0;
+            background-color: transparent;
+            border: 0;
         }
     </style>
 

@@ -1,9 +1,13 @@
 {{-- resources/views/tesoreria/valores/stock.blade.php --}}
-@extends('layouts.tesoreria')
+@extends('layouts.valores')
 
 @section('breadcrumb')
-    <li class="breadcrumb-item">Valores</li>
-    <li class="breadcrumb-item active">Resumen de Stock</li>
+    <li class="breadcrumb-item">
+        <a href="{{ route('tesoreria.valores.index') }}">Valores</a>
+    </li>
+    <li class="breadcrumb-item active">
+        <a href="{{ route('tesoreria.valores.stock') }}">Resumen de Stock</a>
+    </li>
 @endsection
 
 @section('page-content')

@@ -163,7 +163,9 @@
                     <h5 class="modal-title">
                         {{ $showCreateModal ? 'Registrar Nueva Entrada' : 'Editar Entrada' }}
                     </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
                 </div>
                 <div class="modal-body">
                     <form>
@@ -257,8 +259,9 @@
                         <h5 class="modal-title text-danger">
                             <i class="fas fa-exclamation-triangle me-2"></i>Confirmar Eliminación
                         </h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"
-                            aria-label="Close"></button>
+                        <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
                     </div>
                     <div class="modal-body">
                         <p>¿Está seguro que desea eliminar la entrada de <strong>{{ $selectedEntrada->total_recibos }}</strong>
@@ -289,8 +292,9 @@
                         <h5 class="modal-title">
                             <i class="fas fa-info-circle me-2"></i>Detalles de Entrada
                         </h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"
-                            aria-label="Close"></button>
+                        <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
                     </div>
                     <div class="modal-body">
                         <div class="row">
@@ -416,6 +420,16 @@
             hideModal('deleteModal');
         });
 
+        window.addEventListener('show-detail-modal', function(event) {
+            console.log('Evento show-detail-modal recibido!', event);
+            showModal('detailModal');
+        });
+
+        window.addEventListener('hide-detail-modal', function(event) {
+            console.log('Evento hide-detail-modal recibido!', event);
+            hideModal('detailModal');
+        });
+
         // Configurar cuando Livewire esté listo
         document.addEventListener('livewire:load', function() {
             // Limpiar formulario cuando se cierra el modal (simulando hidden.bs.modal)
@@ -533,6 +547,27 @@
 
         .modal.show .modal-dialog {
             transform: none;
+        }
+
+        .close {
+            float: right;
+            font-size: 1.5rem;
+            font-weight: 700;
+            line-height: 1;
+            color: #000;
+            text-shadow: 0 1px 0 #fff;
+            opacity: .5;
+        }
+
+        .close:hover {
+            color: #000;
+            text-decoration: none;
+        }
+
+        button.close {
+            padding: 0;
+            background-color: transparent;
+            border: 0;
         }
     </style>
 </div>
