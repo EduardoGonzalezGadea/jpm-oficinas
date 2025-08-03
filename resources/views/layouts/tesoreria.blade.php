@@ -12,7 +12,7 @@
                 <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-2 mb-3 text-muted">
                     <span>MÓDULO TESORERÍA</span>
                 </h6>
-                
+
                 <ul class="nav flex-column">
                     <li class="nav-item">
                         <a class="nav-link" href="{{ route('tesoreria.valores.index') }}">
@@ -24,34 +24,34 @@
                 <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
                     <span>VALORES</span>
                 </h6>
-                
+
                 <ul class="nav flex-column mb-2">
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('tesoreria.valores.index') ? 'active' : '' }}" 
+                        <a class="nav-link {{ request()->routeIs('tesoreria.valores.index') ? 'active' : '' }}"
                            href="{{ route('tesoreria.valores.index') }}">
                             <i class="fas fa-list me-2"></i>Listado de Valores
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('tesoreria.valores.conceptos') ? 'active' : '' }}" 
+                        <a class="nav-link {{ request()->routeIs('tesoreria.valores.conceptos') ? 'active' : '' }}"
                            href="{{ route('tesoreria.valores.conceptos') }}">
                             <i class="fas fa-tags me-2"></i>Conceptos
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('tesoreria.valores.entradas') ? 'active' : '' }}" 
+                        <a class="nav-link {{ request()->routeIs('tesoreria.valores.entradas') ? 'active' : '' }}"
                            href="{{ route('tesoreria.valores.entradas') }}">
                             <i class="fas fa-arrow-down me-2 text-success"></i>Entradas
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('tesoreria.valores.salidas') ? 'active' : '' }}" 
+                        <a class="nav-link {{ request()->routeIs('tesoreria.valores.salidas') ? 'active' : '' }}"
                            href="{{ route('tesoreria.valores.salidas') }}">
                             <i class="fas fa-arrow-up me-2 text-danger"></i>Salidas
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('tesoreria.valores.stock') ? 'active' : '' }}" 
+                        <a class="nav-link {{ request()->routeIs('tesoreria.valores.stock') ? 'active' : '' }}"
                            href="{{ route('tesoreria.valores.stock') }}">
                             <i class="fas fa-chart-bar me-2 text-info"></i>Resumen de Stock
                         </a>
@@ -66,7 +66,7 @@
             <nav aria-label="breadcrumb" class="mt-3">
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item">
-                        <a href="{{ route('home') }}">Inicio</a>
+                        <a href="{{ route('panel') }}">Inicio</a>
                     </li>
                     <li class="breadcrumb-item">
                         <a href="#">Tesorería</a>
@@ -98,7 +98,7 @@ document.addEventListener('livewire:load', function () {
 function showAlert(type, message) {
     const alertContainer = document.getElementById('alert-container');
     const alertId = 'alert-' + Date.now();
-    
+
     const alertHtml = `
         <div id="${alertId}" class="alert alert-${type} alert-dismissible fade show" role="alert">
             <i class="fas fa-${getAlertIcon(type)} me-2"></i>
@@ -106,9 +106,9 @@ function showAlert(type, message) {
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     `;
-    
+
     alertContainer.innerHTML = alertHtml;
-    
+
     // Auto-ocultar después de 5 segundos
     setTimeout(function() {
         const alert = document.getElementById(alertId);
@@ -121,7 +121,7 @@ function showAlert(type, message) {
 function getAlertIcon(type) {
     switch(type) {
         case 'success': return 'check-circle';
-        case 'error': 
+        case 'error':
         case 'danger': return 'exclamation-triangle';
         case 'warning': return 'exclamation-triangle';
         case 'info': return 'info-circle';
@@ -190,7 +190,7 @@ main {
         position: static;
         height: auto;
     }
-    
+
     main {
         margin-left: 0;
     }

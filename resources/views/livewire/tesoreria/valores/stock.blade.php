@@ -132,16 +132,16 @@
                                     <small class="text-muted">{{ $valor->tipo_valor_texto }}</small>
                                 </td>
                                 <td class="text-center">
-                                    <span class="badge bg-primary">{{ number_format($valor->resumen_stock['stock_total']) }}</span>
+                                    <span class="badge bg-primary text-white">{{ number_format($valor->resumen_stock['stock_total']) }}</span>
                                 </td>
                                 <td class="text-center">
-                                    <span class="badge bg-success">{{ number_format($valor->resumen_stock['libretas_completas']) }}</span>
+                                    <span class="badge bg-success text-white">{{ number_format($valor->resumen_stock['libretas_completas']) }}</span>
                                 </td>
                                 <td class="text-center">
-                                    <span class="badge bg-warning">{{ number_format($valor->resumen_stock['recibos_en_uso']) }}</span>
+                                    <span class="badge bg-warning text-white">{{ number_format($valor->resumen_stock['recibos_en_uso']) }}</span>
                                 </td>
                                 <td class="text-center">
-                                    <span class="badge bg-info">{{ number_format($valor->resumen_stock['recibos_disponibles']) }}</span>
+                                    <span class="badge bg-info text-white">{{ number_format($valor->resumen_stock['recibos_disponibles']) }}</span>
                                 </td>
                                 <td class="text-center">
                                     <button type="button" class="btn btn-outline-info btn-sm"
@@ -456,32 +456,55 @@
         }
 
         // Event listeners para eventos de Livewire
+        window.addEventListener('show-create-edit-modal', function(event) {
+            console.log('Evento show-create-edit-modal recibido!', event);
+            showModal('createEditModal');
+        });
+
+        window.addEventListener('hide-create-edit-modal', function(event) {
+            console.log('Evento hide-create-edit-modal recibido!', event);
+            hideModal('createEditModal');
+        });
+
+        window.addEventListener('show-delete-modal', function(event) {
+            console.log('Evento show-delete-modal recibido!', event);
+            showModal('deleteModal');
+        });
+
+        window.addEventListener('hide-delete-modal', function(event) {
+            console.log('Evento hide-delete-modal recibido!', event);
+            hideModal('deleteModal');
+        });
+
         window.addEventListener('show-detail-modal', function(event) {
+            console.log('Evento show-detail-modal recibido!', event);
             showModal('detailStockModal');
         });
 
         window.addEventListener('hide-detail-modal', function(event) {
+            console.log('Evento hide-detail-modal recibido!', event);
             hideModal('detailStockModal');
         });
 
         // Configurar cuando Livewire esté listo
         document.addEventListener('livewire:load', function() {
-            // Limpiar formulario cuando se cierra el modal (simulando hidden.bs.modal)
-            const detailStockModal = document.getElementById('detailStockModal');
-            if (detailStockModal) {
+            // Listener para el modal de detalle de stock
+            const detailModal = document.getElementById('detailStockModal');
+            if (detailModal) {
                 const observer = new MutationObserver(function(mutations) {
                     mutations.forEach(function(mutation) {
                         if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
                             const modal = mutation.target;
-                            if (modal.style.display === 'none' && !modal.classList.contains(
-                                    'show')) {
-                                Livewire.find('{{ $_instance->id }}')?.call('resetForm');
+                            if (modal.style.display === 'none' && !modal.classList.contains('show')) {
+                                // Opcional: Realizar alguna acción cuando el modal de detalle se cierra
+                                // Por ejemplo, resetear alguna propiedad específica si fuera necesario.
+                                // Livewire.find('{{ $_instance->id }}')?.set('selectedValor', null);
                             }
                         }
                     });
                 });
 
-                observer.observe(detailStockModal, {
+                observer.observe(detailModal, {
                     attributes: true,
                     attributeFilter: ['style', 'class']
                 });

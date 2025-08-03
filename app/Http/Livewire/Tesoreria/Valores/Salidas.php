@@ -216,6 +216,7 @@ class Salidas extends Component
         $this->resetForm();
         $this->fecha = now()->format('Y-m-d');
         $this->showCreateModal = true;
+        $this->dispatchBrowserEvent('show-create-edit-modal');
     }
 
     public function openEditModal($salidaId)
@@ -235,18 +236,21 @@ class Salidas extends Component
         $this->observaciones = $salida->observaciones;
 
         $this->showEditModal = true;
+        $this->dispatchBrowserEvent('show-create-edit-modal');
     }
 
     public function openDeleteModal($salidaId)
     {
         $this->selectedSalida = ValorSalida::with(['valor', 'concepto'])->findOrFail($salidaId);
         $this->showDeleteModal = true;
+        $this->dispatchBrowserEvent('show-delete-modal');
     }
 
     public function openDetailModal($salidaId)
     {
         $this->selectedSalida = ValorSalida::with(['valor', 'concepto'])->findOrFail($salidaId);
         $this->showDetailModal = true;
+        $this->dispatchBrowserEvent('show-detail-modal');
     }
 
     public function create()
@@ -392,7 +396,7 @@ class Salidas extends Component
         $this->emit('alert', ['type' => 'success', 'message' => 'Salida eliminada exitosamente.']);
     }
 
-    private function resetForm()
+    public function resetForm()
     {
         $this->valores_id = '';
         $this->conceptos_id = '';

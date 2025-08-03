@@ -63,19 +63,28 @@ class Stock extends Component
         $this->sortField = $field;
     }
 
+    public function resetFilters()
+    {
+        $this->filterValor = '';
+        $this->filterTipo = '';
+        $this->filterStockBajo = false;
+        $this->calcularEstadisticas();
+    }
+
     public function openDetailModal($valorId)
     {
         $this->selectedValor = Valor::with(['conceptos.usosActivos', 'entradas', 'salidas'])
             ->findOrFail($valorId);
-        
+
         $this->detalleStock = $this->calcularDetalleValor($this->selectedValor);
         $this->showDetailModal = true;
+        $this->dispatchBrowserEvent('show-detail-modal');
     }
 
     public function calcularEstadisticas()
     {
         $valores = $this->getValoresFiltrados();
-        
+
         $this->estadisticasGenerales = [
             'total_valores' => $valores->count(),
             'total_recibos_stock' => $valores->sum(function ($valor) {
@@ -119,7 +128,7 @@ class Stock extends Component
     private function calcularDetalleValor(Valor $valor): array
     {
         $resumenGeneral = $valor->getResumenStock();
-        
+
         // Detalle por concepto
         $conceptosDetalle = $valor->conceptosActivos->map(function ($concepto) {
             $resumenConcepto = $concepto->getResumenUso();
@@ -235,7 +244,7 @@ public function actualizarRecibosUso($usoId, $nuevaCantidad)
     {
         try {
             $uso = ValorUso::findOrFail($usoId);
-            
+
             if ($nuevaCantidad < 0 || $nuevaCantidad > ($uso->hasta - $uso->desde + 1)) {
                 $this->emit('alert', [
                     'type' => 'error',
@@ -245,11 +254,11 @@ public function actualizarRecibosUso($usoId, $nuevaCantidad)
             }
 
             $uso->recibos_disponibles = $nuevaCantidad;
-            
+
             if ($nuevaCantidad == 0) {
                 $uso->activo = false;
             }
-            
+
             $uso->save();
 
             // Actualizar el detalle
@@ -296,7 +305,7 @@ public function actualizarRecibosUso($usoId, $nuevaCantidad)
     {
         try {
             $valores = $this->getValoresFiltrados();
-            
+
             $data = $valores->map(function ($valor) {
                 $resumen = $valor->getResumenStock();
                 return [
@@ -315,7 +324,7 @@ public function actualizarRecibosUso($usoId, $nuevaCantidad)
 
             // Aquí puedes implementar la lógica de exportación
             // Por ejemplo, generar un CSV o Excel
-            
+
             $this->emit('alert', [
                 'type' => 'success',
                 'message' => 'Stock exportado correctamente.'

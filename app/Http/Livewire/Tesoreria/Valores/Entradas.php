@@ -105,6 +105,7 @@ class Entradas extends Component
         $this->resetForm();
         $this->fecha = now()->format('Y-m-d');
         $this->showCreateModal = true;
+        $this->dispatchBrowserEvent('show-create-edit-modal');
     }
 
     public function openEditModal($entradaId)
@@ -121,18 +122,21 @@ class Entradas extends Component
         $this->observaciones = $entrada->observaciones;
 
         $this->showEditModal = true;
+        $this->dispatchBrowserEvent('show-create-edit-modal');
     }
 
     public function openDeleteModal($entradaId)
     {
         $this->selectedEntrada = ValorEntrada::findOrFail($entradaId);
         $this->showDeleteModal = true;
+        $this->dispatchBrowserEvent('show-delete-modal');
     }
 
     public function openDetailModal($entradaId)
     {
         $this->selectedEntrada = ValorEntrada::with('valor')->findOrFail($entradaId);
         $this->showDetailModal = true;
+        $this->dispatchBrowserEvent('show-detail-modal');
     }
 
     public function create()
@@ -243,7 +247,7 @@ class Entradas extends Component
         $this->emit('alert', ['type' => 'success', 'message' => 'Entrada eliminada exitosamente.']);
     }
 
-    private function resetForm()
+    public function resetForm()
     {
         $this->valores_id = '';
         $this->fecha = '';

@@ -110,7 +110,7 @@
                                 <td class="text-center">{{ $entrada->comprobante }}</td>
                                 <td class="text-center">{{ number_format($entrada->desde) }} - {{ number_format($entrada->hasta) }}</td>
                                 <td class="text-center">
-                                    <span class="badge bg-primary">{{ number_format($entrada->total_recibos) }}</span>
+                                    <span class="badge bg-primary text-white">{{ number_format($entrada->total_recibos) }}</span>
                                 </td>
                                 <td class="text-center">
                                     <div class="btn-group btn-group-sm" role="group">
@@ -397,27 +397,23 @@
 
         // Event listeners para eventos de Livewire
         window.addEventListener('show-create-edit-modal', function(event) {
+            console.log('Evento show-create-edit-modal recibido!', event);
             showModal('createEditModal');
         });
 
         window.addEventListener('hide-create-edit-modal', function(event) {
+            console.log('Evento hide-create-edit-modal recibido!', event);
             hideModal('createEditModal');
         });
 
         window.addEventListener('show-delete-modal', function(event) {
+            console.log('Evento show-delete-modal recibido!', event);
             showModal('deleteModal');
         });
 
         window.addEventListener('hide-delete-modal', function(event) {
+            console.log('Evento hide-delete-modal recibido!', event);
             hideModal('deleteModal');
-        });
-
-        window.addEventListener('show-detail-modal', function(event) {
-            showModal('detailModal');
-        });
-
-        window.addEventListener('hide-detail-modal', function(event) {
-            hideModal('detailModal');
         });
 
         // Configurar cuando Livewire esté listo
