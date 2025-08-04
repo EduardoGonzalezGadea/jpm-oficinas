@@ -29,7 +29,9 @@ class ValorController extends Controller
      */
     public function index()
     {
-        return view('tesoreria.valores.index');
+        return view('tesoreria.valores.index')->with([
+            'component' => 'tesoreria.valores.stock',
+        ]);
     }
 
     /**

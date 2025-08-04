@@ -15,10 +15,10 @@
             <h5 class="mb-0"><i class="fas fa-filter me-2"></i>Filtros de Búsqueda</h5>
         </div>
         <div class="card-body">
-            <div class="row d-flex justify-content-between align-items-center">
-                <div class="col-md-4">
+            <div class="d-flex justify-content-between align-content-between">
+                <div class="flex-grow-1">
                     <div class="form-group">
-                        <label class="form-label font-weight-bold col-form-label-sm">Buscar</label>
+                        {{-- <label class="form-label font-weight-bold col-form-label-sm">Buscar</label> --}}
                         <div class="input-group input-group-sm">
                             <div class="input-group-prepend">
                                 <span class="input-group-text"><i class="fas fa-search"></i></span>
@@ -28,9 +28,9 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-md-2">
+                <div>
                     <div class="form-group">
-                        <label class="form-label font-weight-bold col-form-label-sm">Tipo de Valor</label>
+                        {{-- <label class="form-label font-weight-bold col-form-label-sm">Tipo de Valor</label> --}}
                         <select class="form-select form-control-sm" wire:model="filterTipo">
                             <option value="">Todos</option>
                             <option value="pesos">Pesos</option>
@@ -39,9 +39,9 @@
                         </select>
                     </div>
                 </div>
-                <div class="col-md-2">
+                <div>
                     <div class="form-group">
-                        <label class="form-label font-weight-bold col-form-label-sm">Estado</label>
+                        {{-- <label class="form-label font-weight-bold col-form-label-sm">Estado</label> --}}
                         <select class="form-select form-control-sm" wire:model="filterActivo">
                             <option value="">Todos</option>
                             <option value="1">Activos</option>
@@ -49,9 +49,9 @@
                         </select>
                     </div>
                 </div>
-                <div class="col-md-2">
+                <div>
                     <div class="form-group">
-                        <label class="form-label font-weight-bold col-form-label-sm">Por página</label>
+                        {{-- <label class="form-label font-weight-bold col-form-label-sm">Por página</label> --}}
                         <select class="form-select form-control-sm" wire:model="perPage">
                             <option value="10">10</option>
                             <option value="25">25</option>
@@ -59,7 +59,7 @@
                         </select>
                     </div>
                 </div>
-                <div class="col-md-2">
+                <div>
                     <button type="button" class="btn btn-outline-primary btn-sm" wire:click="$set('search', '')">
                         <i class="fas fa-times me-1"></i>Limpiar
                     </button>
@@ -203,7 +203,7 @@
                     <h5 class="modal-title">
                         {{ $showCreateModal ? 'Crear Nuevo Valor' : 'Editar Valor' }}
                     </h5>
-                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
@@ -279,7 +279,7 @@
                     </form>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
                     @if ($showCreateModal)
                         <button type="button" class="btn btn-primary" wire:click="create">
                             <i class="fas fa-save me-2"></i>Crear Valor
@@ -303,7 +303,7 @@
                         <h5 class="modal-title">
                             <i class="fas fa-chart-bar me-2"></i>Resumen de Stock - {{ $selectedValor->nombre }}
                         </h5>
-                        <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                             <span aria-hidden="true">&times;</span>
                         </button>
                     </div>
@@ -411,7 +411,7 @@
                         @endif
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
                     </div>
                 @endif
             </div>
@@ -427,7 +427,7 @@
                         <h5 class="modal-title text-danger">
                             <i class="fas fa-exclamation-triangle me-2"></i>Confirmar Eliminación
                         </h5>
-                        <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                             <span aria-hidden="true">&times;</span>
                         </button>
                     </div>
@@ -439,7 +439,7 @@
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
                         <button type="button" class="btn btn-danger" wire:click="delete">
                             <i class="fas fa-trash me-2"></i>Eliminar
                         </button>
@@ -449,277 +449,5 @@
         </div>
     </div>
 
-    {{-- Reemplaza todo el script anterior con este --}}
-    <script>
-        console.log('=== MODAL SCRIPT VANILLA JS ===');
-
-        // Función para abrir modal manualmente
-        function showModal(modalId) {
-            const modal = document.getElementById(modalId);
-            const backdrop = document.createElement('div');
-
-            if (!modal) {
-                console.error('Modal no encontrado:', modalId);
-                return;
-            }
-
-            console.log('Abriendo modal:', modalId);
-
-            // Crear backdrop
-            backdrop.className = 'modal-backdrop fade show';
-            backdrop.style.zIndex = '1040';
-            document.body.appendChild(backdrop);
-
-            // Mostrar modal
-            modal.style.display = 'block';
-            modal.style.zIndex = '1050';
-            modal.classList.add('show');
-            modal.setAttribute('aria-hidden', 'false');
-
-            // Agregar clase al body
-            document.body.classList.add('modal-open');
-            document.body.style.overflow = 'hidden';
-            document.body.style.paddingRight = '17px'; // Simular scrollbar
-
-            // Enfocar el modal
-            modal.focus();
-
-            // Configurar cierre con ESC
-            const closeOnEsc = function(e) {
-                if (e.key === 'Escape') {
-                    hideModal(modalId);
-                    document.removeEventListener('keydown', closeOnEsc);
-                }
-            };
-            document.addEventListener('keydown', closeOnEsc);
-
-            // Configurar cierre al hacer clic en backdrop
-            backdrop.addEventListener('click', function() {
-                hideModal(modalId);
-            });
-
-            // Configurar botones de cierre
-            const closeButtons = modal.querySelectorAll('[data-bs-dismiss="modal"], .btn-close');
-            closeButtons.forEach(button => {
-                button.addEventListener('click', function() {
-                    hideModal(modalId);
-                });
-            });
-        }
-
-        // Función para cerrar modal manualmente
-        function hideModal(modalId) {
-            const modal = document.getElementById(modalId);
-            const backdrop = document.querySelector('.modal-backdrop');
-
-            if (!modal) return;
-
-            console.log('Cerrando modal:', modalId);
-
-            // Ocultar modal
-            modal.style.display = 'none';
-            modal.classList.remove('show');
-            modal.setAttribute('aria-hidden', 'true');
-
-            // Remover backdrop
-            if (backdrop) {
-                backdrop.remove();
-            }
-
-            // Remover clases del body
-            document.body.classList.remove('modal-open');
-            document.body.style.overflow = '';
-            document.body.style.paddingRight = '';
-        }
-
-        // Event listeners para eventos de Livewire
-        window.addEventListener('show-create-edit-modal', function(event) {
-            console.log('✅ Evento show-create-edit-modal recibido');
-            showModal('createEditModal');
-        });
-
-        window.addEventListener('hide-create-edit-modal', function(event) {
-            console.log('✅ Evento hide-create-edit-modal recibido');
-            hideModal('createEditModal');
-        });
-
-        window.addEventListener('show-stock-modal', function(event) {
-            console.log('✅ Evento show-stock-modal recibido');
-            showModal('stockModal');
-        });
-
-        window.addEventListener('hide-stock-modal', function(event) {
-            console.log('✅ Evento hide-stock-modal recibido');
-            hideModal('stockModal');
-        });
-
-        window.addEventListener('show-delete-modal', function(event) {
-            console.log('✅ Evento show-delete-modal recibido');
-            showModal('deleteModal');
-        });
-
-        window.addEventListener('hide-delete-modal', function(event) {
-            console.log('✅ Evento hide-delete-modal recibido');
-            hideModal('deleteModal');
-        });
-
-        // Función de test
-        window.testModal = function() {
-            console.log('TEST: Disparando evento show-create-edit-modal...');
-            window.dispatchEvent(new CustomEvent('show-create-edit-modal'));
-        };
-
-        // Configurar cuando Livewire esté listo
-        document.addEventListener('livewire:load', function() {
-            console.log('Livewire cargado, configurando eventos adicionales...');
-
-            // Escuchar eventos emit de Livewire
-            Livewire.on('log', message => {
-                console.log('📝 Log desde Livewire:', message);
-            });
-
-            // Limpiar formulario cuando se cierra el modal (simulando hidden.bs.modal)
-            const createEditModal = document.getElementById('createEditModal');
-            if (createEditModal) {
-                // Observador para detectar cuando el modal se cierra
-                const observer = new MutationObserver(function(mutations) {
-                    mutations.forEach(function(mutation) {
-                        if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
-                            const modal = mutation.target;
-                            if (modal.style.display === 'none' && !modal.classList.contains(
-                                    'show')) {
-                                // Modal se cerró, llamar resetForm
-                                console.log('Modal cerrado, llamando resetForm...');
-                                Livewire.find('{{ $_instance->id }}')?.call('resetForm');
-                            }
-                        }
-                    });
-                });
-
-                observer.observe(createEditModal, {
-                    attributes: true,
-                    attributeFilter: ['style', 'class']
-                });
-            }
-        });
-
-        console.log('=== SCRIPT VANILLA JS CARGADO ===');
-    </script>
-
-    {{-- Agrega este CSS en tu vista o layout --}}
-    <style>
-        /* Estilos para modales sin Bootstrap JS */
-        .modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            z-index: 1050;
-            width: 100%;
-            height: 100%;
-            overflow-x: hidden;
-            overflow-y: auto;
-            outline: 0;
-        }
-
-        .modal.show {
-            display: block !important;
-        }
-
-        .modal-dialog {
-            position: relative;
-            width: auto;
-            margin: 0.5rem;
-            pointer-events: none;
-            transform: translate(0, 0);
-            transition: transform 0.3s ease-out;
-        }
-
-        .modal.show .modal-dialog {
-            transform: translate(0, 0);
-        }
-
-        .modal-content {
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            width: 100%;
-            pointer-events: auto;
-            background-color: #fff;
-            background-clip: padding-box;
-            border: 1px solid rgba(0, 0, 0, 0.2);
-            border-radius: 0.3rem;
-            outline: 0;
-        }
-
-        .modal-backdrop {
-            position: fixed;
-            top: 0;
-            left: 0;
-            z-index: 1040;
-            width: 100vw;
-            height: 100vh;
-            background-color: #000;
-            opacity: 0.5;
-        }
-
-        .modal-backdrop.show {
-            opacity: 0.5;
-        }
-
-        body.modal-open {
-            overflow: hidden;
-        }
-
-        /* Centrar modales */
-        @media (min-width: 576px) {
-            .modal-dialog {
-                max-width: 500px;
-                margin: 1.75rem auto;
-            }
-
-            .modal-dialog.modal-lg {
-                max-width: 800px;
-            }
-
-            .modal-dialog.modal-xl {
-                max-width: 1140px;
-            }
-        }
-
-        /* Animaciones suaves */
-        .modal {
-            transition: opacity 0.15s linear;
-        }
-
-        .modal.fade .modal-dialog {
-            transition: transform 0.3s ease-out;
-            transform: translate(0, -50px);
-        }
-
-        .modal.show .modal-dialog {
-            transform: none;
-        }
-
-        .close {
-            float: right;
-            font-size: 1.5rem;
-            font-weight: 700;
-            line-height: 1;
-            color: #000;
-            text-shadow: 0 1px 0 #fff;
-            opacity: .5;
-        }
-
-        .close:hover {
-            color: #000;
-            text-decoration: none;
-        }
-
-        button.close {
-            padding: 0;
-            background-color: transparent;
-            border: 0;
-        }
-    </style>
 
 </div>

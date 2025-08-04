@@ -222,7 +222,7 @@ class Salidas extends Component
         $this->resetForm();
         $this->fecha = now()->format('Y-m-d');
         $this->showCreateModal = true;
-        $this->dispatchBrowserEvent('show-create-edit-modal');
+        $this->dispatchBrowserEvent('show-modal', ['id' => 'createEditModal']);
     }
 
     public function openEditModal($salidaId)
@@ -242,21 +242,21 @@ class Salidas extends Component
         $this->observaciones = $salida->observaciones;
 
         $this->showEditModal = true;
-        $this->dispatchBrowserEvent('show-create-edit-modal');
+        $this->dispatchBrowserEvent('show-modal', ['id' => 'createEditModal']);
     }
 
     public function openDeleteModal($salidaId)
     {
         $this->selectedSalida = ValorSalida::with(['valor', 'concepto'])->findOrFail($salidaId);
         $this->showDeleteModal = true;
-        $this->dispatchBrowserEvent('show-delete-modal');
+        $this->dispatchBrowserEvent('show-modal', ['id' => 'deleteModal']);
     }
 
     public function openDetailModal($salidaId)
     {
         $this->selectedSalida = ValorSalida::with(['valor', 'concepto'])->findOrFail($salidaId);
         $this->showDetailModal = true;
-        $this->dispatchBrowserEvent('show-detail-modal');
+        $this->dispatchBrowserEvent('show-modal', ['id' => 'detailModal']);
     }
 
     public function create()
@@ -328,6 +328,7 @@ class Salidas extends Component
 
         $this->showCreateModal = false;
         $this->resetForm();
+        $this->dispatchBrowserEvent('hide-modal', ['id' => 'createEditModal']);
         $this->emit('alert', ['type' => 'success', 'message' => 'Salida registrada exitosamente.']);
     }
 
@@ -382,6 +383,7 @@ class Salidas extends Component
 
         $this->showEditModal = false;
         $this->resetForm();
+        $this->dispatchBrowserEvent('hide-modal', ['id' => 'createEditModal']);
         $this->emit('alert', ['type' => 'success', 'message' => 'Salida actualizada exitosamente.']);
     }
 
@@ -399,6 +401,7 @@ class Salidas extends Component
 
         $this->selectedSalida->delete();
         $this->showDeleteModal = false;
+        $this->dispatchBrowserEvent('hide-modal', ['id' => 'deleteModal']);
         $this->emit('alert', ['type' => 'success', 'message' => 'Salida eliminada exitosamente.']);
     }
 

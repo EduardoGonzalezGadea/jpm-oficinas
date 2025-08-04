@@ -5,7 +5,7 @@
             <p class="text-muted mb-0">Resumen y gestión del stock de libretas de recibos</p>
         </div>
         <button type="button" class="btn btn-outline-success" wire:click="exportarStock">
-            <i class="fas fa-file-excel me-2"></i>Exportar Stock
+            <i class="fas fa-file-excel mr-2"></i>Exportar Stock
         </button>
     </div>
 
@@ -48,14 +48,14 @@
     {{-- Filtros y búsqueda --}}
     <div class="card mb-4">
         <div class="card-header">
-            <h5 class="mb-0"><i class="fas fa-filter me-2"></i>Filtros de Búsqueda</h5>
+            <h5 class="mb-0"><i class="fas fa-filter mr-2"></i>Filtros de Búsqueda</h5>
         </div>
         <div class="card-body">
             <div class="row d-flex justify-content-between align-items-center">
                 <div class="col-md-4">
                     <div class="form-group">
-                        <label class="form-label font-weight-bold col-form-label-sm">Filtrar por Valor</label>
-                        <select class="form-select form-control-sm" wire:model="filterValor">
+                        <label class="font-weight-bold col-form-label-sm">Filtrar por Valor</label>
+                        <select class="form-control form-control-sm" wire:model="filterValor">
                             <option value="">Todos los Valores</option>
                             @foreach ($valoresParaFiltro as $valorFiltro)
                                 <option value="{{ $valorFiltro->id }}">{{ $valorFiltro->nombre }}</option>
@@ -65,8 +65,8 @@
                 </div>
                 <div class="col-md-3">
                     <div class="form-group">
-                        <label class="form-label font-weight-bold col-form-label-sm">Filtrar por Tipo</label>
-                        <select class="form-select form-control-sm" wire:model="filterTipo">
+                        <label class="font-weight-bold col-form-label-sm">Filtrar por Tipo</label>
+                        <select class="form-control form-control-sm" wire:model="filterTipo">
                             <option value="">Todos los Tipos</option>
                             <option value="pesos">Pesos</option>
                             <option value="UR">UR</option>
@@ -87,7 +87,7 @@
                 </div>
                 <div class="col-md-2">
                     <button type="button" class="btn btn-outline-primary btn-sm" wire:click="resetFilters">
-                        <i class="fas fa-times me-1"></i>Limpiar Filtros
+                        <i class="fas fa-times mr-1"></i>Limpiar Filtros
                     </button>
                 </div>
             </div>
@@ -104,19 +104,19 @@
                             <th wire:click="sortBy('nombre')" style="cursor: pointer;" class="text-nowrap text-start">
                                 Valor
                                 @if ($sortField === 'nombre')
-                                    <i class="fas fa-sort-{{ $sortDirection === 'asc' ? 'up' : 'down' }} ms-1"></i>
+                                    <i class="fas fa-sort-{{ $sortDirection === 'asc' ? 'up' : 'down' }} ml-1"></i>
                                 @endif
                             </th>
                             <th wire:click="sortBy('stock_total')" style="cursor: pointer;" class="text-nowrap text-center">
                                 Total Recibos
                                 @if ($sortField === 'stock_total')
-                                    <i class="fas fa-sort-{{ $sortDirection === 'asc' ? 'up' : 'down' }} ms-1"></i>
+                                    <i class="fas fa-sort-{{ $sortDirection === 'asc' ? 'up' : 'down' }} ml-1"></i>
                                 @endif
                             </th>
                             <th wire:click="sortBy('libretas_completas')" style="cursor: pointer;" class="text-nowrap text-center">
                                 Libretas Completas
                                 @if ($sortField === 'libretas_completas')
-                                    <i class="fas fa-sort-{{ $sortDirection === 'asc' ? 'up' : 'down' }} ms-1"></i>
+                                    <i class="fas fa-sort-{{ $sortDirection === 'asc' ? 'up' : 'down' }} ml-1"></i>
                                 @endif
                             </th>
                             <th class="text-nowrap text-center">Recibos en Uso</th>
@@ -132,16 +132,16 @@
                                     <small class="text-muted">{{ $valor->tipo_valor_texto }}</small>
                                 </td>
                                 <td class="text-center">
-                                    <span class="badge bg-primary text-white">{{ number_format($valor->resumen_stock['stock_total']) }}</span>
+                                    <span class="badge badge-primary text-white">{{ number_format($valor->resumen_stock['stock_total']) }}</span>
                                 </td>
                                 <td class="text-center">
-                                    <span class="badge bg-success text-white">{{ number_format($valor->resumen_stock['libretas_completas']) }}</span>
+                                    <span class="badge badge-success text-white">{{ number_format($valor->resumen_stock['libretas_completas']) }}</span>
                                 </td>
                                 <td class="text-center">
-                                    <span class="badge bg-warning text-white">{{ number_format($valor->resumen_stock['recibos_en_uso']) }}</span>
+                                    <span class="badge badge-warning text-white">{{ number_format($valor->resumen_stock['recibos_en_uso']) }}</span>
                                 </td>
                                 <td class="text-center">
-                                    <span class="badge bg-info text-white">{{ number_format($valor->resumen_stock['recibos_disponibles']) }}</span>
+                                    <span class="badge badge-info text-white">{{ number_format($valor->resumen_stock['recibos_disponibles']) }}</span>
                                 </td>
                                 <td class="text-center">
                                     <button type="button" class="btn btn-outline-info btn-sm"
@@ -171,9 +171,9 @@
                 @if ($selectedValor)
                     <div class="modal-header">
                         <h5 class="modal-title">
-                            <i class="fas fa-chart-bar me-2"></i>Detalle de Stock: {{ $selectedValor->nombre }}
+                            <i class="fas fa-chart-bar mr-2"></i>Detalle de Stock: {{ $selectedValor->nombre }}
                         </h5>
-                        <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                             <span aria-hidden="true"><i class="fas fa-times"></i></span>
                         </button>
                     </div>
@@ -223,10 +223,10 @@
                         {{-- Alertas --}}
                         @if (count($detalleStock['alertas']) > 0)
                             <div class="alert alert-danger mb-4">
-                                <h6 class="alert-heading"><i class="fas fa-bell me-2"></i>Alertas de Stock</h6>
+                                <h6 class="alert-heading"><i class="fas fa-bell mr-2"></i>Alertas de Stock</h6>
                                 <ul class="mb-0">
                                     @foreach ($detalleStock['alertas'] as $alerta)
-                                        <li><i class="{{ $alerta['icono'] }} me-2"></i>{{ $alerta['mensaje'] }}</li>
+                                        <li><i class="{{ $alerta['icono'] }} mr-2"></i>{{ $alerta['mensaje'] }}</li>
                                     @endforeach
                                 </ul>
                             </div>
@@ -317,7 +317,7 @@
                             @endforeach
                         @else
                             <div class="alert alert-info">
-                                <i class="fas fa-info-circle me-2"></i>
+                                <i class="fas fa-info-circle mr-2"></i>
                                 No hay conceptos activos para este valor.
                             </div>
                         @endif
@@ -366,245 +366,29 @@
                             </div>
                         @else
                             <div class="alert alert-info">
-                                <i class="fas fa-info-circle me-2"></i>
+                                <i class="fas fa-info-circle mr-2"></i>
                                 No hay movimientos recientes para este valor.
                             </div>
                         @endif
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                    </div>
                 @endif
             </div>
         </div>
     </div>
 
-    {{-- Script para manejar modales con Vanilla JS --}}
+    @push('scripts')
     <script>
-        // Función para abrir modal manualmente
-        function showModal(modalId) {
-            const modal = document.getElementById(modalId);
-            const backdrop = document.createElement('div');
-
-            if (!modal) {
-                console.error('Modal no encontrado:', modalId);
-                return;
-            }
-
-            // Crear backdrop
-            backdrop.className = 'modal-backdrop fade show';
-            backdrop.style.zIndex = '1040';
-            document.body.appendChild(backdrop);
-
-            // Mostrar modal
-            modal.style.display = 'block';
-            modal.style.zIndex = '1050';
-            modal.classList.add('show');
-            modal.setAttribute('aria-hidden', 'false');
-
-            // Agregar clase al body
-            document.body.classList.add('modal-open');
-            document.body.style.overflow = 'hidden';
-            document.body.style.paddingRight = '17px'; // Simular scrollbar
-
-            // Enfocar el modal
-            modal.focus();
-
-            // Configurar cierre con ESC
-            const closeOnEsc = function(e) {
-                if (e.key === 'Escape') {
-                    hideModal(modalId);
-                    document.removeEventListener('keydown', closeOnEsc);
-                }
-            };
-            document.addEventListener('keydown', closeOnEsc);
-
-            // Configurar cierre al hacer clic en backdrop
-            backdrop.addEventListener('click', function() {
-                hideModal(modalId);
+        document.addEventListener('livewire:load', function () {
+            window.livewire.on('show-detail-modal', () => {
+                $('#detailStockModal').modal('show');
             });
 
-            // Configurar botones de cierre
-            const closeButtons = modal.querySelectorAll('[data-bs-dismiss="modal"], .btn-close');
-            closeButtons.forEach(button => {
-                button.addEventListener('click', function() {
-                    hideModal(modalId);
-                });
+            window.livewire.on('hide-detail-modal', () => {
+                $('#detailStockModal').modal('hide');
             });
-        }
-
-        // Función para cerrar modal manualmente
-        function hideModal(modalId) {
-            const modal = document.getElementById(modalId);
-            const backdrop = document.querySelector('.modal-backdrop');
-
-            if (!modal) return;
-
-            // Ocultar modal
-            modal.style.display = 'none';
-            modal.classList.remove('show');
-            modal.setAttribute('aria-hidden', 'true');
-
-            // Remover backdrop
-            if (backdrop) {
-                backdrop.remove();
-            }
-
-            // Remover clases del body
-            document.body.classList.remove('modal-open');
-            document.body.style.overflow = '';
-            document.body.style.paddingRight = '';
-        }
-
-        // Event listeners para eventos de Livewire
-        window.addEventListener('show-create-edit-modal', function(event) {
-            console.log('Evento show-create-edit-modal recibido!', event);
-            showModal('createEditModal');
-        });
-
-        window.addEventListener('hide-create-edit-modal', function(event) {
-            console.log('Evento hide-create-edit-modal recibido!', event);
-            hideModal('createEditModal');
-        });
-
-        window.addEventListener('show-delete-modal', function(event) {
-            console.log('Evento show-delete-modal recibido!', event);
-            showModal('deleteModal');
-        });
-
-        window.addEventListener('hide-delete-modal', function(event) {
-            console.log('Evento hide-delete-modal recibido!', event);
-            hideModal('deleteModal');
-        });
-
-        window.addEventListener('show-detail-modal', function(event) {
-            console.log('Evento show-detail-modal recibido!', event);
-            showModal('detailStockModal');
-        });
-
-        window.addEventListener('hide-detail-modal', function(event) {
-            console.log('Evento hide-detail-modal recibido!', event);
-            hideModal('detailStockModal');
-        });
-
-        // Configurar cuando Livewire esté listo
-        document.addEventListener('livewire:load', function() {
-            // Listener para el modal de detalle de stock
-            const detailModal = document.getElementById('detailStockModal');
-            if (detailModal) {
-                const observer = new MutationObserver(function(mutations) {
-                    mutations.forEach(function(mutation) {
-                        if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
-                            const modal = mutation.target;
-                            if (modal.style.display === 'none' && !modal.classList.contains('show')) {
-                                // Opcional: Realizar alguna acción cuando el modal de detalle se cierra
-                                // Por ejemplo, resetear alguna propiedad específica si fuera necesario.
-                                // Livewire.find('{{ $_instance->id }}')?.set('selectedValor', null);
-                            }
-                        }
-                    });
-                });
-
-                observer.observe(detailModal, {
-                    attributes: true,
-                    attributeFilter: ['style', 'class']
-                });
-            }
         });
     </script>
-
-    {{-- Agrega este CSS en tu vista o layout --}}
-    <style>
-        /* Estilos para modales sin Bootstrap JS */
-        .modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            z-index: 1050;
-            width: 100%;
-            height: 100%;
-            overflow-x: hidden;
-            overflow-y: auto;
-            outline: 0;
-        }
-
-        .modal.show {
-            display: block !important;
-        }
-
-        .modal-dialog {
-            position: relative;
-            width: auto;
-            margin: 0.5rem;
-            pointer-events: none;
-            transform: translate(0, 0);
-            transition: transform 0.3s ease-out;
-        }
-
-        .modal.show .modal-dialog {
-            transform: translate(0, 0);
-        }
-
-        .modal-content {
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            width: 100%;
-            pointer-events: auto;
-            background-color: #fff;
-            background-clip: padding-box;
-            border: 1px solid rgba(0, 0, 0, 0.2);
-            border-radius: 0.3rem;
-            outline: 0;
-        }
-
-        .modal-backdrop {
-            position: fixed;
-            top: 0;
-            left: 0;
-            z-index: 1040;
-            width: 100vw;
-            height: 100vh;
-            background-color: #000;
-            opacity: 0.5;
-        }
-
-        .modal-backdrop.show {
-            opacity: 0.5;
-        }
-
-        body.modal-open {
-            overflow: hidden;
-        }
-
-        /* Centrar modales */
-        @media (min-width: 576px) {
-            .modal-dialog {
-                max-width: 500px;
-                margin: 1.75rem auto;
-            }
-
-            .modal-dialog.modal-lg {
-                max-width: 800px;
-            }
-
-            .modal-dialog.modal-xl {
-                max-width: 1140px;
-            }
-        }
-
-        /* Animaciones suaves */
-        .modal {
-            transition: opacity 0.15s linear;
-        }
-
-        .modal.fade .modal-dialog {
-            transition: transform 0.3s ease-out;
-            transform: translate(0, -50px);
-        }
-
-        .modal.show .modal-dialog {
-            transform: none;
-        }
-    </style>
+    @endpush
 </div>
+

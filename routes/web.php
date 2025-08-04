@@ -215,10 +215,41 @@ Route::middleware(['web', 'jwt.verify'])->group(function () {
 
         // Rutas principales
         Route::get('/', [ValorController::class, 'index'])->name('index');
-        Route::get('/conceptos', [ValorController::class, 'conceptos'])->name('conceptos');
-        Route::get('/entradas', [ValorController::class, 'entradas'])->name('entradas');
-        Route::get('/salidas', [ValorController::class, 'salidas'])->name('salidas');
-        Route::get('/stock', [ValorController::class, 'stock'])->name('stock');
+
+        Route::get('/stock', function () {
+            return view('layouts.valores')->with([
+                'component' => 'tesoreria.valores.stock'
+            ]);
+        })->name('stock');
+
+        Route::get('/libretas', function () {
+            return view('layouts.valores')->with([
+                'component' => 'tesoreria.valores.index'
+            ]);
+        })->name('libretas');
+
+        Route::get('/recibos', function () {
+            return view('layouts.valores')->with([
+                'component' => 'tesoreria.valores.conceptos'
+            ]);
+        })->name('recibos');
+
+        Route::get('/entradas', function () {
+            return view('layouts.valores')->with([
+                'component' => 'tesoreria.valores.entradas'
+            ]);
+        })->name('entradas');
+
+        Route::get('/salidas', function () {
+            return view('layouts.valores')->with([
+                'component' => 'tesoreria.valores.salidas'
+            ]);
+        })->name('salidas');
+
+        // Route::get('/conceptos', [ValorController::class, 'conceptos'])->name('conceptos');
+        // Route::get('/entradas', [ValorController::class, 'entradas'])->name('entradas');
+        // Route::get('/salidas', [ValorController::class, 'salidas'])->name('salidas');
+        // Route::get('/stock', [ValorController::class, 'stock'])->name('stock');
 
         // APIs y endpoints adicionales
         Route::prefix('api')->name('api.')->group(function () {

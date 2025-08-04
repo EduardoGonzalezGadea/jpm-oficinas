@@ -40,7 +40,7 @@
         @include('layouts.nav')
     @endauth
 
-    <main class="@auth container-fluid mt-4 @else container-fluid @endauth">
+    <main class="@auth container-fluid mt-2 @else container-fluid @endauth">
         @yield('contenido')
     </main>
 
@@ -49,7 +49,7 @@
     <script src="{{ asset('libs/bootstrap-4.6.2-dist/js/bootstrap.bundle.min.js') }}"></script>
     <script src="{{ asset('libs/fontawesome-free-5.15.4-web/js/all.min.js') }}"></script>
     <script src="{{ asset('libs/sweetalert2/dist/sweetalert2.all.min.js') }}"></script>
-    
+
     @yield('scripts')
 
     @livewireScripts
@@ -81,6 +81,21 @@
                 text: event.detail.text,
                 confirmButtonText: 'Cerrar'
             });
+        });
+
+        // Listener para modales de Bootstrap 4 (compatible con jQuery)
+        window.addEventListener('show-modal', event => {
+            const modalId = event.detail.id;
+            if (modalId) {
+                $('#' + modalId).modal('show');
+            }
+        });
+
+        window.addEventListener('hide-modal', event => {
+            const modalId = event.detail.id;
+            if (modalId) {
+                $('#' + modalId).modal('hide');
+            }
         });
     </script>
 </body>

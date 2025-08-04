@@ -5,14 +5,14 @@
             <p class="text-muted mb-0">Gestión de salidas de libretas de recibos</p>
         </div>
         <button type="button" class="btn btn-primary" wire:click="openCreateModal">
-            <i class="fas fa-plus me-2"></i>Nueva Salida
+            <i class="fas fa-plus mr-2"></i>Nueva Salida
         </button>
     </div>
 
     {{-- Filtros y búsqueda --}}
     <div class="card mb-4">
         <div class="card-header">
-            <h5 class="mb-0"><i class="fas fa-filter me-2"></i>Filtros de Búsqueda</h5>
+            <h5 class="mb-0"><i class="fas fa-filter mr-2"></i>Filtros de Búsqueda</h5>
         </div>
         <div class="card-body">
             <div class="row">
@@ -33,7 +33,7 @@
                 <div class="col-md-3">
                     <div class="form-group">
                         <label class="form-label font-weight-bold col-form-label-sm">Valor</label>
-                        <select class="form-select form-control-sm" wire:model="filterValor">
+                        <select class="form-control form-control-sm" wire:model="filterValor">
                             <option value="">Todos los valores</option>
                             @foreach ($valores as $valor)
                                 <option value="{{ $valor->id }}">{{ $valor->nombre }}</option>
@@ -44,7 +44,7 @@
                 <div class="col-md-4">
                     <div class="form-group">
                         <label class="form-label font-weight-bold col-form-label-sm">Concepto</label>
-                        <select class="form-select form-control-sm" wire:model="filterConcepto">
+                        <select class="form-control form-control-sm" wire:model="filterConcepto">
                             <option value="">Todos los conceptos</option>
                             @foreach ($conceptos as $concepto)
                                 <option value="{{ $concepto->id }}">{{ $concepto->concepto }} ({{ $concepto->valor->nombre }})
@@ -56,7 +56,7 @@
                 <div class="col-md-2">
                     <div class="form-group">
                         <label class="form-label font-weight-bold col-form-label-sm">Fecha</label>
-                        <select class="form-select form-control-sm" wire:model="filterFecha">
+                        <select class="form-control form-control-sm" wire:model="filterFecha">
                             <option value="">Todas</option>
                             <option value="hoy">Hoy</option>
                             <option value="semana">Esta Semana</option>
@@ -67,7 +67,7 @@
                 <div class="col-md-1">
                     <div class="form-group">
                         <label class="form-label font-weight-bold col-form-label-sm">Pág.</label>
-                        <select class="form-select form-control-sm" wire:model="perPage">
+                        <select class="form-control form-control-sm" wire:model="perPage">
                             <option value="10">10</option>
                             <option value="25">25</option>
                             <option value="50">50</option>
@@ -76,7 +76,7 @@
                 </div>
                 <div class="col-md-2 d-flex align-items-end">
                     <button type="button" class="btn btn-primary btn-sm w-100" wire:click="resetFilters">
-                        <i class="fas fa-sync-alt me-1"></i>Limpiar
+                        <i class="fas fa-sync-alt mr-1"></i>Limpiar
                     </button>
                 </div>
             </div>
@@ -93,19 +93,19 @@
                             <th wire:click="sortBy('fecha')" style="cursor: pointer;" class="text-nowrap text-center">
                                 Fecha
                                 @if ($sortField === 'fecha')
-                                    <i class="fas fa-sort-{{ $sortDirection === 'asc' ? 'up' : 'down' }} ms-1"></i>
+                                    <i class="fas fa-sort-{{ $sortDirection === 'asc' ? 'up' : 'down' }} ml-1"></i>
                                 @endif
                             </th>
                             <th wire:click="sortBy('valores_id')" style="cursor: pointer;" class="text-nowrap text-start">
                                 Valor
                                 @if ($sortField === 'valores_id')
-                                    <i class="fas fa-sort-{{ $sortDirection === 'asc' ? 'up' : 'down' }} ms-1"></i>
+                                    <i class="fas fa-sort-{{ $sortDirection === 'asc' ? 'up' : 'down' }} ml-1"></i>
                                 @endif
                             </th>
                             <th wire:click="sortBy('conceptos_id')" style="cursor: pointer;" class="text-nowrap text-start">
                                 Concepto
                                 @if ($sortField === 'conceptos_id')
-                                    <i class="fas fa-sort-{{ $sortDirection === 'asc' ? 'up' : 'down' }} ms-1"></i>
+                                    <i class="fas fa-sort-{{ $sortDirection === 'asc' ? 'up' : 'down' }} ml-1"></i>
                                 @endif
                             </th>
                             <th class="text-nowrap text-center">Rango</th>
@@ -128,7 +128,7 @@
                                 </td>
                                 <td class="text-center">{{ number_format($salida->desde) }} - {{ number_format($salida->hasta) }}</td>
                                 <td class="text-center">
-                                    <span class="badge bg-primary text-white">{{ number_format($salida->total_recibos) }}</span>
+                                    <span class="badge badge-primary text-white">{{ number_format($salida->total_recibos) }}</span>
                                 </td>
                                 <td class="text-center">{{ $salida->responsable ?? 'N/A' }}</td>
                                 <td class="text-center">
@@ -182,16 +182,16 @@
                     <h5 class="modal-title">
                         {{ $showCreateModal ? 'Registrar Nueva Salida' : 'Editar Salida' }}
                     </h5>
-                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
                 <div class="modal-body">
                     <form>
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <label class="form-label">Valor <span class="text-danger">*</span></label>
-                                <select class="form-select @error('valores_id') is-invalid @enderror"
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                <label>Valor <span class="text-danger">*</span></label>
+                                <select class="form-control @error('valores_id') is-invalid @enderror"
                                     wire:model="valores_id">
                                     <option value="">Seleccione un valor</option>
                                     @foreach ($valores as $valor)
@@ -202,9 +202,9 @@
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Concepto <span class="text-danger">*</span></label>
-                                <select class="form-select @error('conceptos_id') is-invalid @enderror"
+                            <div class="form-group col-md-6">
+                                <label>Concepto <span class="text-danger">*</span></label>
+                                <select class="form-control @error('conceptos_id') is-invalid @enderror"
                                     wire:model="conceptos_id" @if (!$valores_id) disabled @endif>
                                     <option value="">Seleccione un concepto</option>
                                     @foreach ($conceptosDisponibles as $concepto)
@@ -215,56 +215,56 @@
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Fecha <span class="text-danger">*</span></label>
+                            <div class="form-group col-md-6">
+                                <label>Fecha <span class="text-danger">*</span></label>
                                 <input type="date" class="form-control @error('fecha') is-invalid @enderror"
                                     wire:model="fecha">
                                 @error('fecha')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Comprobante <span class="text-danger">*</span></label>
+                            <div class="form-group col-md-6">
+                                <label>Comprobante <span class="text-danger">*</span></label>
                                 <input type="text" class="form-control @error('comprobante') is-invalid @enderror"
                                     wire:model="comprobante" placeholder="Ej: Recibo 12345">
                                 @error('comprobante')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Desde <span class="text-danger">*</span></label>
+                            <div class="form-group col-md-6">
+                                <label>Desde <span class="text-danger">*</span></label>
                                 <input type="number" class="form-control @error('desde') is-invalid @enderror"
                                     wire:model="desde" placeholder="1" min="1">
                                 @error('desde')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Hasta <span class="text-danger">*</span></label>
+                            <div class="form-group col-md-6">
+                                <label>Hasta <span class="text-danger">*</span></label>
                                 <input type="number" class="form-control @error('hasta') is-invalid @enderror"
                                     wire:model="hasta" placeholder="100" min="1">
                                 @error('hasta')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Número Interno (Opcional)</label>
+                            <div class="form-group col-md-6">
+                                <label>Número Interno (Opcional)</label>
                                 <input type="text" class="form-control @error('interno') is-invalid @enderror"
                                     wire:model="interno" placeholder="Ej: Lote B-2023">
                                 @error('interno')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Responsable (Opcional)</label>
+                            <div class="form-group col-md-6">
+                                <label>Responsable (Opcional)</label>
                                 <input type="text" class="form-control @error('responsable') is-invalid @enderror"
                                     wire:model="responsable" placeholder="Ej: Juan Pérez">
                                 @error('responsable')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
-                            <div class="col-12">
-                                <label class="form-label">Observaciones</label>
+                            <div class="form-group col-12">
+                                <label>Observaciones</label>
                                 <textarea class="form-control @error('observaciones') is-invalid @enderror" wire:model="observaciones" rows="3"
                                     placeholder="Observaciones adicionales..."></textarea>
                                 @error('observaciones')
@@ -293,14 +293,14 @@
                     </form>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
                     @if ($showCreateModal)
                         <button type="button" class="btn btn-primary" wire:click="create">
-                            <i class="fas fa-save me-2"></i>Registrar Salida
+                            <i class="fas fa-save mr-2"></i>Registrar Salida
                         </button>
                     @else
                         <button type="button" class="btn btn-primary" wire:click="update">
-                            <i class="fas fa-save me-2"></i>Actualizar Salida
+                            <i class="fas fa-save mr-2"></i>Actualizar Salida
                         </button>
                     @endif
                 </div>
@@ -315,9 +315,9 @@
                 @if ($selectedSalida)
                     <div class="modal-header">
                         <h5 class="modal-title text-danger">
-                            <i class="fas fa-exclamation-triangle me-2"></i>Confirmar Eliminación
+                            <i class="fas fa-exclamation-triangle mr-2"></i>Confirmar Eliminación
                         </h5>
-                        <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                             <span aria-hidden="true">&times;</span>
                         </button>
                     </div>
@@ -327,14 +327,14 @@
                             <strong>{{ $selectedSalida->concepto->concepto }}</strong> con comprobante
                             <strong>{{ $selectedSalida->comprobante }}</strong>?</p>
                         <div class="alert alert-warning">
-                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <i class="fas fa-exclamation-triangle mr-2"></i>
                             Esta acción no se puede deshacer. La eliminación de esta salida afectará el stock.
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
                         <button type="button" class="btn btn-danger" wire:click="delete">
-                            <i class="fas fa-trash me-2"></i>Eliminar
+                            <i class="fas fa-trash mr-2"></i>Eliminar
                         </button>
                     </div>
                 @endif
@@ -349,9 +349,9 @@
                 @if ($selectedSalida)
                     <div class="modal-header">
                         <h5 class="modal-title">
-                            <i class="fas fa-info-circle me-2"></i>Detalles de Salida
+                            <i class="fas fa-info-circle mr-2"></i>Detalles de Salida
                         </h5>
-                        <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                             <span aria-hidden="true">&times;</span>
                         </button>
                     </div>
@@ -376,259 +376,11 @@
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
                     </div>
                 @endif
             </div>
         </div>
     </div>
 
-    {{-- Script para manejar modales con Vanilla JS --}}
-    <script>
-        // Función para abrir modal manualmente
-        function showModal(modalId) {
-            const modal = document.getElementById(modalId);
-            const backdrop = document.createElement('div');
-
-            if (!modal) {
-                console.error('Modal no encontrado:', modalId);
-                return;
-            }
-
-            // Crear backdrop
-            backdrop.className = 'modal-backdrop fade show';
-            backdrop.style.zIndex = '1040';
-            document.body.appendChild(backdrop);
-
-            // Mostrar modal
-            modal.style.display = 'block';
-            modal.style.zIndex = '1050';
-            modal.classList.add('show');
-            modal.setAttribute('aria-hidden', 'false');
-
-            // Agregar clase al body
-            document.body.classList.add('modal-open');
-            document.body.style.overflow = 'hidden';
-            document.body.style.paddingRight = '17px'; // Simular scrollbar
-
-            // Enfocar el modal
-            modal.focus();
-
-            // Configurar cierre con ESC
-            const closeOnEsc = function(e) {
-                if (e.key === 'Escape') {
-                    hideModal(modalId);
-                    document.removeEventListener('keydown', closeOnEsc);
-                }
-            };
-            document.addEventListener('keydown', closeOnEsc);
-
-            // Configurar cierre al hacer clic en backdrop
-            backdrop.addEventListener('click', function() {
-                hideModal(modalId);
-            });
-
-            // Configurar botones de cierre
-            const closeButtons = modal.querySelectorAll('[data-bs-dismiss="modal"], .btn-close');
-            closeButtons.forEach(button => {
-                button.addEventListener('click', function() {
-                    hideModal(modalId);
-                });
-            });
-        }
-
-        // Función para cerrar modal manualmente
-        function hideModal(modalId) {
-            const modal = document.getElementById(modalId);
-            const backdrop = document.querySelector('.modal-backdrop');
-
-            if (!modal) return;
-
-            // Ocultar modal
-            modal.style.display = 'none';
-            modal.classList.remove('show');
-            modal.setAttribute('aria-hidden', 'true');
-
-            // Remover backdrop
-            if (backdrop) {
-                backdrop.remove();
-            }
-
-            // Remover clases del body
-            document.body.classList.remove('modal-open');
-            document.body.style.overflow = '';
-            document.body.style.paddingRight = '';
-        }
-
-        // Event listeners para eventos de Livewire
-        window.addEventListener('show-create-edit-modal', function(event) {
-            console.log('Evento show-create-edit-modal recibido!', event);
-            showModal('createEditModal');
-        });
-
-        window.addEventListener('hide-create-edit-modal', function(event) {
-            console.log('Evento hide-create-edit-modal recibido!', event);
-            hideModal('createEditModal');
-        });
-
-        window.addEventListener('show-delete-modal', function(event) {
-            console.log('Evento show-delete-modal recibido!', event);
-            showModal('deleteModal');
-        });
-
-        window.addEventListener('hide-delete-modal', function(event) {
-            console.log('Evento hide-delete-modal recibido!', event);
-            hideModal('deleteModal');
-        });
-
-        window.addEventListener('show-detail-modal', function(event) {
-            console.log('Evento show-detail-modal recibido!', event);
-            showModal('detailModal');
-        });
-
-        window.addEventListener('hide-detail-modal', function(event) {
-            console.log('Evento hide-detail-modal recibido!', event);
-            hideModal('detailModal');
-        });
-
-        // Configurar cuando Livewire esté listo
-        document.addEventListener('livewire:load', function() {
-            // Limpiar formulario cuando se cierra el modal (simulando hidden.bs.modal)
-            const createEditModal = document.getElementById('createEditModal');
-            if (createEditModal) {
-                const observer = new MutationObserver(function(mutations) {
-                    mutations.forEach(function(mutation) {
-                        if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
-                            const modal = mutation.target;
-                            if (modal.style.display === 'none' && !modal.classList.contains(
-                                    'show')) {
-                                Livewire.find('{{ $_instance->id }}')?.call('resetForm');
-                            }
-                        }
-                    });
-                });
-
-                observer.observe(createEditModal, {
-                    attributes: true,
-                    attributeFilter: ['style', 'class']
-                });
-            }
-        });
-    </script>
-
-    {{-- Agrega este CSS en tu vista o layout --}}
-    <style>
-        /* Estilos para modales sin Bootstrap JS */
-        .modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            z-index: 1050;
-            width: 100%;
-            height: 100%;
-            overflow-x: hidden;
-            overflow-y: auto;
-            outline: 0;
-        }
-
-        .modal.show {
-            display: block !important;
-        }
-
-        .modal-dialog {
-            position: relative;
-            width: auto;
-            margin: 0.5rem;
-            pointer-events: none;
-            transform: translate(0, 0);
-            transition: transform 0.3s ease-out;
-        }
-
-        .modal.show .modal-dialog {
-            transform: translate(0, 0);
-        }
-
-        .modal-content {
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            width: 100%;
-            pointer-events: auto;
-            background-color: #fff;
-            background-clip: padding-box;
-            border: 1px solid rgba(0, 0, 0, 0.2);
-            border-radius: 0.3rem;
-            outline: 0;
-        }
-
-        .modal-backdrop {
-            position: fixed;
-            top: 0;
-            left: 0;
-            z-index: 1040;
-            width: 100vw;
-            height: 100vh;
-            background-color: #000;
-            opacity: 0.5;
-        }
-
-        .modal-backdrop.show {
-            opacity: 0.5;
-        }
-
-        body.modal-open {
-            overflow: hidden;
-        }
-
-        /* Centrar modales */
-        @media (min-width: 576px) {
-            .modal-dialog {
-                max-width: 500px;
-                margin: 1.75rem auto;
-            }
-
-            .modal-dialog.modal-lg {
-                max-width: 800px;
-            }
-
-            .modal-dialog.modal-xl {
-                max-width: 1140px;
-            }
-        }
-
-        /* Animaciones suaves */
-        .modal {
-            transition: opacity 0.15s linear;
-        }
-
-        .modal.fade .modal-dialog {
-            transition: transform 0.3s ease-out;
-            transform: translate(0, -50px);
-        }
-
-        .modal.show .modal-dialog {
-            transform: none;
-        }
-
-        .close {
-            float: right;
-            font-size: 1.5rem;
-            font-weight: 700;
-            line-height: 1;
-            color: #000;
-            text-shadow: 0 1px 0 #fff;
-            opacity: .5;
-        }
-
-        .close:hover {
-            color: #000;
-            text-decoration: none;
-        }
-
-        button.close {
-            padding: 0;
-            background-color: transparent;
-            border: 0;
-        }
-    </style>
 </div>

@@ -91,7 +91,7 @@ class Conceptos extends Component
     {
         $this->resetForm();
         $this->showCreateModal = true;
-        $this->dispatchBrowserEvent('show-create-edit-modal');
+        $this->dispatchBrowserEvent('show-modal', ['id' => 'createEditModal']);
     }
 
     public function openEditModal($conceptoId)
@@ -107,14 +107,14 @@ class Conceptos extends Component
         $this->activo = $concepto->activo;
 
         $this->showEditModal = true;
-        $this->dispatchBrowserEvent('show-create-edit-modal');
+        $this->dispatchBrowserEvent('show-modal', ['id' => 'createEditModal']);
     }
 
     public function openDeleteModal($conceptoId)
     {
         $this->selectedConcepto = ValorConcepto::findOrFail($conceptoId);
         $this->showDeleteModal = true;
-        $this->dispatchBrowserEvent('show-delete-modal');
+        $this->dispatchBrowserEvent('show-modal', ['id' => 'deleteModal']);
     }
 
     public function create()
@@ -183,8 +183,8 @@ class Conceptos extends Component
         $this->showEditModal = false;
         $this->showDeleteModal = false;
         $this->resetForm();
-        $this->dispatchBrowserEvent('hide-create-edit-modal');
-        $this->dispatchBrowserEvent('hide-delete-modal');
+        $this->dispatchBrowserEvent('hide-modal', ['id' => 'createEditModal']);
+        $this->dispatchBrowserEvent('hide-modal', ['id' => 'deleteModal']);
     }
 
     public function resetForm()

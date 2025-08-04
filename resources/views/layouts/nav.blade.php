@@ -1,4 +1,4 @@
-<nav class="navbar navbar-expand-md navbar-dark bg-dark barra-oscura" style="margin-bottom: 20px;">
+<nav class="navbar navbar-expand-md navbar-dark bg-dark barra-oscura" style="margin-bottom: 0px;">
     <a class="navbar-brand" href="{{ route('panel') }}">
         <i class="fas fa-building mr-2"></i> JPM Oficinas
     </a>
@@ -170,5 +170,8 @@
   color: white;
   /* Opcional, para que el texto sea más fácil de leer sobre un fondo oscuro */
   text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+}
+.barra-oscura .navbar-nav .nav-link:hover {
+  color: yellow;
 }
 </style>

@@ -78,7 +78,7 @@ class Stock extends Component
 
         $this->detalleStock = $this->calcularDetalleValor($this->selectedValor);
         $this->showDetailModal = true;
-        $this->dispatchBrowserEvent('show-detail-modal');
+        $this->dispatchBrowserEvent('show-modal', ['id' => 'detailStockModal']);
     }
 
     public function calcularEstadisticas()

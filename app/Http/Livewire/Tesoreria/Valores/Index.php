@@ -92,7 +92,7 @@ class Index extends Component
     {
         $this->resetForm();
         $this->showCreateModal = true;
-        $this->dispatchBrowserEvent('show-create-edit-modal');
+        $this->dispatchBrowserEvent('show-modal', ['id' => 'createEditModal']);
     }
 
     public function openEditModal($valorId)
@@ -114,7 +114,7 @@ class Index extends Component
             $this->showCreateModal = false;
             $this->showEditModal = true;
 
-            $this->dispatchBrowserEvent('show-create-edit-modal');
+            $this->dispatchBrowserEvent('show-modal', ['id' => 'createEditModal']);
         } catch (\Exception $e) {
             $this->emit('alert', [
                 'type' => 'error',
@@ -127,7 +127,7 @@ class Index extends Component
     {
         $this->selectedValor = Valor::findOrFail($valorId);
         $this->showDeleteModal = true;
-        $this->dispatchBrowserEvent('show-delete-modal');
+        $this->dispatchBrowserEvent('show-modal', ['id' => 'deleteModal']);
     }
 
     public function openStockModal($valorId)
@@ -137,7 +137,7 @@ class Index extends Component
             $this->selectedValor->resumen_stock = $this->selectedValor->getResumenStock();
             $this->stockResumen = $this->selectedValor->resumen_stock;
             $this->showStockModal = true;
-            $this->dispatchBrowserEvent('show-stock-modal');
+            $this->dispatchBrowserEvent('show-modal', ['id' => 'stockModal']);
         } catch (\Exception $e) {
             $this->emit('alert', [
                 'type' => 'error',
@@ -170,7 +170,7 @@ class Index extends Component
 
         $this->showCreateModal = false;
         $this->resetForm();
-        $this->dispatchBrowserEvent('hide-create-edit-modal');
+        $this->dispatchBrowserEvent('hide-modal', ['id' => 'createEditModal']);
         $this->emit('alert', ['type' => 'success', 'message' => 'Valor creado exitosamente.']);
     }
 
@@ -198,7 +198,7 @@ class Index extends Component
 
         $this->showEditModal = false;
         $this->resetForm();
-        $this->dispatchBrowserEvent('hide-create-edit-modal');
+        $this->dispatchBrowserEvent('hide-modal', ['id' => 'createEditModal']);
         $this->emit('alert', ['type' => 'success', 'message' => 'Valor actualizado exitosamente.']);
     }
 
@@ -210,13 +210,13 @@ class Index extends Component
                 'message' => 'No se puede eliminar el valor porque tiene movimientos asociados.'
             ]);
             $this->showDeleteModal = false;
-            $this->dispatchBrowserEvent('hide-delete-modal');
+            $this->dispatchBrowserEvent('hide-modal', ['id' => 'deleteModal']);
             return;
         }
 
         $this->selectedValor->delete();
         $this->showDeleteModal = false;
-        $this->dispatchBrowserEvent('hide-delete-modal');
+        $this->dispatchBrowserEvent('hide-modal', ['id' => 'deleteModal']);
         $this->emit('alert', ['type' => 'success', 'message' => 'Valor eliminado exitosamente.']);
     }
 
@@ -246,7 +246,9 @@ class Index extends Component
         $this->showDeleteModal = false;
         $this->showStockModal = false;
         $this->resetForm();
-        $this->dispatchBrowserEvent('hide-create-edit-modal');
+        $this->dispatchBrowserEvent('hide-modal', ['id' => 'createEditModal']);
+        $this->dispatchBrowserEvent('hide-modal', ['id' => 'deleteModal']);
+        $this->dispatchBrowserEvent('hide-modal', ['id' => 'stockModal']);
     }
 
     public function resetForm()
@@ -266,7 +268,7 @@ class Index extends Component
     {
         $this->emit('alert', ['type' => 'success', 'message' => 'Valor eliminado exitosamente.']);
     }
-    
+
     public function render()
     {
         $valores = Valor::query()
