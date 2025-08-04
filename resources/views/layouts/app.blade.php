@@ -10,11 +10,28 @@
 
     <title>@yield('titulo', 'JPM Oficinas')</title>
 
-    <!-- Lógica para el tema dinámico -->
-    <script src="{{ asset('js/theme-change.js') }}"></script>
+    <!-- Script simple para evitar parpadeos -->
+    <script>
+        (function() {
+            // Detectar tema guardado
+            let savedThemeName = localStorage.getItem("bootswatch-theme-name");
+            if (!savedThemeName) {
+                savedThemeName = "bootstrap-default";
+            }
+
+            // Determinar si es tema oscuro y aplicar fondo inmediatamente
+            const darkThemes = ['darkly', 'slate', 'cyborg', 'materia'];
+            const isDark = darkThemes.includes(savedThemeName);
+
+            // Aplicar color de fondo inmediatamente sin transiciones
+            document.documentElement.style.backgroundColor = isDark ? '#222222' : '#ffffff';
+            document.body.style.backgroundColor = isDark ? '#222222' : '#ffffff';
+        })();
+    </script>
 
     <!-- Bootstrap 4 CSS -->
     <link href="{{ asset('libs/bootstrap-4.6.2-dist/css/bootstrap.min.css') }}" rel="stylesheet">
+
     <!-- Hoja de estilos del tema dinámico -->
     @php
         $themePath = request()->cookie('theme_path', 'libs/bootswatch@4.6.2/dist/cosmo/bootstrap.min.css');
@@ -22,6 +39,7 @@
     @if ($themePath)
         <link id="bootswatch-theme" rel="stylesheet" href="{{ asset($themePath) }}">
     @endif
+
     <!-- Estilos personalizados -->
     <link href="{{ asset('css/app.css') }}" rel="stylesheet">
     <!-- Font Awesome -->
@@ -53,6 +71,9 @@
     @yield('scripts')
 
     @livewireScripts
+
+    <!-- Lógica para el tema dinámico -->
+    <script src="{{ asset('js/theme-change.js') }}"></script>
 
     <script>
         // Listener para notificaciones de SweetAlert2
