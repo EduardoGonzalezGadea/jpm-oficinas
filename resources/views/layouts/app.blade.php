@@ -10,35 +10,25 @@
 
     <title>@yield('titulo', 'JPM Oficinas')</title>
 
-    <!-- Script simple para evitar parpadeos -->
+    <!-- Script para cargar el tema dinámico y evitar parpadeos -->
     <script>
         (function() {
-            // Detectar tema guardado
-            let savedThemeName = localStorage.getItem("bootswatch-theme-name");
-            if (!savedThemeName) {
-                savedThemeName = "bootstrap-default";
+            // Define el tema por defecto. El asset() de Laravel generará la ruta correcta.
+            const defaultThemePath = "{{ asset('libs/bootswatch@4.6.2/dist/cosmo/bootstrap.min.css') }}";
+            
+            // Obtener el tema guardado en LocalStorage
+            let themePath = localStorage.getItem("bootswatch-theme");
+            
+            // Si no hay tema guardado, usar el por defecto
+            if (!themePath) {
+                themePath = defaultThemePath;
             }
-
-            // Determinar si es tema oscuro y aplicar fondo inmediatamente
-            const darkThemes = ['darkly', 'slate', 'cyborg', 'materia'];
-            const isDark = darkThemes.includes(savedThemeName);
-
-            // Aplicar color de fondo inmediatamente sin transiciones
-            document.documentElement.style.backgroundColor = isDark ? '#222222' : '#ffffff';
-            document.body.style.backgroundColor = isDark ? '#222222' : '#ffffff';
+            
+            // Escribir la hoja de estilos del tema directamente en el head.
+            // Esto bloquea el renderizado hasta que la hoja de estilos se determina, evitando el parpadeo.
+            document.write('<link id="bootswatch-theme" rel="stylesheet" href="' + themePath + '">');
         })();
     </script>
-
-    <!-- Bootstrap 4 CSS -->
-    <link href="{{ asset('libs/bootstrap-4.6.2-dist/css/bootstrap.min.css') }}" rel="stylesheet">
-
-    <!-- Hoja de estilos del tema dinámico -->
-    @php
-        $themePath = request()->cookie('theme_path', 'libs/bootswatch@4.6.2/dist/cosmo/bootstrap.min.css');
-    @endphp
-    @if ($themePath)
-        <link id="bootswatch-theme" rel="stylesheet" href="{{ asset($themePath) }}">
-    @endif
 
     <!-- Estilos personalizados -->
     <link href="{{ asset('css/app.css') }}" rel="stylesheet">

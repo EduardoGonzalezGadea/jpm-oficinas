@@ -36,7 +36,7 @@
             max-width: 400px;
             width: 100%;
         }
-        
+
         @media (max-height: 700px) {
             .login-container {
                 max-width: 360px;
@@ -101,11 +101,11 @@
             border-left: none;
             border-radius: 0 8px 8px 0;
         }
-        
+
         .form-group {
             margin-bottom: 0.75rem;
         }
-        
+
         @media (max-height: 700px) {
             .card-header {
                 padding: 1rem;
@@ -141,7 +141,7 @@
                                 <i class="fas fa-building"></i>
                             </div>
                             <div class="text-left">
-                                <h4 class="mb-0">JPM Oficinas</h4>
+                                <h4 class="mb-0 text-white">JPM Oficinas</h4>
                                 <small>República Oriental del Uruguay</small>
                                 <small class="d-block">Ministerio del Interior</small>
                                 <small class="d-block">Jefatura de Policía de Montevideo</small>
