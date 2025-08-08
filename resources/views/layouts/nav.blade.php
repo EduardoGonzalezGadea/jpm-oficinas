@@ -19,9 +19,9 @@
                     <div class="dropdown-menu" aria-labelledby="navbarDropdownTesoreria">
                         {{-- Submenú Cajas --}}
                         <div class="dropdown-submenu">
-                            <a class="dropdown-item dropdown-toggle" href="#" role="button">
+                            {{-- <a class="dropdown-item dropdown-toggle" href="#" role="button">
                                 <i class="fas fa-cash-register mr-2"></i>Cajas
-                            </a>
+                            </a> --}}
                             <div class="dropdown-menu">
                                 <a class="dropdown-item" href="{{ route('tesoreria.cajas.apertura-cierre') }}"
                                     wire:navigate>
@@ -44,9 +44,9 @@
                             <i class="fas fa-coins mr-2"></i>Caja Chica
                         </a>
                         {{-- Link Valores --}}
-                        <a class="dropdown-item" href="{{ route('tesoreria.valores.index') }}" wire:navigate>
+                        {{-- <a class="dropdown-item" href="{{ route('tesoreria.valores.index') }}" wire:navigate>
                             <i class="fas fa-file-invoice mr-2"></i>Valores
-                        </a>
+                        </a> --}}
                     </div>
                 </li>
             @endcan

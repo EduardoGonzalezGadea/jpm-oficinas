@@ -1,11 +1,6 @@
 <div>
     @if ($mostrarGestionDependencias)
         @livewire('tesoreria.caja-chica.dependencias')
-        @script
-            Livewire.on('cerrarGestionDependencias', () => {
-            @this.cerrarGestionDependencias();
-            });
-        @endscript
     @else
         @if (session()->has('message'))
             <div class="alert alert-success alert-dismissible fade show" role="alert">
