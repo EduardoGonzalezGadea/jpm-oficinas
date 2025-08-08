@@ -1,8 +1,8 @@
 @extends('layouts.app')
 
-@section('titulo', 'Gestión de Roles - JPM Oficinas')
+@section('title', 'Gestión de Roles - JPM Oficinas')
 
-@section('contenido')
+@section('content')
     <div class="container-fluid">
         <div class="row">
             <div class="col-12">

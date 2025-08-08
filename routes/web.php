@@ -13,6 +13,7 @@ use App\Http\Controllers\Tesoreria\CajaChica\ImpresionController;
 use App\Http\Controllers\Tesoreria\CajaChica\CajaChicaController;
 use App\Http\Controllers\Tesoreria\CajaChica\PendienteController;
 use App\Http\Controllers\Tesoreria\Valores\ValorController;
+use App\Http\Controllers\Tesoreria\CajaController;
 use App\Http\Controllers\ThemeController;
 
 /*
@@ -166,6 +167,14 @@ Route::middleware(['web', 'jwt.verify'])->group(function () {
     // Tesorería
     Route::prefix('tesoreria')->name('tesoreria.')->group(function () {
         Route::get('/', [TesoreriaController::class, 'index'])->name('index');
+
+        // Rutas de Cajas
+        Route::prefix('cajas')->name('cajas.')->middleware(['permission:operador_tesoreria'])->group(function () {
+            Route::get('/apertura-cierre', [CajaController::class, 'aperturaCierre'])->name('apertura-cierre');
+            Route::get('/movimientos', [CajaController::class, 'movimientos'])->name('movimientos');
+            Route::get('/arqueo', [CajaController::class, 'arqueo'])->name('arqueo');
+            Route::get('/denominaciones', [CajaController::class, 'denominaciones'])->name('denominaciones');
+        });
     });
 
     // Contabilidad

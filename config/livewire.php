@@ -54,8 +54,7 @@ return [
     |
     */
 
-    // 'asset_url' => null,
-    'asset_url' => env('APP_URL'),
+    'asset_url' => null,
 
     /*
     |--------------------------------------------------------------------------
@@ -102,9 +101,22 @@ return [
         'directory' => null,   // Example: 'tmp'                      Default  'livewire-tmp'
         'middleware' => null,  // Example: 'throttle:5,1'             Default: 'throttle:60,1'
         'preview_mimes' => [   // Supported file types for temporary pre-signed file URLs.
-            'png', 'gif', 'bmp', 'svg', 'wav', 'mp4',
-            'mov', 'avi', 'wmv', 'mp3', 'm4a',
-            'jpg', 'jpeg', 'mpga', 'webp', 'wma',
+            'png',
+            'gif',
+            'bmp',
+            'svg',
+            'wav',
+            'mp4',
+            'mov',
+            'avi',
+            'wmv',
+            'mp3',
+            'm4a',
+            'jpg',
+            'jpeg',
+            'mpga',
+            'webp',
+            'wma',
         ],
         'max_upload_time' => 5, // Max duration (in minutes) before an upload gets invalidated.
     ],
@@ -155,5 +167,17 @@ return [
     */
 
     'render_on_redirect' => false,
+
+    /*
+    |--------------------------------------------------------------------------
+    | Pagination Theme
+    |--------------------------------------------------------------------------
+    |
+    | This value sets the pagination theme when using components that use
+    | the WithPagination trait.
+    |
+    */
+
+    'pagination_theme' => 'bootstrap',
 
 ];

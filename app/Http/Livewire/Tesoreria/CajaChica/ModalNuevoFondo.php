@@ -33,21 +33,42 @@ class ModalNuevoFondo extends Component
         'cerrarModalNuevoFondo' => 'cerrarModal',
     ];
 
+    protected function formatearMonto($valor)
+    {
+        if (is_null($valor)) return '';
+        return number_format($valor, 2, ',', '.');
+    }
+
+    protected function parsearMonto($valor)
+    {
+        if (empty($valor)) return null;
+        // Eliminar puntos de miles y reemplazar coma decimal por punto
+        return (float) str_replace(['.', ','], ['', '.'], $valor);
+    }
+
     public function mount()
     {
-        // Valores por defecto o vacíos
-        $this->mes = '';
-        $this->anio = date('Y');
-        $this->monto = '';
+        // Los valores se establecerán en abrirModal()
+    }
+
+    public function updatedMonto($value)
+    {
+        $this->monto = $this->formatearMonto($this->parsearMonto($value));
     }
 
     public function abrirModal()
     {
-        // Los datos se precargan desde Index.php si es necesario
-        // o se pueden establecer aquí valores por defecto
-        // $this->mes = now()->locale('es_ES')->isoFormat('MMMM');
-        // $this->anio = now()->year;
-        // $this->monto = '350000';
+        // Establecer valores por defecto
+        $this->mes = now()->locale('es')->translatedFormat('F');
+        $this->anio = now()->year;
+
+        // Buscar el último fondo de caja chica
+        $ultimoFondo = CajaChica::orderBy('anio', 'desc')
+            ->orderBy('idCajaChica', 'desc')
+            ->first();
+
+        // Si existe un fondo anterior, usar su monto, si no, dejar vacío
+        $this->monto = $ultimoFondo ? $this->formatearMonto($ultimoFondo->montoCajaChica) : null;
 
         $this->mostrarModal = true;
         $this->dispatchBrowserEvent('actualizar-modal-fondo', ['mostrar' => true]);
@@ -63,24 +84,28 @@ class ModalNuevoFondo extends Component
 
     public function guardar()
     {
-        $this->validate();
+        $this->validate([
+            'mes' => 'required|string|max:20',
+            'anio' => 'required|integer',
+            'monto' => [
+                'required',
+                'regex:/^\d{1,3}(\.\d{3})*(\,\d{2})?$/' // Formato: 1.234,56
+            ]
+        ]);
 
         $existe = CajaChica::where('mes', $this->mes)
             ->where('anio', $this->anio)
             ->exists();
 
         if ($existe) {
-            // Usar addError para mostrar el error en el campo específico o un mensaje general
-            // $this->addError('mes', 'Ya existe un Fondo Permanente para este mes y año.');
+            // Restaurar alerta normal con sesión
             session()->flash('error', 'Ya existe un Fondo Permanente para este mes y año.');
-            // Emitir un evento para que el Index pueda mostrar el error si es necesario
-            // o simplemente dejar que se muestre en el modal.
-            // $this->emit('fondoDuplicado');
+            return;
         } else {
             CajaChica::create([
                 'mes' => $this->mes,
                 'anio' => $this->anio,
-                'montoCajaChica' => $this->monto,
+                'montoCajaChica' => $this->parsearMonto($this->monto),
             ]);
 
             session()->flash('message', 'Fondo Permanente creado correctamente.');

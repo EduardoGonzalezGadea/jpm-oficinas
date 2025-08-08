@@ -8,8 +8,6 @@ use App\Models\Tesoreria\Pendiente;
 use App\Models\Tesoreria\Movimiento;
 use App\Models\Tesoreria\Pago;
 use App\Models\Tesoreria\Dependencia;
-use App\Models\Tesoreria\Acreedor;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
@@ -59,7 +57,31 @@ class Index extends Component
         'fondoActualizado' => 'cargarDatos',
         'pendienteCreado' => 'cargarDatos',
         'pagoCreado' => 'cargarDatos',
+        'mostrarAlerta' => 'mostrarAlertaSweet',
+        'abrirGestionDependencias' => 'abrirGestionDependencias',
+        'cerrarGestionDependencias' => 'cerrarGestionDependencias',
     ];
+
+    public $mostrarGestionDependencias = false;
+
+    protected $queryString = [
+        'mostrarGestionDependencias' => ['except' => false],
+    ];
+
+    public function abrirGestionDependencias()
+    {
+        $this->mostrarGestionDependencias = true;
+    }
+
+    public function cerrarGestionDependencias()
+    {
+        $this->mostrarGestionDependencias = false;
+    }
+
+    public function mostrarAlertaSweet($data)
+    {
+        $this->dispatchBrowserEvent('swal', $data);
+    }
 
     protected function rules()
     {
@@ -143,7 +165,7 @@ class Index extends Component
                 ->where('fechaPendientes', '<=', $fechaHastaStr)
                 ->with('dependencia')
                 ->selectRaw(
-                    'tes_cch_pendientes.*, 
+                    'tes_cch_pendientes.*,
                     (SELECT SUM(rendido) FROM tes_cch_movimientos WHERE tes_cch_movimientos.relPendiente = tes_cch_pendientes.idPendientes AND deleted_at IS NULL) as tot_rendido,
                     (SELECT SUM(reintegrado) FROM tes_cch_movimientos WHERE tes_cch_movimientos.relPendiente = tes_cch_pendientes.idPendientes AND deleted_at IS NULL) as tot_reintegrado,
                     (SELECT SUM(recuperado) FROM tes_cch_movimientos WHERE tes_cch_movimientos.relPendiente = tes_cch_pendientes.idPendientes AND deleted_at IS NULL) as tot_recuperado'
@@ -179,7 +201,7 @@ class Index extends Component
                     ->where('fechaPendientes', '<=', $fechaHastaStr)
                     ->with('dependencia')
                     ->selectRaw(
-                        'tes_cch_pendientes.*, 
+                        'tes_cch_pendientes.*,
                         (SELECT SUM(rendido) FROM tes_cch_movimientos WHERE tes_cch_movimientos.relPendiente = tes_cch_pendientes.idPendientes AND deleted_at IS NULL) as tot_rendido,
                         (SELECT SUM(reintegrado) FROM tes_cch_movimientos WHERE tes_cch_movimientos.relPendiente = tes_cch_pendientes.idPendientes AND deleted_at IS NULL) as tot_reintegrado,
                         (SELECT SUM(recuperado) FROM tes_cch_movimientos WHERE tes_cch_movimientos.relPendiente = tes_cch_pendientes.idPendientes AND deleted_at IS NULL) as tot_recuperado'
@@ -224,7 +246,7 @@ class Index extends Component
                 ->where('fechaEgresoPagos', '<=', $fechaHastaStr)
                 ->with('acreedor')
                 ->selectRaw(
-                    'tes_cch_pagos.*, 
+                    'tes_cch_pagos.*,
                     (montoPagos - CASE WHEN fechaIngresoPagos IS NOT NULL THEN recuperadoPagos ELSE 0 END) as saldo_pagos'
                 )
                 ->orderBy('fechaEgresoPagos', 'ASC')
@@ -245,7 +267,7 @@ class Index extends Component
                     ->where('fechaEgresoPagos', '<=', $fechaHastaStr)
                     ->with('acreedor')
                     ->selectRaw(
-                        'tes_cch_pagos.*, 
+                        'tes_cch_pagos.*,
                         (montoPagos - CASE WHEN fechaIngresoPagos IS NOT NULL THEN recuperadoPagos ELSE 0 END) as saldo_pagos'
                     )
                     ->orderBy('fechaEgresoPagos', 'ASC')
@@ -313,7 +335,6 @@ class Index extends Component
     }
 
     // --- Métodos para el Modal de Recuperación ---
-
     public function openRecuperarModal()
     {
         if (!$this->cajaChicaSeleccionada) {
@@ -331,7 +352,7 @@ class Index extends Component
             ->where('fechaPendientes', '<=', $fechaRecuperacionActual)
             ->with('dependencia')
             ->selectRaw(
-                'tes_cch_pendientes.*, 
+                'tes_cch_pendientes.*,
                 (SELECT SUM(rendido) FROM tes_cch_movimientos WHERE tes_cch_movimientos.relPendiente = tes_cch_pendientes.idPendientes AND fechaMovimientos <= ? AND deleted_at IS NULL) as tot_rendido,
                 (SELECT SUM(reintegrado) FROM tes_cch_movimientos WHERE tes_cch_movimientos.relPendiente = tes_cch_pendientes.idPendientes AND fechaMovimientos <= ? AND deleted_at IS NULL) as tot_reintegrado,
                 (SELECT SUM(recuperado) FROM tes_cch_movimientos WHERE tes_cch_movimientos.relPendiente = tes_cch_pendientes.idPendientes AND fechaMovimientos <= ? AND deleted_at IS NULL) as tot_recuperado',
@@ -359,7 +380,7 @@ class Index extends Component
             ->where('fechaEgresoPagos', '<=', $fechaRecuperacionActual)
             ->with('acreedor')
             ->selectRaw(
-                'tes_cch_pagos.*, 
+                'tes_cch_pagos.*,
                 (montoPagos - CASE WHEN fechaIngresoPagos IS NOT NULL AND fechaIngresoPagos <= ? THEN recuperadoPagos ELSE 0 END) as saldo_pagos',
                 [$fechaRecuperacionActual]
             )
@@ -480,7 +501,7 @@ class Index extends Component
         $this->reset(['recuperacion', 'itemsParaRecuperar', 'itemsSeleccionados', 'totalARecuperar', 'seleccionarTodos']);
         $this->resetErrorBag();
     }
-        
+
     // --- Métodos de Acción para Editar Fondo ---
 
     public function editarFondo($idCajaChica, $montoActual)
@@ -577,7 +598,7 @@ class Index extends Component
     {
         $this->nuevoFondo['mes'] = $this->mesActual;
         $this->nuevoFondo['anio'] = $this->anioActual;
-        $this->nuevoFondo['monto'] = '350000';
+        $this->nuevoFondo['monto'] = '0';
 
         $this->emitTo('tesoreria.caja-chica.modal-nuevo-fondo', 'mostrarModalNuevoFondo');
     }

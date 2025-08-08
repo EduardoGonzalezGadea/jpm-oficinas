@@ -14,6 +14,18 @@
                             <button type="button" class="close text-white" wire:click="cerrarModal"
                                 aria-label="Close"><span aria-hidden="true">&times;</span></button>
                         </div>
+
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    Livewire.on('swal', data => {
+        Swal.fire(data);
+    });
+    window.addEventListener('swal', function(e) {
+        Swal.fire(e.detail);
+    });
+});
+</script>
                         <div class="modal-body">
                             @if (session()->has('error'))
                                 <div class="alert alert-danger alert-dismissible fade show" role="alert">
@@ -53,9 +65,11 @@
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
-                            <div class="form-group"><label for="fondoMonto">Monto:</label><input type="number"
-                                    step="0.01" class="form-control @error('monto') is-invalid @enderror"
-                                    id="fondoMonto" wire:model.defer="monto" required min="0">
+                            <div class="form-group"><label for="fondoMonto">Monto:</label><input type="text"
+                                    class="form-control @error('monto') is-invalid @enderror" id="fondoMonto"
+                                    wire:model.lazy="monto" required x-data
+                                    x-on:input="$event.target.value = $event.target.value.replace(/[^0-9,]/g, '').replace(/(,.*?),/g, '$1')"
+                                    placeholder="Ejemplo: 1.234,56">
                                 @error('monto')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror

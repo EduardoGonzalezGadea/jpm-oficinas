@@ -17,6 +17,28 @@
                         <i class="fas fa-dollar-sign mr-2"></i>Tesorería
                     </a>
                     <div class="dropdown-menu" aria-labelledby="navbarDropdownTesoreria">
+                        {{-- Submenú Cajas --}}
+                        <div class="dropdown-submenu">
+                            <a class="dropdown-item dropdown-toggle" href="#" role="button">
+                                <i class="fas fa-cash-register mr-2"></i>Cajas
+                            </a>
+                            <div class="dropdown-menu">
+                                <a class="dropdown-item" href="{{ route('tesoreria.cajas.apertura-cierre') }}"
+                                    wire:navigate>
+                                    <i class="fas fa-door-open mr-2"></i>Apertura/Cierre
+                                </a>
+                                <a class="dropdown-item" href="{{ route('tesoreria.cajas.movimientos') }}" wire:navigate>
+                                    <i class="fas fa-exchange-alt mr-2"></i>Movimientos
+                                </a>
+                                <a class="dropdown-item" href="{{ route('tesoreria.cajas.arqueo') }}" wire:navigate>
+                                    <i class="fas fa-balance-scale mr-2"></i>Arqueo
+                                </a>
+                                <div class="dropdown-divider"></div>
+                                <a class="dropdown-item" href="{{ route('tesoreria.cajas.denominaciones') }}" wire:navigate>
+                                    <i class="fas fa-money-bill-wave mr-2"></i>Denominaciones
+                                </a>
+                            </div>
+                        </div>
                         {{-- Link Caja Chica --}}
                         <a class="dropdown-item" href="{{ route('tesoreria.caja-chica.index') }}" wire:navigate>
                             <i class="fas fa-coins mr-2"></i>Caja Chica
@@ -167,4 +189,53 @@
     .barra-oscura .navbar-nav .nav-link:hover {
         color: yellow;
     }
+
+    /* Estilos para submenús */
+    .dropdown-submenu {
+        position: relative;
+    }
+
+    .dropdown-submenu .dropdown-menu {
+        top: 0;
+        left: 100%;
+        margin-top: -1px;
+    }
+
+    /* Mostrar submenú al hover */
+    .dropdown-submenu:hover>.dropdown-menu {
+        display: block;
+    }
+
+    /* Agregar flecha al submenu */
+    .dropdown-submenu>.dropdown-item::after {
+        display: inline-block;
+        margin-left: auto;
+        content: "";
+        border-top: 0.3em solid transparent;
+        border-right: 0;
+        border-bottom: 0.3em solid transparent;
+        border-left: 0.3em solid;
+        float: right;
+        margin-top: 0.5em;
+    }
 </style>
+
+@push('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Prevenir que el click en el toggle del submenu cierre el menú principal
+            document.querySelectorAll('.dropdown-submenu a.dropdown-toggle').forEach(function(element) {
+                element.addEventListener('click', function(e) {
+                    let nextEl = this.nextElementSibling;
+                    if (nextEl.style.display === 'block') {
+                        nextEl.style.display = 'none';
+                    } else {
+                        nextEl.style.display = 'block';
+                    }
+                    e.stopPropagation();
+                    e.preventDefault();
+                });
+            });
+        });
+    </script>
+@endpush

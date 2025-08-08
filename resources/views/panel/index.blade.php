@@ -1,8 +1,8 @@
 @extends('layouts.app')
 
-@section('titulo', 'Panel Principal - JPM Oficinas')
+@section('title', 'Panel Principal - JPM Oficinas')
 
-@section('contenido')
+@section('content')
     <div class="container-fluid">
 
         <!-- Header del Panel -->

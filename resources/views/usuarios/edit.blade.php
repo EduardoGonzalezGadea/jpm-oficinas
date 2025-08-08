@@ -1,8 +1,8 @@
 @extends('layouts.app')
 
-@section('titulo', 'Editar Usuario')
+@section('title', 'Editar Usuario')
 
-@section('contenido')
+@section('content')
     <div class="container-fluid">
         <div class="row">
             <div class="col-12">

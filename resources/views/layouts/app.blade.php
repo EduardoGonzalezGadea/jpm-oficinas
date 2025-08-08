@@ -8,25 +8,23 @@
 
     <link rel="icon" type="image/x-icon" href="{{ asset('images/icons/jpm.png') }}">
 
-    <title>@yield('titulo', 'JPM Oficinas')</title>
+    <title>@yield('title', 'JPM Oficinas')</title>
 
     <!-- Script para cargar el tema dinámico y evitar parpadeos -->
     <script>
         (function() {
             // Define el tema por defecto. El asset() de Laravel generará la ruta correcta.
             const defaultThemePath = "{{ asset('libs/bootswatch@4.6.2/dist/cosmo/bootstrap.min.css') }}";
-            
+
             // Obtener el tema guardado en LocalStorage
-            let themePath = localStorage.getItem("bootswatch-theme");
-            
-            // Si no hay tema guardado, usar el por defecto
-            if (!themePath) {
-                themePath = defaultThemePath;
-            }
-            
-            // Escribir la hoja de estilos del tema directamente en el head.
-            // Esto bloquea el renderizado hasta que la hoja de estilos se determina, evitando el parpadeo.
-            document.write('<link id="bootswatch-theme" rel="stylesheet" href="' + themePath + '">');
+            let themePath = localStorage.getItem("bootswatch-theme") || defaultThemePath;
+
+            // Crear y agregar el elemento link
+            const themeLink = document.createElement('link');
+            themeLink.id = 'bootswatch-theme';
+            themeLink.rel = 'stylesheet';
+            themeLink.href = themePath;
+            document.head.appendChild(themeLink);
         })();
     </script>
 
@@ -37,8 +35,11 @@
     {{-- SweetAlert2 --}}
     <link href="{{ asset('libs/sweetalert2/dist/sweetalert2.min.css') }}" rel="stylesheet">
 
+    {{-- Alpine.js CDN --}}
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
     @livewireStyles
-    @yield('estilos')
+    @yield('styles')
 
     @routes
 </head>
@@ -49,8 +50,10 @@
     @endauth
 
     <main class="@auth container-fluid mt-2 @else container-fluid @endauth">
-        @yield('contenido')
+        @yield('content')
     </main>
+
+    @livewireScripts
 
     <!-- Bootstrap 4 JS -->
     <script src="{{ asset('libs/jquery/js/jquery-3.6.0.min.js') }}"></script>
@@ -60,7 +63,8 @@
 
     @yield('scripts')
 
-    @livewireScripts
+    <!-- Stack para scripts adicionales -->
+    @stack('scripts')
 
     <!-- Lógica para el tema dinámico -->
     <script src="{{ asset('js/theme-change.js') }}"></script>
