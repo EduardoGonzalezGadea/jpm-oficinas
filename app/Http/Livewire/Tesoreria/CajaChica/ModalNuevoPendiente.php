@@ -31,12 +31,13 @@ class ModalNuevoPendiente extends Component
 
     public function mount()
     {
-        $this->fechaPendientes = now()->toDateString();
     }
 
     public function abrirModal($idCajaChica)
     {
+        $this->reset(['pendiente', 'fechaPendientes', 'relDependencia', 'montoPendientes']);
         $this->idCajaChica = $idCajaChica;
+        $this->fechaPendientes = now()->toDateString();
         $this->cargarDependencias();
         $this->determinarNumeroPendienteSiguiente();
         $this->mostrarModal = true;
@@ -48,9 +49,7 @@ class ModalNuevoPendiente extends Component
     public function cerrarModal()
     {
         $this->mostrarModal = false;
-        $this->reset(['pendiente', 'fechaPendientes', 'relDependencia', 'montoPendientes']);
-        $this->resetErrorBag();
-        $this->dispatchBrowserEvent('actualizar-modal-pendiente', ['mostrar' => false]);
+        $this->dispatchBrowserEvent('cerrar-y-refrescar-pendiente');
     }
 
     public function cargarDependencias()

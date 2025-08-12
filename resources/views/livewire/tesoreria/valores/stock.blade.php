@@ -233,7 +233,7 @@
                         @endif
 
                         {{-- Detalle por Concepto --}}
-                        @if ($detalleStock['conceptos_detalle']->count() > 0)
+                        @if (count($detalleStock['conceptos_detalle']) > 0)
                             <h6 class="mb-3">Detalle por Concepto</h6>
                             @foreach ($detalleStock['conceptos_detalle'] as $conceptoDetalle)
                                 <div class="card mb-3">
@@ -255,7 +255,7 @@
                                                     {{ number_format($conceptoDetalle['resumen']['total_utilizados']) }}</p>
                                             </div>
                                         </div>
-                                        @if ($conceptoDetalle['usos']->count() > 0)
+                                        @if (count($conceptoDetalle["usos"]) > 0)
                                             <h6 class="mt-3">Libretas en Uso:</h6>
                                             <div class="table-responsive">
                                                 <table class="table table-sm table-bordered">
@@ -323,7 +323,7 @@
                         @endif
 
                         {{-- Movimientos Recientes --}}
-                        @if ($detalleStock['movimientos_recientes']->count() > 0)
+                        @if (count($detalleStock["movimientos_recientes"]) > 0)
                             <h6 class="mb-3 mt-4">Movimientos Recientes (Últimos 10)</h6>
                             <div class="table-responsive">
                                 <table class="table table-sm table-striped">

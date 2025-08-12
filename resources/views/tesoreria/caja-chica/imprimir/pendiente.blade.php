@@ -95,7 +95,7 @@
                             </h3>
                         </th>
                         <th colspan="4" class="text-center"></th>
-                        <th colspan="2" class="text-center conBorde">{{ date('d/m/Y') }}</th>
+                        <th colspan="2" class="text-center conBorde">{{ $pendiente->fechaPendientes->format('d/m/Y') }}</th>
                     </tr>
                     <tr>
                         <th colspan="6" class="text-left">

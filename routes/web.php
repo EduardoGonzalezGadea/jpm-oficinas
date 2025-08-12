@@ -105,7 +105,7 @@ Route::middleware(['web', 'jwt.verify'])->group(function () {
 
         // Rutas de asignación
         Route::post('/assign-user', [RoleController::class, 'assignToUser'])->name('assign.user');
-        Route::post('/remove-user', [RoleController::class, 'removeFromUser'])->name('remove.user');
+        Route::delete('/remove-user/{user_id}/{role_id}', [RoleController::class, 'removeFromUser'])->name('remove.user');
         Route::post('/bulk-assign', [RoleController::class, 'bulkAssignToUsers'])->name('bulk.assign');
 
         // Rutas con parámetros
@@ -170,10 +170,12 @@ Route::middleware(['web', 'jwt.verify'])->group(function () {
 
         // Rutas de Cajas
         Route::prefix('cajas')->name('cajas.')->middleware(['permission:operador_tesoreria'])->group(function () {
+            Route::get('/', [CajaController::class, 'index'])->name('index');
             Route::get('/apertura-cierre', [CajaController::class, 'aperturaCierre'])->name('apertura-cierre');
             Route::get('/movimientos', [CajaController::class, 'movimientos'])->name('movimientos');
             Route::get('/arqueo', [CajaController::class, 'arqueo'])->name('arqueo');
             Route::get('/denominaciones', [CajaController::class, 'denominaciones'])->name('denominaciones');
+            Route::get('/conceptos', [CajaController::class, 'conceptos'])->name('conceptos');
         });
     });
 

@@ -56,19 +56,6 @@
                                 </div>
                             </div>
 
-                            @if ($modo_calculo === 'total')
-                                <div class="form-group">
-                                    <label>Total a Distribuir</label>
-                                    <div class="input-group mb-3">
-                                        <div class="input-group-prepend">
-                                            <span class="input-group-text">$</span>
-                                        </div>
-                                        <input type="number" class="form-control" wire:model="total_ingresado"
-                                            step="0.01" min="0">
-                                    </div>
-                                </div>
-                            @endif
-
                             <div class="form-group">
                                 <h6>Desglose Monetario Inicial</h6>
                                 <div class="table-responsive">
@@ -78,7 +65,6 @@
                                                 <th>Denominación</th>
                                                 <th>Cantidad</th>
                                                 <th>Total</th>
-                                                <th>Modo</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -90,8 +76,7 @@
                                                     <td style="width: 120px;">
                                                         <input type="number" class="form-control form-control-sm"
                                                             wire:model.lazy="desglose.{{ $denominacion->idDenominacion }}.cantidad"
-                                                            @if ($desglose[$denominacion->idDenominacion]['modo'] === 'total') readonly @endif
-                                                            min="0">
+                                                            @if ($modo_calculo === 'total') readonly @endif min="0">
                                                     </td>
                                                     <td style="width: 120px;">
                                                         <div class="input-group input-group-sm">
@@ -100,22 +85,8 @@
                                                             </div>
                                                             <input type="number" class="form-control"
                                                                 wire:model.lazy="desglose.{{ $denominacion->idDenominacion }}.total"
-                                                                @if ($desglose[$denominacion->idDenominacion]['modo'] === 'cantidad') readonly @endif
+                                                                @if ($modo_calculo === 'cantidad') readonly @endif
                                                                 min="0" step="{{ $denominacion->valor }}">
-                                                        </div>
-                                                    </td>
-                                                    <td style="width: 100px;">
-                                                        <div class="btn-group btn-group-sm">
-                                                            <button type="button"
-                                                                class="btn btn-sm @if ($desglose[$denominacion->idDenominacion]['modo'] === 'cantidad') btn-primary @else btn-outline-primary @endif"
-                                                                wire:click="$set('desglose.{{ $denominacion->idDenominacion }}.modo', 'cantidad')">
-                                                                Cant
-                                                            </button>
-                                                            <button type="button"
-                                                                class="btn btn-sm @if ($desglose[$denominacion->idDenominacion]['modo'] === 'total') btn-primary @else btn-outline-primary @endif"
-                                                                wire:click="$set('desglose.{{ $denominacion->idDenominacion }}.modo', 'total')">
-                                                                Total
-                                                            </button>
                                                         </div>
                                                     </td>
                                                 </tr>
@@ -147,7 +118,7 @@
                             </p>
                             <p class="mb-1">Hora: {{ $cajaAbierta->hora_apertura }}</p>
                             <p class="mb-1">Saldo Inicial: ${{ number_format($cajaAbierta->saldo_inicial, 2) }}</p>
-                            <p class="mb-0">Usuario: {{ $cajaAbierta->usuarioApertura->name }}</p>
+                            <p class="mb-0">Usuario: {{ $cajaAbierta->usuarioApertura->name ?? 'No asignado' }}</p>
                         </div>
                     @endif
                 </div>

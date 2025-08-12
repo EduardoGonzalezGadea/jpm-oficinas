@@ -14,6 +14,7 @@ class AperturaCierre extends Component
     public $saldo_inicial = 0;
     public $fecha_apertura;
     public $observaciones;
+    public $modo_calculo = 'cantidad';
     // Para el desglose de efectivo
     public $desglose = [];
 
@@ -27,7 +28,7 @@ class AperturaCierre extends Component
     public function mount()
     {
         $this->fecha_apertura = now()->format('Y-m-d');
-        $this->cajaAbierta = Caja::where('estado', 'ABIERTA')->first();
+        $this->cajaAbierta = Caja::with('usuarioApertura')->where('estado', 'ABIERTA')->first();
 
         // Inicializar el desglose con las denominaciones activas
         if (!$this->cajaAbierta) {
@@ -47,7 +48,6 @@ class AperturaCierre extends Component
                 'cantidad' => 0,
                 'total' => 0,
                 'tipo' => $denominacion->tipo,
-                'modo' => 'cantidad' // 'cantidad' o 'total'
             ];
         }
     }
@@ -69,13 +69,14 @@ class AperturaCierre extends Component
         if ($campo === 'cantidad') {
             $cantidad = is_numeric($value) ? $value : 0;
             $this->desglose[$idDenominacion]['total'] = $cantidad * $valor;
-            $this->desglose[$idDenominacion]['modo'] = 'cantidad';
         }
         // Si se actualizó el total, calcular la cantidad
         elseif ($campo === 'total') {
             $total = is_numeric($value) ? $value : 0;
+            // Asegurarse de que el total sea un múltiplo del valor de la denominación
             $this->desglose[$idDenominacion]['cantidad'] = $valor > 0 ? floor($total / $valor) : 0;
-            $this->desglose[$idDenominacion]['modo'] = 'total';
+            //Ajustar el total para que sea exacto
+            $this->desglose[$idDenominacion]['total'] = $this->desglose[$idDenominacion]['cantidad'] * $valor;
         }
 
         // Recalcular el saldo inicial
@@ -93,55 +94,11 @@ class AperturaCierre extends Component
         $this->saldo_inicial = $total;
     }
 
-    public function updatedTotalIngresado()
-    {
-        if ($this->modo_calculo === 'total') {
-            $this->calcularCantidades($this->total_ingresado);
-        }
-    }
-
     public function updatedModoCalculo($value)
     {
-        if ($value === 'total') {
-            // Guardar el total actual antes de resetear las cantidades
-            $this->total_ingresado = $this->saldo_inicial;
-            // Resetear las cantidades
-            foreach ($this->desglose as $id => $detalle) {
-                $this->desglose[$id]['cantidad'] = 0;
-            }
-            // Calcular las nuevas cantidades basadas en el total
-            $this->calcularCantidades($this->total_ingresado);
-        }
-    }
-
-    protected function calcularCantidades($total)
-    {
-        $restante = $total;
-
-        // Ordenar denominaciones de mayor a menor
-        $denominacionesOrdenadas = collect($this->desglose)
-            ->sortByDesc('valor')
-            ->all();
-
-        // Resetear todas las cantidades
-        foreach ($this->desglose as $id => $detalle) {
-            $this->desglose[$id]['cantidad'] = 0;
-        }
-
-        // Calcular la cantidad para cada denominación
-        foreach ($denominacionesOrdenadas as $id => $detalle) {
-            if ($restante <= 0) break;
-
-            $valor = $detalle['valor'];
-            $cantidad = floor($restante / $valor);
-
-            if ($cantidad > 0) {
-                $this->desglose[$id]['cantidad'] = $cantidad;
-                $restante -= $cantidad * $valor;
-            }
-        }
-
-        $this->saldo_inicial = $total - $restante;
+        // Limpiar los valores al cambiar de modo para evitar inconsistencias
+        $this->saldo_inicial = 0;
+        $this->inicializarDesglose();
     }
 
     public function abrirCaja()

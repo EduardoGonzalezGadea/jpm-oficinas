@@ -95,7 +95,7 @@ class ModalEditarPago extends Component
     public function cerrarModal()
     {
         $this->show = false;
-        $this->reset(['pago', 'idPago']);
+        $this->dispatchBrowserEvent('cerrar-y-refrescar-editar-pago');
     }
 
     public function render()

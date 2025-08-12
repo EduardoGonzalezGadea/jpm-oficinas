@@ -105,27 +105,38 @@ class MovimientosPendiente extends Component
     {
         $this->loading = true;
 
-        // Validación básica de Livewire
         $this->validate();
 
-        // Regla 1: El monto reintegrado nunca puede ser mayor que el monto del pendiente.
-        if ($this->reintegrado > $this->pendiente->montoPendientes) {
-            $this->addError('reintegrado', 'El monto reintegrado no puede superar el monto total del pendiente.');
+        // Totales existentes (excluyendo el movimiento actual si se está editando)
+        $totalRendido = $this->pendiente->movimientos()
+            ->when($this->editMode, fn($q) => $q->where('idMovimientos', '!=', $this->movimientoId))
+            ->sum('rendido');
+
+        $totalReintegrado = $this->pendiente->movimientos()
+            ->when($this->editMode, fn($q) => $q->where('idMovimientos', '!=', $this->movimientoId))
+            ->sum('reintegrado');
+
+        $totalRecuperado = $this->pendiente->movimientos()
+            ->when($this->editMode, fn($q) => $q->where('idMovimientos', '!=', $this->movimientoId))
+            ->sum('recuperado');
+
+        // Nuevos totales propuestos con los valores del formulario
+        $nuevoTotalRendido = $totalRendido + ($this->rendido ?: 0);
+        $nuevoTotalReintegrado = $totalReintegrado + ($this->reintegrado ?: 0);
+        $nuevoTotalRecuperado = $totalRecuperado + ($this->recuperado ?: 0);
+
+        // Regla 1: El total recuperado no puede exceder el total rendido.
+        if ($nuevoTotalRecuperado > $nuevoTotalRendido) {
+            $this->addError('recuperado', 'El monto total recuperado no puede ser mayor que el monto total rendido.');
             $this->loading = false;
             return;
         }
 
-        // Regla 2: Si el monto reintegrado es mayor a cero, la suma de rendido + reintegrado no puede ser mayor al monto del pendiente.
-        if ($this->reintegrado > 0 && ($this->rendido + $this->reintegrado) > $this->pendiente->montoPendientes) {
-            $this->addError('rendido', 'Si hay reintegro, la suma de Rendido y Reintegrado no puede superar el monto del pendiente.');
-            $this->addError('reintegrado', 'Si hay reintegro, la suma de Rendido y Reintegrado no puede superar el monto del pendiente.');
-            $this->loading = false;
-            return;
-        }
-
-        // Regla 4: El monto recuperado nunca puede ser mayor que el monto rendido.
-        if ($this->recuperado > $this->rendido) {
-            $this->addError('recuperado', 'El monto recuperado no puede ser mayor que el monto rendido.');
+        // Regla 2: La suma del total rendido y el total reintegrado no puede superar el monto del pendiente.
+        // Se usa una pequeña tolerancia para evitar problemas con decimales.
+        if (($nuevoTotalRendido + $nuevoTotalReintegrado) > ($this->pendiente->montoPendientes + 0.001)) {
+            $this->addError('rendido', 'La suma de rendido y reintegrado supera el monto total del pendiente.');
+            $this->addError('reintegrado', 'La suma de rendido y reintegrado supera el monto total del pendiente.');
             $this->loading = false;
             return;
         }
@@ -242,10 +253,25 @@ class MovimientosPendiente extends Component
     public function updatedRendido($value)
     {
         $this->validateOnly('rendido');
-        $montoPendiente = $this->pendiente->montoPendientes;
-        $rendido = is_numeric($value) ? (float)$value : 0;
-        $reintegro = $montoPendiente - $rendido;
-        $this->reintegrado = $reintegro > 0 ? $reintegro : 0;
+
+        // Totales existentes (excluyendo el movimiento actual si se está editando)
+        $totalRendido = $this->pendiente->movimientos()
+            ->when($this->editMode, fn($q) => $q->where('idMovimientos', '!=', $this->movimientoId))
+            ->sum('rendido');
+
+        $totalReintegrado = $this->pendiente->movimientos()
+            ->when($this->editMode, fn($q) => $q->where('idMovimientos', '!=', $this->movimientoId))
+            ->sum('reintegrado');
+
+        $rendidoActual = is_numeric($value) ? (float)$value : 0;
+
+        // Saldo restante antes de este movimiento
+        $saldoPendiente = $this->pendiente->montoPendientes - ($totalRendido + $totalReintegrado);
+
+        // El reintegro es la diferencia entre el saldo y lo que se está rindiendo ahora
+        $reintegro = $saldoPendiente - $rendidoActual;
+
+        $this->reintegrado = $reintegro > 0 ? round($reintegro, 2) : 0;
     }
 
     public function updatedReintegrado()

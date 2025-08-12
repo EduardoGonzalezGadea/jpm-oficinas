@@ -90,7 +90,7 @@ class RoleController extends Controller
             // Crear el rol
             $role = Role::create([
                 'name' => strtolower(trim($request->name)),
-                'guard_name' => 'web'
+                'guard_name' => 'api',
             ]);
 
             // Asignar permisos si se seleccionaron
@@ -102,12 +102,12 @@ class RoleController extends Controller
             DB::commit();
 
             return redirect()->route('roles.index')
-                ->with('success', 'Rol creado exitosamente.');
+                ->with('swal-success', 'Rol creado exitosamente.');
         } catch (\Exception $e) {
             DB::rollBack();
 
             return back()->withInput()
-                ->with('error', 'Error al crear el rol: ' . $e->getMessage());
+                ->with('toast-error', 'Error al crear el rol: ' . $e->getMessage());
         }
     }
 
@@ -174,7 +174,7 @@ class RoleController extends Controller
             DB::commit();
 
             return redirect()->route('roles.index')
-                ->with('success', 'Rol actualizado exitosamente.');
+                ->with('swal-success', 'Rol actualizado exitosamente.');
         } catch (\Exception $e) {
             DB::rollBack();
 
@@ -197,8 +197,8 @@ class RoleController extends Controller
             // Verificar si hay usuarios asignados a este rol
             if ($role->users()->count() > 0) {
                 return back()->with(
-                    'error',
-                    'No se puede eliminar el rol porque tiene ' . $role->users()->count() . ' usuarios asignados.'
+                    'toast-error',
+                    'No se puede eliminar. El rol tiene ' . $role->users()->count() . ' usuarios asignados.'
                 );
             }
 
@@ -213,7 +213,7 @@ class RoleController extends Controller
             DB::commit();
 
             return redirect()->route('roles.index')
-                ->with('success', 'Rol eliminado exitosamente.');
+                ->with('swal-success', 'Rol eliminado exitosamente.');
         } catch (\Exception $e) {
             DB::rollBack();
 
@@ -252,28 +252,22 @@ class RoleController extends Controller
     /**
      * Remover rol de usuario (API endpoint adicional)
      */
-    public function removeFromUser(Request $request)
+    public function removeFromUser($user_id, $role_id)
     {
-        $request->validate([
-            'user_id' => 'required|exists:users,id',
-            'role_id' => 'required|exists:roles,id'
-        ]);
-
         try {
-            $user = auth()->user()->find($request->user_id);
-            $role = Role::find($request->role_id);
+            $user = User::findOrFail($user_id);
+            $role = Role::findOrFail($role_id);
+
+            // Evitar que un usuario se quite a sí mismo el rol de administrador
+            if ($user->id === auth()->id() && $role->name === 'administrador') {
+                return back()->with('error', 'No puedes remover tu propio rol de administrador.');
+            }
 
             $user->removeRole($role);
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Rol removido exitosamente.'
-            ]);
+            return back()->with('success', "Rol '{$role->name}' removido del usuario '{$user->name}' exitosamente.");
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Error al remover el rol: ' . $e->getMessage()
-            ], 500);
+            return back()->with('error', 'Error al remover el rol: ' . $e->getMessage());
         }
     }
 }

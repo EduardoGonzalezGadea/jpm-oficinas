@@ -30,28 +30,8 @@ class Stock extends Component
 
     protected $listeners = [
         'refreshComponent' => '$refresh',
-        'actualizarStock' => 'calcularEstadisticas'
+        'actualizarStock' => 'render'
     ];
-
-    public function mount()
-    {
-        $this->calcularEstadisticas();
-    }
-
-    public function updatedFilterValor()
-    {
-        $this->calcularEstadisticas();
-    }
-
-    public function updatedFilterTipo()
-    {
-        $this->calcularEstadisticas();
-    }
-
-    public function updatedFilterStockBajo()
-    {
-        $this->calcularEstadisticas();
-    }
 
     public function sortBy($field)
     {
@@ -65,10 +45,7 @@ class Stock extends Component
 
     public function resetFilters()
     {
-        $this->filterValor = '';
-        $this->filterTipo = '';
-        $this->filterStockBajo = false;
-        $this->calcularEstadisticas();
+        $this->reset();
     }
 
     public function openDetailModal($valorId)
@@ -81,10 +58,8 @@ class Stock extends Component
         $this->dispatchBrowserEvent('show-modal', ['id' => 'detailStockModal']);
     }
 
-    public function calcularEstadisticas()
+    public function calcularEstadisticas(Collection $valores)
     {
-        $valores = $this->getValoresFiltrados();
-
         $this->estadisticasGenerales = [
             'total_valores' => $valores->count(),
             'total_recibos_stock' => $valores->sum(function ($valor) {
@@ -240,7 +215,7 @@ class Stock extends Component
         return $alertas;
     }
 
-public function actualizarRecibosUso($usoId, $nuevaCantidad)
+    public function actualizarRecibosUso($usoId, $nuevaCantidad)
     {
         try {
             $uso = ValorUso::findOrFail($usoId);
@@ -263,7 +238,6 @@ public function actualizarRecibosUso($usoId, $nuevaCantidad)
 
             // Actualizar el detalle
             $this->detalleStock = $this->calcularDetalleValor($this->selectedValor);
-            $this->calcularEstadisticas();
 
             $this->emit('alert', [
                 'type' => 'success',
@@ -286,7 +260,6 @@ public function actualizarRecibosUso($usoId, $nuevaCantidad)
 
             // Actualizar el detalle
             $this->detalleStock = $this->calcularDetalleValor($this->selectedValor);
-            $this->calcularEstadisticas();
 
             $this->emit('alert', [
                 'type' => 'success',
@@ -340,7 +313,11 @@ public function actualizarRecibosUso($usoId, $nuevaCantidad)
 
     public function render()
     {
-        $valores = $this->getValoresFiltrados()->map(function ($valor) {
+        $valores = $this->getValoresFiltrados();
+        
+        $this->calcularEstadisticas($valores);
+
+        $valores_view = $valores->map(function ($valor) {
             $valor->resumen_stock = $valor->getResumenStock();
             return $valor;
         });
@@ -360,13 +337,16 @@ public function actualizarRecibosUso($usoId, $nuevaCantidad)
                 }
             };
 
-            $valores = $this->sortDirection === 'asc'
-                ? $valores->sortBy($sortFunction)
-                : $valores->sortByDesc($sortFunction);
+            $valores_view = $this->sortDirection === 'asc'
+                ? $valores_view->sortBy($sortFunction)
+                : $valores_view->sortByDesc($sortFunction);
         }
 
         $valoresParaFiltro = Valor::activos()->orderBy('nombre')->get();
 
-        return view('livewire.tesoreria.valores.stock', compact('valores', 'valoresParaFiltro'));
+        return view('livewire.tesoreria.valores.stock', [
+            'valores' => $valores_view,
+            'valoresParaFiltro' => $valoresParaFiltro
+        ]);
     }
 }

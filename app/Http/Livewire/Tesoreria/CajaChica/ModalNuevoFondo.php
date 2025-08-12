@@ -77,9 +77,7 @@ class ModalNuevoFondo extends Component
     public function cerrarModal()
     {
         $this->mostrarModal = false;
-        $this->reset(['mes', 'anio', 'monto']);
-        $this->resetErrorBag();
-        $this->dispatchBrowserEvent('actualizar-modal-fondo', ['mostrar' => false]);
+        $this->dispatchBrowserEvent('cerrar-y-refrescar-fondo');
     }
 
     public function guardar()

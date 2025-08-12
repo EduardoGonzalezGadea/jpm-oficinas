@@ -19,6 +19,7 @@ class MovimientoCaja extends Model
         'hora',
         'tipo_movimiento', // INGRESO, EGRESO
         'concepto',
+        'detalle',
         'monto',
         'forma_pago', // EFECTIVO, TRANSFERENCIA, CHEQUE
         'referencia',

@@ -31,4 +31,9 @@ class CajaController extends Controller
     {
         return view('tesoreria.cajas.denominaciones');
     }
+
+    public function conceptos()
+    {
+        return view('tesoreria.cajas.conceptos');
+    }
 }

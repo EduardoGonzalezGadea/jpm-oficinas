@@ -26,7 +26,7 @@
                                                     wire:model="desglose.{{ $den->idDenominacion }}.cantidad"
                                                     class="form-control form-control-sm" min="0">
                                             </td>
-                                            <td>${{ number_format(($desglose[$den->idDenominacion]['cantidad'] ?? 0) * $den->valor, 2) }}
+                                            <td>${{ number_format((int)($desglose[$den->idDenominacion]['cantidad'] ?? 0) * $den->valor, 2) }}
                                             </td>
                                         </tr>
                                     @endforeach

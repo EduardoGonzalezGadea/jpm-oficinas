@@ -65,9 +65,7 @@ class ModalNuevoPago extends Component
     public function cerrarModal()
     {
         $this->mostrarModal = false;
-        $this->reset(['fechaEgresoPagos', 'egresoPagos', 'relAcreedores', 'conceptoPagos', 'montoPagos']);
-        $this->resetErrorBag();
-        $this->dispatchBrowserEvent('actualizar-modal-pago', ['mostrar' => false]);
+        $this->dispatchBrowserEvent('cerrar-y-refrescar-pago');
     }
 
     public function cargarAcreedores()

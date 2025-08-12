@@ -143,6 +143,14 @@
                 deselectAllBtn.addEventListener('click', function() {
                     checkboxes.forEach(checkbox => checkbox.checked = false);
                 });
+
+                @if (session('toast-error'))
+                    window.dispatchEvent(new CustomEvent('swal:toast-error', {
+                        detail: {
+                            text: '{{ session('toast-error') }}'
+                        }
+                    }));
+                @endif
             });
         </script>
     @endpush

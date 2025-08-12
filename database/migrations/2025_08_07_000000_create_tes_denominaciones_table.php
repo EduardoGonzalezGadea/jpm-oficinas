@@ -31,8 +31,8 @@ return new class extends Migration
             ['valor' => 20.00, 'tipo' => 'BILLETE', 'orden' => 7, 'created_at' => now()],
             // Monedas
             ['valor' => 50.00, 'tipo' => 'MONEDA', 'orden' => 8, 'created_at' => now()],
-            ['valor' => 20.00, 'tipo' => 'MONEDA', 'orden' => 9, 'created_at' => now()],
-            ['valor' => 10.00, 'tipo' => 'MONEDA', 'orden' => 10, 'created_at' => now()],
+            ['valor' => 10.00, 'tipo' => 'MONEDA', 'orden' => 9, 'created_at' => now()],
+            ['valor' => 5.00, 'tipo' => 'MONEDA', 'orden' => 10, 'created_at' => now()],
             ['valor' => 2.00, 'tipo' => 'MONEDA', 'orden' => 11, 'created_at' => now()],
             ['valor' => 1.00, 'tipo' => 'MONEDA', 'orden' => 12, 'created_at' => now()],
         ]);

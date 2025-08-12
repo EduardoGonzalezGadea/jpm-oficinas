@@ -10,6 +10,8 @@ class Dependencias extends Component
 {
     use WithPagination;
 
+    protected $paginationTheme = 'bootstrap';
+
     public $search = '';
     public $nombre;
     public $dependenciaId;
@@ -64,12 +66,15 @@ class Dependencias extends Component
             $dependencia = Dependencia::findOrFail($this->dependenciaId);
             $dependencia->update(['dependencia' => $this->nombre]);
             session()->flash('message', 'Dependencia actualizada correctamente.');
+            $this->emit('dependenciaActualizada');
         } else {
             Dependencia::create(['dependencia' => $this->nombre]);
             session()->flash('message', 'Dependencia creada correctamente.');
+            $this->emit('dependenciaCreada');
         }
 
         $this->modalFormVisible = false;
+        $this->resetForm();
     }
 
     public function confirmDelete($id)
@@ -84,11 +89,12 @@ class Dependencias extends Component
         session()->flash('message', 'Dependencia eliminada correctamente.');
         $this->modalConfirmDeleteVisible = false;
         $this->resetForm();
+        $this->emit('dependenciaEliminada');
     }
 
     public function cerrarGestionDependencias()
     {
-        $this->emit('cerrarGestionDependencias');
+        $this->emit('cerrarModalDependencias');
     }
 
     public function render()

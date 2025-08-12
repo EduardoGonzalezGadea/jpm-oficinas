@@ -215,14 +215,19 @@
 
                                                                         @can('roles.assign')
                                                                             @if ($role->name !== 'administrador')
-                                                                                <button type="button"
-                                                                                    class="btn btn-outline-danger btn-sm remove-role-btn"
-                                                                                    data-user-id="{{ $user->id }}"
-                                                                                    data-role-id="{{ $role->id }}"
-                                                                                    data-user-name="{{ $user->name }}"
-                                                                                    title="Remover rol">
-                                                                                    <i class="fas fa-times"></i>
-                                                                                </button>
+                                                                                <form
+                                                                                    action="{{ route('roles.remove.user', ['user_id' => $user->id, 'role_id' => $role->id]) }}"
+                                                                                    method="POST" style="display: inline-block;"
+                                                                                    class="form-confirm"
+                                                                                    data-message="¿Está seguro de que desea remover el rol {{ $role->name }} del usuario {{ $user->name }}?">
+                                                                                    @csrf
+                                                                                    @method('DELETE')
+                                                                                    <button type="submit"
+                                                                                        class="btn btn-outline-danger btn-sm"
+                                                                                        title="Remover rol">
+                                                                                        <i class="fas fa-times"></i>
+                                                                                    </button>
+                                                                                </form>
                                                                             @endif
                                                                         @endcan
                                                                     </div>
@@ -252,28 +257,6 @@
         </div>
     </div>
 
-    <!-- Modal para confirmar eliminación de rol del usuario -->
-    <div class="modal fade" id="removeRoleModal" tabindex="-1" role="dialog">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Confirmar Acción</h5>
-                    <button type="button" class="close" data-dismiss="modal">
-                        <span>&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <p>¿Está seguro de remover el rol <strong>{{ $role->name }}</strong> del usuario <span
-                            id="userName"></span>?</p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-danger" id="confirmRemoveRole">Remover Rol</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
     @push('styles')
         <style>
             .avatar-sm {
@@ -295,50 +278,26 @@
     @push('scripts')
         <script>
             document.addEventListener('DOMContentLoaded', function() {
-                let currentUserId = null;
-                let currentRoleId = null;
+                document.querySelectorAll('.form-confirm').forEach(form => {
+                    form.addEventListener('submit', function(e) {
+                        e.preventDefault();
+                        const message = this.dataset.message;
 
-                // Manejar clicks en botones de remover rol
-                document.querySelectorAll('.remove-role-btn').forEach(btn => {
-                    btn.addEventListener('click', function() {
-                        currentUserId = this.dataset.userId;
-                        currentRoleId = this.dataset.roleId;
-                        document.getElementById('userName').textContent = this.dataset.userName;
-                        $('#removeRoleModal').modal('show');
+                        Swal.fire({
+                            title: '¿Estás seguro?',
+                            text: message,
+                            icon: 'warning',
+                            showCancelButton: true,
+                            confirmButtonColor: '#3085d6',
+                            cancelButtonColor: '#d33',
+                            confirmButtonText: 'Sí, continuar',
+                            cancelButtonText: 'Cancelar'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                this.submit();
+                            }
+                        });
                     });
-                });
-
-                // Confirmar eliminación
-                document.getElementById('confirmRemoveRole').addEventListener('click', function() {
-                    if (currentUserId && currentRoleId) {
-                        // Hacer petición AJAX para remover el rol
-                        fetch('{{ route('roles.remove.user') }}', {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')
-                                        .getAttribute('content')
-                                },
-                                body: JSON.stringify({
-                                    user_id: currentUserId,
-                                    role_id: currentRoleId
-                                })
-                            })
-                            .then(response => response.json())
-                            .then(data => {
-                                if (data.success) {
-                                    location.reload(); // Recargar para actualizar la lista
-                                } else {
-                                    alert('Error: ' + data.message);
-                                }
-                            })
-                            .catch(error => {
-                                console.error('Error:', error);
-                                alert('Error al remover el rol');
-                            });
-
-                        $('#removeRoleModal').modal('hide');
-                    }
                 });
             });
         </script>

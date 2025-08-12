@@ -1,4 +1,3 @@
-/* Estilos existentes */
 .btn-quick-access:hover {
     box-shadow: rgb(81, 124, 170) 0px 20px 30px -10px !important;
 }
@@ -11,3 +10,10 @@
     transform: translateY(-1px);
     box-shadow: rgb(40, 60, 82) 0px 20px 30px -10px !important;
 }
+
+/* Botones con gradientes */
+.btn {
+    background-image: linear-gradient(to bottom, rgba(255, 255, 255, 0.371), rgba(255, 255, 255, 0.086) 49%, rgba(0, 0, 0, 0.075) 51%, rgba(0,0,0,0.05));
+    background-repeat: repeat-x;
+}
+

@@ -19,23 +19,20 @@
                     <div class="dropdown-menu" aria-labelledby="navbarDropdownTesoreria">
                         {{-- Submenú Cajas --}}
                         <div class="dropdown-submenu">
-                            {{-- <a class="dropdown-item dropdown-toggle" href="#" role="button">
+                            <a class="dropdown-item dropdown-toggle" href="#" role="button">
                                 <i class="fas fa-cash-register mr-2"></i>Cajas
-                            </a> --}}
+                            </a>
                             <div class="dropdown-menu">
-                                <a class="dropdown-item" href="{{ route('tesoreria.cajas.apertura-cierre') }}"
+                                <a class="dropdown-item" href="{{ route('tesoreria.cajas.index') }}"
                                     wire:navigate>
-                                    <i class="fas fa-door-open mr-2"></i>Apertura/Cierre
-                                </a>
-                                <a class="dropdown-item" href="{{ route('tesoreria.cajas.movimientos') }}" wire:navigate>
-                                    <i class="fas fa-exchange-alt mr-2"></i>Movimientos
-                                </a>
-                                <a class="dropdown-item" href="{{ route('tesoreria.cajas.arqueo') }}" wire:navigate>
-                                    <i class="fas fa-balance-scale mr-2"></i>Arqueo
+                                    <i class="fas fa-balance-scale mr-2"></i>Flujo de Caja
                                 </a>
                                 <div class="dropdown-divider"></div>
                                 <a class="dropdown-item" href="{{ route('tesoreria.cajas.denominaciones') }}" wire:navigate>
                                     <i class="fas fa-money-bill-wave mr-2"></i>Denominaciones
+                                </a>
+                                <a class="dropdown-item" href="{{ route('tesoreria.cajas.conceptos') }}" wire:navigate>
+                                    <i class="fas fa-tags mr-2"></i>Conceptos
                                 </a>
                             </div>
                         </div>

@@ -20,43 +20,43 @@ class ValoresSeeder extends Seeder
         // Crear valores de ejemplo
         $valores = [
             [
-                'nombre' => 'Recibos de Agua',
-                'recibos' => 100,
-                'tipo_valor' => 'pesos',
-                'valor' => 150.00,
-                'descripcion' => 'Libretas de recibos para cobro de servicio de agua potable',
-                'activo' => true
-            ],
-            [
-                'nombre' => 'Recibos de Saneamiento',
-                'recibos' => 100,
-                'tipo_valor' => 'pesos',
-                'valor' => 200.00,
-                'descripcion' => 'Libretas de recibos para cobro de servicio de saneamiento',
-                'activo' => true
-            ],
-            [
-                'nombre' => 'Recibos Unidad Reajustable',
-                'recibos' => 50,
-                'tipo_valor' => 'UR',
-                'valor' => 5.25,
-                'descripcion' => 'Libretas de recibos con valor en unidades reajustables',
-                'activo' => true
-            ],
-            [
-                'nombre' => 'Recibos Sin Valor',
-                'recibos' => 100,
+                'nombre' => 'Artículo 222',
+                'recibos' => 1000,
                 'tipo_valor' => 'SVE',
                 'valor' => null,
-                'descripcion' => 'Libretas de recibos sin valor preestablecido',
+                'descripcion' => 'Libretas de recibos para cobro de servicios de vigilancia por Artículo 222',
                 'activo' => true
             ],
             [
-                'nombre' => 'Recibos de Multas',
-                'recibos' => 50,
-                'tipo_valor' => 'pesos',
-                'valor' => 500.00,
-                'descripcion' => 'Libretas de recibos para cobro de multas administrativas',
+                'nombre' => 'Recibos Generales',
+                'recibos' => 1000,
+                'tipo_valor' => 'SVE',
+                'valor' => null,
+                'descripcion' => 'Libretas de recibos para cobros varios',
+                'activo' => true
+            ],
+            [
+                'nombre' => 'Recibos Generales 1.8 Fondo de Terceros',
+                'recibos' => 500,
+                'tipo_valor' => 'SVE',
+                'valor' => null,
+                'descripcion' => 'Libretas de recibos para cobros de 1.8 Fondo de Terceros',
+                'activo' => true
+            ],
+            [
+                'nombre' => 'Decreto 391/987',
+                'recibos' => 1000,
+                'tipo_valor' => 'SVE',
+                'valor' => null,
+                'descripcion' => 'Libretas de recibos sin valor preestablecido, para cobros varios prehestablecidos',
+                'activo' => true
+            ],
+            [
+                'nombre' => 'Porte de armas',
+                'recibos' => 500,
+                'tipo_valor' => 'UR',
+                'valor' => 10.00,
+                'descripcion' => 'Libretas de recibos para cobro de porte de armas',
                 'activo' => true
             ]
         ];
@@ -77,40 +77,39 @@ class ValoresSeeder extends Seeder
         $conceptos = [];
 
         switch ($valor->nombre) {
-            case 'Recibos de Agua':
+            case 'Artículo 222':
                 $conceptos = [
-                    ['concepto' => 'Cobro Residencial', 'monto' => 150.00, 'tipo_monto' => 'pesos'],
-                    ['concepto' => 'Cobro Comercial', 'monto' => 300.00, 'tipo_monto' => 'pesos'],
-                    ['concepto' => 'Cobro Industrial', 'monto' => 500.00, 'tipo_monto' => 'pesos']
+                    ['concepto' => 'Art. 222 J.P.M.', 'monto' => 0.00, 'tipo_monto' => 'pesos'],
+                    ['concepto' => 'Art. 222 I.N.R.', 'monto' => 0.00, 'tipo_monto' => 'pesos'],
+                    ['concepto' => 'Art. 222 D.N.I.I.', 'monto' => 0.00, 'tipo_monto' => 'pesos'],
+                    ['concepto' => 'Art. 222 D.N.P.C.', 'monto' => 0.00, 'tipo_monto' => 'pesos']
                 ];
                 break;
 
-            case 'Recibos de Saneamiento':
+            case 'Recibos Generales':
                 $conceptos = [
-                    ['concepto' => 'Saneamiento Residencial', 'monto' => 200.00, 'tipo_monto' => 'pesos'],
-                    ['concepto' => 'Saneamiento Comercial', 'monto' => 400.00, 'tipo_monto' => 'pesos']
+                    ['concepto' => 'Cobro de multas de tránsito varias', 'monto' => 0.00, 'tipo_monto' => 'pesos'],
+                    ['concepto' => 'Cobro de multas por carecer de S.O.A.', 'monto' => 0.00, 'tipo_monto' => 'pesos']
                 ];
                 break;
 
-            case 'Recibos Unidad Reajustable':
+            case 'Recibos Generales 1.8 Fondo de Terceros':
                 $conceptos = [
-                    ['concepto' => 'Servicios en UR', 'monto' => 5.25, 'tipo_monto' => 'UR'],
-                    ['concepto' => 'Tasas Municipales', 'monto' => 3.50, 'tipo_monto' => 'UR']
+                    ['concepto' => 'Eventuales', 'monto' => 0.00, 'tipo_monto' => 'pesos'],
+                    ['concepto' => 'Arrendamiento', 'monto' => 0.00, 'tipo_monto' => 'pesos']
                 ];
                 break;
 
-            case 'Recibos Sin Valor':
+            case 'Decreto 391/987':
                 $conceptos = [
-                    ['concepto' => 'Servicios Varios', 'monto' => 0, 'tipo_monto' => 'pesos'],
-                    ['concepto' => 'Cobros Especiales', 'monto' => 0, 'tipo_monto' => 'pesos']
+                    ['concepto' => 'Certificado de Residencia', 'monto' => 0.00, 'tipo_monto' => 'pesos'],
+                    ['concepto' => 'T.HA.T.A.', 'monto' => 0.00, 'tipo_monto' => 'pesos']
                 ];
                 break;
 
-            case 'Recibos de Multas':
+            case 'Porte de armas':
                 $conceptos = [
-                    ['concepto' => 'Multas de Tránsito', 'monto' => 500.00, 'tipo_monto' => 'pesos'],
-                    ['concepto' => 'Multas Administrativas', 'monto' => 750.00, 'tipo_monto' => 'pesos'],
-                    ['concepto' => 'Multas Ambientales', 'monto' => 1000.00, 'tipo_monto' => 'pesos']
+                    ['concepto' => 'Porte de Armas', 'monto' => 10.00, 'tipo_monto' => 'UR']
                 ];
                 break;
         }
@@ -133,83 +132,62 @@ class ValoresSeeder extends Seeder
         $fechaBase = Carbon::now()->subMonths(6);
 
         switch ($valor->nombre) {
-            case 'Recibos de Agua':
+            case 'Artículo 222':
                 $entradas = [
                     [
                         'fecha' => $fechaBase->copy(),
-                        'comprobante' => 'MEM-001/2024',
+                        'comprobante' => 'Memorando 03/2025',
                         'desde' => 1001,
-                        'hasta' => 1500,
-                        'interno' => 'LIB-001'
-                    ],
-                    [
-                        'fecha' => $fechaBase->copy()->addMonth(),
-                        'comprobante' => 'MEM-015/2024',
-                        'desde' => 1501,
                         'hasta' => 2000,
-                        'interno' => 'LIB-002'
-                    ],
-                    [
-                        'fecha' => $fechaBase->copy()->addMonths(2),
-                        'comprobante' => 'MEM-032/2024',
-                        'desde' => 2001,
-                        'hasta' => 2300,
-                        'interno' => 'LIB-003'
+                        'interno' => null
                     ]
                 ];
                 break;
 
-            case 'Recibos de Saneamiento':
+            case 'Recibos Generales':
                 $entradas = [
-                    [
-                        'fecha' => $fechaBase->copy(),
-                        'comprobante' => 'MEM-002/2024',
-                        'desde' => 5001,
-                        'hasta' => 5400,
-                        'interno' => 'SAN-001'
-                    ],
                     [
                         'fecha' => $fechaBase->copy()->addMonth(),
-                        'comprobante' => 'MEM-018/2024',
-                        'desde' => 5401,
-                        'hasta' => 5700,
-                        'interno' => 'SAN-002'
+                        'comprobante' => 'Memorando 25/2025',
+                        'desde' => 151001,
+                        'hasta' => 152000,
+                        'interno' => null
                     ]
                 ];
                 break;
 
-            case 'Recibos Unidad Reajustable':
+            case 'Recibos Generales 1.8 Fondo de Terceros':
                 $entradas = [
                     [
                         'fecha' => $fechaBase->copy(),
-                        'comprobante' => 'MEM-005/2024',
-                        'desde' => 3001,
-                        'hasta' => 3200,
-                        'interno' => 'UR-001'
+                        'comprobante' => 'Memorando 06/2025',
+                        'desde' => 32001,
+                        'hasta' => 32500,
+                        'interno' => null
                     ]
                 ];
                 break;
 
-            case 'Recibos Sin Valor':
+            case 'Decreto 391/987':
                 $entradas = [
                     [
                         'fecha' => $fechaBase->copy(),
-                        'comprobante' => 'MEM-008/2024',
-                        'desde' => 4001,
-                        'hasta' => 4300,
-                        'interno' => 'SVE-001'
+                        'comprobante' => 'Memorando 06/2025',
+                        'desde' => 78001,
+                        'hasta' => 79000,
+                        'interno' => null
                     ]
                 ];
                 break;
 
-            case 'Recibos de Multas':
+            case 'Porte de armas':
                 $entradas = [
                     [
                         'fecha' => $fechaBase->copy(),
-                        'comprobante' => 'MEM-010/2024',
-                        'desde' => 6001,
-                        'hasta' => 6150,
-                        'interno' => 'MUL-001'
+                        'comprobante' => 'Memorando 03/2025',
+                        'desde' => 38000,
+                        'hasta' => 38500,
+                        'interno' => null
                     ]
                 ];
                 break;

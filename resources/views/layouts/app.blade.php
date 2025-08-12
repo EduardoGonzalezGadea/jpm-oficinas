@@ -98,6 +98,24 @@
             });
         });
 
+        window.addEventListener('swal:toast-error', event => {
+            const Toast = Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000, // 3 segundos
+                timerProgressBar: true,
+                didOpen: (toast) => {
+                    toast.addEventListener('mouseenter', Swal.stopTimer)
+                    toast.addEventListener('mouseleave', Swal.resumeTimer)
+                }
+            });
+            Toast.fire({
+                icon: 'error',
+                title: event.detail.text
+            });
+        });
+
         // Listener para modales de Bootstrap 4 (compatible con jQuery)
         window.addEventListener('show-modal', event => {
             const modalId = event.detail.id;
@@ -111,6 +129,25 @@
             if (modalId) {
                 $('#' + modalId).modal('hide');
             }
+        });
+
+        // Listener para confirmaciones de SweetAlert2
+        window.addEventListener('swal:confirm', event => {
+            Swal.fire({
+                title: event.detail.title,
+                text: event.detail.text,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: event.detail.confirmButtonText ? event.detail.confirmButtonText :
+                    'Sí, ejecútalo!',
+                cancelButtonText: event.detail.cancelButtonText ? event.detail.cancelButtonText : 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.livewire.emit(event.detail.method, event.detail.id);
+                }
+            });
         });
     </script>
 </body>

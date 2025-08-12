@@ -1,8 +1,8 @@
 <div>
     <div class="d-flex justify-content-between mb-3">
-        <h5 class="mb-0">Dependencias</h5>
+        <h5 class="mb-0">Acreedores</h5>
         <button wire:click="create" class="btn btn-primary btn-sm">
-            <i class="fas fa-plus"></i> Nueva Dependencia
+            <i class="fas fa-plus"></i> Nuevo Acreedor
         </button>
     </div>
 
@@ -22,7 +22,7 @@
                     <i class="fas fa-search"></i>
                 </span>
             </div>
-            <input type="text" class="form-control" placeholder="Buscar dependencias..." wire:model.debounce.500ms="search">
+            <input type="text" class="form-control" placeholder="Buscar acreedores..." wire:model.debounce.500ms="search">
         </div>
     </div>
 
@@ -35,16 +35,16 @@
                 </tr>
             </thead>
             <tbody>
-                @forelse($dependencias as $dep)
+                @forelse($acreedores as $acr)
                     <tr>
-                        <td class="align-middle">{{ $dep->dependencia }}</td>
+                        <td class="align-middle">{{ $acr->acreedor }}</td>
                         <td class="text-center">
                             <div class="btn-group btn-group-sm" role="group">
-                                <button wire:click="edit({{ $dep->idDependencias }})"
+                                <button wire:click="edit({{ $acr->idAcreedores }})"
                                     class="btn btn-warning" title="Editar">
                                     <i class="fas fa-edit"></i>
                                 </button>
-                                <button wire:click="confirmDelete({{ $dep->idDependencias }})"
+                                <button wire:click="confirmDelete({{ $acr->idAcreedores }})"
                                     class="btn btn-danger" title="Eliminar">
                                     <i class="fas fa-trash"></i>
                                 </button>
@@ -54,7 +54,7 @@
                 @empty
                     <tr>
                         <td colspan="2" class="text-center text-muted">
-                            <i class="fas fa-info-circle"></i> No hay dependencias registradas.
+                            <i class="fas fa-info-circle"></i> No hay acreedores registrados.
                         </td>
                     </tr>
                 @endforelse
@@ -62,9 +62,9 @@
         </table>
     </div>
 
-    @if($dependencias->hasPages())
+    @if($acreedores->hasPages())
         <div class="d-flex justify-content-center mt-3">
-            {{ $dependencias->links() }}
+            {{ $acreedores->links() }}
         </div>
     @endif
 
@@ -76,8 +76,8 @@
                     <form wire:submit.prevent="save">
                         <div class="modal-header">
                             <h6 class="modal-title">
-                                <i class="fas {{ $dependenciaId ? 'fa-edit' : 'fa-plus' }}"></i>
-                                {{ $dependenciaId ? 'Editar' : 'Nueva' }} Dependencia
+                                <i class="fas {{ $acreedorId ? 'fa-edit' : 'fa-plus' }}"></i>
+                                {{ $acreedorId ? 'Editar' : 'Nuevo' }} Acreedor
                             </h6>
                             <button type="button" class="close" wire:click="$set('modalFormVisible', false)">
                                 <span>&times;</span>
@@ -85,10 +85,10 @@
                         </div>
                         <div class="modal-body">
                             <div class="form-group">
-                                <label for="nombreDependencia" class="font-weight-bold">Nombre</label>
-                                <input type="text" id="nombreDependencia" wire:model.defer="nombre"
+                                <label for="nombreAcreedor" class="font-weight-bold">Nombre</label>
+                                <input type="text" id="nombreAcreedor" wire:model.defer="nombre"
                                     class="form-control @error('nombre') is-invalid @enderror"
-                                    placeholder="Ingrese el nombre de la dependencia">
+                                    placeholder="Ingrese el nombre del acreedor">
                                 @error('nombre')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -124,7 +124,7 @@
                     <div class="modal-body">
                         <p class="mb-0">
                             <i class="fas fa-info-circle text-info"></i>
-                            ¿Está seguro que desea eliminar esta dependencia?
+                            ¿Está seguro que desea eliminar este acreedor?
                         </p>
                         <p class="text-danger font-weight-bold mt-2 mb-0">
                             <i class="fas fa-exclamation-triangle"></i>

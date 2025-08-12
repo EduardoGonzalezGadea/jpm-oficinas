@@ -58,25 +58,20 @@ class Index extends Component
         'pendienteCreado' => 'cargarDatos',
         'pagoCreado' => 'cargarDatos',
         'mostrarAlerta' => 'mostrarAlertaSweet',
-        'abrirGestionDependencias' => 'abrirGestionDependencias',
-        'cerrarGestionDependencias' => 'cerrarGestionDependencias',
+        'dependenciaCreada' => 'cargarDatos',
+        'dependenciaActualizada' => 'cargarDatos',
+        'dependenciaEliminada' => 'cargarDatos',
+        'acreedorCreado' => 'cargarDatos',
+        'acreedorActualizado' => 'cargarDatos',
+        'acreedorEliminado' => 'cargarDatos',
     ];
 
-    public $mostrarGestionDependencias = false;
+    public $mostrarModalDependencias = false;
+    public $mostrarModalAcreedores = false;
 
     protected $queryString = [
-        'mostrarGestionDependencias' => ['except' => false],
+        'mostrarModalDependencias' => ['except' => false],
     ];
-
-    public function abrirGestionDependencias()
-    {
-        $this->mostrarGestionDependencias = true;
-    }
-
-    public function cerrarGestionDependencias()
-    {
-        $this->mostrarGestionDependencias = false;
-    }
 
     public function mostrarAlertaSweet($data)
     {
@@ -183,6 +178,7 @@ class Index extends Component
                 $pendiente->extra = $diferencia > 0 ? $diferencia : 0;
 
                 $pendiente->saldo = $pendiente->montoPendientes - ($pendiente->tot_reintegrado + $pendiente->tot_recuperado);
+                $pendiente->es_mes_anterior = false; // Flag for current month
                 return $pendiente;
             });
 
@@ -219,6 +215,7 @@ class Index extends Component
                     $pendiente->extra = $diferencia > 0 ? $diferencia : 0;
 
                     $pendiente->saldo = $pendiente->montoPendientes - ($pendiente->tot_reintegrado + $pendiente->tot_recuperado);
+                    $pendiente->es_mes_anterior = true; // Flag for previous month
                     return $pendiente;
                 })->filter(function ($pendiente) {
                     return $pendiente->saldo > 0;
@@ -250,7 +247,11 @@ class Index extends Component
                     (montoPagos - CASE WHEN fechaIngresoPagos IS NOT NULL THEN recuperadoPagos ELSE 0 END) as saldo_pagos'
                 )
                 ->orderBy('fechaEgresoPagos', 'ASC')
-                ->get();
+                ->get()
+                ->map(function($pago) {
+                    $pago->es_mes_anterior = false;
+                    return $pago;
+                });
 
             // Obtener pagos del mes anterior con saldo > 0
             $mesAnioAnterior = $this->getMesAnioAnterior();
@@ -271,11 +272,14 @@ class Index extends Component
                         (montoPagos - CASE WHEN fechaIngresoPagos IS NOT NULL THEN recuperadoPagos ELSE 0 END) as saldo_pagos'
                     )
                     ->orderBy('fechaEgresoPagos', 'ASC')
-                    ->get();
-
-                $pagosAnterior = $pagosAnterior->filter(function ($pago) {
-                    return ($pago['saldo_pagos'] ?? 0) > 0;
-                });
+                    ->get()
+                    ->map(function($pago) {
+                        $pago->es_mes_anterior = true;
+                        return $pago;
+                    })
+                    ->filter(function ($pago) {
+                        return ($pago['saldo_pagos'] ?? 0) > 0;
+                    });
             }
 
             $this->tablaPagos = $pagosActual->concat($pagosAnterior)->sortBy('fechaEgresoPagos')->values();
@@ -338,7 +342,9 @@ class Index extends Component
     public function openRecuperarModal()
     {
         if (!$this->cajaChicaSeleccionada) {
-            session()->flash('error', 'No hay una caja chica activa para este período.');
+            $this->dispatchBrowserEvent('swal:toast-error', [
+                'text' => 'No hay una caja chica activa para este período.'
+            ]);
             return;
         }
 
@@ -348,6 +354,7 @@ class Index extends Component
 
         $fechaRecuperacionActual = now()->endOfDay()->toDateTimeString();
 
+        // --- Pendientes del mes actual ---
         $pendientesRecuperacion = Pendiente::where('relCajaChica', $this->cajaChicaSeleccionada->idCajaChica)
             ->where('fechaPendientes', '<=', $fechaRecuperacionActual)
             ->with('dependencia')
@@ -376,6 +383,7 @@ class Index extends Component
             ];
         });
 
+        // --- Pagos del mes actual ---
         $pagosRecuperacion = Pago::where('relCajaChica_Pagos', $this->cajaChicaSeleccionada->idCajaChica)
             ->where('fechaEgresoPagos', '<=', $fechaRecuperacionActual)
             ->with('acreedor')
@@ -401,7 +409,73 @@ class Index extends Component
             ];
         });
 
-        $items = $pendientes->concat($pagos)->values();
+        // --- Mes Anterior ---
+        $mesAnioAnterior = $this->getMesAnioAnterior();
+        $cajaChicaAnterior = CajaChica::where('mes', $mesAnioAnterior['mes'])
+            ->where('anio', $mesAnioAnterior['anio'])
+            ->first();
+
+        $pendientesAnterior = collect();
+        $pagosAnterior = collect();
+
+        if ($cajaChicaAnterior) {
+            // --- Pendientes del mes anterior ---
+            $pendientesRecuperacionAnterior = Pendiente::where('relCajaChica', $cajaChicaAnterior->idCajaChica)
+                ->where('fechaPendientes', '<=', $fechaRecuperacionActual)
+                ->with('dependencia')
+                ->selectRaw(
+                    'tes_cch_pendientes.*,
+                    (SELECT SUM(rendido) FROM tes_cch_movimientos WHERE tes_cch_movimientos.relPendiente = tes_cch_pendientes.idPendientes AND fechaMovimientos <= ? AND deleted_at IS NULL) as tot_rendido,
+                    (SELECT SUM(reintegrado) FROM tes_cch_movimientos WHERE tes_cch_movimientos.relPendiente = tes_cch_pendientes.idPendientes AND fechaMovimientos <= ? AND deleted_at IS NULL) as tot_reintegrado,
+                    (SELECT SUM(recuperado) FROM tes_cch_movimientos WHERE tes_cch_movimientos.relPendiente = tes_cch_pendientes.idPendientes AND fechaMovimientos <= ? AND deleted_at IS NULL) as tot_recuperado',
+                    [$fechaRecuperacionActual, $fechaRecuperacionActual, $fechaRecuperacionActual]
+                )
+                ->orderBy('pendiente', 'ASC')
+                ->get();
+
+            $pendientesAnterior = $pendientesRecuperacionAnterior->filter(function ($p) {
+                $saldoRendido = ($p['tot_rendido'] ?? 0) - ($p['tot_recuperado'] ?? 0);
+                return $saldoRendido > 0;
+            })->map(function ($p) {
+                $detalleDependencia = $p['dependencia']['dependencia'] ?? 'Sin dato';
+                return [
+                    'id' => 'pendiente_' . $p['idPendientes'],
+                    'tipo' => 'Pendiente (Mes Ant.)',
+                    'detalle' => $detalleDependencia . ' (N° ' . $p['pendiente'] . ')',
+                    'saldo' => ($p['tot_rendido'] ?? 0) - ($p['tot_recuperado'] ?? 0),
+                    'origen_id' => $p['idPendientes'],
+                    'origen_type' => Pendiente::class,
+                ];
+            });
+
+            // --- Pagos del mes anterior ---
+            $pagosRecuperacionAnterior = Pago::where('relCajaChica_Pagos', $cajaChicaAnterior->idCajaChica)
+                ->where('fechaEgresoPagos', '<=', $fechaRecuperacionActual)
+                ->with('acreedor')
+                ->selectRaw(
+                    'tes_cch_pagos.*,
+                    (montoPagos - CASE WHEN fechaIngresoPagos IS NOT NULL AND fechaIngresoPagos <= ? THEN recuperadoPagos ELSE 0 END) as saldo_pagos',
+                    [$fechaRecuperacionActual]
+                )
+                ->orderBy('fechaEgresoPagos', 'ASC')
+                ->get();
+
+            $pagosAnterior = $pagosRecuperacionAnterior->filter(function ($p) {
+                return ($p['saldo_pagos'] ?? 0) > 0;
+            })->map(function ($p) {
+                $detalleAcreedor = $p['acreedor']['acreedor'] ?? 'Sin dato';
+                return [
+                    'id' => 'pago_' . $p['idPagos'],
+                    'tipo' => 'Pago Directo (Mes Ant.)',
+                    'detalle' => $detalleAcreedor . ' - ' . $p['conceptoPagos'],
+                    'saldo' => $p['saldo_pagos'] ?? 0,
+                    'origen_id' => $p['idPagos'],
+                    'origen_type' => Pago::class,
+                ];
+            });
+        }
+
+        $items = $pendientes->concat($pendientesAnterior)->concat($pagos)->concat($pagosAnterior)->values();
 
         if ($items->isEmpty()) {
             session()->flash('message', 'No hay saldos pendientes de recuperar para el período y fecha seleccionados.');
@@ -500,6 +574,7 @@ class Index extends Component
         $this->showRecuperarModal = false;
         $this->reset(['recuperacion', 'itemsParaRecuperar', 'itemsSeleccionados', 'totalARecuperar', 'seleccionarTodos']);
         $this->resetErrorBag();
+        $this->cargarDatos();
     }
 
     // --- Métodos de Acción para Editar Fondo ---
@@ -576,6 +651,7 @@ class Index extends Component
             'montoOriginal' => ''
         ];
         $this->resetErrorBag();
+        $this->cargarDatos();
     }
 
     public function updatedEditandoFondoMonto()
@@ -670,6 +746,28 @@ class Index extends Component
     public function cargarDependencias()
     {
         $this->dependencias = Dependencia::orderBy('dependencia', 'ASC')->get();
+    }
+
+    public function abrirModalDependencias()
+    {
+        $this->mostrarModalDependencias = true;
+    }
+
+    public function cerrarModalDependencias()
+    {
+        $this->mostrarModalDependencias = false;
+        $this->cargarDatos();
+    }
+
+    public function abrirModalAcreedores()
+    {
+        $this->mostrarModalAcreedores = true;
+    }
+
+    public function cerrarModalAcreedores()
+    {
+        $this->mostrarModalAcreedores = false;
+        $this->cargarDatos();
     }
 
     // --- Renderizado ---

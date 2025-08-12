@@ -23,15 +23,6 @@
                         </div>
                     </div>
                     <div class="card-body">
-                        @if (session('success'))
-                            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                                {{ session('success') }}
-                                <button type="button" class="close" data-dismiss="alert">
-                                    <span aria-hidden="true">&times;</span>
-                                </button>
-                            </div>
-                        @endif
-
                         @if (session('error'))
                             <div class="alert alert-danger alert-dismissible fade show" role="alert">
                                 {{ session('error') }}
@@ -93,7 +84,8 @@
                                                     @if ($role->name !== 'administrador')
                                                         <form action="{{ route('roles.destroy', $role) }}" method="POST"
                                                             style="display: inline-block;"
-                                                            onsubmit="return confirm('¿Está seguro de eliminar este rol? Los usuarios con este rol perderán estos permisos.')">
+                                                            class="form-confirm"
+                                                            data-message="¿Está seguro de eliminar este rol? Los usuarios con este rol perderán estos permisos.">
                                                             @csrf
                                                             @method('DELETE')
                                                             <button type="submit" class="btn btn-sm btn-danger"
@@ -128,4 +120,26 @@
             </div>
         </div>
     </div>
+
+    @push('scripts')
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                @if (session('swal-success'))
+                    window.dispatchEvent(new CustomEvent('swal:success', {
+                        detail: {
+                            text: '{{ session('swal-success') }}'
+                        }
+                    }));
+                @endif
+
+                @if (session('toast-error'))
+                    window.dispatchEvent(new CustomEvent('swal:toast-error', {
+                        detail: {
+                            text: '{{ session('toast-error') }}'
+                        }
+                    }));
+                @endif
+            });
+        </script>
+    @endpush
 @endsection

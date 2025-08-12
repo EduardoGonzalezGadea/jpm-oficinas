@@ -16,6 +16,10 @@
                         role="tab" aria-controls="pills-apertura-cierre" aria-selected="false">Apertura y Cierre</a>
                 </li>
                 <li class="nav-item" role="presentation">
+                    <a class="nav-link" id="pills-arqueos-tab" data-toggle="pill" href="#pills-arqueos" role="tab"
+                        aria-controls="pills-arqueos" aria-selected="false">Arqueos</a>
+                </li>
+                <li class="nav-item" role="presentation">
                     <a class="nav-link" id="pills-reportes-tab" data-toggle="pill" href="#pills-reportes" role="tab"
                         aria-controls="pills-reportes" aria-selected="false">Reportes</a>
                 </li>
@@ -33,6 +37,10 @@
                     aria-labelledby="pills-apertura-cierre-tab">
                     @livewire('tesoreria.cajas.apertura-cierre')
                 </div>
+                <div class="tab-pane fade" id="pills-arqueos" role="tabpanel"
+                    aria-labelledby="pills-arqueos-tab">
+                    @livewire('tesoreria.cajas.arqueo')
+                </div>
                 <div class="tab-pane fade" id="pills-reportes" role="tabpanel" aria-labelledby="pills-reportes-tab">
                     {{-- @livewire('tesoreria.cajas.reportes-caja') --}}
                     <p>Contenido de Reportes...</p>
@@ -40,7 +48,7 @@
                 <div class="tab-pane fade" id="pills-configuracion" role="tabpanel"
                     aria-labelledby="pills-configuracion-tab">
                     {{-- @livewire('tesoreria.cajas.configuracion-caja') --}}
-                    <p>Contenido de Configuración...</p>
+                    @livewire('tesoreria.cajas.index')
                 </div>
             </div>
         </div>

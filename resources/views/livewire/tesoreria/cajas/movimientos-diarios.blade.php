@@ -35,77 +35,8 @@
         </div>
     </div>
 
-    {{-- Formulario de Registro de Movimiento --}}
-    <div class="card mb-4">
-        <div class="card-header">
-            <h5 class="card-title">Registrar Nuevo Movimiento</h5>
-        </div>
-        <div class="card-body">
-            <form wire:submit.prevent="registrarMovimiento">
-                <div class="form-row">
-                    <div class="form-group col-md-4">
-                        <label for="tipo">Tipo de Movimiento</label>
-                        <select id="tipo" class="form-control" wire:model="tipo">
-                            <option value="entrada">Entrada</option>
-                            <option value="salida">Salida</option>
-                        </select>
-                    </div>
-                    <div class="form-group col-md-4">
-                        <label for="concepto">Concepto</label>
-                        <input type="text" id="concepto" class="form-control" wire:model="concepto" placeholder="Ej: Venta de producto">
-                    </div>
-                    <div class="form-group col-md-4">
-                        <label for="monto">Monto</label>
-                        <input type="number" id="monto" class="form-control" wire:model="monto" placeholder="0.00">
-                    </div>
-                </div>
-                <button type="submit" class="btn btn-primary">Registrar Movimiento</button>
-            </form>
-        </div>
-    </div>
-
-    {{-- Tabla de Movimientos del Día --}}
-    <div class="card">
-        <div class="card-header">
-            <h5 class="card-title">Movimientos del Día</h5>
-        </div>
-        <div class="card-body">
-            <table class="table table-striped">
-                <thead>
-                    <tr>
-                        <th>Hora</th>
-                        <th>Tipo</th>
-                        <th>Concepto</th>
-                        <th>Monto</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>09:15 AM</td>
-                        <td><span class="badge badge-success">Entrada</span></td>
-                        <td>Venta de producto A</td>
-                        <td>$ 200.00</td>
-                    </tr>
-                    <tr>
-                        <td>10:30 AM</td>
-                        <td><span class="badge badge-danger">Salida</span></td>
-                        <td>Compra de insumos</td>
-                        <td>$ 50.00</td>
-                    </tr>
-                    <tr>
-                        <td>11:00 AM</td>
-                        <td><span class="badge badge-success">Entrada</span></td>
-                        <td>Venta de producto B</td>
-                        <td>$ 300.00</td>
-                    </tr>
-                    <tr>
-                        <td>01:45 PM</td>
-                        <td><span class="badge badge-danger">Salida</span></td>
-                        <td>Pago de servicio</td>
-                        <td>$ 200.00</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+    {{-- Movimientos del Día --}}
+    <div>
+        @livewire('tesoreria.cajas.movimientos')
     </div>
 </div>
