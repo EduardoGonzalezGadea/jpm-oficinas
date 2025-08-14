@@ -9,7 +9,7 @@
     const setupTheme = () => {
         const themeStylesheet = document.getElementById("bootswatch-theme");
         const defaultThemePath =
-            "libs/bootstrap-4.6.2-dist/css/bootstrap.min.css";
+            "{{ assets('libs/bootstrap-4.6.2-dist/css/bootstrap.min.css') }}";
         const defaultThemeName = "bootstrap-default";
 
         // Cargar el tema guardado en LocalStorage al iniciar

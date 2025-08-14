@@ -51,6 +51,10 @@
                     <i class="fas fa-money-check"></i>
                     Recuperar todo
                 </button>
+                <button class="btn btn-secondary flex-fill" wire:click="forzarRecargaCompleta" title="Recargar datos">
+                    <i class="fas fa-sync-alt"></i>
+                    Recargar
+                </button>
             </div>
         </div>
     </div>
@@ -321,8 +325,8 @@
         </div>
         <div class="col-md-6 text-right d-print-none">
             <div class="btn-group" role="group">
-                <button class="btn btn-primary" wire:click="abrirModalDependencias">
-                    <i class="fas fa-cogs"></i>
+                <button class="btn btn-primary flex-fill" wire:click="openModalDependencias">
+                    <i class="fas fa-building"></i>
                     Dependencias
                 </button>
                 <button class="btn btn-info" wire:click="prepararModalNuevoPendiente">
@@ -350,7 +354,8 @@
         </thead>
         <tbody>
             @forelse ($tablaPendientesDetalle as $item)
-                <tr wire:key="pendiente-{{ $item->idPendientes }}" class="{{ ($item->es_mes_anterior ?? false) ? 'table-warning' : '' }}">
+                <tr wire:key="pendiente-{{ $item->idPendientes }}"
+                    class="{{ $item->es_mes_anterior ?? false ? 'table-warning' : '' }}">
                     <td class="text-right align-middle font-weight-bold">{{ $item->pendiente }}</td>
                     <td class="text-center align-middle">
                         {{ $item->fechaPendientes ? $item->fechaPendientes->format('d/m/Y') : '' }}
@@ -376,6 +381,13 @@
                                 class="btn btn-sm btn-dark mr-1" title="Editar Pendiente">
                                 <i class="fas fa-pencil-alt"></i>
                             </a>
+                            @if (($item->tot_recuperado ?? 0) < ($item->tot_rendido ?? 0) && ($item->tot_rendido ?? 0) > 0)
+                                <button type="button" class="btn btn-sm btn-info mr-1"
+                                    title="Recuperar Dinero Rendido"
+                                    wire:click="openRecuperarRendidoModal({{ $item->idPendientes }})">
+                                    <i class="fas fa-hand-holding-usd"></i>
+                                </button>
+                            @endif
                             <a href="{{ route('tesoreria.caja-chica.imprimir.pendiente', $item->idPendientes) }}"
                                 target="_blank" class="btn btn-sm btn-dark mr-1" title="Imprimir Pendiente">
                                 <i class="fas fa-print"></i>
@@ -402,7 +414,7 @@
         </div>
         <div class="col-md-6 text-right d-print-none">
             <div class="btn-group" role="group">
-                <button class="btn btn-primary" wire:click="abrirModalAcreedores">
+                <button class="btn btn-primary" wire:click="openModalAcreedores">
                     <i class="fas fa-users"></i>
                     Acreedores
                 </button>
@@ -429,7 +441,8 @@
         </thead>
         <tbody>
             @forelse ($tablaPagos as $item)
-                <tr wire:key="pago-{{ $item->idPagos }}" class="{{ ($item->es_mes_anterior ?? false) ? 'table-warning' : '' }}">
+                <tr wire:key="pago-{{ $item->idPagos }}"
+                    class="{{ $item->es_mes_anterior ?? false ? 'table-warning' : '' }}">
                     <td class="text-center align-middle">
                         {{ $item->fechaEgresoPagos ? $item->fechaEgresoPagos->format('d/m/Y') : '' }}</td>
                     <td class="text-center align-middle font-weight-bold">{{ $item->egresoPagos }}</td>
@@ -454,6 +467,13 @@
                                 wire:click="$emit('mostrarModalEditarPago', {{ $item->idPagos }})" title="Editar">
                                 <i class="fas fa-pencil-alt"></i>
                             </button>
+                            @if (($item->recuperadoPagos ?? 0) < ($item->montoPagos ?? 0) && ($item->montoPagos ?? 0) > 0)
+                                <button type="button" class="btn btn-sm btn-info mr-1"
+                                    title="Recuperar Pago Directo"
+                                    wire:click="openRecuperarPagoModal({{ $item->idPagos }})">
+                                    <i class="fas fa-hand-holding-usd"></i>
+                                </button>
+                            @endif
                             <a href="{{ route('tesoreria.caja-chica.imprimir.pago', $item->idPagos) }}"
                                 target="_blank" class="btn btn-sm btn-dark mr-1" title="Imprimir Pago Directo">
                                 <i class="fas fa-print"></i>
@@ -472,61 +492,218 @@
         </tbody>
     </table>
 
+    <!-- Modal de Recuperación de Dinero Rendido de Pendiente -->
+    @if ($showRecuperarRendidoModal)
+        <div class="modal fade show" id="modalRecuperarRendido" tabindex="-1" role="dialog"
+            aria-labelledby="modalRecuperarRendidoLabel" style="display: block;" aria-modal="true">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <div class="modal-header bg-info text-white">
+                        <h5 class="modal-title" id="modalRecuperarRendidoLabel">
+                            <i class="fas fa-hand-holding-usd mr-2"></i>Recuperar Dinero Rendido de Pendiente
+                        </h5>
+                        <button type="button" class="close" wire:click="closeRecuperarRendidoModal"
+                            aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
+                        <form wire:submit.prevent="saveRecuperarRendido">
+                            <div class="form-group">
+                                <label for="recuperarRendidoFecha">Fecha:</label>
+                                <input type="date" id="recuperarRendidoFecha"
+                                    class="form-control @error('recuperarRendidoData.fecha') is-invalid @enderror"
+                                    wire:model.defer="recuperarRendidoData.fecha">
+                                @error('recuperarRendidoData.fecha')
+                                    <span class="invalid-feedback">{{ $message }}</span>
+                                @enderror
+                            </div>
+                            <div class="form-group">
+                                <label for="recuperarRendidoDocumentos">Documentos:</label>
+                                <input type="text" id="recuperarRendidoDocumentos"
+                                    class="form-control @error('recuperarRendidoData.documentos') is-invalid @enderror"
+                                    wire:model.defer="recuperarRendidoData.documentos"
+                                    placeholder="Ingrese documentos">
+                                @error('recuperarRendidoData.documentos')
+                                    <span class="invalid-feedback">{{ $message }}</span>
+                                @enderror
+                            </div>
+                            <div class="form-group">
+                                <label for="recuperarRendidoMontoRecuperado">Monto Recuperado:</label>
+                                <input type="number" id="recuperarRendidoMontoRecuperado"
+                                    class="form-control @error('recuperarRendidoData.monto_recuperado') is-invalid @enderror"
+                                    wire:model.defer="recuperarRendidoData.monto_recuperado" step="0.01">
+                                @error('recuperarRendidoData.monto_recuperado')
+                                    <span class="invalid-feedback">{{ $message }}</span>
+                                @enderror
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" wire:click="closeRecuperarRendidoModal">
+                            <i class="fas fa-times mr-1"></i>Cancelar
+                        </button>
+                        <button type="button" class="btn btn-info" wire:click="saveRecuperarRendido">
+                            <i class="fas fa-save mr-1"></i>Guardar Recuperación
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal-backdrop fade show"></div>
+    @endif
+
+    <!-- Modal de Recuperación de Pago Directo -->
+    @if ($showRecuperarPagoModal)
+        <div class="modal fade show" id="modalRecuperarPago" tabindex="-1" role="dialog"
+            aria-labelledby="modalRecuperarPagoLabel" style="display: block;" aria-modal="true">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <div class="modal-header bg-info text-white">
+                        <h5 class="modal-title" id="modalRecuperarPagoLabel">
+                            <i class="fas fa-hand-holding-usd mr-2"></i>Recuperar Pago Directo
+                        </h5>
+                        <button type="button" class="close" wire:click="closeRecuperarPagoModal"
+                            aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
+                        <form wire:submit.prevent="saveRecuperarPago">
+                            <div class="form-group">
+                                <label for="recuperarPagoFecha">Fecha de Recuperación:</label>
+                                <input type="date" id="recuperarPagoFecha"
+                                    class="form-control @error('recuperarPagoData.fecha') is-invalid @enderror"
+                                    wire:model.defer="recuperarPagoData.fecha">
+                                @error('recuperarPagoData.fecha')
+                                    <span class="invalid-feedback">{{ $message }}</span>
+                                @enderror
+                            </div>
+                            <div class="form-group">
+                                <label for="recuperarPagoNumeroIngreso">Número de Ingreso:</label>
+                                <input type="text" id="recuperarPagoNumeroIngreso"
+                                    class="form-control @error('recuperarPagoData.numero_ingreso') is-invalid @enderror"
+                                    wire:model.defer="recuperarPagoData.numero_ingreso"
+                                    placeholder="Ingrese número de ingreso">
+                                @error('recuperarPagoData.numero_ingreso')
+                                    <span class="invalid-feedback">{{ $message }}</span>
+                                @enderror
+                            </div>
+                            @if ($recuperarPagoData['es_banco_bse'] ?? false)
+                                <div class="form-group">
+                                    <label for="recuperarPagoNumeroIngresoBSE">Número de Ingreso BSE:</label>
+                                    <input type="text" id="recuperarPagoNumeroIngresoBSE"
+                                        class="form-control @error('recuperarPagoData.numero_ingreso_bse') is-invalid @enderror"
+                                        wire:model.defer="recuperarPagoData.numero_ingreso_bse"
+                                        placeholder="Ingrese número de ingreso BSE">
+                                    @error('recuperarPagoData.numero_ingreso_bse')
+                                        <span class="invalid-feedback">{{ $message }}</span>
+                                    @enderror
+                                </div>
+                            @endif
+                            <div class="form-group">
+                                <label for="recuperarPagoMontoRecuperado">Monto Recuperado:</label>
+                                <input type="number" id="recuperarPagoMontoRecuperado"
+                                    class="form-control @error('recuperarPagoData.monto_recuperado') is-invalid @enderror"
+                                    wire:model.defer="recuperarPagoData.monto_recuperado" step="0.01">
+                                @error('recuperarPagoData.monto_recuperado')
+                                    <span class="invalid-feedback">{{ $message }}</span>
+                                @enderror
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" wire:click="closeRecuperarPagoModal">
+                            <i class="fas fa-times mr-1"></i>Cancelar
+                        </button>
+                        <button type="button" class="btn btn-info" wire:click="saveRecuperarPago">
+                            <i class="fas fa-save mr-1"></i>Guardar Recuperación
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal-backdrop fade show"></div>
+    @endif
+
+    <!-- Alertas para recuperación de pagos -->
+    @if ($modalRecuperarPagoError)
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            {{ $modalRecuperarPagoError }}
+            <button type="button" class="close" wire:click="$set('modalRecuperarPagoError', null)">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    @endif
+
+    @if ($modalRecuperarPagoMessage)
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            {{ $modalRecuperarPagoMessage }}
+            <button type="button" class="close" wire:click="$set('modalRecuperarPagoMessage', null)">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    @endif
+
     <!-- Incluir los componentes de modales -->
     <livewire:tesoreria.caja-chica.modal-nuevo-fondo />
     <livewire:tesoreria.caja-chica.modal-nuevo-pendiente />
     <livewire:tesoreria.caja-chica.modal-nuevo-pago />
     <livewire:tesoreria.caja-chica.modal-editar-pago />
 
-    <!-- Modal de Gestión de Dependencias -->
-    @if ($mostrarModalDependencias)
-        <div class="modal fade show d-block" tabindex="-1" role="dialog" aria-modal="true">
-            <div class="modal-dialog modal-lg modal-dialog-scrollable" role="document">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">
-                            <i class="fas fa-cogs"></i> Gestión de Dependencias
-                        </h5>
-                        <button type="button" class="close" wire:click="cerrarModalDependencias">
-                            <span>&times;</span>
-                        </button>
-                    </div>
-                    <div class="modal-body">
-                        @livewire('tesoreria.caja-chica.dependencias')
-                    </div>
+    <!-- Modal Dependencias -->
+    <div class="modal fade" id="modalDependencias" tabindex="-1" role="dialog"
+        aria-labelledby="modalDependenciasLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h6 class="modal-title" id="modalDependenciasLabel">
+                        <i class="fas fa-building"></i> Gestión de Dependencias
+                    </h6>
+                    <button type="button" class="close" wire:click="closeModalDependencias">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    @livewire('tesoreria.caja-chica.dependencias')
                 </div>
             </div>
         </div>
-        <div class="modal-backdrop fade show"></div>
-    @endif
+    </div>
 
-    <!-- Modal de Gestión de Acreedores -->
-    @if ($mostrarModalAcreedores)
-        <div class="modal fade show d-block" tabindex="-1" role="dialog" aria-modal="true">
-            <div class="modal-dialog modal-lg modal-dialog-scrollable" role="document">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">
-                            <i class="fas fa-users"></i> Gestión de Acreedores
-                        </h5>
-                        <button type="button" class="close" wire:click="cerrarModalAcreedores">
-                            <span>&times;</span>
-                        </button>
-                    </div>
-                    <div class="modal-body">
-                        @livewire('tesoreria.caja-chica.acreedores')
-                    </div>
+    <!-- Modal Acreedores -->
+    <div class="modal fade" id="modalAcreedores" tabindex="-1" role="dialog"
+        aria-labelledby="modalAcreedoresLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h6 class="modal-title" id="modalAcreedoresLabel">
+                        <i class="fas fa-users"></i> Gestión de Acreedores
+                    </h6>
+                    <button type="button" class="close" wire:click="closeModalAcreedores">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    @livewire('tesoreria.caja-chica.acreedores')
                 </div>
             </div>
         </div>
-        <div class="modal-backdrop fade show"></div>
-    @endif
+    </div>
 </div>
 
 @push('scripts')
     <script>
         document.addEventListener('livewire:init', function() {
             // === Gestión de Modales ===
+
+
+            // Prevenir que Livewire re-renderice innecesariamente
+            Livewire.on('livewire:load', () => {
+                console.log('Livewire cargado, manteniendo estado de modales');
+            });
+
+            // === Gestión de Estados de Carga ===
             const modales = {
                 recuperar: {
                     show: () => $('#modalRecuperar').modal('show'),
@@ -551,6 +728,10 @@
             // Eventos de modales
             Livewire.on('show-recuperar-modal', modales.recuperar.show);
             Livewire.on('hide-recuperar-modal', modales.recuperar.hide);
+            Livewire.on('show-recuperar-rendido-modal', () => $('#modalRecuperarRendido').modal('show'));
+            Livewire.on('hide-recuperar-rendido-modal', () => $('#modalRecuperarRendido').modal('hide'));
+            Livewire.on('show-recuperar-pago-modal', () => $('#modalRecuperarPago').modal('show'));
+            Livewire.on('hide-recuperar-pago-modal', () => $('#modalRecuperarPago').modal('hide'));
             Livewire.on('mostrar-modal-nuevo-fondo', modales.nuevoFondo.show);
             Livewire.on('cerrar-modal-nuevo-fondo', modales.nuevoFondo
                 .hide); // Inicializar datepicker si es necesario
@@ -615,6 +796,23 @@
 
             Livewire.on('cerrarModalDependencias', function() {
                 @this.cerrarModalDependencias();
+            });
+
+            Livewire.on('cerrarModalAcreedores', function() {
+                @this.cerrarModalAcreedores();
+            });
+
+            // Listener para cuando se recargan los datos
+            Livewire.on('datosRecargados', function() {
+                console.log('Datos recargados correctamente');
+                // Forzar la actualización de la interfaz si es necesario
+                @this.call('$refresh');
+            });
+
+            // Listener para cuando se completa la recarga forzada
+            Livewire.on('recargaCompletada', function() {
+                console.log('Recarga completa finalizada');
+                // Aquí se pueden agregar acciones adicionales si es necesario
             });
 
             // === Gestión de Estados de Carga ===

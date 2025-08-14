@@ -23,6 +23,7 @@ class MovimientosPendiente extends Component
     public $rendido = 0;
     public $reintegrado = 0;
     public $recuperado = 0;
+    public $isRecovering = false; // Nueva propiedad para el modo de recuperación
 
     // Variables para confirmación de eliminación
     public $movimientoAEliminar = null;
@@ -105,7 +106,27 @@ class MovimientosPendiente extends Component
     {
         $this->loading = true;
 
-        $this->validate();
+        // Definir reglas de validación condicionales
+        if ($this->isRecovering) {
+            $rules = [
+                'fechaMovimientos' => 'required|date|before_or_equal:today',
+                'documentos' => 'nullable|string|max:255',
+                'recuperado' => 'required|numeric|min:0.01', // Debe ser un monto positivo
+            ];
+            $messages = [
+                'recuperado.required' => 'El monto a recuperar es obligatorio.',
+                'recuperado.numeric' => 'El monto a recuperar debe ser numérico.',
+                'recuperado.min' => 'El monto a recuperar debe ser mayor a 0.',
+            ];
+            $this->validate($rules, $messages);
+
+            // Asegurarse de que rendido y reintegrado sean 0 en modo recuperación
+            $this->rendido = 0;
+            $this->reintegrado = 0;
+
+        } else {
+            $this->validate(); // Usar reglas por defecto
+        }
 
         // Totales existentes (excluyendo el movimiento actual si se está editando)
         $totalRendido = $this->pendiente->movimientos()
@@ -125,16 +146,17 @@ class MovimientosPendiente extends Component
         $nuevoTotalReintegrado = $totalReintegrado + ($this->reintegrado ?: 0);
         $nuevoTotalRecuperado = $totalRecuperado + ($this->recuperado ?: 0);
 
-        // Regla 1: El total recuperado no puede exceder el total rendido.
-        if ($nuevoTotalRecuperado > $nuevoTotalRendido) {
-            $this->addError('recuperado', 'El monto total recuperado no puede ser mayor que el monto total rendido.');
+        // Regla 1: El total recuperado no puede exceder el total rendido del pendiente.
+        // En modo recuperación, el rendido del movimiento actual es 0, pero la validación es sobre el total del pendiente.
+        if ($nuevoTotalRecuperado > $this->getBalancePendiente()['total_rendido']) {
+            $this->addError('recuperado', 'El monto total recuperado no puede ser mayor que el monto total rendido del pendiente.');
             $this->loading = false;
             return;
         }
 
         // Regla 2: La suma del total rendido y el total reintegrado no puede superar el monto del pendiente.
-        // Se usa una pequeña tolerancia para evitar problemas con decimales.
-        if (($nuevoTotalRendido + $nuevoTotalReintegrado) > ($this->pendiente->montoPendientes + 0.001)) {
+        // Esta regla solo aplica si NO estamos en modo recuperación, o si el movimiento actual tiene rendido/reintegrado.
+        if (!$this->isRecovering && ($nuevoTotalRendido + $nuevoTotalReintegrado) > ($this->pendiente->montoPendientes + 0.001)) {
             $this->addError('rendido', 'La suma de rendido y reintegrado supera el monto total del pendiente.');
             $this->addError('reintegrado', 'La suma de rendido y reintegrado supera el monto total del pendiente.');
             $this->loading = false;
@@ -227,6 +249,26 @@ class MovimientosPendiente extends Component
         $this->reintegrado = 0;
         $this->recuperado = 0;
         $this->editMode = false;
+        $this->isRecovering = false; // Resetear el modo de recuperación
+    }
+
+    public function abrirModalRecuperarRendido()
+    {
+        $this->resetForm();
+        $this->editMode = false;
+        $this->isRecovering = true; // Activar modo de recuperación
+
+        $balance = $this->getBalancePendiente();
+        $saldoPendienteRecuperar = $balance['total_rendido'] - $balance['total_recuperado'];
+
+        $this->fechaMovimientos = Carbon::now()->format('Y-m-d');
+        $this->recuperado = max(0, round($saldoPendienteRecuperar, 2)); // Asegurarse de que no sea negativo
+        $this->rendido = 0; // No se rinde en este modo
+        $this->reintegrado = 0; // No se reintegra en este modo
+
+        $this->showModal = true;
+        $this->resetErrorBag();
+        $this->dispatchBrowserEvent('modal-opened');
     }
 
     public function confirmarEliminacion($id)
@@ -252,6 +294,9 @@ class MovimientosPendiente extends Component
     // Métodos para validación en tiempo real
     public function updatedRendido($value)
     {
+        if ($this->isRecovering) {
+            return; // No hacer nada si estamos en modo recuperación
+        }
         $this->validateOnly('rendido');
 
         // Totales existentes (excluyendo el movimiento actual si se está editando)

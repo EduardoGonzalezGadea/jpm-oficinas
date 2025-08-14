@@ -11,8 +11,11 @@ use App\Models\Tesoreria\Dependencia;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
+
+
 class Index extends Component
 {
+    
     // --- Propiedades Públicas ---
     public $mesActual;
     public $anioActual;
@@ -37,7 +40,11 @@ class Index extends Component
     // Modal Editar Fondo
     public $showEditFondoModal = false;
     public $editandoFondo = [
-        'id' => null, 'mes' => '', 'anio' => '', 'monto' => '', 'montoOriginal' => ''
+        'id' => null,
+        'mes' => '',
+        'anio' => '',
+        'monto' => '',
+        'montoOriginal' => ''
     ];
 
     // --- Propiedades para el Modal de Recuperación ---
@@ -50,6 +57,44 @@ class Index extends Component
     public $itemsSeleccionados = [];
     public $totalARecuperar = 0.00;
     public $seleccionarTodos = false;
+
+    // --- Propiedades para el Modal de Recuperación de Rendido ---
+    public $showRecuperarRendidoModal = false;
+    public $recuperarRendidoData = [
+        'relPendiente' => null,
+        'fecha' => '',
+        'documentos' => '',
+        'monto_rendido' => 0,
+        'monto_reintegrado' => 0,
+        'monto_recuperado' => 0,
+    ];
+    public $selectedPendienteId;
+    public $modalRecuperarRendidoError = null;
+    public $modalRecuperarRendidoMessage = null;
+
+    // Propiedades para recuperación de pagos directos
+    public $showRecuperarPagoModal = false;
+    public $recuperarPagoData = [
+        'relPago' => null,
+        'fecha' => '',
+        'numero_ingreso' => '',
+        'numero_ingreso_bse' => '',
+        'monto_recuperado' => 0,
+    ];
+    public $selectedPagoId;
+    public $modalRecuperarPagoError = null;
+    public $modalRecuperarPagoMessage = null;
+
+    
+
+    protected $queryString = [
+        // Removido mostrarModalDependencias para evitar re-renderizado
+    ];
+
+    public function mostrarAlertaSweet($data)
+    {
+        $this->dispatchBrowserEvent('swal', $data);
+    }
 
     protected $listeners = [
         'cargarDependencias',
@@ -66,18 +111,6 @@ class Index extends Component
         'acreedorEliminado' => 'cargarDatos',
     ];
 
-    public $mostrarModalDependencias = false;
-    public $mostrarModalAcreedores = false;
-
-    protected $queryString = [
-        'mostrarModalDependencias' => ['except' => false],
-    ];
-
-    public function mostrarAlertaSweet($data)
-    {
-        $this->dispatchBrowserEvent('swal', $data);
-    }
-
     protected function rules()
     {
         $rules = [
@@ -88,6 +121,12 @@ class Index extends Component
             $rules['recuperacion.fecha'] = 'required|date';
             $rules['recuperacion.numero_ingreso'] = 'required|string|max:50';
             $rules['itemsSeleccionados'] = 'required|array|min:1';
+        }
+
+        if ($this->showRecuperarRendidoModal) {
+            $rules['recuperarRendidoData.fecha'] = 'required|date';
+            $rules['recuperarRendidoData.documentos'] = 'nullable|string|max:255';
+            $rules['recuperarRendidoData.monto_recuperado'] = 'required|numeric|min:0.01|max:99999999.99';
         }
 
         return $rules;
@@ -104,6 +143,12 @@ class Index extends Component
             'recuperacion.numero_ingreso.required' => 'El número de ingreso es obligatorio.',
             'itemsSeleccionados.required' => 'Debe seleccionar al menos un ítem para recuperar.',
             'itemsSeleccionados.min' => 'Debe seleccionar al menos un ítem para recuperar.',
+            'recuperarRendidoData.fecha.required' => 'La fecha es obligatoria.',
+            'recuperarRendidoData.documentos.max' => 'Los documentos no pueden exceder los 255 caracteres.',
+            'recuperarRendidoData.monto_recuperado.required' => 'El monto recuperado es obligatorio.',
+            'recuperarRendidoData.monto_recuperado.numeric' => 'El monto recuperado debe ser un número válido.',
+            'recuperarRendidoData.monto_recuperado.min' => 'El monto recuperado debe ser al menos 0.01.',
+            'recuperarRendidoData.monto_recuperado.max' => 'El monto recuperado no puede exceder 99,999,999.99.',
         ];
     }
 
@@ -121,9 +166,51 @@ class Index extends Component
         $this->cargarDatos();
     }
 
-    public function updatedMesActual() { $this->cargarDatos(); }
-    public function updatedAnioActual() { $this->cargarDatos(); }
-    public function updatedFechaHasta() { $this->cargarDatos(); }
+    
+
+    // Métodos para abrir/cerrar modales
+    public function openModalDependencias()
+    {
+        $this->dispatchBrowserEvent('show-modal', ['id' => 'modalDependencias']);
+    }
+
+    public function closeModalDependencias()
+    {
+        $this->dispatchBrowserEvent('hide-modal', ['id' => 'modalDependencias']);
+        // Solo recargar datos al cerrar
+        $this->cargarDatos();
+        $this->emit('datosRecargados');
+        $this->resetErrorBag();
+    }
+
+    public function openModalAcreedores()
+    {
+        $this->dispatchBrowserEvent('show-modal', ['id' => 'modalAcreedores']);
+    }
+
+    public function closeModalAcreedores()
+    {
+        $this->dispatchBrowserEvent('hide-modal', ['id' => 'modalAcreedores']);
+        // Solo recargar datos al cerrar
+        $this->cargarDatos();
+        $this->emit('datosRecargados');
+        $this->resetErrorBag();
+    }
+
+    
+
+    public function updatedMesActual()
+    {
+        $this->cargarDatos();
+    }
+    public function updatedAnioActual()
+    {
+        $this->cargarDatos();
+    }
+    public function updatedFechaHasta()
+    {
+        $this->cargarDatos();
+    }
 
     public function cargarDatos()
     {
@@ -248,7 +335,7 @@ class Index extends Component
                 )
                 ->orderBy('fechaEgresoPagos', 'ASC')
                 ->get()
-                ->map(function($pago) {
+                ->map(function ($pago) {
                     $pago->es_mes_anterior = false;
                     return $pago;
                 });
@@ -273,7 +360,7 @@ class Index extends Component
                     )
                     ->orderBy('fechaEgresoPagos', 'ASC')
                     ->get()
-                    ->map(function($pago) {
+                    ->map(function ($pago) {
                         $pago->es_mes_anterior = true;
                         return $pago;
                     })
@@ -562,7 +649,6 @@ class Index extends Component
             $this->closeRecuperarModal();
             $this->cargarDatos();
             session()->flash('message', 'Recuperación guardada exitosamente.');
-
         } catch (\Exception $e) {
             DB::rollBack();
             session()->flash('error', 'Error al guardar la recuperación: ' . $e->getMessage());
@@ -576,6 +662,200 @@ class Index extends Component
         $this->resetErrorBag();
         $this->cargarDatos();
     }
+
+    // --- Métodos para el Modal de Recuperación de Rendido ---
+    public function openRecuperarRendidoModal($pendienteId)
+    {
+        $this->resetErrorBag();
+        $this->selectedPendienteId = $pendienteId;
+        $pendiente = Pendiente::find($pendienteId);
+
+        if (!$pendiente) {
+            session()->flash('error', 'Pendiente no encontrado.');
+            return;
+        }
+
+        // Recalcular tot_rendido para este pendiente específico
+        $tot_rendido = Movimiento::where('relPendiente', $pendienteId)->sum('rendido');
+        $tot_recuperado_existente = Movimiento::where('relPendiente', $pendienteId)->sum('recuperado');
+
+        $montoRecuperable = $tot_rendido - $tot_recuperado_existente;
+
+        $this->recuperarRendidoData = [
+            'relPendiente' => $pendienteId,
+            'fecha' => now()->format('Y-m-d'),
+            'documentos' => '',
+            'monto_rendido' => 0,
+            'monto_reintegrado' => 0,
+            'monto_recuperado' => max(0, $montoRecuperable), // Asegura que no sea negativo
+        ];
+
+        $this->showRecuperarRendidoModal = true;
+        $this->dispatchBrowserEvent('show-recuperar-rendido-modal');
+    }
+
+    public function saveRecuperarRendido()
+    {
+        $this->reset(['modalRecuperarRendidoError', 'modalRecuperarRendidoMessage']);
+        $this->validate([
+            'recuperarRendidoData.fecha' => 'required|date',
+            'recuperarRendidoData.documentos' => 'nullable|string|max:255',
+            'recuperarRendidoData.monto_recuperado' => 'required|numeric|min:0.01|max:99999999.99',
+        ], [
+            'recuperarRendidoData.fecha.required' => 'La fecha es obligatoria.',
+            'recuperarRendidoData.documentos.max' => 'Los documentos no pueden exceder los 255 caracteres.',
+            'recuperarRendidoData.monto_recuperado.required' => 'El monto recuperado es obligatorio.',
+            'recuperarRendidoData.monto_recuperado.numeric' => 'El monto recuperado debe ser un número válido.',
+            'recuperarRendidoData.monto_recuperado.min' => 'El monto recuperado debe ser al menos 0.01.',
+            'recuperarRendidoData.monto_recuperado.max' => 'El monto recuperado no puede exceder 99,999,999.99.',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            $pendiente = Pendiente::find($this->recuperarRendidoData['relPendiente']);
+
+            if (!$pendiente) {
+                $this->modalRecuperarRendidoError = 'Pendiente no encontrado para la validación.';
+                DB::rollBack();
+                return;
+            }
+
+            // Recalcular tot_rendido y tot_recuperado para este pendiente específico con datos frescos
+            $tot_rendido_actual = Movimiento::where('relPendiente', $pendiente->idPendientes)->sum('rendido');
+            $tot_recuperado_existente_actual = Movimiento::where('relPendiente', $pendiente->idPendientes)->sum('recuperado');
+
+            $montoRecuperableActual = $tot_rendido_actual - $tot_recuperado_existente_actual;
+
+            if ($this->recuperarRendidoData['monto_recuperado'] > $montoRecuperableActual) {
+                $this->modalRecuperarRendidoError = 'El monto a recuperar ( ' . number_format($this->recuperarRendidoData['monto_recuperado'], 2, ',', '.') . ' ) no puede ser mayor que el saldo rendido actual del pendiente ( ' . number_format($montoRecuperableActual, 2, ',', '.') . ' ).';
+                DB::rollBack();
+                return;
+            }
+
+            Movimiento::create([
+                'relPendiente' => $this->recuperarRendidoData['relPendiente'],
+                'fechaMovimientos' => $this->recuperarRendidoData['fecha'],
+                'documentoMovimiento' => $this->recuperarRendidoData['documentos'],
+                'rendido' => 0, // Siempre 0 para este tipo de movimiento
+                'reintegrado' => 0, // Siempre 0 para este tipo de movimiento
+                'recuperado' => $this->recuperarRendidoData['monto_recuperado'],
+                'saldo' => 0, // El saldo se recalcula en el modelo o vista
+            ]);
+
+            DB::commit();
+            $this->cargarDatos();
+            $this->modalRecuperarRendidoMessage = 'Dinero rendido recuperado exitosamente.';
+            $this->closeRecuperarRendidoModal();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            $this->modalRecuperarRendidoError = 'Error al guardar la recuperación del dinero rendido: ' . $e->getMessage();
+        }
+    }
+
+    public function closeRecuperarRendidoModal()
+    {
+        $this->showRecuperarRendidoModal = false;
+        $this->reset(['recuperarRendidoData', 'selectedPendienteId', 'modalRecuperarRendidoError', 'modalRecuperarRendidoMessage']);
+        $this->resetErrorBag();
+        $this->cargarDatos();
+    }
+
+    // --- Métodos para Recuperación de Pagos Directos ---
+
+    public function openRecuperarPagoModal($pagoId)
+    {
+        $this->selectedPagoId = $pagoId;
+        $pago = Pago::with('acreedor')->findOrFail($pagoId);
+
+        $this->recuperarPagoData = [
+            'relPago' => $pagoId,
+            'fecha' => now()->format('Y-m-d'),
+            'numero_ingreso' => '',
+            'numero_ingreso_bse' => '',
+            'monto_recuperado' => $pago->montoPagos - $pago->recuperadoPagos,
+            'es_banco_bse' => ($pago->acreedor->acreedor ?? '') === 'Banco de Seguros del Estado',
+        ];
+
+        $this->showRecuperarPagoModal = true;
+        $this->resetErrorBag();
+    }
+
+    public function closeRecuperarPagoModal()
+    {
+        $this->showRecuperarPagoModal = false;
+        $this->reset(['recuperarPagoData', 'selectedPagoId', 'modalRecuperarPagoError', 'modalRecuperarPagoMessage']);
+        $this->resetErrorBag();
+        $this->cargarDatos();
+    }
+
+    public function saveRecuperarPago()
+    {
+        $this->reset(['modalRecuperarPagoError', 'modalRecuperarPagoMessage']);
+
+        // Reglas de validación base
+        $rules = [
+            'recuperarPagoData.fecha' => 'required|date',
+            'recuperarPagoData.numero_ingreso' => 'required|string|max:255',
+            'recuperarPagoData.monto_recuperado' => 'required|numeric|min:0.01|max:99999999.99',
+        ];
+
+        // Si es Banco de Seguros del Estado, hacer obligatorio el campo BSE
+        if ($this->recuperarPagoData['es_banco_bse']) {
+            $rules['recuperarPagoData.numero_ingreso_bse'] = 'required|string|max:255';
+        } else {
+            $rules['recuperarPagoData.numero_ingreso_bse'] = 'nullable|string|max:255';
+        }
+
+        $this->validate($rules, [
+            'recuperarPagoData.fecha.required' => 'La fecha es obligatoria.',
+            'recuperarPagoData.numero_ingreso.required' => 'El número de ingreso es obligatorio.',
+            'recuperarPagoData.numero_ingreso.max' => 'El número de ingreso no puede exceder los 255 caracteres.',
+            'recuperarPagoData.numero_ingreso_bse.required' => 'El número de ingreso BSE es obligatorio para Banco de Seguros del Estado.',
+            'recuperarPagoData.numero_ingreso_bse.max' => 'El número de ingreso BSE no puede exceder los 255 caracteres.',
+            'recuperarPagoData.monto_recuperado.required' => 'El monto recuperado es obligatorio.',
+            'recuperarPagoData.monto_recuperado.numeric' => 'El monto recuperado debe ser un número válido.',
+            'recuperarPagoData.monto_recuperado.min' => 'El monto recuperado debe ser al menos 0.01.',
+            'recuperarPagoData.monto_recuperado.max' => 'El monto recuperado no puede exceder 99,999,999.99.',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            $pago = Pago::find($this->recuperarPagoData['relPago']);
+
+            if (!$pago) {
+                $this->modalRecuperarPagoError = 'Pago no encontrado para la validación.';
+                DB::rollBack();
+                return;
+            }
+
+            // Verificar que el monto a recuperar no exceda el saldo disponible
+            $saldoDisponible = $pago->montoPagos - $pago->recuperadoPagos;
+
+            if ($this->recuperarPagoData['monto_recuperado'] > $saldoDisponible) {
+                $this->modalRecuperarPagoError = 'El monto a recuperar (' . number_format($this->recuperarPagoData['monto_recuperado'], 2, ',', '.') . ') no puede ser mayor que el saldo disponible del pago (' . number_format($saldoDisponible, 2, ',', '.') . ').';
+                DB::rollBack();
+                return;
+            }
+
+            // Actualizar el pago con la información de recuperación
+            $pago->update([
+                'recuperadoPagos' => $pago->recuperadoPagos + $this->recuperarPagoData['monto_recuperado'],
+                'fechaIngresoPagos' => $this->recuperarPagoData['fecha'],
+                'ingresoPagos' => $this->recuperarPagoData['numero_ingreso'],
+                'ingresoPagosBSE' => $this->recuperarPagoData['numero_ingreso_bse'],
+            ]);
+
+            DB::commit();
+            $this->cargarDatos();
+            $this->modalRecuperarPagoMessage = 'Pago directo recuperado exitosamente.';
+            $this->closeRecuperarPagoModal();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            $this->modalRecuperarPagoError = 'Error al guardar la recuperación del pago directo: ' . $e->getMessage();
+        }
+    }
+
+    // --- Métodos para Modal de Acreedores ---
 
     // --- Métodos de Acción para Editar Fondo ---
 
@@ -715,9 +995,18 @@ class Index extends Component
     private function getMesAnioAnterior()
     {
         $meses = [
-            'enero' => 1, 'febrero' => 2, 'marzo' => 3, 'abril' => 4,
-            'mayo' => 5, 'junio' => 6, 'julio' => 7, 'agosto' => 8,
-            'septiembre' => 9, 'octubre' => 10, 'noviembre' => 11, 'diciembre' => 12
+            'enero' => 1,
+            'febrero' => 2,
+            'marzo' => 3,
+            'abril' => 4,
+            'mayo' => 5,
+            'junio' => 6,
+            'julio' => 7,
+            'agosto' => 8,
+            'septiembre' => 9,
+            'octubre' => 10,
+            'noviembre' => 11,
+            'diciembre' => 12
         ];
 
         // Asegurarse de que el nombre del mes esté en minúsculas para la búsqueda
@@ -748,26 +1037,21 @@ class Index extends Component
         $this->dependencias = Dependencia::orderBy('dependencia', 'ASC')->get();
     }
 
-    public function abrirModalDependencias()
+    // Método para forzar recarga completa de datos
+    public function forzarRecargaCompleta()
     {
-        $this->mostrarModalDependencias = true;
-    }
+        try {
+            // Limpiar cache si es necesario
+            cache()->forget('caja_chica_data_' . $this->mesActual . '_' . $this->anioActual);
 
-    public function cerrarModalDependencias()
-    {
-        $this->mostrarModalDependencias = false;
-        $this->cargarDatos();
-    }
+            // Recargar todos los datos
+            $this->cargarDatos();
 
-    public function abrirModalAcreedores()
-    {
-        $this->mostrarModalAcreedores = true;
-    }
-
-    public function cerrarModalAcreedores()
-    {
-        $this->mostrarModalAcreedores = false;
-        $this->cargarDatos();
+            // Emitir evento de confirmación
+            $this->emit('recargaCompletada');
+        } catch (\Exception $e) {
+            session()->flash('error', 'Error al recargar los datos: ' . $e->getMessage());
+        }
     }
 
     // --- Renderizado ---

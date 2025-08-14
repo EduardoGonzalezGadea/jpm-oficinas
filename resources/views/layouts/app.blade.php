@@ -10,6 +10,9 @@
 
     <title>@yield('title', 'JPM Oficinas')</title>
 
+    <!-- Bootstrap 4 CSS -->
+    <link href="{{ asset('libs/bootstrap-4.6.2-dist/css/bootstrap.min.css') }}" rel="stylesheet">
+
     <!-- Script para cargar el tema dinámico y evitar parpadeos -->
     <script>
         (function() {
@@ -36,7 +39,7 @@
     <link href="{{ asset('libs/sweetalert2/dist/sweetalert2.min.css') }}" rel="stylesheet">
 
     {{-- Alpine.js CDN --}}
-    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script defer src="{{ asset('libs/alpinejs@3.14.9/dist/cdn.min.js') }}"></script>
 
     @livewireStyles
     @yield('styles')

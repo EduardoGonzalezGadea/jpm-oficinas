@@ -8,6 +8,25 @@
                 </div>
 
                 <div class="col-md-6 text-right">
+                    {{-- Botón para recuperar rendido --}}
+                    @php
+                        $balance = $this->getBalancePendiente();
+                        $canRecover = $balance['total_rendido'] > 0 && $balance['total_recuperado'] < $balance['total_rendido'];
+                    @endphp
+
+                    @if ($canRecover)
+                        <button type="button" class="btn btn-success {{ $loading ? 'disabled' : '' }} mr-2"
+                            wire:click="abrirModalRecuperarRendido" {{ $loading ? 'disabled' : '' }}>
+                            @if ($loading)
+                                <span class="spinner-border spinner-border-sm mr-1" role="status"
+                                    aria-hidden="true"></span>
+                            @else
+                                <i class="fas fa-hand-holding-usd" aria-hidden="true"></i>
+                            @endif
+                            Recuperar Rendido
+                        </button>
+                    @endif
+
                     {{-- Botón para crear nuevo movimiento --}}
                     <button type="button" class="btn btn-info {{ $loading ? 'disabled' : '' }}"
                         wire:click="abrirModalCrear" {{ $loading ? 'disabled' : '' }}>
@@ -151,8 +170,12 @@
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title">
-                            <i class="fas {{ $editMode ? 'fa-edit' : 'fa-plus' }}"></i>
-                            {{ $editMode ? 'Editar Movimiento' : 'Crear Nuevo Movimiento' }}
+                            <i class="fas {{ $editMode ? 'fa-edit' : ($isRecovering ? 'fa-hand-holding-usd' : 'fa-plus') }}"></i>
+                            @if ($isRecovering)
+                                Recuperar Rendido
+                            @else
+                                {{ $editMode ? 'Editar Movimiento' : 'Crear Nuevo Movimiento' }}
+                            @endif
                         </h5>
                         <button type="button" class="close" wire:click="cerrarModal" aria-label="Close">
                             <span aria-hidden="true">&times;</span>
@@ -161,6 +184,19 @@
 
                     <form wire:submit.prevent="guardarMovimiento">
                         <div class="modal-body">
+                            @if ($errors->any())
+                                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                    <h5 class="alert-heading"><i class="fas fa-exclamation-triangle"></i> Error de Validación</h5>
+                                    <ul class="mb-0">
+                                        @foreach ($errors->all() as $error)
+                                            <li>{{ $error }}</li>
+                                        @endforeach
+                                    </ul>
+                                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
+                                </div>
+                            @endif
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="form-group">
@@ -207,7 +243,7 @@
                                             <input type="number"
                                                 class="form-control @error('rendido') is-invalid @enderror"
                                                 id="movimiento_monto_rendido" wire:model.debounce.300ms="rendido" step="0.01"
-                                                min="0" placeholder="0.00">
+                                                min="0" placeholder="0.00" {{ $isRecovering ? 'disabled' : '' }}>
                                             @error('rendido')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
@@ -228,7 +264,7 @@
                                             <input type="number"
                                                 class="form-control @error('reintegrado') is-invalid @enderror"
                                                 id="movimiento_monto_reintegrado" wire:model.lazy="reintegrado" step="0.01"
-                                                min="0" placeholder="0.00">
+                                                min="0" placeholder="0.00" {{ $isRecovering ? 'disabled' : '' }}>
                                             @error('reintegrado')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
