@@ -18,7 +18,7 @@
                     </a>
                     <div class="dropdown-menu" aria-labelledby="navbarDropdownTesoreria">
                         {{-- Submenú Cajas --}}
-                        <div class="dropdown-submenu">
+                        <div class="dropdown-submenu submenu-right">
                             <a class="dropdown-item dropdown-toggle" href="#" role="button">
                                 <i class="fas fa-cash-register mr-2"></i>Cajas
                             </a>
@@ -59,75 +59,83 @@
 
         <ul class="navbar-nav">
             <li class="nav-item dropdown">
-                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownThemes" role="button"
+                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownSistema" role="button"
                     data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                    <i class="fas fa-palette mr-2"></i>Estilo
+                    <i class="fas fa-cogs mr-2"></i>Sistema
                 </a>
-                <div class="dropdown-menu" aria-labelledby="navbarDropdownThemes">
-                    {{-- Tema por Defecto (Bootstrap Original) --}}
-                    <button type="button" class="dropdown-item theme-select-button" data-theme-name="bootstrap-default"
-                        data-theme-path="{{ asset('libs/bootstrap-4.6.2-dist/css/bootstrap.min.css') }}">
-                        Por defecto
-                        <span class="text-success theme-active-indicator" style="display: none;">✔</span>
-                    </button>
-
+                <div class="dropdown-menu" aria-labelledby="navbarDropdownSistema">
+                    @can('administrar_sistema')
+                    <a class="dropdown-item" href="{{ route('pendrive.index') }}">
+                        <i class="fas fa-hdd mr-2"></i>Pendrive Virtual
+                    </a>
                     <div class="dropdown-divider"></div>
-                    <h6 class="dropdown-header">Temas Claros</h6>
+                    @endcan
+                    <div class="dropdown-submenu submenu-left">
+                        <a class="dropdown-item dropdown-toggle" href="#">
+                            <i class="fas fa-palette mr-2"></i>Estilos
+                        </a>
+                        <div class="dropdown-menu">
+                            {{-- Tema por Defecto (Bootstrap Original) --}}
+                            <button type="button" class="dropdown-item theme-select-button"
+                                data-theme-name="bootstrap-default"
+                                data-theme-path="{{ asset('libs/bootstrap-4.6.2-dist/css/bootstrap.min.css') }}">
+                                Por defecto
+                                <span class="text-success theme-active-indicator" style="display: none;">✔</span>
+                            </button>
 
-                    {{-- Tema Cosmo --}}
-                    <button type="button" class="dropdown-item theme-select-button" data-theme-name="cosmo"
-                        data-theme-path="{{ asset('libs/bootswatch@4.6.2/dist/cosmo/bootstrap.min.css') }}">
-                        Cosmo
-                        <span class="text-success theme-active-indicator" style="display: none;">✔</span>
-                    </button>
+                            <div class="dropdown-divider"></div>
+                            <h6 class="dropdown-header">Temas Claros</h6>
 
-                    {{-- Tema Cerulean --}}
-                    <button type="button" class="dropdown-item theme-select-button" data-theme-name="cerulean"
-                        data-theme-path="{{ asset('libs/bootswatch@4.6.2/dist/cerulean/bootstrap.min.css') }}">
-                        Cerulean
-                        <span class="text-success theme-active-indicator" style="display: none;">✔</span>
-                    </button>
+                            {{-- Tema Cosmo --}}
+                            <button type="button" class="dropdown-item theme-select-button" data-theme-name="cosmo"
+                                data-theme-path="{{ asset('libs/bootswatch@4.6.2/dist/cosmo/bootstrap.min.css') }}">
+                                Cosmo
+                                <span class="text-success theme-active-indicator" style="display: none;">✔</span>
+                            </button>
 
-                    {{-- Tema Litera --}}
-                    <button type="button" class="dropdown-item theme-select-button" data-theme-name="litera"
-                        data-theme-path="{{ asset('libs/bootswatch@4.6.2/dist/litera/bootstrap.min.css') }}">
-                        Litera
-                        <span class="text-success theme-active-indicator" style="display: none;">✔</span>
-                    </button>
+                            {{-- Tema Cerulean --}}
+                            <button type="button" class="dropdown-item theme-select-button"
+                                data-theme-name="cerulean"
+                                data-theme-path="{{ asset('libs/bootswatch@4.6.2/dist/cerulean/bootstrap.min.css') }}">
+                                Cerulean
+                                <span class="text-success theme-active-indicator" style="display: none;">✔</span>
+                            </button>
 
-                    {{-- Tema Materia --}}
-                    <button type="button" class="dropdown-item theme-select-button" data-theme-name="material"
-                        data-theme-path="{{ asset('libs/bootswatch@4.6.2/dist/materia/bootstrap.min.css') }}">
-                        Materia
-                        <span class="text-success theme-active-indicator" style="display: none;">✔</span>
-                    </button>
+                            {{-- Tema Litera --}}
+                            <button type="button" class="dropdown-item theme-select-button" data-theme-name="litera"
+                                data-theme-path="{{ asset('libs/bootswatch@4.6.2/dist/litera/bootstrap.min.css') }}">
+                                Litera
+                                <span class="text-success theme-active-indicator" style="display: none;">✔</span>
+                            </button>
 
-                    <div class="dropdown-divider"></div>
-                    <h6 class="dropdown-header">Temas Oscuros</h6>
+                            {{-- Tema Materia --}}
+                            <button type="button" class="dropdown-item theme-select-button"
+                                data-theme-name="material"
+                                data-theme-path="{{ asset('libs/bootswatch@4.6.2/dist/materia/bootstrap.min.css') }}">
+                                Materia
+                                <span class="text-success theme-active-indicator" style="display: none;">✔</span>
+                            </button>
 
-                    {{-- Tema Cyborg --}}
-                    <button type="button" class="dropdown-item theme-select-button" data-theme-name="cyborg"
-                        data-theme-path="{{ asset('libs/bootswatch@4.6.2/dist/cyborg/bootstrap.min.css') }}">
-                        Cyborg
-                        <span class="text-success theme-active-indicator" style="display: none;">✔</span>
-                    </button>
+                            <div class="dropdown-divider"></div>
+                            <h6 class="dropdown-header">Temas Oscuros</h6>
 
-                    {{-- Tema Darkly --}}
-                    <button type="button" class="dropdown-item theme-select-button" data-theme-name="darkly"
-                        data-theme-path="{{ asset('libs/bootswatch@4.6.2/dist/darkly/bootstrap.min.css') }}">
-                        Darkly
-                        <span class="text-success theme-active-indicator" style="display: none;">✔</span>
-                    </button>
+                            {{-- Tema Cyborg --}}
+                            <button type="button" class="dropdown-item theme-select-button" data-theme-name="cyborg"
+                                data-theme-path="{{ asset('libs/bootswatch@4.6.2/dist/cyborg/bootstrap.min.css') }}">
+                                Cyborg
+                                <span class="text-success theme-active-indicator" style="display: none;">✔</span>
+                            </button>
+
+                            {{-- Tema Darkly --}}
+                            <button type="button" class="dropdown-item theme-select-button" data-theme-name="darkly"
+                                data-theme-path="{{ asset('libs/bootswatch@4.6.2/dist/darkly/bootstrap.min.css') }}">
+                                Darkly
+                                <span class="text-success theme-active-indicator" style="display: none;">✔</span>
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </li>
-            @can('ver_usuarios')
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ route('usuarios.index') }}">
-                        <i class="fas fa-users mr-2"></i>Usuarios
-                    </a>
-                </li>
-            @endcan
-
             <li class="nav-item dropdown">
                 <a class="nav-link dropdown-toggle" href="#" role="button" data-toggle="dropdown">
                     <i class="fas fa-user mr-2"></i>{{ auth()->user()->nombre }} {{ auth()->user()->apellido }}
@@ -136,6 +144,11 @@
                     <a href="{{ route('usuarios.miPerfil') }}" class="dropdown-item">
                         <i class="fas fa-user-edit mr-2"></i>Mi Perfil
                     </a>
+                    @can('ver_usuarios')
+                        <a class="dropdown-item" href="{{ route('usuarios.index') }}">
+                            <i class="fas fa-users mr-2"></i>Gestión de usuarios
+                        </a>
+                    @endcan
                     <div class="dropdown-divider"></div>
                     <form action="{{ route('logout') }}" method="POST" class="d-inline">
                         @csrf
@@ -192,9 +205,17 @@
         position: relative;
     }
 
-    .dropdown-submenu .dropdown-menu {
+    .submenu-right .dropdown-menu {
         top: 0;
         left: 100%;
+        right: auto;
+        margin-top: -1px;
+    }
+
+    .submenu-left .dropdown-menu {
+        top: 0;
+        left: auto;
+        right: 100%;
         margin-top: -1px;
     }
 

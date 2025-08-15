@@ -51,10 +51,6 @@
                     <i class="fas fa-money-check"></i>
                     Recuperar todo
                 </button>
-                <button class="btn btn-secondary flex-fill" wire:click="forzarRecargaCompleta" title="Recargar datos">
-                    <i class="fas fa-sync-alt"></i>
-                    Recargar
-                </button>
             </div>
         </div>
     </div>

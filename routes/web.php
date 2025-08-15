@@ -15,6 +15,7 @@ use App\Http\Controllers\Tesoreria\CajaChica\PendienteController;
 use App\Http\Controllers\Tesoreria\Valores\ValorController;
 use App\Http\Controllers\Tesoreria\CajaController;
 use App\Http\Controllers\ThemeController;
+use App\Http\Controllers\PendriveController;
 
 /*
 |--------------------------------------------------------------------------
@@ -158,6 +159,15 @@ Route::middleware(['web', 'jwt.verify'])->group(function () {
         Route::get('/{modulo}/editar', [ModuloController::class, 'edit'])->name('edit');
         Route::put('/{modulo}', [ModuloController::class, 'update'])->name('update');
         Route::delete('/{modulo}', [ModuloController::class, 'destroy'])->name('destroy');
+    });
+
+    // ------------------------------------------------------------------------
+    // PENDRIVE VIRTUAL
+    // ------------------------------------------------------------------------
+    Route::prefix('pendrive')->name('pendrive.')->group(function () {
+        Route::get('/', [PendriveController::class, 'index'])->name('index');
+        Route::post('upload', [PendriveController::class, 'upload'])->name('upload');
+        Route::get('download/{filename}', [PendriveController::class, 'download'])->name('download');
     });
 
     // ------------------------------------------------------------------------

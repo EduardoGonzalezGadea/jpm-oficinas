@@ -15,7 +15,7 @@ use Carbon\Carbon;
 
 class Index extends Component
 {
-    
+
     // --- Propiedades Públicas ---
     public $mesActual;
     public $anioActual;
@@ -85,7 +85,7 @@ class Index extends Component
     public $modalRecuperarPagoError = null;
     public $modalRecuperarPagoMessage = null;
 
-    
+
 
     protected $queryString = [
         // Removido mostrarModalDependencias para evitar re-renderizado
@@ -166,11 +166,12 @@ class Index extends Component
         $this->cargarDatos();
     }
 
-    
+
 
     // Métodos para abrir/cerrar modales
     public function openModalDependencias()
     {
+        $this->cargarDatos();
         $this->dispatchBrowserEvent('show-modal', ['id' => 'modalDependencias']);
     }
 
@@ -185,6 +186,7 @@ class Index extends Component
 
     public function openModalAcreedores()
     {
+        $this->cargarDatos();
         $this->dispatchBrowserEvent('show-modal', ['id' => 'modalAcreedores']);
     }
 
@@ -197,7 +199,7 @@ class Index extends Component
         $this->resetErrorBag();
     }
 
-    
+
 
     public function updatedMesActual()
     {
@@ -428,6 +430,7 @@ class Index extends Component
     // --- Métodos para el Modal de Recuperación ---
     public function openRecuperarModal()
     {
+        $this->cargarDatos();
         if (!$this->cajaChicaSeleccionada) {
             $this->dispatchBrowserEvent('swal:toast-error', [
                 'text' => 'No hay una caja chica activa para este período.'
@@ -666,6 +669,7 @@ class Index extends Component
     // --- Métodos para el Modal de Recuperación de Rendido ---
     public function openRecuperarRendidoModal($pendienteId)
     {
+        $this->cargarDatos();
         $this->resetErrorBag();
         $this->selectedPendienteId = $pendienteId;
         $pendiente = Pendiente::find($pendienteId);
@@ -764,6 +768,7 @@ class Index extends Component
 
     public function openRecuperarPagoModal($pagoId)
     {
+        $this->cargarDatos();
         $this->selectedPagoId = $pagoId;
         $pago = Pago::with('acreedor')->findOrFail($pagoId);
 
@@ -861,6 +866,7 @@ class Index extends Component
 
     public function editarFondo($idCajaChica, $montoActual)
     {
+        $this->cargarDatos();
         try {
             $fondo = CajaChica::findOrFail($idCajaChica);
 
@@ -943,6 +949,7 @@ class Index extends Component
 
     public function prepararModalNuevoPendiente()
     {
+        $this->cargarDatos();
         if ($this->cajaChicaSeleccionada) {
             $this->emitTo('tesoreria.caja-chica.modal-nuevo-pendiente', 'mostrarModalNuevoPendiente', $this->cajaChicaSeleccionada->idCajaChica);
         } else {
@@ -952,6 +959,7 @@ class Index extends Component
 
     public function mostrarModalNuevoFondo()
     {
+        $this->cargarDatos();
         $this->nuevoFondo['mes'] = $this->mesActual;
         $this->nuevoFondo['anio'] = $this->anioActual;
         $this->nuevoFondo['monto'] = '0';
@@ -961,6 +969,7 @@ class Index extends Component
 
     public function prepararModalNuevoPago()
     {
+        $this->cargarDatos();
         if ($this->cajaChicaSeleccionada) {
             $this->emitTo('tesoreria.caja-chica.modal-nuevo-pago', 'mostrarModalNuevoPago', $this->cajaChicaSeleccionada->idCajaChica);
         } else {
@@ -1035,23 +1044,6 @@ class Index extends Component
     public function cargarDependencias()
     {
         $this->dependencias = Dependencia::orderBy('dependencia', 'ASC')->get();
-    }
-
-    // Método para forzar recarga completa de datos
-    public function forzarRecargaCompleta()
-    {
-        try {
-            // Limpiar cache si es necesario
-            cache()->forget('caja_chica_data_' . $this->mesActual . '_' . $this->anioActual);
-
-            // Recargar todos los datos
-            $this->cargarDatos();
-
-            // Emitir evento de confirmación
-            $this->emit('recargaCompletada');
-        } catch (\Exception $e) {
-            session()->flash('error', 'Error al recargar los datos: ' . $e->getMessage());
-        }
     }
 
     // --- Renderizado ---

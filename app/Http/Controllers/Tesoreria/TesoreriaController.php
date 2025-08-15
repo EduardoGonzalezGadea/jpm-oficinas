@@ -11,6 +11,6 @@ class TesoreriaController extends Controller
     {
         $this->authorize('gestionar_tesoreria');
 
-        return view('tesoreria.index');
+        // return view('tesoreria.index');
     }
 }
