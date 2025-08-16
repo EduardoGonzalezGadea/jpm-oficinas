@@ -60,6 +60,13 @@ return [
             'visibility' => 'public',
         ],
 
+        'public_thumbnails' => [
+            'driver' => 'local',
+            'root' => storage_path('app/public_thumbnails'),
+            'url' => env('APP_URL').'/storage/thumbnails',
+            'visibility' => 'public',
+        ],
+
     ],
 
     /*

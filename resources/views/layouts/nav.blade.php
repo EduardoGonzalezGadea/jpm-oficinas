@@ -64,12 +64,12 @@
                     <i class="fas fa-cogs mr-2"></i>Sistema
                 </a>
                 <div class="dropdown-menu" aria-labelledby="navbarDropdownSistema">
-                    @can('administrar_sistema')
+                    {{-- @can('administrar_sistema') --}}
                     <a class="dropdown-item" href="{{ route('pendrive.index') }}">
                         <i class="fas fa-hdd mr-2"></i>Pendrive Virtual
                     </a>
                     <div class="dropdown-divider"></div>
-                    @endcan
+                    {{-- @endcan --}}
                     <div class="dropdown-submenu submenu-left">
                         <a class="dropdown-item dropdown-toggle" href="#">
                             <i class="fas fa-palette mr-2"></i>Estilos

@@ -1,6 +1,5 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PanelController;
 use App\Http\Controllers\UsuarioController;
@@ -15,6 +14,7 @@ use App\Http\Controllers\Tesoreria\CajaChica\PendienteController;
 use App\Http\Controllers\Tesoreria\Valores\ValorController;
 use App\Http\Controllers\Tesoreria\CajaController;
 use App\Http\Controllers\ThemeController;
+use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PendriveController;
 
 /*
@@ -168,6 +168,8 @@ Route::middleware(['web', 'jwt.verify'])->group(function () {
         Route::get('/', [PendriveController::class, 'index'])->name('index');
         Route::post('upload', [PendriveController::class, 'upload'])->name('upload');
         Route::get('download/{filename}', [PendriveController::class, 'download'])->name('download');
+        Route::get('thumbnail/{filename}', [PendriveController::class, 'getThumbnail'])->name('thumbnail');
+        Route::delete('{filename}', [PendriveController::class, 'destroy'])->name('destroy');
     });
 
     // ------------------------------------------------------------------------
