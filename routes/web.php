@@ -16,6 +16,7 @@ use App\Http\Controllers\Tesoreria\CajaController;
 use App\Http\Controllers\ThemeController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PendriveController;
+use App\Http\Livewire\InfraccionesTransito;
 
 /*
 |--------------------------------------------------------------------------
@@ -42,6 +43,12 @@ Route::post('/tema/cambiar', [ThemeController::class, 'switchTheme'])->name('the
 // Rutas de autenticación
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
+
+
+Route::get('/infracciones-transito', function() {
+    return view('infracciones.infracciones-transito');
+})->name('infracciones.index');
+
 
 // ============================================================================
 // RUTAS PROTEGIDAS POR JWT

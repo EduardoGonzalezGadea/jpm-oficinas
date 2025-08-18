@@ -23,8 +23,7 @@
                                 <i class="fas fa-cash-register mr-2"></i>Cajas
                             </a>
                             <div class="dropdown-menu">
-                                <a class="dropdown-item" href="{{ route('tesoreria.cajas.index') }}"
-                                    wire:navigate>
+                                <a class="dropdown-item" href="{{ route('tesoreria.cajas.index') }}" wire:navigate>
                                     <i class="fas fa-balance-scale mr-2"></i>Flujo de Caja
                                 </a>
                                 <div class="dropdown-divider"></div>
@@ -44,6 +43,10 @@
                         {{-- <a class="dropdown-item" href="{{ route('tesoreria.valores.index') }}" wire:navigate>
                             <i class="fas fa-file-invoice mr-2"></i>Valores
                         </a> --}}
+                        {{-- Link Infracciones de Tránsito --}}
+                        <a class="dropdown-item" href="{{ route('infracciones.index') }}">
+                            <i class="fas fa-list"></i> Infracciones
+                        </a>
                     </div>
                 </li>
             @endcan
@@ -94,8 +97,7 @@
                             </button>
 
                             {{-- Tema Cerulean --}}
-                            <button type="button" class="dropdown-item theme-select-button"
-                                data-theme-name="cerulean"
+                            <button type="button" class="dropdown-item theme-select-button" data-theme-name="cerulean"
                                 data-theme-path="{{ asset('libs/bootswatch@4.6.2/dist/cerulean/bootstrap.min.css') }}">
                                 Cerulean
                                 <span class="text-success theme-active-indicator" style="display: none;">✔</span>
@@ -109,8 +111,7 @@
                             </button>
 
                             {{-- Tema Materia --}}
-                            <button type="button" class="dropdown-item theme-select-button"
-                                data-theme-name="material"
+                            <button type="button" class="dropdown-item theme-select-button" data-theme-name="material"
                                 data-theme-path="{{ asset('libs/bootswatch@4.6.2/dist/materia/bootstrap.min.css') }}">
                                 Materia
                                 <span class="text-success theme-active-indicator" style="display: none;">✔</span>
