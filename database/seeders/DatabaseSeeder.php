@@ -18,6 +18,8 @@ class DatabaseSeeder extends Seeder
             RoleAndPermissionSeeder::class,
             UserSeeder::class,
             ValoresSeeder::class,
+            Tesoreria\MultaSeeder::class,
+            Tesoreria\CajaConceptoSeeder::class,
         ]);
     }
 }

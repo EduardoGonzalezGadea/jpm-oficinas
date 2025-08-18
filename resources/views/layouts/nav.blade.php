@@ -44,8 +44,8 @@
                             <i class="fas fa-file-invoice mr-2"></i>Valores
                         </a> --}}
                         {{-- Link Infracciones de Tránsito --}}
-                        <a class="dropdown-item" href="{{ route('infracciones.index') }}">
-                            <i class="fas fa-list"></i> Infracciones
+                        <a class="dropdown-item" href="{{ route('tesoreria.multas-transito') }}">
+                            <i class="fas fa-list"></i> Multas de Tránsito
                         </a>
                     </div>
                 </li>

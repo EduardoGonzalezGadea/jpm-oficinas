@@ -16,7 +16,6 @@ use App\Http\Controllers\Tesoreria\CajaController;
 use App\Http\Controllers\ThemeController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PendriveController;
-use App\Http\Livewire\InfraccionesTransito;
 
 /*
 |--------------------------------------------------------------------------
@@ -45,9 +44,6 @@ Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
 
 
-Route::get('/infracciones-transito', function() {
-    return view('infracciones.infracciones-transito');
-})->name('infracciones.index');
 
 
 // ============================================================================
@@ -156,7 +152,7 @@ Route::middleware(['web', 'jwt.verify'])->group(function () {
     });
 
     // ------------------------------------------------------------------------
-    // GESTIÓN DE MÓDULOS (Comentado actualmente)
+    // GESTIÓN DE MÓDULOS
     // ------------------------------------------------------------------------
     Route::prefix('modulos')->name('modulos.')->group(function () {
         Route::get('/', [ModuloController::class, 'index'])->name('index');
@@ -196,6 +192,11 @@ Route::middleware(['web', 'jwt.verify'])->group(function () {
             Route::get('/denominaciones', [CajaController::class, 'denominaciones'])->name('denominaciones');
             Route::get('/conceptos', [CajaController::class, 'conceptos'])->name('conceptos');
         });
+
+        // Rutas de multas
+        Route::get('/multas-transito', function () {
+            return view('tesoreria.multas');
+        })->name('multas-transito');
     });
 
     // Contabilidad

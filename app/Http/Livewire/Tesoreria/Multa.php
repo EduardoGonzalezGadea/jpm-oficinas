@@ -1,25 +1,27 @@
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Http\Livewire\Tesoreria;
 
-use App\Models\InfraccionTransito;
+use App\Models\Tesoreria\Multa as MultaModel;
 use Livewire\Component;
 use Livewire\WithPagination;
 
-class InfraccionesTransito extends Component
+class Multa extends Component
 {
     use WithPagination;
 
     protected $paginationTheme = 'bootstrap';
 
+    // --- REFACTORIZADO ---
     // Propiedades del formulario
-    public $infraccion_id;
+    public $multa_id;
     public $articulo;
     public $apartado;
     public $descripcion;
-    public $importe_ur;
+    public $moneda = 'UR';
+    public $importe_original;
+    public $importe_unificado;
     public $decreto;
-    public $activo = true;
 
     // Propiedades de control
     public $isOpen = false;
@@ -40,18 +42,17 @@ class InfraccionesTransito extends Component
         'articulo' => 'required|string|max:10',
         'apartado' => 'nullable|string|max:10',
         'descripcion' => 'required|string',
-        'importe_ur' => 'required|numeric|min:0|max:999.9',
+        'moneda' => 'required|string|max:3',
+        'importe_original' => 'required|numeric|min:0',
+        'importe_unificado' => 'nullable|numeric|min:0',
         'decreto' => 'nullable|string|max:100',
-        'activo' => 'boolean'
     ];
 
     protected $messages = [
         'articulo.required' => 'El artículo es obligatorio.',
         'descripcion.required' => 'La descripción es obligatoria.',
-        'importe_ur.required' => 'El importe es obligatorio.',
-        'importe_ur.numeric' => 'El importe debe ser un número.',
-        'importe_ur.min' => 'El importe debe ser mayor a 0.',
-        'importe_ur.max' => 'El importe no puede ser mayor a 999.9.',
+        'importe_original.required' => 'El importe original es obligatorio.',
+        'importe_original.numeric' => 'El importe original debe ser un número.',
     ];
 
     public function updatingSearch()
@@ -79,14 +80,15 @@ class InfraccionesTransito extends Component
 
     public function edit($id)
     {
-        $infraccion = InfraccionTransito::findOrFail($id);
-        $this->infraccion_id = $infraccion->id;
-        $this->articulo = $infraccion->articulo;
-        $this->apartado = $infraccion->apartado;
-        $this->descripcion = $infraccion->descripcion;
-        $this->importe_ur = $infraccion->importe_ur;
-        $this->decreto = $infraccion->decreto;
-        $this->activo = $infraccion->activo;
+        $multa = MultaModel::findOrFail($id);
+        $this->multa_id = $multa->id;
+        $this->articulo = $multa->articulo;
+        $this->apartado = $multa->apartado;
+        $this->descripcion = $multa->descripcion;
+        $this->moneda = $multa->moneda;
+        $this->importe_original = $multa->importe_original;
+        $this->importe_unificado = $multa->importe_unificado;
+        $this->decreto = $multa->decreto;
 
         $this->isEdit = true;
         $this->openModal();
@@ -96,19 +98,20 @@ class InfraccionesTransito extends Component
     {
         $this->validate();
 
-        InfraccionTransito::updateOrCreate(
-            ['id' => $this->infraccion_id],
+        MultaModel::updateOrCreate(
+            ['id' => $this->multa_id],
             [
                 'articulo' => $this->articulo,
                 'apartado' => $this->apartado,
                 'descripcion' => $this->descripcion,
-                'importe_ur' => $this->importe_ur,
-                'decreto' => $this->decreto,
-                'activo' => $this->activo
+                'moneda' => $this->moneda,
+                'importe_original' => $this->importe_original,
+                'importe_unificado' => $this->importe_unificado,
+                'decreto' => $this->decreto
             ]
         );
 
-        session()->flash('message', $this->isEdit ? 'Infracción actualizada exitosamente.' : 'Infracción creada exitosamente.');
+        session()->flash('message', $this->isEdit ? 'Multa actualizada exitosamente.' : 'Multa creada exitosamente.');
 
         $this->closeModal();
         $this->resetInputFields();
@@ -116,17 +119,11 @@ class InfraccionesTransito extends Component
 
     public function delete($id)
     {
-        InfraccionTransito::find($id)->delete();
-        session()->flash('message', 'Infracción eliminada exitosamente.');
+        MultaModel::find($id)->delete();
+        session()->flash('message', 'Multa eliminada exitosamente.');
     }
 
-    public function toggleStatus($id)
-    {
-        $infraccion = InfraccionTransito::find($id);
-        $infraccion->update(['activo' => !$infraccion->activo]);
-
-        session()->flash('message', 'Estado actualizado exitosamente.');
-    }
+    
 
     public function openModal()
     {
@@ -140,19 +137,20 @@ class InfraccionesTransito extends Component
 
     private function resetInputFields()
     {
-        $this->infraccion_id = null;
+        $this->multa_id = null;
         $this->articulo = '';
         $this->apartado = '';
         $this->descripcion = '';
-        $this->importe_ur = '';
+        $this->moneda = 'UR';
+        $this->importe_original = '';
+        $this->importe_unificado = '';
         $this->decreto = '';
-        $this->activo = true;
         $this->resetErrorBag();
     }
 
     public function render()
     {
-        $infracciones = InfraccionTransito::query()
+        $multas = MultaModel::query()
             ->when($this->search, function ($query) {
                 $query->where(function ($q) {
                     $q->where('articulo', 'like', '%' . $this->search . '%')
@@ -164,6 +162,6 @@ class InfraccionesTransito extends Component
             ->orderBy($this->sortField, $this->sortDirection)
             ->paginate($this->perPage);
 
-        return view('livewire.infracciones-transito', compact('infracciones'));
+        return view('livewire.tesoreria.multa', compact('multas'));
     }
 }

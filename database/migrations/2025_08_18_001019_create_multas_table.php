@@ -13,20 +13,26 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('infracciones_transito', function (Blueprint $table) {
+        Schema::create('tes_multas', function (Blueprint $table) {
             $table->id();
-            $table->string('articulo', 10);
+            $table->integer('articulo');
             $table->string('apartado', 10)->nullable();
             $table->text('descripcion');
-            $table->decimal('importe_ur', 8, 1);
+            $table->string('moneda', 3)->default('UR');
+
+            // --- REFACTORIZADO ---
+            // Se renombra 'importe' a 'importe_original' para mayor claridad.
+            $table->decimal('importe_original', 10, 2);
+            // Se añade el nuevo campo para el valor unificado. Es nullable porque no todas las multas tienen un nuevo valor.
+            $table->decimal('importe_unificado', 10, 2)->nullable();
+            // ---------------------
+
             $table->string('decreto', 100)->nullable();
-            $table->boolean('activo')->default(true);
             $table->timestamps();
             $table->softDeletes();
 
             // Índices
             $table->index(['articulo', 'apartado']);
-            $table->index('activo');
         });
     }
 
@@ -37,6 +43,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('infracciones_transito');
+        Schema::dropIfExists('tes_multas');
     }
 };
