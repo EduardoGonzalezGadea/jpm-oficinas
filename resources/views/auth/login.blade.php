@@ -91,6 +91,29 @@
             margin-bottom: 0.5rem;
         }
 
+
+        /* Botón Inicio circular: mejor foco/hover para accesibilidad y feedback */
+        .btn-outline-light.rounded-circle {
+            transition: transform .1s ease, box-shadow .2s ease, background-color .2s ease;
+        }
+        .btn-outline-light.rounded-circle:hover {
+            transform: translateY(-1px);
+            background-color: rgba(255, 255, 255, 0.15);
+        }
+        .btn-outline-light.rounded-circle:focus {
+            box-shadow: 0 0 0 0.2rem rgba(255, 255, 255, .5);
+        }
+
+        /* Botón Inicio flotante en esquina superior derecha */
+        .home-fab {
+            position: fixed;
+            top: 20px; /* fallback */
+            right: 20px; /* fallback */
+            top: calc(env(safe-area-inset-top, 0px) + 20px);
+            right: calc(env(safe-area-inset-right, 0px) + 20px);
+            z-index: 1050; /* sobre la tarjeta */
+        }
+
         .input-group-text {
             background-color: #f8f9fa;
             border-right: none;
@@ -131,20 +154,27 @@
 </head>
 
 <body>
+    <a href="{{ route('home') }}" class="home-fab btn btn-outline-light btn-sm rounded-circle d-inline-flex align-items-center justify-content-center"
+       style="width:2.75rem;height:2.75rem"
+       data-toggle="tooltip" data-placement="left" title="Ir al inicio" aria-label="Ir al inicio">
+        <i class="fas fa-home"></i>
+    </a>
     <div class="container">
         <div class="row justify-content-center">
             <div class="login-container">
                 <div class="card">
                     <div class="card-header">
-                        <div class="d-flex align-items-center justify-content-center">
-                            <div class="login-icon mr-2">
-                                <i class="fas fa-building"></i>
-                            </div>
-                            <div class="text-left">
-                                <h4 class="mb-0 text-white">JPM Oficinas</h4>
-                                <small>República Oriental del Uruguay</small>
-                                <small class="d-block">Ministerio del Interior</small>
-                                <small class="d-block">Jefatura de Policía de Montevideo</small>
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div class="d-flex align-items-center">
+                                <div class="login-icon mr-2">
+                                    <i class="fas fa-building"></i>
+                                </div>
+                                <div class="text-left">
+                                    <h4 class="mb-0 text-white">JPM Oficinas</h4>
+                                    <small>República Oriental del Uruguay</small>
+                                    <small class="d-block">Ministerio del Interior</small>
+                                    <small class="d-block">Jefatura de Policía de Montevideo</small>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -192,7 +222,7 @@
                                     </div>
                                     <input type="email" class="form-control @error('email') is-invalid @enderror"
                                         id="email" name="email" value="{{ old('email') }}"
-                                        placeholder="Ingresa tu correro electrónico" required autocomplete="email">
+                                        placeholder="Ingresa tu correo electrónico" required autocomplete="username" autofocus>
                                 </div>
                             </div>
 
@@ -206,7 +236,12 @@
                                     </div>
                                     <input type="password" class="form-control @error('password') is-invalid @enderror"
                                         id="password" name="password" placeholder="Ingresa tu contraseña" required
-                                        autocomplete="password">
+                                        autocomplete="current-password">
+                                    <div class="input-group-append">
+                                        <button class="btn btn-light border" type="button" id="togglePassword" aria-label="Mostrar contraseña" data-toggle="tooltip" data-placement="left" title="Mostrar/Ocultar">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
 
@@ -234,6 +269,27 @@
     <script src="{{ asset('libs/jquery/js/jquery-3.6.0.min.js') }}"></script>
     <script src="{{ asset('libs/bootstrap-4.6.2-dist/js/bootstrap.bundle.min.js') }}"></script>
     <script src="{{ asset('libs/fontawesome-free-5.15.4-web/js/all.min.js') }}"></script>
+
+    <script>
+        // Inicializar tooltips y toggle de contraseña
+        $(function () {
+            $('[data-toggle="tooltip"]').tooltip();
+
+            $('#togglePassword').on('click', function () {
+                var $input = $('#password');
+                var $icon = $(this).find('i');
+                if ($input.attr('type') === 'password') {
+                    $input.attr('type', 'text');
+                    $icon.removeClass('fa-eye').addClass('fa-eye-slash');
+                    $(this).attr('aria-label', 'Ocultar contraseña').attr('title', 'Ocultar');
+                } else {
+                    $input.attr('type', 'password');
+                    $icon.removeClass('fa-eye-slash').addClass('fa-eye');
+                    $(this).attr('aria-label', 'Mostrar contraseña').attr('title', 'Mostrar');
+                }
+            });
+        });
+    </script>
 </body>
 
 </html>

@@ -30,8 +30,8 @@ class ModalEditarPago extends Component
 
     protected $rules = [
         'pago.fechaEgresoPagos' => 'required|date',
-        'pago.egresoPagos' => 'required|string|max:255',
-        'pago.relAcreedores' => 'required|integer|exists:tes_cch_acreedores,idAcreedores',
+        'pago.egresoPagos' => 'nullable|string|max:50',
+        'pago.relAcreedores' => 'nullable|integer|exists:tes_cch_acreedores,idAcreedores',
         'pago.conceptoPagos' => 'required|string|max:500',
         'pago.montoPagos' => 'required|numeric|min:0',
         'pago.recuperadoPagos' => 'nullable|numeric|min:0|lte:pago.montoPagos',
@@ -74,7 +74,7 @@ class ModalEditarPago extends Component
             $pago = Pago::findOrFail($this->idPago);
             $pago->update([
                 'fechaEgresoPagos' => Carbon::parse($this->pago['fechaEgresoPagos']),
-                'egresoPagos' => $this->pago['egresoPagos'],
+                'egresoPagos' => $this->pago['egresoPagos'] ?: null,
                 'relAcreedores' => $this->pago['relAcreedores'],
                 'conceptoPagos' => $this->pago['conceptoPagos'],
                 'montoPagos' => floatval($this->pago['montoPagos']),

@@ -180,6 +180,7 @@ class Entradas extends Component
         $this->resetForm();
         $this->dispatchBrowserEvent('hide-modal', ['id' => 'createEditModal']);
         $this->emit('alert', ['type' => 'success', 'message' => 'Entrada registrada exitosamente.']);
+        $this->emit('actualizarStock');
     }
 
     public function update()
@@ -224,6 +225,7 @@ class Entradas extends Component
         $this->resetForm();
         $this->dispatchBrowserEvent('hide-modal', ['id' => 'createEditModal']);
         $this->emit('alert', ['type' => 'success', 'message' => 'Entrada actualizada exitosamente.']);
+        $this->emit('actualizarStock');
     }
 
     public function delete()
@@ -248,6 +250,7 @@ class Entradas extends Component
         $this->showDeleteModal = false;
         $this->dispatchBrowserEvent('hide-modal', ['id' => 'deleteModal']);
         $this->emit('alert', ['type' => 'success', 'message' => 'Entrada eliminada exitosamente.']);
+        $this->emit('actualizarStock');
     }
 
     public function resetForm()

@@ -12,7 +12,7 @@ return new class extends Migration
             $table->id('idPagos');
             $table->unsignedBigInteger('relCajaChica_Pagos'); // FK a tes_caja_chica.idCajaChica
             $table->date('fechaEgresoPagos');
-            $table->string('egresoPagos', 50);
+            $table->string('egresoPagos', 50)->nullable();
             $table->unsignedBigInteger('relAcreedores')->nullable(); // FK a tes_cch_acreedores.idAcreedores
             $table->string('conceptoPagos', 255);
             $table->decimal('montoPagos', 15, 2);

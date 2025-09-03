@@ -410,13 +410,29 @@ class Index extends Component
             $this->tablaTotales['Total Extras'] = $stExtras;
 
             // Calcular totales de pagos usando tablaPagos
-            $totalMontoPagos = $this->tablaPagos->sum('montoPagos');
-            $totalRecuperadoPagos = $this->tablaPagos->sum('recuperadoPagos');
+            $pagosConEgreso = $this->tablaPagos->filter(function ($p) {
+                $egreso = $p['egresoPagos'] ?? null;
+                return !is_null($egreso) && trim((string)$egreso) !== '';
+            });
+            $pagosSinEgreso = $this->tablaPagos->filter(function ($p) {
+                $egreso = $p['egresoPagos'] ?? null;
+                return is_null($egreso) || trim((string)$egreso) === '';
+            });
 
-            $stPagos = $totalMontoPagos - $totalRecuperadoPagos;
-            $this->tablaTotales['Saldo Pagos Directos'] = $stPagos;
+            $saldoPagosConEgreso = $pagosConEgreso->sum(function ($p) {
+                return ($p['montoPagos'] ?? 0) - ($p['recuperadoPagos'] ?? 0);
+            });
+            $saldoPagosSinEgreso = $pagosSinEgreso->sum(function ($p) {
+                return ($p['montoPagos'] ?? 0) - ($p['recuperadoPagos'] ?? 0);
+            });
 
-            $stSaldo = $montoCajaChica - $stPendientes - $stRendidos - $stExtras - $stPagos;
+            // Saldo de pagos directos con egreso (para totales y recuperar)
+            $this->tablaTotales['Saldo Pagos Directos'] = $saldoPagosConEgreso;
+            // Saldo de pagos directos sin egreso (visible en totales pero excluido de 'Recuperar')
+            $this->tablaTotales['Pagos Sin Egreso'] = $saldoPagosSinEgreso;
+
+            // Saldo total considera ambos tipos de pagos
+            $stSaldo = $montoCajaChica - $stPendientes - $stRendidos - $stExtras - $saldoPagosConEgreso - $saldoPagosSinEgreso;
             $this->tablaTotales['Saldo Total'] = $stSaldo;
         } catch (\Exception $e) {
             session()->flash('error', 'Error al calcular los totales: ' . $e->getMessage());
@@ -474,8 +490,10 @@ class Index extends Component
         });
 
         // --- Pagos del mes actual ---
+        // Nota: Excluir pagos sin número de egreso del proceso de recuperación
         $pagosRecuperacion = Pago::where('relCajaChica_Pagos', $this->cajaChicaSeleccionada->idCajaChica)
             ->where('fechaEgresoPagos', '<=', $fechaRecuperacionActual)
+            ->whereRaw("TRIM(egresoPagos) <> ''")
             ->with('acreedor')
             ->selectRaw(
                 'tes_cch_pagos.*,
@@ -539,8 +557,10 @@ class Index extends Component
             });
 
             // --- Pagos del mes anterior ---
+            // Nota: Excluir pagos sin número de egreso del proceso de recuperación
             $pagosRecuperacionAnterior = Pago::where('relCajaChica_Pagos', $cajaChicaAnterior->idCajaChica)
                 ->where('fechaEgresoPagos', '<=', $fechaRecuperacionActual)
+                ->whereRaw("TRIM(egresoPagos) <> ''")
                 ->with('acreedor')
                 ->selectRaw(
                     'tes_cch_pagos.*,
@@ -953,7 +973,7 @@ class Index extends Component
         if ($this->cajaChicaSeleccionada) {
             $this->emitTo('tesoreria.caja-chica.modal-nuevo-pendiente', 'mostrarModalNuevoPendiente', $this->cajaChicaSeleccionada->idCajaChica);
         } else {
-            session()->flash('error', 'No se ha determinado Fondo Permanente para el mes y año de trabajo actual.');
+            $this->dispatchBrowserEvent('swal:toast-error', ['text' => 'No se ha determinado Fondo Permanente para el mes y año de trabajo actual.']);
         }
     }
 
@@ -973,8 +993,20 @@ class Index extends Component
         if ($this->cajaChicaSeleccionada) {
             $this->emitTo('tesoreria.caja-chica.modal-nuevo-pago', 'mostrarModalNuevoPago', $this->cajaChicaSeleccionada->idCajaChica);
         } else {
-            session()->flash('error', 'No se ha determinado Fondo Permanente para el mes y año de trabajo actual.');
+            $this->dispatchBrowserEvent('swal:toast-error', ['text' => 'No se ha determinado Fondo Permanente para el mes y año de trabajo actual.']);
         }
+    }
+
+    public function cerrarModalNuevoPendiente()
+    {
+        $this->emitTo('tesoreria.caja-chica.modal-nuevo-pendiente', 'cerrarModalNuevoPendiente');
+        $this->cargarDatos();
+    }
+
+    public function cerrarModalNuevoPago()
+    {
+        $this->emitTo('tesoreria.caja-chica.modal-nuevo-pago', 'cerrarModalNuevoPago');
+        $this->cargarDatos();
     }
 
     public function establecerFechaHoy()

@@ -83,7 +83,7 @@ class AuthController extends Controller
         session()->save();
 
         // Inicia una sesión de Laravel tradicional para este usuario
-        Auth::login($user, true); // Remember me = true
+        Auth::login($user, false); // Remember me = true
         session()->put('auth.password_confirmed_at', time());
         
         // Regenerar la sesión para prevenir ataques de fijación de sesión
@@ -102,7 +102,7 @@ class AuthController extends Controller
 
         // Para peticiones web, guardar token en cookie y redirigir
         $minutes = config('jwt.ttl', 60);
-        $cookie = cookie('jwt_token', $token, $minutes, '/', null, false, true); // httpOnly = true
+        $cookie = cookie('jwt_token', $token, 0, '/', null, false, true); // httpOnly = true
         
         // Establecer el token en JWTAuth para la sesión actual
         JWTAuth::setToken($token);
@@ -170,10 +170,10 @@ class AuthController extends Controller
 
         // Para peticiones web
         $minutes = config('jwt.ttl', 60);
-        $cookie = cookie('jwt_token', $token, $minutes, '/', null, false, true);
+        $cookie = cookie('jwt_token', $token, 0, '/', null, false, true);
 
         // Iniciar sesión al registrarse
-        Auth::login($user, true);
+        Auth::login($user, false);
         session()->put('auth.password_confirmed_at', time());
         session()->regenerate(true);
 
@@ -220,6 +220,11 @@ class AuthController extends Controller
             if ($token) {
                 JWTAuth::invalidate($token);
             }
+
+            // Cerrar la sesión de Laravel
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
 
             if ($request->expectsJson()) {
                 return response()->json(['message' => 'Sesión cerrada exitosamente']);

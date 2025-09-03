@@ -330,6 +330,7 @@ class Salidas extends Component
         $this->resetForm();
         $this->dispatchBrowserEvent('hide-modal', ['id' => 'createEditModal']);
         $this->emit('alert', ['type' => 'success', 'message' => 'Salida registrada exitosamente.']);
+        $this->emit('actualizarStock');
     }
 
     public function update()
@@ -385,6 +386,7 @@ class Salidas extends Component
         $this->resetForm();
         $this->dispatchBrowserEvent('hide-modal', ['id' => 'createEditModal']);
         $this->emit('alert', ['type' => 'success', 'message' => 'Salida actualizada exitosamente.']);
+        $this->emit('actualizarStock');
     }
 
     public function delete()
@@ -403,6 +405,7 @@ class Salidas extends Component
         $this->showDeleteModal = false;
         $this->dispatchBrowserEvent('hide-modal', ['id' => 'deleteModal']);
         $this->emit('alert', ['type' => 'success', 'message' => 'Salida eliminada exitosamente.']);
+        $this->emit('actualizarStock');
     }
 
     public function resetForm()

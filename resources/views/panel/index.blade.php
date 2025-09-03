@@ -55,6 +55,30 @@
                                         Tesorería | Caja Chica
                                     </a>
                                 </div>
+
+                                <div class="col-md-4 mb-3">
+                                    <a href="{{ route('tesoreria.multas-transito') }}"
+                                        class="btn btn-outline-info btn-block btn-lg d-flex flex-column justify-content-center align-items-center btn-quick-access">
+                                        <i class="fas fa-list fa-2x d-block mb-2"></i>
+                                        Tesorería | Multas Tránsito
+                                    </a>
+                                </div>
+
+                                <div class="col-md-4 mb-3">
+                                    <a href="{{ route('tesoreria.arrendamientos.index') }}"
+                                        class="btn btn-outline-info btn-block btn-lg d-flex flex-column justify-content-center align-items-center btn-quick-access">
+                                        <i class="fas fa-file-signature fa-2x d-block mb-2"></i>
+                                        Tesorería | Arrendamientos
+                                    </a>
+                                </div>
+
+                                <div class="col-md-4 mb-3">
+                                    <a href="{{ route('tesoreria.eventuales.index') }}"
+                                        class="btn btn-outline-info btn-block btn-lg d-flex flex-column justify-content-center align-items-center btn-quick-access">
+                                        <i class="fas fa-hand-holding-usd fa-2x d-block mb-2"></i>
+                                        Tesorería | Eventuales
+                                    </a>
+                                </div>
                             @endcan
 
                             @can('operador_contabilidad')

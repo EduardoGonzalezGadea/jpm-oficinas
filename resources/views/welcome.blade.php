@@ -542,6 +542,12 @@
                                             <i class="fas fa-lock mr-2"></i>Iniciar Sesión
                                         </a>
 
+                                        <div class="mt-3">
+                                            <a href="{{ route('multas-transito-publico') }}" class="btn btn-info btn-lg">
+                                                <i class="fas fa-list mr-2"></i>Consultar Multas de Tránsito
+                                            </a>
+                                        </div>
+
                                         @if (Route::has('register'))
                                             <div class="mt-2">
                                                 <a href="{{ route('register') }}" class="text-muted small">
@@ -559,16 +565,19 @@
                                     <h5 class="mb-0"><i class="fas fa-info-circle mr-2"></i>Información</h5>
                                 </div>
                                 <div class="card-body p-4">
-                                    <p class="small mb-2"><i class="fas fa-check-circle text-success mr-1"></i> 
+                                    <p class="small mb-2"><i class="fas fa-check-circle text-success mr-1"></i>
                                         Autorización y gestión de Usuarios
                                     </p>
-                                    <p class="small mb-2"><i class="fas fa-check-circle text-success mr-1"></i> 
+                                    <p class="small mb-2"><i class="fas fa-check-circle text-success mr-1"></i>
+                                        Acceso público a consultas
+                                    </p>
+                                    <p class="small mb-2"><i class="fas fa-check-circle text-success mr-1"></i>
                                         Diferentes estilos de visualización
                                     </p>
                                     <p class="small mb-2"><i class="fas fa-check-circle text-success mr-1"></i>
                                         Varios módulos de diversas oficinas
                                     </p>
-                                    <p class="small mb-0"><i class="fas fa-check-circle text-success mr-1"></i> 
+                                    <p class="small mb-0"><i class="fas fa-check-circle text-success mr-1"></i>
                                         Información general del sistema
                                     </p>
                                 </div>

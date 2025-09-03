@@ -29,9 +29,7 @@ class ModalNuevoPendiente extends Component
         'cerrarModalNuevoPendiente' => 'cerrarModal',
     ];
 
-    public function mount()
-    {
-    }
+    public function mount() {}
 
     public function abrirModal($idCajaChica)
     {
@@ -42,14 +40,15 @@ class ModalNuevoPendiente extends Component
         $this->determinarNumeroPendienteSiguiente();
         $this->mostrarModal = true;
 
-        // Emitir evento para que JS actualice el DOM
-        $this->dispatchBrowserEvent('actualizar-modal-pendiente', ['mostrar' => true]);
+        // Usar el sistema global de modales como en valores/entradas
+        $this->dispatchBrowserEvent('show-modal', ['id' => 'modalNuevoPendiente']);
     }
 
     public function cerrarModal()
     {
         $this->mostrarModal = false;
-        $this->dispatchBrowserEvent('cerrar-y-refrescar-pendiente');
+        $this->reset(['pendiente', 'fechaPendientes', 'relDependencia', 'montoPendientes']);
+        $this->resetErrorBag();
     }
 
     public function cargarDependencias()
@@ -107,7 +106,7 @@ class ModalNuevoPendiente extends Component
             ]);
 
             session()->flash('message', 'Pendiente creado correctamente.');
-            $this->cerrarModal();
+            $this->dispatchBrowserEvent('hide-modal', ['id' => 'modalNuevoPendiente']);
             $this->emitTo('tesoreria.caja-chica.index', 'pendienteCreado');
         } catch (\Exception $e) {
             session()->flash('error', 'Error al crear el pendiente.');

@@ -14,6 +14,10 @@ use App\Http\Controllers\Tesoreria\CajaChica\PendienteController;
 use App\Http\Controllers\Tesoreria\Valores\ValorController;
 use App\Http\Controllers\Tesoreria\CajaController;
 use App\Http\Controllers\ThemeController;
+use App\Http\Livewire\Tesoreria\Arrendamientos\PrintArrendamientos;
+use App\Http\Livewire\Tesoreria\Arrendamientos\PrintArrendamientosFull;
+use App\Http\Livewire\Tesoreria\Eventuales\PrintEventuales;
+use App\Http\Livewire\Tesoreria\Eventuales\PrintEventualesFull;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PendriveController;
 
@@ -35,6 +39,11 @@ use App\Http\Controllers\PendriveController;
 Route::get('/', function () {
     return view('welcome');
 })->name('home');
+
+// Ruta pública para acceso como invitado a multas de tránsito
+Route::get('/multas-transito-publico', function () {
+    return view('tesoreria.multas-publico');
+})->name('multas-transito-publico');
 
 // Cambiar tema (debe funcionar sin autenticación para el formulario de login)
 Route::post('/tema/cambiar', [ThemeController::class, 'switchTheme'])->name('theme.switch');
@@ -197,6 +206,34 @@ Route::middleware(['web', 'jwt.verify'])->group(function () {
         Route::get('/multas-transito', function () {
             return view('tesoreria.multas');
         })->name('multas-transito');
+
+        // Rutas de Eventuales
+        Route::prefix('eventuales')->name('eventuales.')->group(function () {
+            Route::get('/', function () {
+                return view('tesoreria.eventuales.index');
+            })->name('index');
+
+            Route::get('/planillas/imprimir/{id}', function ($id) {
+                $planilla = App\Models\Tesoreria\EventualPlanilla::findOrFail($id);
+                return view('tesoreria.eventuales.planillas-print', compact('planilla'));
+            })->name('planillas-print');
+
+            // Rutas de Impresión de Eventuales
+            Route::get('/imprimir/{year}/{mes}', PrintEventuales::class)->name('imprimir');
+            Route::get('/imprimir-detalles/{year}/{mes}', PrintEventualesFull::class)->name('imprimir-detalles');
+        });
+
+        // Rutas de Planillas
+        Route::get('/arrendamientos/planillas/imprimir/{id}', function ($id) {
+            $planilla = App\Models\Tesoreria\Planilla::findOrFail($id);
+            return view('tesoreria.arrendamientos.planillas-print', compact('planilla'));
+        })->name('arrendamientos.planillas-print');
+
+        // Ruta de Impresión de Arrendamientos
+        Route::get('/arrendamientos/imprimir/{year}/{mes}', PrintArrendamientos::class)->name('arrendamientos.imprimir');
+
+        // Ruta de Impresión Detallada de Arrendamientos
+        Route::get('/arrendamientos/imprimir-todo/{year}/{mes}', PrintArrendamientosFull::class)->name('arrendamientos.imprimir-todo');
     });
 
     // Contabilidad

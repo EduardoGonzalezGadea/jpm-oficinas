@@ -20,7 +20,7 @@ class ModalNuevoPago extends Component
 
     protected $rules = [
         'fechaEgresoPagos' => 'required|date',
-        'egresoPagos' => 'required|string|max:50',
+        'egresoPagos' => 'nullable|string|max:50',
         'relAcreedores' => 'nullable|exists:tes_cch_acreedores,idAcreedores',
         'conceptoPagos' => 'required|string|max:255',
         'montoPagos' => 'required|numeric|min:0.01',
@@ -59,13 +59,14 @@ class ModalNuevoPago extends Component
         $this->idCajaChica = $idCajaChica;
         $this->cargarAcreedores();
         $this->mostrarModal = true;
-        $this->dispatchBrowserEvent('actualizar-modal-pago', ['mostrar' => true]);
+        $this->dispatchBrowserEvent('show-modal', ['id' => 'modalNuevoPago']);
     }
 
     public function cerrarModal()
     {
         $this->mostrarModal = false;
-        $this->dispatchBrowserEvent('cerrar-y-refrescar-pago');
+        $this->reset(['fechaEgresoPagos', 'egresoPagos', 'relAcreedores', 'conceptoPagos', 'montoPagos']);
+        $this->resetErrorBag();
     }
 
     public function cargarAcreedores()
@@ -81,7 +82,7 @@ class ModalNuevoPago extends Component
             Pago::create([
                 'relCajaChica_Pagos' => $this->idCajaChica,
                 'fechaEgresoPagos' => $this->fechaEgresoPagos,
-                'egresoPagos' => $this->egresoPagos,
+                'egresoPagos' => $this->egresoPagos ?: null,
                 'relAcreedores' => $this->relAcreedores ?: null,
                 'conceptoPagos' => $this->conceptoPagos,
                 'montoPagos' => $this->montoPagos,
@@ -89,8 +90,7 @@ class ModalNuevoPago extends Component
             ]);
 
             session()->flash('message', 'Pago Directo creado correctamente.');
-            $this->cerrarModal();
-            // Notificar al componente principal para recargar datos
+            $this->dispatchBrowserEvent('hide-modal', ['id' => 'modalNuevoPago']);
             $this->emitTo('tesoreria.caja-chica.index', 'pagoCreado');
         } catch (\Exception $e) {
             session()->flash('error', 'Error al crear el pago directo: ' . $e->getMessage());

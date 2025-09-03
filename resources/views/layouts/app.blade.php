@@ -73,6 +73,33 @@
     <script src="{{ asset('js/theme-change.js') }}"></script>
 
     <script>
+        document.addEventListener('livewire:load', function () {
+            Livewire.onError(statusCode => {
+                if (statusCode === 401 || statusCode === 419) {
+                    // SweetAlert2 para notificar al usuario y redirigir al login
+                    Swal.fire({
+                        title: 'Sesión expirada',
+                        text: 'Tu sesión ha expirado. Serás redirigido al login.',
+                        icon: 'warning',
+                        confirmButtonText: 'Aceptar',
+                        allowOutsideClick: false,
+                        allowEscapeKey: false
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            try {
+                                // Limpiar tokens locales si existieran
+                                localStorage.removeItem('jwt_token');
+                                sessionStorage.removeItem('jwt_token');
+                            } catch (e) {}
+                            // Redirigir explícitamente al login para evitar vistas parciales rotas
+                            window.location.href = route('login');
+                        }
+                    });
+                    return false; // Detiene el manejo de errores de Livewire
+                }
+            });
+        });
+
         // Listener para notificaciones de SweetAlert2
         window.addEventListener('swal:success', event => {
             const Toast = Swal.mixin({
@@ -131,6 +158,15 @@
             const modalId = event.detail.id;
             if (modalId) {
                 $('#' + modalId).modal('hide');
+
+                // Limpiar datos del modal después de cerrarlo
+                setTimeout(() => {
+                    if (modalId === 'modalNuevoPendiente') {
+                        window.livewire.emit('cerrarModalNuevoPendiente');
+                    } else if (modalId === 'modalNuevoPago') {
+                        window.livewire.emit('cerrarModalNuevoPago');
+                    }
+                }, 300);
             }
         });
 

@@ -18,7 +18,7 @@
                     </a>
                     <div class="dropdown-menu" aria-labelledby="navbarDropdownTesoreria">
                         {{-- Submenú Cajas --}}
-                        <div class="dropdown-submenu submenu-right">
+                        {{-- <div class="dropdown-submenu submenu-right">
                             <a class="dropdown-item dropdown-toggle" href="#" role="button">
                                 <i class="fas fa-cash-register mr-2"></i>Cajas
                             </a>
@@ -34,7 +34,7 @@
                                     <i class="fas fa-tags mr-2"></i>Conceptos
                                 </a>
                             </div>
-                        </div>
+                        </div> --}}
                         {{-- Link Caja Chica --}}
                         <a class="dropdown-item" href="{{ route('tesoreria.caja-chica.index') }}" wire:navigate>
                             <i class="fas fa-coins mr-2"></i>Caja Chica
@@ -46,6 +46,13 @@
                         {{-- Link Infracciones de Tránsito --}}
                         <a class="dropdown-item" href="{{ route('tesoreria.multas-transito') }}">
                             <i class="fas fa-list"></i> Multas de Tránsito
+                        </a>
+                        {{-- Link Arrendamientos --}}
+                        <a class="dropdown-item" href="{{ route('tesoreria.arrendamientos.index') }}">
+                            <i class="fas fa-file-signature mr-2"></i> Arrendamientos
+                        </a>
+                        <a class="dropdown-item" href="{{ route('tesoreria.eventuales.index') }}">
+                            <i class="fas fa-hand-holding-usd mr-2"></i> Eventuales
                         </a>
                     </div>
                 </li>

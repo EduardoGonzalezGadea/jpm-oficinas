@@ -61,8 +61,8 @@
                     </div>
                 </div>
                 <div class="col-md-1">
-                    <button type="button" class="btn btn-outline-primary btn-sm" wire:click="$set('search', '')">
-                        <i class="fas fa-times mr-1"></i>Limpiar
+                    <button type="button" class="btn btn-primary btn-sm w-100 py-1" wire:click="$set('search', '')">
+                        <i class="fas fa-sync-alt mr-1"></i><span class="text-nowrap">Limpiar</span>
                     </button>
                 </div>
             </div>

@@ -37,7 +37,7 @@ class InfraccionTransitoController extends Controller
 
         $infracciones = $query->orderBy('articulo')
             ->orderBy('apartado')
-            ->paginate($request->get('per_page', 15));
+            ->paginate($request->get('per_page', 25));
 
         return response()->json($infracciones);
     }

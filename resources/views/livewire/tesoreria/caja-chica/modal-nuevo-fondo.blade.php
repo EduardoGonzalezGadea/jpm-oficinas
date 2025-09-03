@@ -16,16 +16,6 @@
                         </div>
 
 
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    Livewire.on('swal', data => {
-        Swal.fire(data);
-    });
-    window.addEventListener('swal', function(e) {
-        Swal.fire(e.detail);
-    });
-});
-</script>
                         <div class="modal-body">
                             @if (session()->has('error'))
                                 <div class="alert alert-danger alert-dismissible fade show" role="alert">
@@ -39,7 +29,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             @endif
                             <div class="form-group"><label for="fondoMes">Mes:</label>
                                 <select class="form-control @error('mes') is-invalid @enderror" id="fondoMes"
-                                    wire:model.defer="mes" required autofocus>
+                                    wire:model.defer="mes" required>
                                     <option value="">Seleccionar Mes...</option>
                                     <option value="enero">Enero</option>
                                     <option value="febrero">Febrero</option>
@@ -68,6 +58,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             <div class="form-group"><label for="fondoMonto">Monto:</label><input type="text"
                                     class="form-control @error('monto') is-invalid @enderror" id="fondoMonto"
                                     wire:model.lazy="monto" required x-data
+                                    x-init="setTimeout(() => $el.focus(), 0)"
                                     x-on:input="$event.target.value = $event.target.value.replace(/[^0-9,]/g, '').replace(/(,.*?),/g, '$1')"
                                     placeholder="Ejemplo: 1.234,56">
                                 @error('monto')
@@ -86,9 +77,5 @@ document.addEventListener('DOMContentLoaded', function () {
             </div>
         </div>
     @endif
-    <script>
-        document.addEventListener('livewire:init', function() {
-            Livewire.on('actualizar-modal-fondo', function(data) {});
-        });
-    </script>
+    
 </div>

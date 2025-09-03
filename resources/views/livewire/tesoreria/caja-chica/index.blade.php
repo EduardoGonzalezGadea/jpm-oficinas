@@ -261,13 +261,13 @@
         </div>
     </div>
 
-    <table class="table table-bordered" id="tablaTotales">
+    <table class="table table-bordered mb-1" id="tablaTotales">
         <thead class="thead-dark">
             <tr>
-                <th class="text-center align-middle">Fondo Total</th>
                 <th class="text-center align-middle">Pendientes</th>
                 <th class="text-center align-middle">Rendidos</th>
                 <th class="text-center align-middle">Extras</th>
+                <th class="text-center align-middle">Pagos s/eg.</th>
                 <th class="text-center align-middle">Pagos</th>
                 <th class="text-center align-middle">Recuperar</th>
                 <th class="text-center align-middle">Saldo en $</th>
@@ -276,9 +276,6 @@
         <tbody>
             <tr>
                 <td class="text-center align-middle font-weight-bold">
-                    {{ isset($tablaTotales['Monto Caja Chica']) ? number_format($tablaTotales['Monto Caja Chica'], 2, ',', '.') : '0,00' }}
-                </td>
-                <td class="text-center align-middle font-weight-bold">
                     {{ isset($tablaTotales['Total Pendientes']) ? number_format($tablaTotales['Total Pendientes'], 2, ',', '.') : '0,00' }}
                 </td>
                 <td class="text-center align-middle font-weight-bold">
@@ -286,6 +283,9 @@
                 </td>
                 <td class="text-center align-middle font-weight-bold">
                     {{ isset($tablaTotales['Total Extras']) ? number_format($tablaTotales['Total Extras'], 2, ',', '.') : '0,00' }}
+                </td>
+                <td class="text-center align-middle font-weight-bold">
+                    {{ isset($tablaTotales['Pagos Sin Egreso']) ? number_format($tablaTotales['Pagos Sin Egreso'], 2, ',', '.') : '0,00' }}
                 </td>
                 <td class="text-center align-middle font-weight-bold">
                     {{ isset($tablaTotales['Saldo Pagos Directos']) ? number_format($tablaTotales['Saldo Pagos Directos'], 2, ',', '.') : '0,00' }}
@@ -313,6 +313,10 @@
             @endif
         </tbody>
     </table>
+    <div class="mt-0 text-center small">
+        <span class="font-weight-bold">Pendientes + Pagos sin egreso = $
+            {{ number_format((isset($tablaTotales['Total Pendientes']) ? floatval($tablaTotales['Total Pendientes']) : 0) + (isset($tablaTotales['Pagos Sin Egreso']) ? floatval($tablaTotales['Pagos Sin Egreso']) : 0), 2, ',', '.') }}</span>
+    </div>
 
     <!-- Tabla Pendientes Detalle -->
     <div class="row d-flex justify-content-between align-items-center">
@@ -441,7 +445,8 @@
                     class="{{ $item->es_mes_anterior ?? false ? 'table-warning' : '' }}">
                     <td class="text-center align-middle">
                         {{ $item->fechaEgresoPagos ? $item->fechaEgresoPagos->format('d/m/Y') : '' }}</td>
-                    <td class="text-center align-middle font-weight-bold">{{ $item->egresoPagos }}</td>
+                    <td class="text-center align-middle font-weight-bold">{{ $item->egresoPagos ?? 'Sin número' }}
+                    </td>
                     <td class="text-center align-middle">{{ $item->acreedor->acreedor ?? '' }}</td>
                     <td>{{ $item->conceptoPagos }}</td>
                     <td class="text-right align-middle">{{ number_format($item->montoPagos, 2, ',', '.') }}</td>
@@ -463,7 +468,11 @@
                                 wire:click="$emit('mostrarModalEditarPago', {{ $item->idPagos }})" title="Editar">
                                 <i class="fas fa-pencil-alt"></i>
                             </button>
-                            @if (($item->recuperadoPagos ?? 0) < ($item->montoPagos ?? 0) && ($item->montoPagos ?? 0) > 0)
+                            @if (
+                                ($item->recuperadoPagos ?? 0) < ($item->montoPagos ?? 0) &&
+                                    ($item->montoPagos ?? 0) > 0 &&
+                                    isset($item->egresoPagos) &&
+                                    strlen(trim($item->egresoPagos)) > 0)
                                 <button type="button" class="btn btn-sm btn-info mr-1"
                                     title="Recuperar Pago Directo"
                                     wire:click="openRecuperarPagoModal({{ $item->idPagos }})">
@@ -693,7 +702,6 @@
         document.addEventListener('livewire:init', function() {
             // === Gestión de Modales ===
 
-
             // Prevenir que Livewire re-renderice innecesariamente
             Livewire.on('livewire:load', () => {
                 console.log('Livewire cargado, manteniendo estado de modales');
@@ -729,8 +737,9 @@
             Livewire.on('show-recuperar-pago-modal', () => $('#modalRecuperarPago').modal('show'));
             Livewire.on('hide-recuperar-pago-modal', () => $('#modalRecuperarPago').modal('hide'));
             Livewire.on('mostrar-modal-nuevo-fondo', modales.nuevoFondo.show);
-            Livewire.on('cerrar-modal-nuevo-fondo', modales.nuevoFondo
-                .hide); // Inicializar datepicker si es necesario
+            Livewire.on('cerrar-modal-nuevo-fondo', modales.nuevoFondo.hide);
+
+            // Inicializar datepicker si es necesario
             Livewire.on('contentChanged', function() {
                 if ($.fn.datepicker) {
                     $('.datepicker').not('.hasDatepicker').datepicker({
@@ -816,42 +825,36 @@
 
             // Función para manejar el estado de carga de las tablas
             const manejarEstadoTablas = (estado) => {
-                const opacidad = estado === 'cargando' ? '0.6' : '1';
-                const pointerEvents = estado === 'cargando' ? 'none' : 'auto';
-
-                tablasAfectadas.forEach(tablaId => {
-                    const tabla = document.getElementById(tablaId);
-                    if (tabla) {
-                        tabla.style.opacity = opacidad;
-                        tabla.style.pointerEvents = pointerEvents;
+                tablasAfectadas.forEach(tabla => {
+                    const elemento = document.querySelector(`[wire\\:loading\\.${tabla}]`);
+                    if (elemento) {
+                        if (estado === 'loading') {
+                            elemento.classList.add('loading');
+                        } else {
+                            elemento.classList.remove('loading');
+                        }
                     }
                 });
             };
 
-            // Evento de cambio de fecha
-            const fechaInput = document.getElementById('fechaHastaInput');
-            if (fechaInput) {
-                fechaInput.addEventListener('change', () => manejarEstadoTablas('cargando'));
-            }
+            // Escuchar eventos de carga
+            Livewire.on('loading', () => manejarEstadoTablas('loading'));
+            Livewire.on('loaded', () => manejarEstadoTablas('loaded'));
 
-            // Restaurar estado cuando se complete la carga
-            Livewire.hook('message.processed', () => manejarEstadoTablas('completado'));
-        });
+            // === Gestión de Errores ===
+            Livewire.on('error', (error) => {
+                console.error('Error en Livewire:', error);
+                // Aquí puedes agregar manejo de errores global
+            });
 
-        window.addEventListener('cerrar-y-refrescar-pendiente', event => {
-            @this.call('cargarDatos');
-        });
-
-        window.addEventListener('cerrar-y-refrescar-fondo', event => {
-            @this.call('cargarDatos');
-        });
-
-        window.addEventListener('cerrar-y-refrescar-pago', event => {
-            @this.call('cargarDatos');
-        });
-
-        window.addEventListener('cerrar-y-refrescar-editar-pago', event => {
-            @this.call('cargarDatos');
+            // === Inicialización Adicional ===
+            // Asegurar que los modales se inicialicen correctamente
+            $(document).ready(function() {
+                // Verificar que los modales estén disponibles
+                console.log('Modales disponibles:', {
+                    nuevoFondo: $('#modalNuevoFondo').length > 0
+                });
+            });
         });
     </script>
 @endpush

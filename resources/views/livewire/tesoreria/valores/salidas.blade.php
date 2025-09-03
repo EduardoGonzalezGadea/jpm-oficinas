@@ -15,10 +15,10 @@
             <h5 class="mb-0"><i class="fas fa-filter mr-2"></i>Filtros de Búsqueda</h5>
         </div>
         <div class="card-body">
-            <div class="row">
-                <div class="col-12">
+            <div class="row d-flex justify-content-between align-items-center">
+                <div class="col-md-3">
                     <div class="form-group">
-                        <label class="form-label font-weight-bold col-form-label-sm">Buscar</label>
+                        <label class="font-weight-bold col-form-label-sm">Buscar</label>
                         <div class="input-group input-group-sm">
                             <div class="input-group-prepend">
                                 <span class="input-group-text"><i class="fas fa-search"></i></span>
@@ -28,11 +28,9 @@
                         </div>
                     </div>
                 </div>
-            </div>
-            <div class="row mt-3">
                 <div class="col-md-3">
                     <div class="form-group">
-                        <label class="form-label font-weight-bold col-form-label-sm">Valor</label>
+                        <label class="font-weight-bold col-form-label-sm">Valor</label>
                         <select class="form-control form-control-sm" wire:model="filterValor">
                             <option value="">Todos los valores</option>
                             @foreach ($valores as $valor)
@@ -41,9 +39,9 @@
                         </select>
                     </div>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-2">
                     <div class="form-group">
-                        <label class="form-label font-weight-bold col-form-label-sm">Concepto</label>
+                        <label class="font-weight-bold col-form-label-sm">Concepto</label>
                         <select class="form-control form-control-sm" wire:model="filterConcepto">
                             <option value="">Todos los conceptos</option>
                             @foreach ($conceptos as $concepto)
@@ -55,7 +53,7 @@
                 </div>
                 <div class="col-md-2">
                     <div class="form-group">
-                        <label class="form-label font-weight-bold col-form-label-sm">Fecha</label>
+                        <label class="font-weight-bold col-form-label-sm">Fecha</label>
                         <select class="form-control form-control-sm" wire:model="filterFecha">
                             <option value="">Todas</option>
                             <option value="hoy">Hoy</option>
@@ -66,7 +64,7 @@
                 </div>
                 <div class="col-md-1">
                     <div class="form-group">
-                        <label class="form-label font-weight-bold col-form-label-sm">Pág.</label>
+                        <label class="font-weight-bold col-form-label-sm">Pág.</label>
                         <select class="form-control form-control-sm" wire:model="perPage">
                             <option value="10">10</option>
                             <option value="25">25</option>
@@ -74,10 +72,12 @@
                         </select>
                     </div>
                 </div>
-                <div class="col-md-2 d-flex align-items-end">
-                    <button type="button" class="btn btn-primary btn-sm w-100" wire:click="resetFilters">
-                        <i class="fas fa-sync-alt mr-1"></i>Limpiar
-                    </button>
+                <div class="col-md-1">
+                    <div class="form-group d-flex align-items-end">
+                        <button type="button" class="btn btn-primary btn-sm w-100 py-1" wire:click="resetFilters">
+                            <i class="fas fa-sync-alt mr-1"></i><span class="text-nowrap">Limpiar</span>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>

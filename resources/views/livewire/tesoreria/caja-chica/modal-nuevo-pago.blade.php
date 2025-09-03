@@ -1,20 +1,20 @@
 {{-- resources/views/livewire/tesoreria/caja-chica/modal-nuevo-pago.blade.php --}}
 <div>
-    @if($mostrarModal)
-        <div class="modal fade show d-block" id="modalNuevoPago" tabindex="-1" role="dialog" style="background-color: rgba(0,0,0,0.5);" aria-modal="true" role="dialog">
-            <div class="modal-dialog" role="document">
-                <div class="modal-content" style="max-height: 95vh; display: flex; flex-direction: column;">
+    @if ($mostrarModal)
+        <div class="modal fade" id="modalNuevoPago" tabindex="-1" wire:ignore.self>
+            <div class="modal-dialog">
+                <div class="modal-content">
                     <form wire:submit.prevent="guardar">
-                        <div class="modal-header bg-info text-white flex-shrink-0">
+                        <div class="modal-header bg-info text-white">
                             <h5 class="modal-title">
-                                 <i class="far fa-handshake"></i>
+                                <i class="far fa-handshake"></i>
                                 Nuevo Pago Directo
                             </h5>
-                            <button type="button" class="close text-white" wire:click="cerrarModal" aria-label="Close">
+                            <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
                                 <span aria-hidden="true">&times;</span>
                             </button>
                         </div>
-                        <div class="modal-body" style="flex-grow: 1; overflow-y: auto; max-height: 70vh;">
+                        <div class="modal-body">
                             @if (session()->has('error'))
                                 <div class="alert alert-danger alert-dismissible fade show" role="alert">
                                     {{ session('error') }}
@@ -37,17 +37,19 @@
 
                             <div class="form-group">
                                 <label for="pagoFechaEgreso">Fecha Egreso:</label>
-                                <input type="date" class="form-control @error('fechaEgresoPagos') is-invalid @enderror"
-                                       id="pagoFechaEgreso" wire:model.defer="fechaEgresoPagos" required>
+                                <input type="date"
+                                    class="form-control @error('fechaEgresoPagos') is-invalid @enderror"
+                                    id="pagoFechaEgreso" wire:model.defer="fechaEgresoPagos" required>
                                 @error('fechaEgresoPagos')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
 
                             <div class="form-group">
-                                <label for="pagoEgreso">Egreso:</label>
+                                <label for="pagoEgreso">Egreso (Opcional):</label>
                                 <input type="text" class="form-control @error('egresoPagos') is-invalid @enderror"
-                                       id="pagoEgreso" wire:model.defer="egresoPagos" required autofocus>
+                                    id="pagoEgreso" wire:model.defer="egresoPagos" autofocus
+                                    placeholder="Número de egreso (opcional)">
                                 @error('egresoPagos')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -56,9 +58,9 @@
                             <div class="form-group">
                                 <label for="pagoAcreedor">Acreedor:</label>
                                 <select class="form-control @error('relAcreedores') is-invalid @enderror"
-                                        id="pagoAcreedor" wire:model.defer="relAcreedores">
-                                    <option value="">Seleccionar Acreedor (Opcional)...</option>
-                                    @foreach($acreedores as $acreedor)
+                                    id="pagoAcreedor" wire:model.defer="relAcreedores">
+                                    <option value="">Seleccionar Acreedor...</option>
+                                    @foreach ($acreedores as $acreedor)
                                         <option value="{{ $acreedor->idAcreedores }}">{{ $acreedor->acreedor }}</option>
                                     @endforeach
                                 </select>
@@ -70,7 +72,7 @@
                             <div class="form-group">
                                 <label for="pagoConcepto">Concepto:</label>
                                 <input type="text" class="form-control @error('conceptoPagos') is-invalid @enderror"
-                                       id="pagoConcepto" wire:model.defer="conceptoPagos" required>
+                                    id="pagoConcepto" wire:model.defer="conceptoPagos" required>
                                 @error('conceptoPagos')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -78,15 +80,16 @@
 
                             <div class="form-group">
                                 <label for="pagoMonto">Monto:</label>
-                                <input type="number" step="0.01" class="form-control @error('montoPagos') is-invalid @enderror"
-                                       id="pagoMonto" wire:model.defer="montoPagos" required min="0.01">
+                                <input type="number" step="0.01"
+                                    class="form-control @error('montoPagos') is-invalid @enderror" id="pagoMonto"
+                                    wire:model.defer="montoPagos" required min="0.01">
                                 @error('montoPagos')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
                         </div>
-                        <div class="modal-footer flex-shrink-0">
-                            <button type="button" class="btn btn-secondary" wire:click="cerrarModal">
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">
                                 Cancelar
                             </button>
                             <button type="submit" class="btn btn-info" wire:loading.attr="disabled">
@@ -101,8 +104,10 @@
     @endif
 
     <script>
-        document.addEventListener('livewire:init', function () {
-            Livewire.on('actualizar-modal-pago', function (data) {
+        document.addEventListener('livewire:init', function() {
+            // Manejar el cierre del modal con Bootstrap y sincronizar con Livewire
+            $(document).on('hidden.bs.modal', '#modalNuevoPago', function() {
+                @this.cerrarModal();
             });
         });
     </script>

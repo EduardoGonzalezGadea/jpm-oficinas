@@ -62,7 +62,7 @@ class Multa extends Model
     public function getImporteUnificadoFormateadoAttribute()
     {
         if (is_null($this->importe_unificado)) {
-            return '<span class="text-muted">N/A</span>';
+            return '';
         }
         return number_format($this->importe_unificado, 2, ',', '.') . '&nbsp;' . $this->moneda;
     }
