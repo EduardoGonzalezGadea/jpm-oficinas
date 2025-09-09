@@ -90,7 +90,7 @@
                                         <td class="text-right align-middle"><span
                                                 class="text-nowrap-custom">{{ $eventual->monto_formateado }}</span></td>
                                         <td class="text-right align-middle">
-                                            {{ number_format($eventual->orden_cobro, 0, ',', '.') }}</td>
+                                            {{ $eventual->orden_cobro }}</td>
                                         <td class="text-right align-middle">{{ $eventual->recibo }}</td>
                                         <td class="text-center align-middle">{{ $eventual->medio_de_pago }}</td>
                                         @canany(['gestionar_tesoreria', 'supervisar_tesoreria'])

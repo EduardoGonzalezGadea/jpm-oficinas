@@ -22,8 +22,8 @@ return new class extends Migration
             $table->string('telefono')->nullable();
             $table->decimal('monto', 10, 2);
             $table->text('detalle')->nullable();
-            $table->integer('orden_cobro')->nullable();
-            $table->integer('recibo')->nullable();
+            $table->string('orden_cobro')->nullable();
+            $table->string('recibo')->nullable();
             $table->string('medio_de_pago')->default('Transferencia')->comment('Medios de pago: Efectivo, Transferencia, POS, Cheque');
             $table->boolean('confirmado')->default(false);
             $table->timestamps();

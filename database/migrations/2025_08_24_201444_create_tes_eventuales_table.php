@@ -22,7 +22,7 @@ return new class extends Migration
             $table->decimal('monto', 10, 2);
             $table->enum('medio_de_pago', ['Efectivo', 'Transferencia', 'POS', 'Cheque']);
             $table->text('detalle')->nullable();
-            $table->integer('orden_cobro')->nullable();
+            $table->string('orden_cobro')->nullable();
             $table->string('recibo')->nullable();
             $table->boolean('confirmado')->default(false);
             $table->foreignId('planilla_id')->nullable()->constrained('tes_eventuales_planillas');

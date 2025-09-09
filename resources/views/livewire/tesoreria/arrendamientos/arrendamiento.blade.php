@@ -77,9 +77,9 @@
                                                 class="text-nowrap-custom">{{ $arrendamiento->monto_formateado }}</span>
                                         </td>
                                         <td class="text-right align-middle">
-                                            {{ number_format($arrendamiento->orden_cobro, 0, ',', '.') }}</td>
+                                            {{ $arrendamiento->orden_cobro }}</td>
                                         <td class="text-right align-middle">
-                                            {{ number_format($arrendamiento->recibo, 0, ',', '.') }}</td>
+                                            {{ $arrendamiento->recibo }}</td>
                                         <td class="text-center align-middle">{{ $arrendamiento->medio_de_pago }}</td>
                                         @canany(['gestionar_tesoreria', 'supervisar_tesoreria'])
                                             <td
@@ -99,6 +99,7 @@
                                                 class="btn btn-sm btn-info" data-toggle="modal"
                                                 data-target="#detailsModal" title="Detalles"><i
                                                     class="fas fa-eye"></i></button>
+                                            <button wire:click="editIngreso({{ $arrendamiento->id }})" class="btn btn-sm btn-success" title="Ingreso"><i class="fas fa-file-invoice-dollar"></i></button>
                                             <button wire:click="edit({{ $arrendamiento->id }})"
                                                 class="btn btn-sm btn-primary" title="Editar"><i
                                                     class="fas fa-edit"></i></button>
@@ -142,6 +143,51 @@
                     <div class="d-flex justify-content-center">
                         {{ $arrendamientos->links() }}
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ingreso Modal -->
+    <div wire:ignore.self class="modal fade" id="ingresoModal" tabindex="-1" role="dialog"
+        aria-labelledby="ingresoModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="ingresoModalLabel">Registrar Ingreso</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <dl class="row">
+                            <dt class="col-sm-3">Nombre</dt>
+                            <dd class="col-sm-9">{{ $nombre }}</dd>
+
+                            <dt class="col-sm-3">Monto</dt>
+                            <dd class="col-sm-9">{{ $monto }}</dd>
+
+                            <dt class="col-sm-3">O/C</dt>
+                            <dd class="col-sm-9">{{ $orden_cobro }}</dd>
+
+                            <dt class="col-sm-3">Recibo</dt>
+                            <dd class="col-sm-9">{{ $recibo }}</dd>
+                        </dl>
+                        <div class="form-group">
+                            <label for="ingreso_input">Ingreso</label>
+                            <input type="text" wire:model.defer="ingreso" id="ingreso_input"
+                                class="form-control form-control-sm">
+                            @error('ingreso')
+                                <span class="text-danger">{{ $message }}</span>
+                            @enderror
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                    <button type="button" wire:click.prevent="updateIngreso()"
+                        class="btn btn-primary">Guardar</button>
                 </div>
             </div>
         </div>
@@ -370,10 +416,15 @@
 
             window.livewire.on('arrendamientoUpdate', () => {
                 $('#arrendamientoModal').modal('hide');
+                $('#ingresoModal').modal('hide');
             });
 
             $(document).ready(function() {
                 $('#arrendamientoModal').on('hidden.bs.modal', function() {
+                    window.livewire.emit('resetForm');
+                });
+
+                $('#ingresoModal').on('hidden.bs.modal', function() {
                     window.livewire.emit('resetForm');
                 });
 
@@ -397,6 +448,10 @@
                             }
                         }
                     });
+                });
+
+                $('#ingresoModal').on('shown.bs.modal', function() {
+                    $('#ingreso_input').focus();
                 });
             });
         </script>

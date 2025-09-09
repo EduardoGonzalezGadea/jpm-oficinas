@@ -69,8 +69,8 @@ class Arrendamiento extends Component
             'telefono' => 'nullable|string|max:255',
             'monto' => 'required|numeric',
             'detalle' => 'nullable|string',
-            'orden_cobro' => 'nullable|integer',
-            'recibo' => 'nullable|integer',
+            'orden_cobro' => 'nullable|string|max:255',
+            'recibo' => 'nullable|string|max:255',
             'medio_de_pago' => 'required|string|max:255',
         ]);
 
@@ -121,6 +121,37 @@ class Arrendamiento extends Component
         $this->dispatchBrowserEvent('show-modal', ['id' => 'arrendamientoModal']);
     }
 
+    public function editIngreso($id)
+    {
+        $arrendamiento = Model::findOrFail($id);
+
+        $this->arrendamiento_id = $id;
+        $this->nombre = $arrendamiento->nombre;
+        $this->monto = $arrendamiento->monto_formateado;
+        $this->orden_cobro = $arrendamiento->orden_cobro;
+        $this->recibo = $arrendamiento->recibo;
+        $this->ingreso = $arrendamiento->ingreso;
+
+        $this->dispatchBrowserEvent('show-modal', ['id' => 'ingresoModal']);
+    }
+
+    public function updateIngreso()
+    {
+        $this->validate([
+            'ingreso' => 'nullable|integer',
+        ]);
+
+        if ($this->arrendamiento_id) {
+            $arrendamiento = Model::findOrFail($this->arrendamiento_id);
+            $arrendamiento->update([
+                'ingreso' => $this->ingreso,
+            ]);
+            $this->resetInput();
+            $this->emit('arrendamientoUpdate');
+            $this->dispatchBrowserEvent('alert', ['type' => 'success', 'message' => 'Ingreso actualizado con éxito!']);
+        }
+    }
+
     public function update()
     {
         $this->validate([
@@ -131,8 +162,8 @@ class Arrendamiento extends Component
             'telefono' => 'nullable|string|max:255',
             'monto' => 'required|numeric',
             'detalle' => 'nullable|string',
-            'orden_cobro' => 'nullable|integer',
-            'recibo' => 'nullable|integer',
+            'orden_cobro' => 'nullable|string|max:255',
+            'recibo' => 'nullable|string|max:255',
             'medio_de_pago' => 'required|string|max:255',
         ]);
 

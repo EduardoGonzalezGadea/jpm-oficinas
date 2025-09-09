@@ -38,9 +38,9 @@
                                 class="text-nowrap-custom">{{ $arrendamiento->monto_formateado }}</span>
                         </td>
                         <td class="text-right align-middle">
-                            {{ number_format($arrendamiento->orden_cobro, 0, ',', '.') }}</td>
+                            {{ $arrendamiento->orden_cobro }}</td>
                         <td class="text-right align-middle">
-                            {{ number_format($arrendamiento->recibo, 0, ',', '.') }}</td>
+                            {{ $arrendamiento->recibo }}</td>
                         <td class="text-center align-middle">{{ $arrendamiento->medio_de_pago }}</td>
                     </tr>
                 @empty

@@ -90,8 +90,8 @@ class Eventuales extends Component
             'monto' => 'required|numeric',
             'medio_de_pago' => 'required|string|max:255',
             'detalle' => 'nullable|string',
-            'orden_cobro' => 'nullable|integer',
-            'recibo' => 'nullable|string|max:50',
+            'orden_cobro' => 'nullable|string|max:255',
+            'recibo' => 'nullable|string|max:255',
         ]);
 
         Model::create([
@@ -156,8 +156,8 @@ class Eventuales extends Component
             'monto' => 'required|numeric',
             'medio_de_pago' => 'required|string|max:255',
             'detalle' => 'nullable|string',
-            'orden_cobro' => 'nullable|integer',
-            'recibo' => 'nullable|string|max:50',
+            'orden_cobro' => 'nullable|string|max:255',
+            'recibo' => 'nullable|string|max:255',
         ]);
 
         if ($this->eventual_id) {

@@ -49,7 +49,7 @@
                         <td class="text-right align-middle">{{ number_format($eventual->ingreso, 0, ',', '.') }}</td>
                         <td class="text-center align-middle">{{ $eventual->institucion }}</td>
                         <td class="text-right align-middle"><span class="text-nowrap-custom">{{ $eventual->monto_formateado }}</span></td>
-                        <td class="text-right align-middle">{{ number_format($eventual->orden_cobro, 0, ',', '.') }}</td>
+                        <td class="text-right align-middle">{{ $eventual->orden_cobro }}</td>
                         <td class="text-right align-middle">{{ $eventual->recibo }}</td>
                         <td class="text-center align-middle">{{ $eventual->medio_de_pago }}</td>
                     </tr>
