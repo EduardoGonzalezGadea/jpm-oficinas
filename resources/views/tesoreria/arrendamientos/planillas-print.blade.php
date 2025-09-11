@@ -74,6 +74,7 @@
             <tr>
                 <th>Fecha</th>
                 <th>Ingreso</th>
+                <th>Nombre</th>
                 <th class="text-right">Monto</th>
                 <th>Medio de Pago</th>
                 <th>O/C</th>
@@ -84,19 +85,20 @@
             @foreach ($planilla->arrendamientos as $arrendamiento)
                 <tr>
                     <td>{{ $arrendamiento->fecha->format('d/m/Y') }}</td>
-                    <td>{{ $arrendamiento->ingreso }}</td>
+                    <td>{{ is_numeric($arrendamiento->ingreso) ? number_format($arrendamiento->ingreso, 0, ',', '.') : $arrendamiento->ingreso }}</td>
+                    <td>{{ $arrendamiento->nombre }}</td>
                     <td class="text-right">{{ $arrendamiento->monto_formateado }}</td>
                     <td>{{ $arrendamiento->medio_de_pago }}</td>
-                    <td>{{ $arrendamiento->orden_cobro }}</td>
-                    <td>{{ $arrendamiento->recibo }}</td>
+                    <td>{{ is_numeric($arrendamiento->orden_cobro) ? number_format($arrendamiento->orden_cobro, 0, ',', '.') : $arrendamiento->orden_cobro }}</td>
+                    <td>{{ is_numeric($arrendamiento->recibo) ? number_format($arrendamiento->recibo, 0, ',', '.') : $arrendamiento->recibo }}</td>
                 </tr>
             @endforeach
         </tbody>
         <tfoot>
             <tr>
-                <td colspan="2" class="text-right"><strong>Total Planilla:</strong></td>
+                <td colspan="3" class="text-right"><strong>Total Planilla:</strong></td>
                 <td class="text-right"><strong>{{ '$ ' . number_format($planilla->arrendamientos->sum('monto'), 2, ',', '.') }}</strong></td>
-                <td colspan="3"></td>
+                <td colspan="4"></td>
             </tr>
         </tfoot>
     </table>

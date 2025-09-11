@@ -82,12 +82,12 @@
         <tbody>
             @foreach ($planilla->eventuales as $eventual)
                 <tr>
-                    <td>{{ $eventual->ingreso }}</td>
+                    <td>{{ is_numeric($eventual->ingreso) ? number_format($eventual->ingreso, 0, ',', '.') : $eventual->ingreso }}</td>
                     <td>{{ $eventual->institucion }}</td>
                     <td class="text-right">{{ $eventual->monto_formateado }}</td>
                     <td>{{ $eventual->medio_de_pago }}</td>
-                    <td>{{ $eventual->orden_cobro }}</td>
-                    <td>{{ $eventual->recibo }}</td>
+                    <td>{{ is_numeric($eventual->orden_cobro) ? number_format($eventual->orden_cobro, 0, ',', '.') : $eventual->orden_cobro }}</td>
+                    <td>{{ is_numeric($eventual->recibo) ? number_format($eventual->recibo, 0, ',', '.') : $eventual->recibo }}</td>
                 </tr>
             @endforeach
         </tbody>

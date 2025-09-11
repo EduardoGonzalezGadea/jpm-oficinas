@@ -56,6 +56,7 @@
                                 <tr>
                                     <th class="text-center align-middle">Fecha</th>
                                     <th class="text-center align-middle">Ingreso</th>
+                                    <th class="text-center align-middle">Nombre</th>
                                     <th class="text-center align-middle">Monto</th>
                                     <th class="text-center align-middle">O/C</th>
                                     <th class="text-center align-middle">Recibo</th>
@@ -71,15 +72,16 @@
                                     <tr>
                                         <td class="text-center align-middle">
                                             {{ $arrendamiento->fecha->format('d/m/Y') }}</td>
-                                        <td class="text-right align-middle">
-                                            {{ number_format($arrendamiento->ingreso, 0, ',', '.') }}</td>
+                                        <td class="text-right align-middle{{ is_null($arrendamiento->ingreso) || $arrendamiento->ingreso == 0 ? ' table-warning' : '' }}">
+                                            {{ is_numeric($arrendamiento->ingreso) ? number_format($arrendamiento->ingreso, 0, ',', '.') : $arrendamiento->ingreso }}</td>
+                                        <td class="text-left align-middle">{{ $arrendamiento->nombre }}</td>
                                         <td class="text-right align-middle"><span
                                                 class="text-nowrap-custom">{{ $arrendamiento->monto_formateado }}</span>
                                         </td>
                                         <td class="text-right align-middle">
-                                            {{ $arrendamiento->orden_cobro }}</td>
+                                            {{ is_numeric($arrendamiento->orden_cobro) ? number_format($arrendamiento->orden_cobro, 0, ',', '.') : $arrendamiento->orden_cobro }}</td>
                                         <td class="text-right align-middle">
-                                            {{ $arrendamiento->recibo }}</td>
+                                            {{ is_numeric($arrendamiento->recibo) ? number_format($arrendamiento->recibo, 0, ',', '.') : $arrendamiento->recibo }}</td>
                                         <td class="text-center align-middle">{{ $arrendamiento->medio_de_pago }}</td>
                                         @canany(['gestionar_tesoreria', 'supervisar_tesoreria'])
                                             <td
@@ -111,7 +113,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="@canany(['gestionar_tesoreria', 'supervisar_tesoreria']) 8 @else 7 @endcanany"
+                                        <td colspan="@canany(['gestionar_tesoreria', 'supervisar_tesoreria']) 9 @else 8 @endcanany"
                                             class="text-center">No hay registros para el mes y año seleccionados.</td>
                                     </tr>
                                 @endforelse
@@ -119,22 +121,22 @@
                             <tfoot>
                                 @foreach ($subtotales as $subtotal)
                                     <tr>
-                                        <td colspan="2" class="text-right align-middle"><strong>Total
+                                        <td colspan="3" class="text-right align-middle"><strong>Total
                                                 {{ $subtotal->medio_de_pago }}:</strong></td>
                                         <td class="text-right align-middle"><strong><span class="text-nowrap-custom">$
                                                     {{ number_format($subtotal->total, 2, ',', '.') }}</span></strong>
                                         </td>
-                                        <td colspan="@canany(['gestionar_tesoreria', 'supervisar_tesoreria']) 5 @else 4 @endcanany"
+                                        <td colspan="@canany(['gestionar_tesoreria', 'supervisar_tesoreria']) 6 @else 5 @endcanany"
                                             class="align-middle"></td>
                                     </tr>
                                 @endforeach
                                 <tr>
-                                    <td colspan="2" class="text-right align-middle"><strong>Total General:</strong>
+                                    <td colspan="3" class="text-right align-middle"><strong>Total General:</strong>
                                     </td>
                                     <td class="text-right align-middle"><strong><span class="text-nowrap-custom">$
                                                 {{ number_format($total, 2, ',', '.') }}</span></strong></td>
                                     <td
-                                        colspan="@canany(['gestionar_tesoreria', 'supervisar_tesoreria']) 5 @else 4 @endcanany">
+                                        colspan="@canany(['gestionar_tesoreria', 'supervisar_tesoreria']) 6 @else 5 @endcanany">
                                     </td>
                                 </tr>
                             </tfoot>
@@ -407,6 +409,30 @@
                     title: message,
                     showConfirmButton: false,
                     timer: 1500
+                });
+            });
+
+            // Manejar redirección cuando el JWT expire
+            window.addEventListener('redirect-to-login', event => {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Sesión Expirada',
+                    text: event.detail.message,
+                    showConfirmButton: true,
+                    confirmButtonText: 'Ir al Login',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // Limpiar tokens locales si existieran
+                        try {
+                            localStorage.removeItem('jwt_token');
+                            sessionStorage.removeItem('jwt_token');
+                        } catch (e) {}
+                        
+                        // Redirigir al login
+                        window.location.href = '{{ route("login") }}';
+                    }
                 });
             });
 

@@ -3,6 +3,7 @@
 namespace App\Http\Livewire\Tesoreria\Eventuales;
 
 use App\Models\Tesoreria\Eventual as Model;
+use App\Models\Tesoreria\EventualInstitucion;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Illuminate\Support\Facades\DB;
@@ -34,6 +35,20 @@ class Eventuales extends Component
 
     public function render()
     {
+        // Verificar autenticación antes de procesar cualquier lógica
+        if (!auth()->check()) {
+            $this->dispatchBrowserEvent('redirect-to-login', [
+                'message' => 'La sesión ha expirado. Por favor, inicie sesión de nuevo.'
+            ]);
+            return view('livewire.tesoreria.eventuales.eventuales', [
+                'eventuales' => collect(),
+                'subtotales' => collect(),
+                'totalesPorInstitucion' => collect(),
+                'generalTotal' => 0,
+                'instituciones' => collect(),
+            ]);
+        }
+
                         $query = Model::whereYear('fecha', $this->year)
             ->whereMonth('fecha', $this->mes)
             ->search($this->search);
@@ -59,11 +74,15 @@ class Eventuales extends Component
             ->toBase()
             ->get();
 
+        // Obtener instituciones activas para el select
+        $instituciones = EventualInstitucion::activas()->orderBy('nombre')->get();
+
         return view('livewire.tesoreria.eventuales.eventuales', [
             'eventuales' => $eventuales,
             'subtotales' => $subtotales,
             'totalesPorInstitucion' => $this->totalesPorInstitucion,
             'generalTotal' => $this->generalTotal,
+            'instituciones' => $instituciones,
         ]);
     }
 

@@ -46,11 +46,11 @@
                 @forelse ($eventuales as $eventual)
                     <tr>
                         <td class="text-center align-middle">{{ $eventual->fecha->format('d/m/Y') }}</td>
-                        <td class="text-right align-middle">{{ number_format($eventual->ingreso, 0, ',', '.') }}</td>
+                        <td class="text-right align-middle">{{ is_numeric($eventual->ingreso) ? number_format($eventual->ingreso, 0, ',', '.') : $eventual->ingreso }}</td>
                         <td class="text-center align-middle">{{ $eventual->institucion }}</td>
                         <td class="text-right align-middle"><span class="text-nowrap-custom">{{ $eventual->monto_formateado }}</span></td>
-                        <td class="text-right align-middle">{{ $eventual->orden_cobro }}</td>
-                        <td class="text-right align-middle">{{ $eventual->recibo }}</td>
+                        <td class="text-right align-middle">{{ is_numeric($eventual->orden_cobro) ? number_format($eventual->orden_cobro, 0, ',', '.') : $eventual->orden_cobro }}</td>
+                        <td class="text-right align-middle">{{ is_numeric($eventual->recibo) ? number_format($eventual->recibo, 0, ',', '.') : $eventual->recibo }}</td>
                         <td class="text-center align-middle">{{ $eventual->medio_de_pago }}</td>
                     </tr>
                 @empty

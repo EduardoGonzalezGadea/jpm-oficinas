@@ -38,14 +38,14 @@
     @forelse ($eventuales as $eventual)
         <div class="eventual-record">
             <p><strong>Fecha:</strong> {{ $eventual->fecha->format('d/m/Y') }}</p>
-            <p><strong>Ingreso:</strong> {{ $eventual->ingreso ?? 'Sin dato' }}</p>
+            <p><strong>Ingreso:</strong> {{ is_numeric($eventual->ingreso) ? number_format($eventual->ingreso, 0, ',', '.') : ($eventual->ingreso ?? 'Sin dato') }}</p>
             <p><strong>Institución:</strong> {{ $eventual->institucion ?? 'Sin dato' }}</p>
             <p><strong>Titular:</strong> {{ $eventual->titular ?? 'Sin dato' }}</p>
             <p><strong>Medio de Pago:</strong> {{ $eventual->medio_de_pago }}</p>
             <p><strong>Monto:</strong> {{ $eventual->monto_formateado }}</p>
             <p><strong>Detalle:</strong> {{ $eventual->detalle ?? 'Sin dato' }}</p>
-            <p><strong>Orden de Cobro:</strong> {{ $eventual->orden_cobro ?? 'Sin dato' }}</p>
-            <p><strong>Recibo:</strong> {{ $eventual->recibo ?? 'Sin dato' }}</p>
+            <p><strong>Orden de Cobro:</strong> {{ is_numeric($eventual->orden_cobro) ? number_format($eventual->orden_cobro, 0, ',', '.') : ($eventual->orden_cobro ?? 'Sin dato') }}</p>
+            <p><strong>Recibo:</strong> {{ is_numeric($eventual->recibo) ? number_format($eventual->recibo, 0, ',', '.') : ($eventual->recibo ?? 'Sin dato') }}</p>
         </div>
     @empty
         <p>No hay registros para el mes y año seleccionados.</p>

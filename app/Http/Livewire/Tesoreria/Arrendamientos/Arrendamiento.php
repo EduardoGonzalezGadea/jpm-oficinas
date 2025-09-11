@@ -32,6 +32,17 @@ class Arrendamiento extends Component
 
     public function render()
     {
+        // Verificar autenticación antes de procesar cualquier lógica
+        if (!auth()->check()) {
+            $this->dispatchBrowserEvent('redirect-to-login', [
+                'message' => 'La sesión ha expirado. Por favor, inicie sesión de nuevo.'
+            ]);
+            return view('livewire.tesoreria.arrendamientos.arrendamiento', [
+                'arrendamientos' => collect(),
+                'subtotales' => collect(),
+            ]);
+        }
+
         $arrendamientos = Model::whereYear('fecha', $this->year)
             ->whereMonth('fecha', $this->mes)
             ->search($this->search)

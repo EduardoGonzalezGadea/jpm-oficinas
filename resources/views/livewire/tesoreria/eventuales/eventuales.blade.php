@@ -10,6 +10,9 @@
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h3 class="mb-0">Eventuales</h3>
                     <div class="btn-group d-print-none">
+                        <a href="{{ route('tesoreria.eventuales.instituciones') }}" class="btn btn-secondary">
+                            <i class="fas fa-building"></i> Instituciones
+                        </a>
                         <a href="{{ route('tesoreria.eventuales.imprimir-detalles', ['year' => $year, 'mes' => $mes]) }}" target="_blank" class="btn btn-info">
                             <i class="fas fa-print"></i> Detalles
                         </a>
@@ -85,13 +88,13 @@
                                         <td class="text-center align-middle">{{ $eventual->fecha->format('d/m/Y') }}
                                         </td>
                                         <td class="text-right align-middle">
-                                            {{ number_format($eventual->ingreso, 0, ',', '.') }}</td>
+                                            {{ is_numeric($eventual->ingreso) ? number_format($eventual->ingreso, 0, ',', '.') : $eventual->ingreso }}</td>
                                         <td class="text-center align-middle">{{ $eventual->institucion }}</td>
                                         <td class="text-right align-middle"><span
                                                 class="text-nowrap-custom">{{ $eventual->monto_formateado }}</span></td>
                                         <td class="text-right align-middle">
-                                            {{ $eventual->orden_cobro }}</td>
-                                        <td class="text-right align-middle">{{ $eventual->recibo }}</td>
+                                            {{ is_numeric($eventual->orden_cobro) ? number_format($eventual->orden_cobro, 0, ',', '.') : $eventual->orden_cobro }}</td>
+                                        <td class="text-right align-middle">{{ is_numeric($eventual->recibo) ? number_format($eventual->recibo, 0, ',', '.') : $eventual->recibo }}</td>
                                         <td class="text-center align-middle">{{ $eventual->medio_de_pago }}</td>
                                         @canany(['gestionar_tesoreria', 'supervisar_tesoreria'])
                                             <td
@@ -202,12 +205,9 @@
                                     <select wire:model.defer="institucion" id="institucion"
                                         class="form-control form-control-sm">
                                         <option value="">Seleccione...</option>
-                                        <option value="ASSE">ASSE</option>
-                                        <option value="INAU">INAU</option>
-                                        <option value="MIDES">MIDES</option>
-                                        <option value="HOSPITAL CLÍNICAS">HOSPITAL CLÍNICAS</option>
-                                        <option value="IMM">IMM</option>
-                                        <option value="MGAP">MGAP</option>
+                                        @foreach($instituciones as $inst)
+                                            <option value="{{ $inst->nombre }}">{{ $inst->nombre }}</option>
+                                        @endforeach
                                     </select>
                                     @error('institucion')
                                         <span class="text-danger">{{ $message }}</span>
@@ -383,6 +383,30 @@
                         timer: 1500
                     });
                 }
+            });
+
+            // Manejar redirección cuando el JWT expire
+            window.addEventListener('redirect-to-login', event => {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Sesión Expirada',
+                    text: event.detail.message,
+                    showConfirmButton: true,
+                    confirmButtonText: 'Ir al Login',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // Limpiar tokens locales si existieran
+                        try {
+                            localStorage.removeItem('jwt_token');
+                            sessionStorage.removeItem('jwt_token');
+                        } catch (e) {}
+                        
+                        // Redirigir al login
+                        window.location.href = '{{ route("login") }}';
+                    }
+                });
             });
 
             window.livewire.on('eventualStore', () => {

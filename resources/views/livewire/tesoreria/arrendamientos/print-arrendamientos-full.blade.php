@@ -24,15 +24,15 @@
     @forelse ($arrendamientos as $arrendamiento)
         <div class="arrendamiento-record">
             <p><strong>Fecha:</strong> {{ $arrendamiento->fecha->format('d/m/Y') }}</p>
-            <p><strong>Ingreso:</strong> {{ $arrendamiento->ingreso ?? 'Sin dato' }}</p>
+            <p><strong>Ingreso:</strong> {{ is_numeric($arrendamiento->ingreso) ? number_format($arrendamiento->ingreso, 0, ',', '.') : ($arrendamiento->ingreso ?? 'Sin dato') }}</p>
             <p><strong>Nombre:</strong> {{ $arrendamiento->nombre ?? 'Sin dato' }}</p>
             <p><strong>Cédula:</strong> {{ $arrendamiento->cedula ?? 'Sin dato' }}</p>
             <p><strong>Teléfono:</strong> {{ $arrendamiento->telefono ?? 'Sin dato' }}</p>
             <p><strong>Medio de Pago:</strong> {{ $arrendamiento->medio_de_pago }}</p>
             <p><strong>Monto:</strong> {{ $arrendamiento->monto_formateado }}</p>
             <p><strong>Detalle:</strong> {{ $arrendamiento->detalle ?? 'Sin dato' }}</p>
-            <p><strong>Orden de Cobro:</strong> {{ $arrendamiento->orden_cobro ?? 'Sin dato' }}</p>
-            <p><strong>Recibo:</strong> {{ $arrendamiento->recibo ?? 'Sin dato' }}</p>
+            <p><strong>Orden de Cobro:</strong> {{ is_numeric($arrendamiento->orden_cobro) ? number_format($arrendamiento->orden_cobro, 0, ',', '.') : ($arrendamiento->orden_cobro ?? 'Sin dato') }}</p>
+            <p><strong>Recibo:</strong> {{ is_numeric($arrendamiento->recibo) ? number_format($arrendamiento->recibo, 0, ',', '.') : ($arrendamiento->recibo ?? 'Sin dato') }}</p>
         </div>
     @empty
         <p>No hay registros para el mes y año seleccionados.</p>

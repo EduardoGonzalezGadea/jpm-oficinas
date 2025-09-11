@@ -213,6 +213,10 @@ Route::middleware(['web', 'jwt.verify'])->group(function () {
                 return view('tesoreria.eventuales.index');
             })->name('index');
 
+            Route::get('/instituciones', function () {
+                return view('tesoreria.eventuales.instituciones');
+            })->name('instituciones');
+
             Route::get('/planillas/imprimir/{id}', function ($id) {
                 $planilla = App\Models\Tesoreria\EventualPlanilla::findOrFail($id);
                 return view('tesoreria.eventuales.planillas-print', compact('planilla'));

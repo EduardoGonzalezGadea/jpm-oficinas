@@ -21,6 +21,7 @@
                 <tr>
                     <th class="text-center align-middle">Fecha</th>
                     <th class="text-center align-middle">Ingreso</th>
+                    <th class="text-center align-middle">Nombre</th>
                     <th class="text-center align-middle">Monto</th>
                     <th class="text-center align-middle">O/C</th>
                     <th class="text-center align-middle">Recibo</th>
@@ -33,19 +34,20 @@
                         <td class="text-center align-middle">
                             {{ $arrendamiento->fecha->format('d/m/Y') }}</td>
                         <td class="text-right align-middle">
-                            {{ number_format($arrendamiento->ingreso, 0, ',', '.') }}</td>
+                            {{ is_numeric($arrendamiento->ingreso) ? number_format($arrendamiento->ingreso, 0, ',', '.') : $arrendamiento->ingreso }}</td>
+                        <td class="text-left align-middle">{{ $arrendamiento->nombre }}</td>
                         <td class="text-right align-middle"><span
                                 class="text-nowrap-custom">{{ $arrendamiento->monto_formateado }}</span>
                         </td>
                         <td class="text-right align-middle">
-                            {{ $arrendamiento->orden_cobro }}</td>
+                            {{ is_numeric($arrendamiento->orden_cobro) ? number_format($arrendamiento->orden_cobro, 0, ',', '.') : $arrendamiento->orden_cobro }}</td>
                         <td class="text-right align-middle">
-                            {{ $arrendamiento->recibo }}</td>
+                            {{ is_numeric($arrendamiento->recibo) ? number_format($arrendamiento->recibo, 0, ',', '.') : $arrendamiento->recibo }}</td>
                         <td class="text-center align-middle">{{ $arrendamiento->medio_de_pago }}</td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="6"
+                        <td colspan="7"
                             class="text-center">No hay registros para el mes y año seleccionados.</td>
                     </tr>
                 @endforelse
@@ -53,21 +55,21 @@
             <tfoot>
                 @foreach ($subtotales as $subtotal)
                     <tr>
-                        <td colspan="2" class="text-right align-middle"><strong>Total
+                        <td colspan="3" class="text-right align-middle"><strong>Total
                                 {{ $subtotal->medio_de_pago }}:</strong></td>
                         <td class="text-right align-middle"><strong><span class="text-nowrap-custom">$
                                     {{ number_format($subtotal->total, 2, ',', '.') }}</span></strong>
                         </td>
-                        <td colspan="3"
+                        <td colspan="4"
                             class="align-middle"></td>
                     </tr>
                 @endforeach
                 <tr>
-                    <td colspan="2" class="text-right align-middle"><strong>Total General:</strong>
+                    <td colspan="3" class="text-right align-middle"><strong>Total General:</strong>
                     </td>
                     <td class="text-right align-middle"><strong><span class="text-nowrap-custom">$
                                 {{ number_format($total, 2, ',', '.') }}</span></strong></td>
-                    <td colspan="3">
+                    <td colspan="4">
                     </td>
                 </tr>
             </tfoot>
