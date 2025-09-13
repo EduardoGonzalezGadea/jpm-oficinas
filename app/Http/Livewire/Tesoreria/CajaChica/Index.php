@@ -250,9 +250,10 @@ class Index extends Component
                 ->with('dependencia')
                 ->selectRaw(
                     'tes_cch_pendientes.*,
-                    (SELECT SUM(rendido) FROM tes_cch_movimientos WHERE tes_cch_movimientos.relPendiente = tes_cch_pendientes.idPendientes AND deleted_at IS NULL) as tot_rendido,
-                    (SELECT SUM(reintegrado) FROM tes_cch_movimientos WHERE tes_cch_movimientos.relPendiente = tes_cch_pendientes.idPendientes AND deleted_at IS NULL) as tot_reintegrado,
-                    (SELECT SUM(recuperado) FROM tes_cch_movimientos WHERE tes_cch_movimientos.relPendiente = tes_cch_pendientes.idPendientes AND deleted_at IS NULL) as tot_recuperado'
+                    (SELECT SUM(rendido) FROM tes_cch_movimientos WHERE tes_cch_movimientos.relPendiente = tes_cch_pendientes.idPendientes AND fechaMovimientos <= ? AND deleted_at IS NULL) as tot_rendido,
+                    (SELECT SUM(reintegrado) FROM tes_cch_movimientos WHERE tes_cch_movimientos.relPendiente = tes_cch_pendientes.idPendientes AND fechaMovimientos <= ? AND deleted_at IS NULL) as tot_reintegrado,
+                    (SELECT SUM(recuperado) FROM tes_cch_movimientos WHERE tes_cch_movimientos.relPendiente = tes_cch_pendientes.idPendientes AND fechaMovimientos <= ? AND deleted_at IS NULL) as tot_recuperado',
+                    [$fechaHastaStr, $fechaHastaStr, $fechaHastaStr]
                 )
                 ->orderBy('pendiente', 'ASC')
                 ->get();
@@ -287,9 +288,10 @@ class Index extends Component
                     ->with('dependencia')
                     ->selectRaw(
                         'tes_cch_pendientes.*,
-                        (SELECT SUM(rendido) FROM tes_cch_movimientos WHERE tes_cch_movimientos.relPendiente = tes_cch_pendientes.idPendientes AND deleted_at IS NULL) as tot_rendido,
-                        (SELECT SUM(reintegrado) FROM tes_cch_movimientos WHERE tes_cch_movimientos.relPendiente = tes_cch_pendientes.idPendientes AND deleted_at IS NULL) as tot_reintegrado,
-                        (SELECT SUM(recuperado) FROM tes_cch_movimientos WHERE tes_cch_movimientos.relPendiente = tes_cch_pendientes.idPendientes AND deleted_at IS NULL) as tot_recuperado'
+                        (SELECT SUM(rendido) FROM tes_cch_movimientos WHERE tes_cch_movimientos.relPendiente = tes_cch_pendientes.idPendientes AND fechaMovimientos <= ? AND deleted_at IS NULL) as tot_rendido,
+                        (SELECT SUM(reintegrado) FROM tes_cch_movimientos WHERE tes_cch_movimientos.relPendiente = tes_cch_pendientes.idPendientes AND fechaMovimientos <= ? AND deleted_at IS NULL) as tot_reintegrado,
+                        (SELECT SUM(recuperado) FROM tes_cch_movimientos WHERE tes_cch_movimientos.relPendiente = tes_cch_pendientes.idPendientes AND fechaMovimientos <= ? AND deleted_at IS NULL) as tot_recuperado',
+                        [$fechaHastaStr, $fechaHastaStr, $fechaHastaStr]
                     )
                     ->orderBy('pendiente', 'ASC')
                     ->get();
@@ -333,7 +335,9 @@ class Index extends Component
                 ->with('acreedor')
                 ->selectRaw(
                     'tes_cch_pagos.*,
-                    (montoPagos - CASE WHEN fechaIngresoPagos IS NOT NULL THEN recuperadoPagos ELSE 0 END) as saldo_pagos'
+                    (montoPagos - CASE WHEN fechaIngresoPagos IS NOT NULL AND fechaIngresoPagos <= ? THEN recuperadoPagos ELSE 0 END) as saldo_pagos,
+                    CASE WHEN fechaIngresoPagos IS NOT NULL AND fechaIngresoPagos <= ? THEN recuperadoPagos ELSE 0 END as recuperado_en_periodo',
+                    [$fechaHastaStr, $fechaHastaStr]
                 )
                 ->orderBy('fechaEgresoPagos', 'ASC')
                 ->get()
@@ -358,7 +362,9 @@ class Index extends Component
                     ->with('acreedor')
                     ->selectRaw(
                         'tes_cch_pagos.*,
-                        (montoPagos - CASE WHEN fechaIngresoPagos IS NOT NULL THEN recuperadoPagos ELSE 0 END) as saldo_pagos'
+                        (montoPagos - CASE WHEN fechaIngresoPagos IS NOT NULL AND fechaIngresoPagos <= ? THEN recuperadoPagos ELSE 0 END) as saldo_pagos,
+                        CASE WHEN fechaIngresoPagos IS NOT NULL AND fechaIngresoPagos <= ? THEN recuperadoPagos ELSE 0 END as recuperado_en_periodo',
+                        [$fechaHastaStr, $fechaHastaStr]
                     )
                     ->orderBy('fechaEgresoPagos', 'ASC')
                     ->get()
@@ -420,10 +426,10 @@ class Index extends Component
             });
 
             $saldoPagosConEgreso = $pagosConEgreso->sum(function ($p) {
-                return ($p['montoPagos'] ?? 0) - ($p['recuperadoPagos'] ?? 0);
+                return ($p['montoPagos'] ?? 0) - ($p['recuperado_en_periodo'] ?? 0);
             });
             $saldoPagosSinEgreso = $pagosSinEgreso->sum(function ($p) {
-                return ($p['montoPagos'] ?? 0) - ($p['recuperadoPagos'] ?? 0);
+                return ($p['montoPagos'] ?? 0) - ($p['recuperado_en_periodo'] ?? 0);
             });
 
             // Saldo de pagos directos con egreso (para totales y recuperar)
@@ -497,8 +503,9 @@ class Index extends Component
             ->with('acreedor')
             ->selectRaw(
                 'tes_cch_pagos.*,
-                (montoPagos - CASE WHEN fechaIngresoPagos IS NOT NULL AND fechaIngresoPagos <= ? THEN recuperadoPagos ELSE 0 END) as saldo_pagos',
-                [$fechaRecuperacionActual]
+                (montoPagos - CASE WHEN fechaIngresoPagos IS NOT NULL AND fechaIngresoPagos <= ? THEN recuperadoPagos ELSE 0 END) as saldo_pagos,
+                CASE WHEN fechaIngresoPagos IS NOT NULL AND fechaIngresoPagos <= ? THEN recuperadoPagos ELSE 0 END as recuperado_en_periodo',
+                [$fechaRecuperacionActual, $fechaRecuperacionActual]
             )
             ->orderBy('fechaEgresoPagos', 'ASC')
             ->get();
@@ -564,8 +571,9 @@ class Index extends Component
                 ->with('acreedor')
                 ->selectRaw(
                     'tes_cch_pagos.*,
-                    (montoPagos - CASE WHEN fechaIngresoPagos IS NOT NULL AND fechaIngresoPagos <= ? THEN recuperadoPagos ELSE 0 END) as saldo_pagos',
-                    [$fechaRecuperacionActual]
+                    (montoPagos - CASE WHEN fechaIngresoPagos IS NOT NULL AND fechaIngresoPagos <= ? THEN recuperadoPagos ELSE 0 END) as saldo_pagos,
+                    CASE WHEN fechaIngresoPagos IS NOT NULL AND fechaIngresoPagos <= ? THEN recuperadoPagos ELSE 0 END as recuperado_en_periodo',
+                    [$fechaRecuperacionActual, $fechaRecuperacionActual]
                 )
                 ->orderBy('fechaEgresoPagos', 'ASC')
                 ->get();
@@ -699,9 +707,14 @@ class Index extends Component
             return;
         }
 
-        // Recalcular tot_rendido para este pendiente específico
-        $tot_rendido = Movimiento::where('relPendiente', $pendienteId)->sum('rendido');
-        $tot_recuperado_existente = Movimiento::where('relPendiente', $pendienteId)->sum('recuperado');
+        // Recalcular tot_rendido para este pendiente específico considerando fechaHasta
+        $fechaHastaStr = Carbon::createFromFormat('Y-m-d', $this->fechaHasta)->endOfDay()->toDateTimeString();
+        $tot_rendido = Movimiento::where('relPendiente', $pendienteId)
+            ->where('fechaMovimientos', '<=', $fechaHastaStr)
+            ->sum('rendido');
+        $tot_recuperado_existente = Movimiento::where('relPendiente', $pendienteId)
+            ->where('fechaMovimientos', '<=', $fechaHastaStr)
+            ->sum('recuperado');
 
         $montoRecuperable = $tot_rendido - $tot_recuperado_existente;
 
@@ -744,9 +757,14 @@ class Index extends Component
                 return;
             }
 
-            // Recalcular tot_rendido y tot_recuperado para este pendiente específico con datos frescos
-            $tot_rendido_actual = Movimiento::where('relPendiente', $pendiente->idPendientes)->sum('rendido');
-            $tot_recuperado_existente_actual = Movimiento::where('relPendiente', $pendiente->idPendientes)->sum('recuperado');
+            // Recalcular tot_rendido y tot_recuperado para este pendiente específico con datos frescos considerando fechaHasta
+            $fechaHastaStr = Carbon::createFromFormat('Y-m-d', $this->fechaHasta)->endOfDay()->toDateTimeString();
+            $tot_rendido_actual = Movimiento::where('relPendiente', $pendiente->idPendientes)
+                ->where('fechaMovimientos', '<=', $fechaHastaStr)
+                ->sum('rendido');
+            $tot_recuperado_existente_actual = Movimiento::where('relPendiente', $pendiente->idPendientes)
+                ->where('fechaMovimientos', '<=', $fechaHastaStr)
+                ->sum('recuperado');
 
             $montoRecuperableActual = $tot_rendido_actual - $tot_recuperado_existente_actual;
 

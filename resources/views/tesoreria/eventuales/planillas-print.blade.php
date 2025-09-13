@@ -12,17 +12,21 @@
             font-size: 12px;
         }
         .header {
-            margin-bottom: 30px;
-        }
-        .header h1 {
-            margin: 0;
-            font-size: 20px;
-        }
-        .planilla-info {
+            text-align: left;
             margin-bottom: 20px;
         }
-        .planilla-info p {
-            margin: 5px 0;
+        .header h1, .header h4, .header h5 {
+            margin: 0;
+        }
+        .header h1 {
+            font-size: 24px;
+        }
+        .header h4 {
+            font-size: 18px;
+        }
+        .header h5 {
+            font-size: 16px;
+            margin-bottom: 10px;
         }
         table {
             width: 100%;
@@ -57,16 +61,16 @@
     </div>
 
     <div class="header">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-            <h1>Planilla de Eventuales</h1>
+        <h4>Jefatura de Policía de Montevideo</h4>
+        <h5>Dirección de Tesorería</h5>
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <h1 style="margin: 0;">Planilla de Eventuales</h1>
             <div style="text-align: right;">
-                <p style="margin: 0;">Número: {{ $planilla->numero }}</p>
-                <p style="margin: 0;">Fecha de Creación: {{ $planilla->fecha_creacion->format('d/m/Y') }}</p>
+                <p style="margin: 0; font-size: 12px;"><strong>Número:</strong> {{ $planilla->numero }}</p>
+                <p style="margin: 0; font-size: 12px;"><strong>Fecha:</strong> {{ $planilla->fecha_creacion->format('d/m/Y') }}</p>
             </div>
         </div>
     </div>
-
-    
 
     <table>
         <thead>

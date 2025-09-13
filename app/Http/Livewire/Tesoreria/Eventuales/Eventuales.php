@@ -4,6 +4,7 @@ namespace App\Http\Livewire\Tesoreria\Eventuales;
 
 use App\Models\Tesoreria\Eventual as Model;
 use App\Models\Tesoreria\EventualInstitucion;
+use App\Models\Tesoreria\MedioDePago;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Illuminate\Support\Facades\DB;
@@ -77,12 +78,16 @@ class Eventuales extends Component
         // Obtener instituciones activas para el select
         $instituciones = EventualInstitucion::activas()->orderBy('nombre')->get();
 
+        // Obtener medios de pago activos
+        $mediosDePago = MedioDePago::activos()->ordenado()->get();
+
         return view('livewire.tesoreria.eventuales.eventuales', [
             'eventuales' => $eventuales,
             'subtotales' => $subtotales,
             'totalesPorInstitucion' => $this->totalesPorInstitucion,
             'generalTotal' => $this->generalTotal,
             'instituciones' => $instituciones,
+            'mediosDePago' => $mediosDePago,
         ]);
     }
 

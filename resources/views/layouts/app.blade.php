@@ -56,6 +56,18 @@
         @yield('content')
     </main>
 
+    <!-- Botón flotante para ir al panel principal -->
+    @auth
+        <a href="{{ route('panel') }}" class="btn-float-base btn-home-float" title="Ir al Panel Principal">
+            <i class="fas fa-home"></i>
+        </a>
+
+        <!-- Botón flotante para scroll hacia arriba -->
+        <button class="btn-float-base btn-scroll-top-float" title="Volver arriba" onclick="scrollToTop()">
+            <i class="fas fa-arrow-up"></i>
+        </button>
+    @endauth
+
     @livewireScripts
 
     <!-- Bootstrap 4 JS -->
@@ -188,6 +200,14 @@
                 }
             });
         });
+
+        // Función para desplazamiento suave hacia arriba
+        function scrollToTop() {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        }
     </script>
 </body>
 

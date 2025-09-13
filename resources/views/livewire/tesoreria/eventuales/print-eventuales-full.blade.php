@@ -18,7 +18,7 @@
     <div class="header-print">
         <h4>Jefatura de Policía de Montevideo</h4>
         <h5>Dirección de Tesorería</h5>
-        <h6>Listado Detallado de Eventuales - {{ ucfirst(\Carbon\Carbon::create()->month($mes)->monthName) }} {{ $year }}</h6>
+        <h6 class="d-flex justify-content-between"><span>Listado Detallado de Eventuales</span><span>{{ ucfirst(\Carbon\Carbon::create()->month($mes)->monthName) }} {{ $year }}</span></h6>
     </div>
 
     @if ($totalesPorInstitucion->isNotEmpty())

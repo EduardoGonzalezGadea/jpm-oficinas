@@ -5,14 +5,45 @@
         }
         .header-print {
             text-align: left;
-            margin-bottom: 20px;
+            margin-bottom: 10px;
+        }
+        .header-print h4 {
+            margin: 0 0 2px 0;
+            font-size: 1.2rem;
+        }
+        .header-print h5 {
+            margin: 0 0 2px 0;
+            font-size: 1rem;
+        }
+        .header-print h6 {
+            margin: 0;
+            font-size: 0.9rem;
+        }
+        .table {
+            margin-bottom: 5px;
+        }
+        .table th, .table td {
+            padding: 1px 4px;
+            font-size: 0.8rem;
+            line-height: 1.1;
+        }
+        .table th {
+            font-size: 0.75rem;
+            line-height: 1.1;
+        }
+        .table tbody tr {
+            height: 18px;
+        }
+        .table {
+            border-spacing: 0;
+            border-collapse: collapse;
         }
     </style>
 
     <div class="header-print">
         <h4>Jefatura de Policía de Montevideo</h4>
         <h5>Dirección de Tesorería</h5>
-        <h6>Listado de Arrendamientos - {{ ucfirst(\Carbon\Carbon::create()->month($mes)->monthName) }} {{ $year }}</h6>
+        <h6 class="d-flex justify-content-between align-items-center"><span>Listado de Arrendamientos</span><span>{{ ucfirst(\Carbon\Carbon::create()->month($mes)->monthName) }} {{ $year }}</span></h6>
     </div>
 
     <div class="table-responsive">

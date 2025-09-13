@@ -38,30 +38,38 @@
                             </div>
                         </div>
                     @endif
-                    <div class="row mb-3">
-                        <div class="col-md-3">
-                            <label for="year">Año</label>
-                            <select wire:model="year" id="year" class="form-control form-control-sm">
-                                @for ($i = date('Y'); $i >= 2020; $i--)
-                                    <option value="{{ $i }}">{{ $i }}</option>
-                                @endfor
-                            </select>
+                    <!-- Selector de Fecha/Mes/Año -->
+                    <div class="form-row mb-3">
+                        <div class="col-md-5">
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text">Mes y Año</span>
+                                </div>
+                                <select id="mesSelector" class="form-control" wire:model.live="mes">
+                                    <option value="1">Enero</option>
+                                    <option value="2">Febrero</option>
+                                    <option value="3">Marzo</option>
+                                    <option value="4">Abril</option>
+                                    <option value="5">Mayo</option>
+                                    <option value="6">Junio</option>
+                                    <option value="7">Julio</option>
+                                    <option value="8">Agosto</option>
+                                    <option value="9">Septiembre</option>
+                                    <option value="10">Octubre</option>
+                                    <option value="11">Noviembre</option>
+                                    <option value="12">Diciembre</option>
+                                </select>
+                                <input type="number" id="anioSelector" class="form-control" wire:model.live="year">
+                            </div>
                         </div>
-                        <div class="col-md-3">
-                            <label for="mes">Mes</label>
-                            <select wire:model="mes" id="mes" class="form-control form-control-sm">
-                                @foreach (range(1, 12) as $m)
-                                    <option value="{{ $m }}">
-                                        {{ ucfirst(\Carbon\Carbon::create()->month($m)->monthName) }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="col-md-6 d-print-none">
-                            <label for="search">Buscar</label>
-                            <input type="text" wire:model="search" id="search"
-                                class="form-control form-control-sm"
-                                placeholder="Buscar por ingreso, monto, O/C o recibo...">
+                        <div class="col-md-7 align-self-end d-print-none">
+                            <div class="btn-group d-flex" role="group">
+                                <div class="input-group">
+                                    <input type="text" wire:model="search" id="search"
+                                        class="form-control form-control-sm"
+                                        placeholder="Buscar por ingreso, monto, O/C o recibo...">
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -76,6 +84,7 @@
                                     <th class="text-center align-middle">O/C</th>
                                     <th class="text-center align-middle">Recibo</th>
                                     <th class="text-center align-middle">Medio de Pago</th>
+                                    <th class="text-center align-middle"></th>
                                     @canany(['gestionar_tesoreria', 'supervisar_tesoreria'])
                                         <th class="text-center align-middle d-print-none">Confirmado</th>
                                     @endcanany
@@ -96,6 +105,13 @@
                                             {{ is_numeric($eventual->orden_cobro) ? number_format($eventual->orden_cobro, 0, ',', '.') : $eventual->orden_cobro }}</td>
                                         <td class="text-right align-middle">{{ is_numeric($eventual->recibo) ? number_format($eventual->recibo, 0, ',', '.') : $eventual->recibo }}</td>
                                         <td class="text-center align-middle">{{ $eventual->medio_de_pago }}</td>
+                                        <td class="text-center align-middle">
+                                            @if($eventual->planilla_id)
+                                                <i class="fas fa-check-circle text-success" title="En planilla"></i>
+                                            @else
+                                                <i class="fas fa-times-circle text-danger" title="No en planilla"></i>
+                                            @endif
+                                        </td>
                                         @canany(['gestionar_tesoreria', 'supervisar_tesoreria'])
                                             <td
                                                 class="text-center{{ !$eventual->confirmado ? ' table-warning' : '' }} align-middle d-print-none">
@@ -125,7 +141,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="@canany(['gestionar_tesoreria', 'supervisar_tesoreria']) 9 @else 8 @endcanany"
+                                        <td colspan="@canany(['gestionar_tesoreria', 'supervisar_tesoreria']) 10 @else 9 @endcanany"
                                             class="text-center">No hay registros para el mes y año seleccionados.</td>
                                     </tr>
                                 @endforelse
@@ -138,7 +154,7 @@
                                         <td class="text-right align-middle"><strong><span class="text-nowrap-custom">$
                                                     {{ number_format($subtotal->total_submonto, 2, ',', '.') }}</span></strong>
                                         </td>
-                                        <td colspan="@canany(['gestionar_tesoreria', 'supervisar_tesoreria']) 5 @else 4 @endcanany"
+                                        <td colspan="@canany(['gestionar_tesoreria', 'supervisar_tesoreria']) 6 @else 5 @endcanany"
                                             class="align-middle"></td>
                                     </tr>
                                 @endforeach
@@ -148,7 +164,7 @@
                                     <td class="text-right align-middle"><strong><span class="text-nowrap-custom">$
                                                 {{ number_format($generalTotal, 2, ',', '.') }}</span></strong></td>
                                     <td
-                                        colspan="@canany(['gestionar_tesoreria', 'supervisar_tesoreria']) 5 @else 4 @endcanany">
+                                        colspan="@canany(['gestionar_tesoreria', 'supervisar_tesoreria']) 6 @else 5 @endcanany">
                                     </td>
                                 </tr>
                             </tfoot>
@@ -229,14 +245,13 @@
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label for="medio_de_pago">Medio de Pago</label>
-                                    <select wire:model.defer="medio_de_pago" id="medio_de_pago"
-                                        class="form-control form-control-sm">
-                                        <option value="">Seleccione...</option>
-                                        <option value="Efectivo">Efectivo</option>
-                                        <option value="Transferencia">Transferencia</option>
-                                        <option value="POS">POS</option>
-                                        <option value="Cheque">Cheque</option>
-                                    </select>
+                                     <select wire:model.defer="medio_de_pago" id="medio_de_pago"
+                                         class="form-control form-control-sm">
+                                         <option value="">Seleccione...</option>
+                                         @foreach($mediosDePago as $medio)
+                                             <option value="{{ $medio->nombre }}">{{ $medio->nombre }}</option>
+                                         @endforeach
+                                     </select>
                                     @error('medio_de_pago')
                                         <span class="text-danger">{{ $message }}</span>
                                     @enderror
@@ -402,7 +417,7 @@
                             localStorage.removeItem('jwt_token');
                             sessionStorage.removeItem('jwt_token');
                         } catch (e) {}
-                        
+
                         // Redirigir al login
                         window.location.href = '{{ route("login") }}';
                     }

@@ -82,6 +82,17 @@
                     {{-- @endcan --}}
                     <div class="dropdown-submenu submenu-left">
                         <a class="dropdown-item dropdown-toggle" href="#">
+                            <i class="fas fa-cog mr-2"></i>Configuración
+                        </a>
+                        <div class="dropdown-menu">
+                            <a class="dropdown-item" href="{{ route('tesoreria.configuracion.medios-de-pago.index') }}">
+                                <i class="fas fa-credit-card mr-2"></i>Medios de Pago
+                            </a>
+                        </div>
+                    </div>
+                    <div class="dropdown-divider"></div>
+                    <div class="dropdown-submenu submenu-left">
+                        <a class="dropdown-item dropdown-toggle" href="#">
                             <i class="fas fa-palette mr-2"></i>Estilos
                         </a>
                         <div class="dropdown-menu">

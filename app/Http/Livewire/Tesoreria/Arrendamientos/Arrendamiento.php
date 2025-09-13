@@ -3,6 +3,7 @@
 namespace App\Http\Livewire\Tesoreria\Arrendamientos;
 
 use App\Models\Tesoreria\Arrendamiento as Model;
+use App\Models\Tesoreria\MedioDePago;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Carbon\Carbon;
@@ -59,9 +60,12 @@ class Arrendamiento extends Component
             ->groupBy('medio_de_pago')
             ->get();
 
-                return view('livewire.tesoreria.arrendamientos.arrendamiento', [
+        $mediosDePago = MedioDePago::activos()->ordenado()->get();
+
+        return view('livewire.tesoreria.arrendamientos.arrendamiento', [
             'arrendamientos' => $arrendamientos,
             'subtotales' => $subtotales,
+            'mediosDePago' => $mediosDePago,
         ]);
     }
 

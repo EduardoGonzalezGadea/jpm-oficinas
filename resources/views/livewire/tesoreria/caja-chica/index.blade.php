@@ -33,7 +33,7 @@
                     <option value="junio">Junio</option>
                     <option value="julio">Julio</option>
                     <option value="agosto">Agosto</option>
-                    <option value="setiembre">Setiembre</option>
+                    <option value="septiembre">Septiembre</option>
                     <option value="octubre">Octubre</option>
                     <option value="noviembre">Noviembre</option>
                     <option value="diciembre">Diciembre</option>
@@ -450,7 +450,7 @@
                     <td class="text-center align-middle">{{ $item->acreedor->acreedor ?? '' }}</td>
                     <td>{{ $item->conceptoPagos }}</td>
                     <td class="text-right align-middle">{{ number_format($item->montoPagos, 2, ',', '.') }}</td>
-                    <td class="text-right align-middle">{{ number_format($item->recuperadoPagos, 2, ',', '.') }}
+                    <td class="text-right align-middle">{{ number_format($item->recuperado_en_periodo ?? 0, 2, ',', '.') }}
                     </td>
                     <td
                         class="text-right align-middle
@@ -469,7 +469,7 @@
                                 <i class="fas fa-pencil-alt"></i>
                             </button>
                             @if (
-                                ($item->recuperadoPagos ?? 0) < ($item->montoPagos ?? 0) &&
+                                ($item->recuperado_en_periodo ?? 0) < ($item->montoPagos ?? 0) &&
                                     ($item->montoPagos ?? 0) > 0 &&
                                     isset($item->egresoPagos) &&
                                     strlen(trim($item->egresoPagos)) > 0)

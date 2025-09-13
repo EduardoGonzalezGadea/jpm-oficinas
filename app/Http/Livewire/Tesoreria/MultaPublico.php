@@ -32,14 +32,15 @@ class MultaPublico extends Component
     public function mount()
     {
         try {
-            $response = Http::get('https://www.gub.uy/direccion-general-impositiva/datos-y-estadisticas/datos/unidad-reajustable-ur');
+            $response = Http::get('https://www.bps.gub.uy/bps/valores.jsp');
             if ($response->successful()) {
                 $html = $response->body();
                 $dom = new DOMDocument();
                 @$dom->loadHTML($html);
                 $xpath = new DOMXPath($dom);
-                $mesActual = ucfirst(now()->monthName);
-                $valor = $xpath->query("//table/tbody/tr[contains(td[1], '$mesActual')]/td[2]");
+
+                // Buscar la fila que contiene "Unidad Reajustable (UR)" en la primera columna
+                $valor = $xpath->query("//table//tr[td[1][contains(., 'Unidad Reajustable (UR)')]]/td[3]");
                 if ($valor->length > 0) {
                     $this->valorUr = trim($valor->item(0)->nodeValue);
                 }

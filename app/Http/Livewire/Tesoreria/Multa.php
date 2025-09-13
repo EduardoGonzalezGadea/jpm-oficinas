@@ -6,8 +6,6 @@ use App\Models\Tesoreria\Multa as MultaModel;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Illuminate\Support\Facades\Http;
-use DOMDocument;
-use DOMXPath;
 
 class Multa extends Component
 {
@@ -62,20 +60,23 @@ class Multa extends Component
     public function mount()
     {
         try {
-            $response = Http::get('https://www.gub.uy/direccion-general-impositiva/datos-y-estadisticas/datos/unidad-reajustable-ur');
-            if ($response->successful()) {
-                $html = $response->body();
-                $dom = new DOMDocument();
-                @$dom->loadHTML($html);
-                $xpath = new DOMXPath($dom);
-                $mesActual = ucfirst(now()->monthName);
-                $valor = $xpath->query("//table/tbody/tr[contains(td[1], '$mesActual')]/td[2]");
-                if ($valor->length > 0) {
-                    $this->valorUr = trim($valor->item(0)->nodeValue);
+            $url = 'https://www.bps.gub.uy/bps/valores.jsp';
+            $command = 'curl -s --compressed "' . $url . '"';
+            $html = shell_exec($command);
+
+            if (!empty($html)) {
+                $pattern = '/Unidad Reajustable \(UR\).*?<td class="celda-numero">\$(.*?)<\/td>.*?<td class="celda-numero">\$(.*?)<\/td>/s';
+                if (preg_match($pattern, $html, $matches)) {
+                    // El valor actual es el segundo que se captura
+                    $this->valorUr = trim($matches[2]);
+                } else {
+                    $this->valorUr = 'No disponible';
                 }
+            } else {
+                $this->valorUr = 'Error al cargar';
             }
         } catch (\Exception $e) {
-            // Silently fail, so the page still loads
+            $this->valorUr = 'Error';
         }
     }
 

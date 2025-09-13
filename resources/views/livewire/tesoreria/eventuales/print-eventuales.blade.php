@@ -5,19 +5,62 @@
         }
         .header-print {
             text-align: left;
-            margin-bottom: 20px;
+            margin-bottom: 10px;
+        }
+        .header-print h4 {
+            margin: 0 0 2px 0;
+            font-size: 1.2rem;
+        }
+        .header-print h5 {
+            margin: 0 0 2px 0;
+            font-size: 1rem;
+        }
+        .header-print h6 {
+            margin: 0;
+            font-size: 0.9rem;
+        }
+        .table {
+            margin-bottom: 5px;
+        }
+        .table th, .table td {
+            padding: 1px 4px;
+            font-size: 0.8rem;
+            line-height: 1.1;
+        }
+        .table th {
+            font-size: 0.75rem;
+            line-height: 1.1;
+        }
+        .table tbody tr {
+            height: 18px;
+        }
+        .table {
+            border-spacing: 0;
+            border-collapse: collapse;
+        }
+        .totales-institucion {
+            margin-bottom: 8px;
+            padding: 4px 8px;
+        }
+        .totales-institucion h5 {
+            margin: 0 0 4px 0;
+            font-size: 0.9rem;
+        }
+        .totales-institucion .p-2 {
+            padding: 2px 4px !important;
+            font-size: 0.75rem;
         }
     </style>
 
     <div class="header-print">
         <h4>Jefatura de Policía de Montevideo</h4>
         <h5>Dirección de Tesorería</h5>
-        <h6>Listado de Eventuales - {{ ucfirst(\Carbon\Carbon::create()->month($mes)->monthName) }} {{ $year }}</h6>
+        <h6 class="d-flex justify-content-between align-items-center"><span>Listado de Eventuales</span><span>{{ ucfirst(\Carbon\Carbon::create()->month($mes)->monthName) }} {{ $year }}</span></h6>
     </div>
 
     @if ($totalesPorInstitucion->isNotEmpty())
-        <div class="mb-3 p-3 border rounded bg-light">
-            <h5 class="mb-3 text-center">Totales por Institución</h5>
+        <div class="totales-institucion border rounded bg-light">
+            <h5 class="text-center">Totales por Institución</h5>
             <div class="d-flex flex-wrap justify-content-around">
                 @foreach ($totalesPorInstitucion as $totalInst)
                     <div class="p-2 text-center flex-fill">
