@@ -13,7 +13,6 @@ use App\Http\Controllers\Tesoreria\CajaChica\CajaChicaController;
 use App\Http\Controllers\Tesoreria\CajaChica\PendienteController;
 use App\Http\Controllers\Tesoreria\Valores\ValorController;
 use App\Http\Controllers\Tesoreria\CajaController;
-use App\Http\Controllers\Tesoreria\MedioDePagoController;
 use App\Http\Controllers\ThemeController;
 use App\Http\Livewire\Tesoreria\Arrendamientos\PrintArrendamientos;
 use App\Http\Livewire\Tesoreria\Arrendamientos\PrintArrendamientosFull;
@@ -241,15 +240,9 @@ Route::middleware(['web', 'jwt.verify'])->group(function () {
         Route::get('/arrendamientos/imprimir-todo/{year}/{mes}', PrintArrendamientosFull::class)->name('arrendamientos.imprimir-todo');
 
         // Rutas de Configuración - Medios de Pago
-        Route::prefix('configuracion/medios-de-pago')->name('configuracion.medios-de-pago.')->group(function () {
-            Route::get('/', [MedioDePagoController::class, 'index'])->name('index');
-            Route::get('/crear', [MedioDePagoController::class, 'create'])->name('create');
-            Route::post('/', [MedioDePagoController::class, 'store'])->name('store');
-            Route::get('/{medioDePago}', [MedioDePagoController::class, 'show'])->name('show');
-            Route::get('/{medioDePago}/editar', [MedioDePagoController::class, 'edit'])->name('edit');
-            Route::put('/{medioDePago}', [MedioDePagoController::class, 'update'])->name('update');
-            Route::delete('/{medioDePago}', [MedioDePagoController::class, 'destroy'])->name('destroy');
-        });
+        Route::get('/configuracion/medios-de-pago', function () {
+            return view('tesoreria.configuracion.medios-de-pago.index-livewire');
+        })->name('configuracion.medios-de-pago.index');
     });
 
     // Contabilidad

@@ -32,4 +32,17 @@ class MedioDePago extends Model
     {
         return $query->orderBy('nombre');
     }
+
+    // Scope para búsqueda
+    public function scopeSearch($query, $term)
+    {
+        if (empty($term)) {
+            return $query;
+        }
+
+        return $query->where(function ($query) use ($term) {
+            $query->where('nombre', 'like', '%' . $term . '%')
+                ->orWhere('descripcion', 'like', '%' . $term . '%');
+        });
+    }
 }
