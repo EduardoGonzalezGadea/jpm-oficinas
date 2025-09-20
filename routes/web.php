@@ -250,6 +250,11 @@ Route::middleware(['web', 'jwt.verify'])->group(function () {
         Route::get('/configuracion/medios-de-pago', function () {
             return view('tesoreria.configuracion.medios-de-pago.index-livewire');
         })->name('configuracion.medios-de-pago.index');
+
+        // Rutas de Configuración - Tipos de Monedas
+        Route::get('/configuracion/tipos-monedas', function () {
+            return view('tesoreria.configuracion.tes-tipos-monedas.index-livewire');
+        })->name('configuracion.tes-tipos-monedas.index');
     });
 
     // Contabilidad

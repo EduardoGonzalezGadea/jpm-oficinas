@@ -81,6 +81,9 @@ class PlanillasManager extends Component
         $this->dispatchBrowserEvent('alert', ['type' => 'success', 'message' => 'Planilla ' . $planillaNumero . ' creada exitosamente.']);
         $this->loadPlanillas();
         $this->loadEventualesDisponibles();
+
+        // Emit event to refresh the main eventuals list
+        $this->emit('planillaCreated');
     }
 
     public function printPlanilla($planillaId)
@@ -104,6 +107,9 @@ class PlanillasManager extends Component
         $this->dispatchBrowserEvent('alert', ['type' => 'success', 'message' => 'Planilla ' . $planilla->numero . ' eliminada exitosamente. Los eventuales asociados están nuevamente disponibles.']);
         $this->loadPlanillas();
         $this->loadEventualesDisponibles();
+
+        // Emit event to refresh the main eventuals list
+        $this->emit('planillaDeleted');
     }
 
     public function render()

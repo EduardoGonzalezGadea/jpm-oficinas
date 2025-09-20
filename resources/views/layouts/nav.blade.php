@@ -102,6 +102,9 @@
                             <a class="dropdown-item" href="{{ route('tesoreria.configuracion.medios-de-pago.index') }}">
                                 <i class="fas fa-credit-card mr-2"></i>Medios de Pago
                             </a>
+                            <a class="dropdown-item" href="{{ route('tesoreria.configuracion.tes-tipos-monedas.index') }}">
+                                <i class="fas fa-money-bill-wave mr-2"></i>Tipos de Monedas
+                            </a>
                         </div>
                     </div>
                     <div class="dropdown-divider"></div>

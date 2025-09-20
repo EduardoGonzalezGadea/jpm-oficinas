@@ -13,7 +13,7 @@ class Arrendamiento extends Component
 {
     use WithPagination;
 
-    protected $listeners = ['resetForm', 'destroy' => 'destroy', 'refreshComponent' => '$refresh'];
+    protected $listeners = ['resetForm', 'destroy' => 'destroy', 'refreshComponent' => '$refresh', 'planillaCreated' => '$refresh', 'planillaDeleted' => '$refresh'];
 
     protected $paginationTheme = 'bootstrap';
 

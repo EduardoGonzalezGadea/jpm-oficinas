@@ -71,6 +71,9 @@ class PlanillasManager extends Component
         $this->dispatchBrowserEvent('alert', ['type' => 'success', 'message' => 'Planilla ' . $planillaNumero . ' creada exitosamente.']);
         $this->loadPlanillas();
         $this->loadArrendamientosDisponibles();
+
+        // Emit event to refresh the main arrendamientos list
+        $this->emit('planillaCreated');
     }
 
     public function printPlanilla($planillaId)
@@ -96,6 +99,9 @@ class PlanillasManager extends Component
         $this->dispatchBrowserEvent('alert', ['type' => 'success', 'message' => 'Planilla ' . $planilla->numero . ' eliminada exitosamente. Los arrendamientos asociados están nuevamente disponibles.']);
         $this->loadPlanillas();
         $this->loadArrendamientosDisponibles();
+
+        // Emit event to refresh the main arrendamientos list
+        $this->emit('planillaDeleted');
     }
 
     public function render()
