@@ -29,6 +29,11 @@ class ValorController extends Controller
      */
     public function index()
     {
+        // Solo permitir acceso a administradores mientras el módulo está en desarrollo
+        if (!auth()->user()->hasRole('administrador')) {
+            abort(403, 'Acceso denegado. Solo los administradores pueden acceder al módulo de Tesorería mientras está en desarrollo.');
+        }
+
         return view('tesoreria.valores.index')->with([
             'component' => 'tesoreria.valores.stock',
         ]);
@@ -39,6 +44,11 @@ class ValorController extends Controller
      */
     public function conceptos()
     {
+        // Solo permitir acceso a administradores mientras el módulo está en desarrollo
+        if (!auth()->user()->hasRole('administrador')) {
+            abort(403, 'Acceso denegado. Solo los administradores pueden acceder al módulo de Tesorería mientras está en desarrollo.');
+        }
+
         return view('tesoreria.valores.conceptos');
     }
 
@@ -47,6 +57,11 @@ class ValorController extends Controller
      */
     public function entradas()
     {
+        // Solo permitir acceso a administradores mientras el módulo está en desarrollo
+        if (!auth()->user()->hasRole('administrador')) {
+            abort(403, 'Acceso denegado. Solo los administradores pueden acceder al módulo de Tesorería mientras está en desarrollo.');
+        }
+
         return view('tesoreria.valores.entradas');
     }
 
@@ -55,6 +70,11 @@ class ValorController extends Controller
      */
     public function salidas()
     {
+        // Solo permitir acceso a administradores mientras el módulo está en desarrollo
+        if (!auth()->user()->hasRole('administrador')) {
+            abort(403, 'Acceso denegado. Solo los administradores pueden acceder al módulo de Tesorería mientras está en desarrollo.');
+        }
+
         return view('tesoreria.valores.salidas');
     }
 
@@ -63,6 +83,11 @@ class ValorController extends Controller
      */
     public function stock()
     {
+        // Solo permitir acceso a administradores mientras el módulo está en desarrollo
+        if (!auth()->user()->hasRole('administrador')) {
+            abort(403, 'Acceso denegado. Solo los administradores pueden acceder al módulo de Tesorería mientras está en desarrollo.');
+        }
+
         return view('tesoreria.valores.stock');
     }
 

@@ -171,7 +171,9 @@
                         </table>
                     </div>
                     <div class="d-flex justify-content-center">
-                        {{ $eventuales->links() }}
+                        @if($eventuales instanceof \Illuminate\Pagination\LengthAwarePaginator)
+                            {{ $eventuales->links() }}
+                        @endif
                     </div>
                 </div>
             </div>

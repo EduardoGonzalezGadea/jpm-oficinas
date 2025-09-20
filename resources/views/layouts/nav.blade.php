@@ -40,9 +40,9 @@
                             <i class="fas fa-coins mr-2"></i>Caja Chica
                         </a>
                         {{-- Link Valores --}}
-                        {{-- <a class="dropdown-item" href="{{ route('tesoreria.valores.index') }}" wire:navigate>
+                        <a class="dropdown-item" href="{{ route('tesoreria.valores.index') }}" wire:navigate>
                             <i class="fas fa-file-invoice mr-2"></i>Valores
-                        </a> --}}
+                        </a>
                         {{-- Link Infracciones de Tránsito --}}
                         <a class="dropdown-item" href="{{ route('tesoreria.multas-transito') }}">
                             <i class="fas fa-list"></i> Multas de Tránsito
@@ -54,6 +54,20 @@
                         <a class="dropdown-item" href="{{ route('tesoreria.eventuales.index') }}">
                             <i class="fas fa-hand-holding-usd mr-2"></i> Eventuales
                         </a>
+                        {{-- Link Armas --}}
+                        <div class="dropdown-submenu submenu-right">
+                            <a class="dropdown-item dropdown-toggle" href="#" role="button">
+                                <i class="fas fa-shield-alt mr-2"></i>Armas
+                            </a>
+                            <div class="dropdown-menu">
+                                <a class="dropdown-item" href="{{ route('tesoreria.armas.porte') }}" wire:navigate>
+                                    <i class="fas fa-id-badge mr-2"></i>Porte de Armas
+                                </a>
+                                <a class="dropdown-item" href="{{ route('tesoreria.armas.tenencia') }}" wire:navigate>
+                                    <i class="fas fa-home mr-2"></i>Tenencia de Armas
+                                </a>
+                            </div>
+                        </div>
                     </div>
                 </li>
             @endcan

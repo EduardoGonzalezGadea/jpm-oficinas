@@ -26,6 +26,11 @@ class Arrendamiento extends Component
 
     public function mount()
     {
+        // Verificar autenticación antes de procesar cualquier lógica
+        if (!auth()->check()) {
+            return redirect()->route('login')->with('error', 'La sesión ha expirado. Por favor, inicie sesión de nuevo.');
+        }
+
         $this->mes = Carbon::now()->month;
         $this->year = Carbon::now()->year;
         $this->medio_de_pago = 'Transferencia';
@@ -33,16 +38,6 @@ class Arrendamiento extends Component
 
     public function render()
     {
-        // Verificar autenticación antes de procesar cualquier lógica
-        if (!auth()->check()) {
-            $this->dispatchBrowserEvent('redirect-to-login', [
-                'message' => 'La sesión ha expirado. Por favor, inicie sesión de nuevo.'
-            ]);
-            return view('livewire.tesoreria.arrendamientos.arrendamiento', [
-                'arrendamientos' => collect(),
-                'subtotales' => collect(),
-            ]);
-        }
 
         $arrendamientos = Model::whereYear('fecha', $this->year)
             ->whereMonth('fecha', $this->mes)
@@ -76,6 +71,10 @@ class Arrendamiento extends Component
 
     public function store()
     {
+        if (!auth()->check()) {
+            return redirect()->route('login')->with('error', 'La sesión ha expirado. Por favor, inicie sesión de nuevo.');
+        }
+
         $this->validate([
             'fecha' => 'required|date',
             'ingreso' => 'nullable|integer',
@@ -109,6 +108,10 @@ class Arrendamiento extends Component
 
     public function edit($id)
     {
+        if (!auth()->check()) {
+            return redirect()->route('login')->with('error', 'La sesión ha expirado. Por favor, inicie sesión de nuevo.');
+        }
+
         $arrendamiento = Model::findOrFail($id);
 
         if ($arrendamiento->planilla_id !== null) {
@@ -138,6 +141,10 @@ class Arrendamiento extends Component
 
     public function editIngreso($id)
     {
+        if (!auth()->check()) {
+            return redirect()->route('login')->with('error', 'La sesión ha expirado. Por favor, inicie sesión de nuevo.');
+        }
+
         $arrendamiento = Model::findOrFail($id);
 
         $this->arrendamiento_id = $id;
@@ -152,6 +159,10 @@ class Arrendamiento extends Component
 
     public function updateIngreso()
     {
+        if (!auth()->check()) {
+            return redirect()->route('login')->with('error', 'La sesión ha expirado. Por favor, inicie sesión de nuevo.');
+        }
+
         $this->validate([
             'ingreso' => 'nullable|integer',
         ]);
@@ -169,6 +180,10 @@ class Arrendamiento extends Component
 
     public function update()
     {
+        if (!auth()->check()) {
+            return redirect()->route('login')->with('error', 'La sesión ha expirado. Por favor, inicie sesión de nuevo.');
+        }
+
         $this->validate([
             'fecha' => 'required|date',
             'ingreso' => 'nullable|integer',
@@ -204,6 +219,10 @@ class Arrendamiento extends Component
 
     public function destroy($id)
     {
+        if (!auth()->check()) {
+            return redirect()->route('login')->with('error', 'La sesión ha expirado. Por favor, inicie sesión de nuevo.');
+        }
+
         $arrendamiento = Model::findOrFail($id);
 
         if ($arrendamiento->planilla_id !== null) {
@@ -255,6 +274,10 @@ class Arrendamiento extends Component
 
     public function toggleConfirmado($id)
     {
+        if (!auth()->check()) {
+            return redirect()->route('login')->with('error', 'La sesión ha expirado. Por favor, inicie sesión de nuevo.');
+        }
+
         if (auth()->user()->cannot('gestionar_tesoreria') && auth()->user()->cannot('supervisar_tesoreria')) {
             abort(403);
         }

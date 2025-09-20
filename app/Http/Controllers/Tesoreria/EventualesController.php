@@ -5,12 +5,10 @@ namespace App\Http\Controllers\Tesoreria;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 
-class TesoreriaController extends Controller
+class EventualesController extends Controller
 {
     public function index()
     {
-        $this->authorize('gestionar_tesoreria');
-
-        return view('tesoreria.index');
+        return view('tesoreria.eventuales.index');
     }
 }

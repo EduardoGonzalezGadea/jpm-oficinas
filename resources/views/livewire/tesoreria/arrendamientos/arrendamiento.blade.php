@@ -159,7 +159,9 @@
                         </table>
                     </div>
                     <div class="d-flex justify-content-center">
-                        {{ $arrendamientos->links() }}
+                        @if($arrendamientos instanceof \Illuminate\Pagination\LengthAwarePaginator)
+                            {{ $arrendamientos->links() }}
+                        @endif
                     </div>
                 </div>
             </div>

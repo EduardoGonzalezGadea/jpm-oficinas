@@ -18,7 +18,7 @@ class Eventuales extends Component
 
     protected $paginationTheme = 'bootstrap';
 
-        public $mes, $year;
+    public $mes, $year;
     public $search;
     public $generalTotal;
     public $totalesPorInstitucion = [];
@@ -28,6 +28,12 @@ class Eventuales extends Component
 
     public function mount()
     {
+        // Verificar autenticación antes de procesar cualquier lógica
+        if (!auth()->check()) {
+            session()->flash('error', 'La sesión ha expirado. Por favor, inicie sesión de nuevo.');
+            return redirect(route('login'));
+        }
+
         $this->mes = Carbon::now()->month;
                 $this->year = Carbon::now()->year;
         $this->fecha = Carbon::now()->format('Y-m-d');
@@ -36,19 +42,6 @@ class Eventuales extends Component
 
     public function render()
     {
-        // Verificar autenticación antes de procesar cualquier lógica
-        if (!auth()->check()) {
-            $this->dispatchBrowserEvent('redirect-to-login', [
-                'message' => 'La sesión ha expirado. Por favor, inicie sesión de nuevo.'
-            ]);
-            return view('livewire.tesoreria.eventuales.eventuales', [
-                'eventuales' => collect(),
-                'subtotales' => collect(),
-                'totalesPorInstitucion' => collect(),
-                'generalTotal' => 0,
-                'instituciones' => collect(),
-            ]);
-        }
 
                         $query = Model::whereYear('fecha', $this->year)
             ->whereMonth('fecha', $this->mes)
@@ -99,6 +92,10 @@ class Eventuales extends Component
 
     public function store()
     {
+        if (!auth()->check()) {
+            return redirect()->route('login')->with('error', 'La sesión ha expirado. Por favor, inicie sesión de nuevo.');
+        }
+
         if (empty($this->orden_cobro)) {
             $this->orden_cobro = null;
         }
@@ -137,6 +134,10 @@ class Eventuales extends Component
 
     public function edit($id)
     {
+        if (!auth()->check()) {
+            return redirect()->route('login')->with('error', 'La sesión ha expirado. Por favor, inicie sesión de nuevo.');
+        }
+
         $eventual = Model::findOrFail($id);
 
         if ($eventual->planilla_id !== null) {
@@ -165,6 +166,10 @@ class Eventuales extends Component
 
     public function update()
     {
+        if (!auth()->check()) {
+            return redirect()->route('login')->with('error', 'La sesión ha expirado. Por favor, inicie sesión de nuevo.');
+        }
+
         if (empty($this->orden_cobro)) {
             $this->orden_cobro = null;
         }
@@ -205,6 +210,10 @@ class Eventuales extends Component
 
     public function destroy($id)
     {
+        if (!auth()->check()) {
+            return redirect()->route('login')->with('error', 'La sesión ha expirado. Por favor, inicie sesión de nuevo.');
+        }
+
         $eventual = Model::findOrFail($id);
 
         if ($eventual->planilla_id !== null) {
@@ -255,6 +264,10 @@ class Eventuales extends Component
 
     public function toggleConfirmado($id)
     {
+        if (!auth()->check()) {
+            return redirect()->route('login')->with('error', 'La sesión ha expirado. Por favor, inicie sesión de nuevo.');
+        }
+
         if (auth()->user()->cannot('gestionar_tesoreria') && auth()->user()->cannot('supervisar_tesoreria')) {
             abort(403);
         }

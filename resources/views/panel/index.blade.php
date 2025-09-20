@@ -79,6 +79,16 @@
                                         Tesorería | Eventuales
                                     </a>
                                 </div>
+
+                                @hasrole('administrador')
+                                <div class="col-md-4 mb-3">
+                                    <a href="{{ route('tesoreria.valores.index') }}"
+                                        class="btn btn-outline-danger btn-block btn-lg d-flex flex-column justify-content-center align-items-center btn-quick-access">
+                                        <i class="fas fa-file-invoice fa-2x d-block mb-2"></i>
+                                        Tesorería | Valores
+                                    </a>
+                                </div>
+                                @endhasrole
                             @endcan
 
                             @can('operador_contabilidad')

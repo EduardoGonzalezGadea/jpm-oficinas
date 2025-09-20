@@ -13,6 +13,7 @@ use App\Http\Controllers\Tesoreria\CajaChica\CajaChicaController;
 use App\Http\Controllers\Tesoreria\CajaChica\PendienteController;
 use App\Http\Controllers\Tesoreria\Valores\ValorController;
 use App\Http\Controllers\Tesoreria\CajaController;
+use App\Http\Controllers\Tesoreria\ArmasController;
 use App\Http\Controllers\ThemeController;
 use App\Http\Livewire\Tesoreria\Arrendamientos\PrintArrendamientos;
 use App\Http\Livewire\Tesoreria\Arrendamientos\PrintArrendamientosFull;
@@ -239,6 +240,12 @@ Route::middleware(['web', 'jwt.verify'])->group(function () {
         // Ruta de Impresión Detallada de Arrendamientos
         Route::get('/arrendamientos/imprimir-todo/{year}/{mes}', PrintArrendamientosFull::class)->name('arrendamientos.imprimir-todo');
 
+        // Rutas de Armas
+        Route::prefix('armas')->name('armas.')->group(function () {
+            Route::get('/porte', [ArmasController::class, 'porte'])->name('porte');
+            Route::get('/tenencia', [ArmasController::class, 'tenencia'])->name('tenencia');
+        });
+
         // Rutas de Configuración - Medios de Pago
         Route::get('/configuracion/medios-de-pago', function () {
             return view('tesoreria.configuracion.medios-de-pago.index-livewire');
@@ -288,7 +295,7 @@ Route::middleware(['web', 'jwt.verify'])->group(function () {
     // ------------------------------------------------------------------------
     // TESORERÍA - VALORES
     // ------------------------------------------------------------------------
-    Route::prefix('tesoreria/valores')->name('tesoreria.valores.')->middleware(['auth'])->group(function () {
+    Route::prefix('tesoreria/valores')->name('tesoreria.valores.')->middleware(['admin.only'])->group(function () {
 
         // Rutas principales
         Route::get('/', function () {

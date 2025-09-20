@@ -66,6 +66,11 @@
         <button class="btn-float-base btn-scroll-top-float" title="Volver arriba" onclick="scrollToTop()">
             <i class="fas fa-arrow-up"></i>
         </button>
+
+        <!-- Botón flotante para scroll hacia abajo -->
+        <button class="btn-float-base btn-scroll-bottom-float" title="Ir al final" onclick="scrollToBottom()">
+            <i class="fas fa-arrow-down"></i>
+        </button>
     @endauth
 
     @livewireScripts
@@ -205,6 +210,14 @@
         function scrollToTop() {
             window.scrollTo({
                 top: 0,
+                behavior: 'smooth'
+            });
+        }
+
+        // Función para desplazamiento suave hacia abajo
+        function scrollToBottom() {
+            window.scrollTo({
+                top: document.body.scrollHeight,
                 behavior: 'smooth'
             });
         }

@@ -133,7 +133,7 @@ input:checked + .slider:before {
 /* Botón para ir al panel principal */
 .btn-home-float {
   bottom: 20px;
-  right: 20px;
+  right: 5px;
   background: linear-gradient(135deg, #007bff, #0056b3);
   /* Sombra con prefijos */
   -webkit-box-shadow: 0 1px 4px rgba(0, 123, 255, 0.4);
@@ -155,8 +155,8 @@ input:checked + .slider:before {
 
 /* Botón para scroll hacia arriba */
 .btn-scroll-top-float {
-  bottom: 54px; /* 20px (bottom) + 28px (height) + 6px (spacing) */
-  right: 20px;
+  bottom: 88px; /* 54px (scroll-bottom) + 28px (height) + 6px (spacing) */
+  right: 5px;
   background: linear-gradient(135deg, #28a745, #1e7e34);
   /* Sombra con prefijos */
   -webkit-box-shadow: 0 1px 4px rgba(40, 167, 69, 0.4);
@@ -176,6 +176,29 @@ input:checked + .slider:before {
   box-shadow: 0 2px 8px rgba(40, 167, 69, 0.4);
 }
 
+/* Botón para scroll hacia abajo */
+.btn-scroll-bottom-float {
+  bottom: 54px; /* 20px (bottom) + 28px (height) + 6px (spacing) */
+  right: 5px;
+  background: linear-gradient(135deg, #28a745, #1e7e34);
+  /* Sombra con prefijos */
+  -webkit-box-shadow: 0 1px 4px rgba(40, 167, 69, 0.4);
+  box-shadow: 0 1px 4px rgba(40, 167, 69, 0.4);
+}
+
+.btn-scroll-bottom-float:hover {
+  background: linear-gradient(135deg, #1e7e34, #145a23);
+  /* Sombra con prefijos */
+  -webkit-box-shadow: 0 6px 20px rgba(40, 167, 69, 0.6);
+  box-shadow: 0 6px 20px rgba(40, 167, 69, 0.6);
+}
+
+.btn-scroll-bottom-float:active {
+  /* Sombra con prefijos */
+  -webkit-box-shadow: 0 2px 8px rgba(40, 167, 69, 0.4);
+  box-shadow: 0 2px 8px rgba(40, 167, 69, 0.4);
+}
+
 /* Media query para pantallas pequeñas */
 @media (max-width: 768px) {
   .btn-float-base {
@@ -186,11 +209,16 @@ input:checked + .slider:before {
 
   .btn-home-float {
     bottom: 12px;
-    right: 12px;
+    right: 5px;
+  }
+
+  .btn-scroll-bottom-float {
+    bottom: 42px; /* 12px + 24px + 6px */
+    right: 5px;
   }
 
   .btn-scroll-top-float {
-    bottom: 42px; /* 12px + 24px + 6px */
-    right: 12px;
+    bottom: 72px; /* 42px + 24px + 6px */
+    right: 5px;
   }
 }
