@@ -17,31 +17,32 @@
                         <i class="fas fa-dollar-sign mr-2"></i>Tesorería
                     </a>
                     <div class="dropdown-menu" aria-labelledby="navbarDropdownTesoreria">
-                        {{-- Submenú Cajas --}}
-                        {{-- <div class="dropdown-submenu submenu-right">
+                        {{-- Submenu Caja Diaria --}}
+                        <div class="dropdown-submenu submenu-right">
                             <a class="dropdown-item dropdown-toggle" href="#" role="button">
-                                <i class="fas fa-cash-register mr-2"></i>Cajas
+                                <i class="fas fa-cash-register mr-2"></i>Caja Diaria
                             </a>
                             <div class="dropdown-menu">
-                                <a class="dropdown-item" href="{{ route('tesoreria.cajas.index') }}" wire:navigate>
-                                    <i class="fas fa-balance-scale mr-2"></i>Flujo de Caja
+                                <a class="dropdown-item" href="{{ route('tesoreria.caja_diaria', ['tab' => 'resumen']) }}">
+                                    <i class="fas fa-chart-line mr-2"></i>Resumen
                                 </a>
-                                <div class="dropdown-divider"></div>
-                                <a class="dropdown-item" href="{{ route('tesoreria.cajas.denominaciones') }}" wire:navigate>
-                                    <i class="fas fa-money-bill-wave mr-2"></i>Denominaciones
+                                <a class="dropdown-item" href="{{ route('tesoreria.caja_diaria', ['tab' => 'cobros']) }}">
+                                    <i class="fas fa-plus-circle mr-2"></i>Cobros
                                 </a>
-                                <a class="dropdown-item" href="{{ route('tesoreria.cajas.conceptos') }}" wire:navigate>
-                                    <i class="fas fa-tags mr-2"></i>Conceptos
+                                <a class="dropdown-item" href="{{ route('tesoreria.caja_diaria', ['tab' => 'pagos']) }}">
+                                    <i class="fas fa-minus-circle mr-2"></i>Pagos
+                                </a>
+                                <a class="dropdown-item" href="{{ route('tesoreria.caja_diaria', ['tab' => 'art222']) }}">
+                                    <i class="fas fa-file-alt mr-2"></i>Art. 222
+                                </a>
+                                <a class="dropdown-item" href="{{ route('tesoreria.caja_diaria', ['tab' => 'opciones']) }}">
+                                    <i class="fas fa-cogs mr-2"></i>Opciones
                                 </a>
                             </div>
-                        </div> --}}
+                        </div>
                         {{-- Link Caja Chica --}}
                         <a class="dropdown-item" href="{{ route('tesoreria.caja-chica.index') }}" wire:navigate>
                             <i class="fas fa-coins mr-2"></i>Caja Chica
-                        </a>
-                        {{-- Link Valores --}}
-                        <a class="dropdown-item" href="{{ route('tesoreria.valores.index') }}" wire:navigate>
-                            <i class="fas fa-file-invoice mr-2"></i>Valores
                         </a>
                         {{-- Link Infracciones de Tránsito --}}
                         <a class="dropdown-item" href="{{ route('tesoreria.multas-transito') }}">
@@ -104,6 +105,9 @@
                             </a>
                             <a class="dropdown-item" href="{{ route('tesoreria.configuracion.tes-tipos-monedas.index') }}">
                                 <i class="fas fa-money-bill-wave mr-2"></i>Tipos de Monedas
+                            </a>
+                            <a class="dropdown-item" href="{{ route('tesoreria.configuracion.tes-denominaciones-monedas.index') }}">
+                                <i class="fas fa-coins mr-2"></i>Denominaciones
                             </a>
                         </div>
                     </div>

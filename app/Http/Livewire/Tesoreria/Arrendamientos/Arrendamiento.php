@@ -8,10 +8,11 @@ use Livewire\Component;
 use Livewire\WithPagination;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use App\Traits\ConvertirMayusculas;
 
 class Arrendamiento extends Component
 {
-    use WithPagination;
+    use WithPagination, ConvertirMayusculas;
 
     protected $listeners = ['resetForm', 'destroy' => 'destroy', 'refreshComponent' => '$refresh', 'planillaCreated' => '$refresh', 'planillaDeleted' => '$refresh'];
 
@@ -88,18 +89,23 @@ class Arrendamiento extends Component
             'medio_de_pago' => 'required|string|max:255',
         ]);
 
-        Model::create([
-            'fecha' => $this->fecha,
-            'ingreso' => $this->ingreso,
-            'nombre' => $this->nombre,
-            'cedula' => $this->cedula,
-            'telefono' => $this->telefono,
-            'monto' => $this->monto,
-            'detalle' => $this->detalle,
-            'orden_cobro' => $this->orden_cobro,
-            'recibo' => $this->recibo,
-            'medio_de_pago' => $this->medio_de_pago,
-        ]);
+        $datos = $this->convertirCamposAMayusculas(
+            ['nombre', 'cedula', 'telefono', 'detalle', 'orden_cobro', 'recibo', 'medio_de_pago'],
+            [
+                'fecha' => $this->fecha,
+                'ingreso' => $this->ingreso,
+                'nombre' => $this->nombre,
+                'cedula' => $this->cedula,
+                'telefono' => $this->telefono,
+                'monto' => $this->monto,
+                'detalle' => $this->detalle,
+                'orden_cobro' => $this->orden_cobro,
+                'recibo' => $this->recibo,
+                'medio_de_pago' => $this->medio_de_pago,
+            ]
+        );
+
+        Model::create($datos);
 
         $this->resetInput();
         $this->emit('arrendamientoStore');
@@ -199,18 +205,23 @@ class Arrendamiento extends Component
 
         if ($this->arrendamiento_id) {
             $arrendamiento = Model::findOrFail($this->arrendamiento_id);
-            $arrendamiento->update([
-                'fecha' => $this->fecha,
-                'ingreso' => $this->ingreso,
-                'nombre' => $this->nombre,
-                'cedula' => $this->cedula,
-                'telefono' => $this->telefono,
-                'monto' => $this->monto,
-                'detalle' => $this->detalle,
-                'orden_cobro' => $this->orden_cobro,
-                'recibo' => $this->recibo,
-                'medio_de_pago' => $this->medio_de_pago,
-            ]);
+            $datos = $this->convertirCamposAMayusculas(
+                ['nombre', 'cedula', 'telefono', 'detalle', 'orden_cobro', 'recibo', 'medio_de_pago'],
+                [
+                    'fecha' => $this->fecha,
+                    'ingreso' => $this->ingreso,
+                    'nombre' => $this->nombre,
+                    'cedula' => $this->cedula,
+                    'telefono' => $this->telefono,
+                    'monto' => $this->monto,
+                    'detalle' => $this->detalle,
+                    'orden_cobro' => $this->orden_cobro,
+                    'recibo' => $this->recibo,
+                    'medio_de_pago' => $this->medio_de_pago,
+                ]
+            );
+
+            $arrendamiento->update($datos);
             $this->resetInput();
             $this->emit('arrendamientoUpdate');
             $this->dispatchBrowserEvent('alert', ['type' => 'success', 'message' => 'Arrendamiento actualizado con éxito!']);

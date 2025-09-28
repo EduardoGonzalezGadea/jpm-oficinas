@@ -9,10 +9,11 @@ use Livewire\Component;
 use Livewire\WithPagination;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use App\Traits\ConvertirMayusculas;
 
 class Eventuales extends Component
 {
-    use WithPagination;
+    use WithPagination, ConvertirMayusculas;
 
     protected $listeners = ['resetForm', 'destroy' => 'destroy', 'refreshComponent' => '$refresh', 'planillaCreated' => '$refresh', 'planillaDeleted' => '$refresh'];
 
@@ -115,17 +116,22 @@ class Eventuales extends Component
             'recibo' => 'nullable|string|max:255',
         ]);
 
-        Model::create([
-            'fecha' => $this->fecha,
-            'ingreso' => $this->ingreso,
-            'institucion' => $this->institucion,
-            'titular' => $this->titular,
-            'monto' => $this->monto,
-            'medio_de_pago' => $this->medio_de_pago,
-            'detalle' => $this->detalle,
-            'orden_cobro' => $this->orden_cobro,
-            'recibo' => $this->recibo,
-        ]);
+        $datos = $this->convertirCamposAMayusculas(
+            ['institucion', 'titular', 'detalle', 'orden_cobro', 'recibo', 'medio_de_pago'],
+            [
+                'fecha' => $this->fecha,
+                'ingreso' => $this->ingreso,
+                'institucion' => $this->institucion,
+                'titular' => $this->titular,
+                'monto' => $this->monto,
+                'medio_de_pago' => $this->medio_de_pago,
+                'detalle' => $this->detalle,
+                'orden_cobro' => $this->orden_cobro,
+                'recibo' => $this->recibo,
+            ]
+        );
+
+        Model::create($datos);
 
         $this->resetInput();
         $this->emit('eventualStore');
@@ -191,17 +197,22 @@ class Eventuales extends Component
 
         if ($this->eventual_id) {
             $eventual = Model::findOrFail($this->eventual_id);
-            $eventual->update([
-                'fecha' => $this->fecha,
-                'ingreso' => $this->ingreso,
-                'institucion' => $this->institucion,
-                'titular' => $this->titular,
-                'monto' => $this->monto,
-                'medio_de_pago' => $this->medio_de_pago,
-                'detalle' => $this->detalle,
-                'orden_cobro' => $this->orden_cobro,
-                'recibo' => $this->recibo,
-            ]);
+            $datos = $this->convertirCamposAMayusculas(
+                ['institucion', 'titular', 'detalle', 'orden_cobro', 'recibo', 'medio_de_pago'],
+                [
+                    'fecha' => $this->fecha,
+                    'ingreso' => $this->ingreso,
+                    'institucion' => $this->institucion,
+                    'titular' => $this->titular,
+                    'monto' => $this->monto,
+                    'medio_de_pago' => $this->medio_de_pago,
+                    'detalle' => $this->detalle,
+                    'orden_cobro' => $this->orden_cobro,
+                    'recibo' => $this->recibo,
+                ]
+            );
+
+            $eventual->update($datos);
             $this->resetInput();
             $this->emit('eventualUpdate');
             $this->dispatchBrowserEvent('alert', ['type' => 'success', 'message' => 'Eventual actualizado con éxito!', 'toast' => true]);

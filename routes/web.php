@@ -8,11 +8,11 @@ use App\Http\Controllers\ModuloController;
 use App\Http\Controllers\Tesoreria\TesoreriaController;
 use App\Http\Controllers\ContabilidadController;
 use App\Http\Controllers\PermissionController;
+use App\Http\Controllers\Tesoreria\ArrendamientoController;
 use App\Http\Controllers\Tesoreria\CajaChica\ImpresionController;
 use App\Http\Controllers\Tesoreria\CajaChica\CajaChicaController;
 use App\Http\Controllers\Tesoreria\CajaChica\PendienteController;
-use App\Http\Controllers\Tesoreria\Valores\ValorController;
-use App\Http\Controllers\Tesoreria\CajaController;
+
 use App\Http\Controllers\Tesoreria\ArmasController;
 use App\Http\Controllers\ThemeController;
 use App\Http\Livewire\Tesoreria\Arrendamientos\PrintArrendamientos;
@@ -193,15 +193,10 @@ Route::middleware(['web', 'jwt.verify'])->group(function () {
     Route::prefix('tesoreria')->name('tesoreria.')->group(function () {
         Route::get('/', [TesoreriaController::class, 'index'])->name('index');
 
-        // Rutas de Cajas
-        Route::prefix('cajas')->name('cajas.')->middleware(['permission:operador_tesoreria'])->group(function () {
-            Route::get('/', [CajaController::class, 'index'])->name('index');
-            Route::get('/apertura-cierre', [CajaController::class, 'aperturaCierre'])->name('apertura-cierre');
-            Route::get('/movimientos', [CajaController::class, 'movimientos'])->name('movimientos');
-            Route::get('/arqueo', [CajaController::class, 'arqueo'])->name('arqueo');
-            Route::get('/denominaciones', [CajaController::class, 'denominaciones'])->name('denominaciones');
-            Route::get('/conceptos', [CajaController::class, 'conceptos'])->name('conceptos');
-        });
+        // Caja Diaria
+        Route::get('/caja-diaria/{tab?}', [TesoreriaController::class, 'cajaDiaria'])
+            ->name('caja_diaria');
+
 
         // Rutas de multas
         Route::get('/multas-transito', function () {
@@ -228,17 +223,16 @@ Route::middleware(['web', 'jwt.verify'])->group(function () {
             Route::get('/imprimir-detalles/{year}/{mes}', PrintEventualesFull::class)->name('imprimir-detalles');
         });
 
-        // Rutas de Planillas
-        Route::get('/arrendamientos/planillas/imprimir/{id}', function ($id) {
-            $planilla = App\Models\Tesoreria\Planilla::findOrFail($id);
-            return view('tesoreria.arrendamientos.planillas-print', compact('planilla'));
-        })->name('arrendamientos.planillas-print');
-
-        // Ruta de Impresión de Arrendamientos
-        Route::get('/arrendamientos/imprimir/{year}/{mes}', PrintArrendamientos::class)->name('arrendamientos.imprimir');
-
-        // Ruta de Impresión Detallada de Arrendamientos
-        Route::get('/arrendamientos/imprimir-todo/{year}/{mes}', PrintArrendamientosFull::class)->name('arrendamientos.imprimir-todo');
+        // Rutas de Arrendamientos
+        Route::prefix('arrendamientos')->name('arrendamientos.')->group(function () {
+            Route::get('/', [ArrendamientoController::class, 'index'])->name('index');
+            Route::get('/planillas/imprimir/{id}', function ($id) {
+                $planilla = App\Models\Tesoreria\Planilla::findOrFail($id);
+                return view('tesoreria.arrendamientos.planillas-print', compact('planilla'));
+            })->name('planillas-print');
+            Route::get('/imprimir/{year}/{mes}', PrintArrendamientos::class)->name('imprimir');
+            Route::get('/imprimir-todo/{year}/{mes}', PrintArrendamientosFull::class)->name('imprimir-todo');
+        });
 
         // Rutas de Armas
         Route::prefix('armas')->name('armas.')->group(function () {
@@ -255,6 +249,11 @@ Route::middleware(['web', 'jwt.verify'])->group(function () {
         Route::get('/configuracion/tipos-monedas', function () {
             return view('tesoreria.configuracion.tes-tipos-monedas.index-livewire');
         })->name('configuracion.tes-tipos-monedas.index');
+
+        // Rutas de Configuración - Denominaciones de Monedas
+        Route::get('/configuracion/denominaciones-monedas', function () {
+            return view('tesoreria.configuracion.tes-denominaciones-monedas.index-livewire');
+        })->name('configuracion.tes-denominaciones-monedas.index');
     });
 
     // Contabilidad
@@ -297,28 +296,7 @@ Route::middleware(['web', 'jwt.verify'])->group(function () {
             ->name('tesoreria.caja-chica.imprimir.pago');
     });
 
-    // ------------------------------------------------------------------------
-    // TESORERÍA - VALORES
-    // ------------------------------------------------------------------------
-    Route::prefix('tesoreria/valores')->name('tesoreria.valores.')->middleware(['admin.only'])->group(function () {
 
-        // Rutas principales
-        Route::get('/', function () {
-            return view('layouts.valores');
-        })->name('index');
-
-        Route::get('/{page}', function () {
-            return view('layouts.valores');
-        })->where('page', 'stock|libretas|recibos|entradas|salidas');
-
-        // APIs y endpoints adicionales
-        Route::prefix('api')->name('api.')->group(function () {
-            Route::get('/stock-resumen/{valor}', [ValorController::class, 'getStockResumen'])->name('stock.resumen');
-            Route::post('/validar-rango', [ValorController::class, 'validarRango'])->name('validar.rango');
-            Route::get('/estadisticas', [ValorController::class, 'estadisticas'])->name('estadisticas');
-            Route::get('/exportar-stock', [ValorController::class, 'exportarStock'])->name('exportar.stock');
-        });
-    });
 });
 
 // ============================================================================

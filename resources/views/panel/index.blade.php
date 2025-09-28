@@ -48,6 +48,15 @@
                     <div class="card-body">
                         <div class="row">
                             @can('operador_tesoreria')
+
+                                <div class="col-md-4 mb-3">
+                                    <a href="{{ route('tesoreria.caja_diaria', ['tab' => 'resumen', 'fecha' => session('caja_diaria_fecha', date('Y-m-d'))]) }}"
+                                        class="btn btn-outline-info btn-block btn-lg d-flex flex-column justify-content-center align-items-center btn-quick-access">
+                                        <i class="fas fa-cash-register fa-2x d-block mb-2"></i>
+                                        Tesorería | Caja Diaria
+                                    </a>
+                                </div>
+
                                 <div class="col-md-4 mb-3">
                                     <a href="{{ route('tesoreria.caja-chica.index') }}"
                                         class="btn btn-outline-info btn-block btn-lg d-flex flex-column justify-content-center align-items-center btn-quick-access">
@@ -81,14 +90,23 @@
                                 </div>
 
                                 @hasrole('administrador')
+                                {{-- Acceso directo a Tesorería | Valores eliminado --}}
+                                @endhasrole
+
                                 <div class="col-md-4 mb-3">
-                                    <a href="{{ route('tesoreria.valores.index') }}"
-                                        class="btn btn-outline-danger btn-block btn-lg d-flex flex-column justify-content-center align-items-center btn-quick-access">
-                                        <i class="fas fa-file-invoice fa-2x d-block mb-2"></i>
-                                        Tesorería | Valores
+                                    <a href="{{ route('tesoreria.armas.porte') }}"
+                                        class="btn btn-outline-info btn-block btn-lg d-flex flex-column justify-content-center align-items-center btn-quick-access">
+                                        <i class="fas fa-shield-alt fa-2x d-block mb-2"></i>
+                                        Tesorería | Porte
                                     </a>
                                 </div>
-                                @endhasrole
+                                <div class="col-md-4 mb-3">
+                                    <a href="{{ route('tesoreria.armas.tenencia') }}"
+                                        class="btn btn-outline-info btn-block btn-lg d-flex flex-column justify-content-center align-items-center btn-quick-access">
+                                        <i class="fas fa-shield-alt fa-2x d-block mb-2"></i>
+                                        Tesorería | Tenencia
+                                    </a>
+                                </div>
                             @endcan
 
                             @can('operador_contabilidad')

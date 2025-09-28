@@ -29,24 +29,12 @@
                         para la gestión financiera de la institución.
                     </p>
 
-                    <!-- Características en desarrollo -->
+                    <!-- Características -->
                     <div class="row mt-5">
-                        <div class="col-md-4 mb-4">
-                            <div class="card h-100 border-primary">
-                                <div class="card-body">
-                                    <i class="fas fa-cash-register text-primary mb-3" style="font-size: 2rem;"></i>
-                                    <h5 class="card-title">Gestión de Cajas</h5>
-                                    <p class="card-text text-muted">
-                                        Control completo de movimientos, aperturas, cierres y arqueos de caja.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-
                         <div class="col-md-4 mb-4">
                             <div class="card h-100 border-success">
                                 <div class="card-body">
-                                    <i class="fas fa-file-invoice-dollar text-success mb-3" style="font-size: 2rem;"></i>
+                                    <i class="fas fa-coins text-success mb-3" style="font-size: 2rem;"></i>
                                     <h5 class="card-title">Caja Chica</h5>
                                     <p class="card-text text-muted">
                                         Administración eficiente de gastos menores y rendiciones.
@@ -58,10 +46,22 @@
                         <div class="col-md-4 mb-4">
                             <div class="card h-100 border-info">
                                 <div class="card-body">
-                                    <i class="fas fa-money-bill-wave text-info mb-3" style="font-size: 2rem;"></i>
-                                    <h5 class="card-title">Valores y Multas</h5>
+                                    <i class="fas fa-car text-info mb-3" style="font-size: 2rem;"></i>
+                                    <h5 class="card-title">Multas de Tránsito</h5>
                                     <p class="card-text text-muted">
-                                        Gestión integral de valores, recibos y sistema de multas.
+                                        Gestión integral del sistema de multas.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4 mb-4">
+                            <div class="card h-100 border-warning">
+                                <div class="card-body">
+                                    <i class="fas fa-file-signature text-warning mb-3" style="font-size: 2rem;"></i>
+                                    <h5 class="card-title">Arrendamientos y Eventuales</h5>
+                                    <p class="card-text text-muted">
+                                        Control de arrendamientos y servicios eventuales.
                                     </p>
                                 </div>
                             </div>

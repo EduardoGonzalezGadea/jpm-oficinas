@@ -50,12 +50,15 @@
                                 <td>{{ $registro->cedula }}</td>
                                 <td>{{ $registro->orden_cobro }}</td>
                                 <td>{{ $registro->numero_tramite }}</td>
-                                <td>${{ number_format($registro->monto, 2) }}</td>
+                                <td>$ {{ number_format($registro->monto, 2, ',', '.') }}</td>
                                 <td>
-                                    <button wire:click="edit({{ $registro->id }})" class="btn btn-sm btn-info">
+                                    <button wire:click="showDetails({{ $registro->id }})" class="btn btn-sm btn-secondary" title="Ver Detalle">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button wire:click="edit({{ $registro->id }})" class="btn btn-sm btn-info" title="Editar">
                                         <i class="fas fa-edit"></i>
                                     </button>
-                                    <button wire:click="confirmDelete({{ $registro->id }})" class="btn btn-sm btn-danger">
+                                    <button wire:click="confirmDelete({{ $registro->id }})" class="btn btn-sm btn-danger" title="Eliminar">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </td>
@@ -69,7 +72,7 @@
                 </table>
             </div>
 
-            <div class="mt-3">
+            <div class="mt-3 d-flex justify-content-center">
                 {{ $registros->links() }}
             </div>
         </div>
@@ -228,9 +231,41 @@
         </div>
     </div>
 
-    @if($showModal || $showDeleteModal)
+    @if($showModal || $showDeleteModal || $showDetailModal)
         <div class="modal-backdrop fade show"></div>
     @endif
+
+    <!-- Modal de Detalle -->
+    <div class="modal fade @if($showDetailModal) show @endif" style="@if($showDetailModal) display: block; @endif" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Detalle del Registro de Porte de Armas</h5>
+                    <button type="button" class="close" wire:click="closeDetailModal">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    @if($selectedRegistro)
+                        <div class="row">
+                            <div class="col-md-6 mb-2"><strong>Fecha:</strong> {{ $selectedRegistro->fecha->format('d/m/Y') }}</div>
+                            <div class="col-md-6 mb-2"><strong>Monto:</strong> $ {{ number_format($selectedRegistro->monto, 2, ',', '.') }}</div>
+                            <div class="col-md-6 mb-2"><strong>Titular:</strong> {{ $selectedRegistro->titular }}</div>
+                            <div class="col-md-6 mb-2"><strong>Cédula:</strong> {{ $selectedRegistro->cedula }}</div>
+                            <div class="col-md-6 mb-2"><strong>Teléfono:</strong> {{ $selectedRegistro->telefono }}</div>
+                            <div class="col-md-6 mb-2"><strong>Orden de Cobro:</strong> {{ $selectedRegistro->orden_cobro }}</div>
+                            <div class="col-md-6 mb-2"><strong>Número de Trámite:</strong> {{ $selectedRegistro->numero_tramite }}</div>
+                            <div class="col-md-6 mb-2"><strong>Ingreso Contabilidad:</strong> {{ $selectedRegistro->ingreso_contabilidad }}</div>
+                            <div class="col-md-6 mb-2"><strong>Recibo:</strong> {{ $selectedRegistro->recibo }}</div>
+                        </div>
+                    @endif
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" wire:click="closeDetailModal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     @push('scripts')
     <script>

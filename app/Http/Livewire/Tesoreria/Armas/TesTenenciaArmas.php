@@ -5,16 +5,18 @@ namespace App\Http\Livewire\Tesoreria\Armas;
 use Livewire\Component;
 use Livewire\WithPagination;
 use App\Models\Tesoreria\TesTenenciaArmas as TesTenenciaArmasModel;
+use App\Traits\ConvertirMayusculas;
 
 class TesTenenciaArmas extends Component
 {
-    use WithPagination;
+    use WithPagination, ConvertirMayusculas;
 
     protected $paginationTheme = 'bootstrap';
 
     public $showModal = false;
     public $editMode = false;
     public $showDeleteModal = false;
+    public $showDetailModal = false;
     public $deleteId = null;
 
     public $registro_id;
@@ -28,7 +30,22 @@ class TesTenenciaArmas extends Component
     public $cedula;
     public $telefono;
 
+    public $selectedRegistro = null;
     public $search = '';
+    public function showDetails($id)
+    {
+        $this->showModal = false;
+        $this->showDeleteModal = false;
+        $this->editMode = false;
+        $this->selectedRegistro = TesTenenciaArmasModel::findOrFail($id);
+        $this->showDetailModal = true;
+    }
+
+    public function closeDetailModal()
+    {
+        $this->showDetailModal = false;
+        $this->selectedRegistro = null;
+    }
 
     protected $rules = [
         'fecha' => 'required|date',
@@ -104,17 +121,20 @@ class TesTenenciaArmas extends Component
     {
         $this->validate();
 
-        $data = [
-            'fecha' => $this->fecha,
-            'orden_cobro' => $this->orden_cobro,
-            'numero_tramite' => $this->numero_tramite,
-            'ingreso_contabilidad' => $this->ingreso_contabilidad,
-            'recibo' => $this->recibo,
-            'monto' => $this->monto,
-            'titular' => $this->titular,
-            'cedula' => $this->cedula,
-            'telefono' => $this->telefono,
-        ];
+        $data = $this->convertirCamposAMayusculas(
+            ['titular', 'cedula', 'telefono', 'orden_cobro', 'numero_tramite', 'ingreso_contabilidad', 'recibo'],
+            [
+                'fecha' => $this->fecha,
+                'orden_cobro' => $this->orden_cobro,
+                'numero_tramite' => $this->numero_tramite,
+                'ingreso_contabilidad' => $this->ingreso_contabilidad,
+                'recibo' => $this->recibo,
+                'monto' => $this->monto,
+                'titular' => $this->titular,
+                'cedula' => $this->cedula,
+                'telefono' => $this->telefono,
+            ]
+        );
 
         if ($this->editMode) {
             TesTenenciaArmasModel::find($this->registro_id)->update($data);

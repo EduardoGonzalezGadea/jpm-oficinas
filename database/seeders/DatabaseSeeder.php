@@ -18,8 +18,10 @@ class DatabaseSeeder extends Seeder
             RoleAndPermissionSeeder::class,
             UserSeeder::class,
             ValoresSeeder::class,
+            Tesoreria\MedioDePagoSeeder::class,
             Tesoreria\MultaSeeder::class,
-            Tesoreria\CajaConceptoSeeder::class,
+            Tesoreria\TesDenominacionMonedaSeeder::class,
+            Tesoreria\TesTipoMonedaSeeder::class,
         ]);
     }
 }

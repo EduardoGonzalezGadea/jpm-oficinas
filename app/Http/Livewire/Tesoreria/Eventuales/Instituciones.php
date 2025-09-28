@@ -5,10 +5,11 @@ namespace App\Http\Livewire\Tesoreria\Eventuales;
 use App\Models\Tesoreria\EventualInstitucion;
 use Livewire\Component;
 use Livewire\WithPagination;
+use App\Traits\ConvertirMayusculas;
 
 class Instituciones extends Component
 {
-    use WithPagination;
+    use WithPagination, ConvertirMayusculas;
 
     protected $paginationTheme = 'bootstrap';
 
@@ -53,11 +54,16 @@ class Instituciones extends Component
     {
         $this->validate();
 
-        EventualInstitucion::create([
-            'nombre' => $this->nombre,
-            'descripcion' => $this->descripcion,
-            'activa' => $this->activa,
-        ]);
+        $datos = $this->convertirCamposAMayusculas(
+            ['nombre', 'descripcion'],
+            [
+                'nombre' => $this->nombre,
+                'descripcion' => $this->descripcion,
+                'activa' => $this->activa,
+            ]
+        );
+
+        EventualInstitucion::create($datos);
 
         $this->resetForm();
         $this->dispatchBrowserEvent('close-modal', ['modal' => '#institucionModal']);
@@ -70,7 +76,7 @@ class Instituciones extends Component
     public function edit($id)
     {
         $institucion = EventualInstitucion::findOrFail($id);
-        
+
         $this->institucion_id = $institucion->id;
         $this->nombre = $institucion->nombre;
         $this->descripcion = $institucion->descripcion;
@@ -87,11 +93,16 @@ class Instituciones extends Component
         $this->validate();
 
         $institucion = EventualInstitucion::findOrFail($this->institucion_id);
-        $institucion->update([
-            'nombre' => $this->nombre,
-            'descripcion' => $this->descripcion,
-            'activa' => $this->activa,
-        ]);
+        $datos = $this->convertirCamposAMayusculas(
+            ['nombre', 'descripcion'],
+            [
+                'nombre' => $this->nombre,
+                'descripcion' => $this->descripcion,
+                'activa' => $this->activa,
+            ]
+        );
+
+        $institucion->update($datos);
 
         $this->resetForm();
         $this->dispatchBrowserEvent('close-modal', ['modal' => '#institucionModal']);
@@ -115,7 +126,7 @@ class Instituciones extends Component
     {
         try {
             $institucion = EventualInstitucion::findOrFail($id);
-            
+
             // Verificar si la institución tiene eventuales asociados
             if ($institucion->eventuales()->count() > 0) {
                 $this->dispatchBrowserEvent('alert', [
@@ -126,7 +137,7 @@ class Instituciones extends Component
             }
 
             $institucion->delete();
-            
+
             $this->dispatchBrowserEvent('alert', [
                 'type' => 'success',
                 'message' => 'Institución eliminada exitosamente.'
@@ -143,7 +154,7 @@ class Instituciones extends Component
     {
         $institucion = EventualInstitucion::findOrFail($id);
         $institucion->update(['activa' => !$institucion->activa]);
-        
+
         $status = $institucion->activa ? 'activada' : 'desactivada';
         $this->dispatchBrowserEvent('alert', [
             'type' => 'success',

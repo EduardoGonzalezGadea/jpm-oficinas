@@ -39,12 +39,12 @@
     <link href="{{ asset('libs/sweetalert2/dist/sweetalert2.min.css') }}" rel="stylesheet">
 
     {{-- Alpine.js CDN --}}
-    <script defer src="{{ asset('libs/alpinejs@3.14.9/dist/cdn.min.js') }}"></script>
+    {{-- <script defer src="{{ asset('libs/alpinejs@3.14.9/dist/cdn.min.js') }}"></script> --}}
 
     @livewireStyles
     @yield('styles')
 
-    @routes
+    {{-- @routes --}}
 </head>
 
 <body>
@@ -73,11 +73,12 @@
         </button>
     @endauth
 
-    @livewireScripts
-
     <!-- Bootstrap 4 JS -->
     <script src="{{ asset('libs/jquery/js/jquery-3.6.0.min.js') }}"></script>
     <script src="{{ asset('libs/bootstrap-4.6.2-dist/js/bootstrap.bundle.min.js') }}"></script>
+
+    @livewireScripts
+
     <script src="{{ asset('libs/fontawesome-free-5.15.4-web/js/all.min.js') }}"></script>
     <script src="{{ asset('libs/sweetalert2/dist/sweetalert2.all.min.js') }}"></script>
 
@@ -109,7 +110,7 @@
                                 sessionStorage.removeItem('jwt_token');
                             } catch (e) {}
                             // Redirigir explícitamente al login para evitar vistas parciales rotas
-                            window.location.href = route('login');
+                            window.location.href = '/login';
                         }
                     });
                     return false; // Detiene el manejo de errores de Livewire

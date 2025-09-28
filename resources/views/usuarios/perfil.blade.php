@@ -13,7 +13,7 @@
                 </div>
                 <div class="card-body">
                     {{-- Pestañas --}}
-                    <ul class="nav nav-tabs" id="perfilTab" role="tablist">
+                    <ul class="nav nav-pills" id="perfilTab" role="tablist">
                         <li class="nav-item">
                             <a class="nav-link active" id="datos-tab" data-toggle="tab" href="#datos" role="tab">
                                 <i class="fas fa-user"></i> Datos Personales
