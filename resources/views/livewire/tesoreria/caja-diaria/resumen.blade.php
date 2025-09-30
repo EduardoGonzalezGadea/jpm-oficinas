@@ -196,6 +196,11 @@
                 } else if (activeElement.classList.contains('cantidad-input')) {
                     inputs = Array.from(formContainer.querySelectorAll('.cantidad-input'));
                 } else {
+                    // If the active element is the save button, click it
+                    if (activeElement.classList.contains('btn-success')) {
+                        activeElement.click();
+                        return;
+                    }
                     return;
                 }
 
@@ -213,6 +218,20 @@
 
         document.addEventListener('livewire:destroy', () => {
             document.removeEventListener('keydown', handleEnter, true);
+        });
+
+        document.addEventListener('cajaInicialGuardada', function () {
+            const alert = document.querySelector('.alert-warning');
+            if (alert) {
+                $(alert).alert('close');
+            }
+        });
+
+        document.addEventListener('cierreCajaGuardado', function () {
+            const alert = document.querySelector('.alert-warning');
+            if (alert) {
+                $(alert).alert('close');
+            }
         });
 
         document.addEventListener('shown.bs.tab', function(e) {

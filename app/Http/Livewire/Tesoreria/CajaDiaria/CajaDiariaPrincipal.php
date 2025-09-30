@@ -174,12 +174,15 @@ class CajaDiariaPrincipal extends Component
         // Lógica para guardar caja inicial
         // Por ejemplo, validar y guardar en base de datos
         session()->flash('message', 'Caja Inicial guardada correctamente.');
+        $this->cajaDiariaExists = true;
+        $this->dispatch('cajaInicialGuardada');
     }
 
     public function guardarCierreCaja()
     {
         // Lógica para guardar cierre de caja
         session()->flash('message', 'Cierre de Caja guardado correctamente.');
+        $this->dispatch('cierreCajaGuardado');
     }
 
     public function render()
