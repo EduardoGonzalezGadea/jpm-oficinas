@@ -21,10 +21,16 @@ class Movimiento extends Model
         'rendido',
         'reintegrado',
         'recuperado',
+        'created_by',
+        'updated_by',
+        'deleted_by',
     ];
 
     protected $casts = [
         'fechaMovimientos' => 'date',
+        'rendido' => 'decimal:2',
+        'reintegrado' => 'decimal:2',
+        'recuperado' => 'decimal:2',
     ];
 
     protected $dates = ['deleted_at']; // <-- Especificar la columna deleted_at

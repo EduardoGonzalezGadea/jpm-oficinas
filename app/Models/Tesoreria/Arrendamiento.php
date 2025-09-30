@@ -16,18 +16,15 @@ class Arrendamiento extends Model
     public $timestamps = true;
 
     protected $fillable = [
-        'fecha',
-        'ingreso',
-        'nombre',
-        'cedula',
-        'telefono',
+        'arrendador',
         'monto',
-        'detalle',
-        'orden_cobro',
-        'recibo',
-        'medio_de_pago',
-        'confirmado',
-        'planilla_id',
+        'fecha_inicio',
+        'fecha_fin',
+        'observaciones',
+        'activo',
+        'created_by',
+        'updated_by',
+        'deleted_by'
     ];
 
     protected $casts = [

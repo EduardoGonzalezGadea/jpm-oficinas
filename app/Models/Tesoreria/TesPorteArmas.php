@@ -22,6 +22,9 @@ class TesPorteArmas extends Model
         'titular',
         'cedula',
         'telefono',
+        'created_by',
+        'updated_by',
+        'deleted_by',
     ];
 
     protected $dates = ['fecha'];

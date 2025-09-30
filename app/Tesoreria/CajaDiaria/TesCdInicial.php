@@ -6,28 +6,32 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class TesCajaDiarias extends Model
+class TesCdInicial extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $table = 'tes_caja_diarias';
+    protected $table = 'tes_cd_inicials';
 
     protected $fillable = [
-        'fecha',
-        'monto_inicial',
-        'observaciones',
-        'estado',
+        'tes_caja_diarias_id',
+        'tes_denominaciones_monedas_id',
+        'monto',
         'created_by',
         'updated_by',
         'deleted_by',
     ];
 
-    protected $casts = [
-        'fecha' => 'date',
-        'monto_inicial' => 'decimal:2',
-    ];
+    public function cajaDiaria()
+    {
+        return $this->belongsTo(TesCajaDiarias::class, 'tes_caja_diarias_id');
+    }
 
-    // Relationships
+    public function denominacionMoneda()
+    {
+        // Assuming you have a TesDenominacionesMoneda model
+        // return $this->belongsTo(TesDenominacionesMoneda::class, 'tes_denominaciones_monedas_id');
+    }
+
     public function createdBy()
     {
         return $this->belongsTo(\App\Models\User::class, 'created_by');
@@ -41,10 +45,5 @@ class TesCajaDiarias extends Model
     public function deletedBy()
     {
         return $this->belongsTo(\App\Models\User::class, 'deleted_by');
-    }
-
-    public function iniciales()
-    {
-        return $this->hasMany(TesCdInicial::class, 'tes_caja_diarias_id');
     }
 }

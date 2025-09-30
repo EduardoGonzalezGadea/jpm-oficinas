@@ -8,15 +8,18 @@ use App\Models\Cobro;
 use App\Models\Pago;
 use App\Models\Tesoreria\TesDenominacionMoneda;
 use App\Tesoreria\CajaDiaria\TesCajaDiarias;
+use App\Tesoreria\CajaDiaria\TesCdInicial;
+use App\Models\Tesoreria\CajaDiaria\TesCdCierre;
+use App\Models\Tesoreria\CajaDiaria\TesCdCierreDenominacion;
 
 class Resumen extends Component
 {
-    public $saldoInicial = 0;
-    public $totalCobros = 0;
-    public $totalPagos = 0;
-    public $saldoActual = 0;
     public $fecha;
-    public $cajaDiariaExists = true;
+    public $cajaDiariaExists;
+    public $saldoInicial;
+    public $totalCobros;
+    public $totalPagos;
+    public $saldoActual;
 
     public $denominaciones = [];
     public $cajaInicialPorDenominacion = [];
@@ -24,12 +27,18 @@ class Resumen extends Component
     public $cierrePorDenominacion = [];
     public $cierreTotal = 0;
 
-    public function mount($fecha = null)
+    public function mount($fecha, $cajaDiariaExists, $saldoInicial, $totalCobros, $totalPagos, $saldoActual)
     {
-        $this->fecha = $fecha ?: now()->format('Y-m-d');
+        $this->fecha = $fecha;
+        $this->cajaDiariaExists = $cajaDiariaExists;
+        $this->saldoInicial = $saldoInicial;
+        $this->totalCobros = $totalCobros;
+        $this->totalPagos = $totalPagos;
+        $this->saldoActual = $saldoActual;
+
         $this->denominaciones = TesDenominacionMoneda::activos()->ordenado()->get();
         $this->inicializarCajas();
-        $this->calcularSaldos();
+        $this->loadCajaData();
     }
 
     private function inicializarCajas()
@@ -43,6 +52,31 @@ class Resumen extends Component
                 'cantidad' => 0,
                 'monto' => 0
             ];
+        }
+    }
+
+    private function loadCajaData()
+    {
+        if ($this->cajaDiariaExists) {
+            try {
+                $fecha = Carbon::parse($this->fecha);
+                $cajaDiaria = TesCajaDiarias::whereDate('fecha', $fecha)->with('iniciales')->first();
+
+                if ($cajaDiaria) {
+                    foreach ($cajaDiaria->iniciales as $inicial) {
+                        if (isset($this->cajaInicialPorDenominacion[$inicial->tes_denominaciones_monedas_id])) {
+                            $denominacion = $this->denominaciones->find($inicial->tes_denominaciones_monedas_id);
+                            $this->cajaInicialPorDenominacion[$inicial->tes_denominaciones_monedas_id]['monto'] = (float)$inicial->monto;
+                            if ($denominacion && (float)$denominacion->denominacion > 0) {
+                                $this->cajaInicialPorDenominacion[$inicial->tes_denominaciones_monedas_id]['cantidad'] = (float)$inicial->monto / (float)$denominacion->denominacion;
+                            }
+                        }
+                    }
+                    $this->calcularCajaInicialTotal();
+                }
+            } catch (\Exception $e) {
+                // Log or handle error, for now, do nothing to prevent crash
+            }
         }
     }
 
@@ -85,24 +119,6 @@ class Resumen extends Component
         $this->calcularCierreTotal();
     }
 
-    public function updatedCajaInicialTotal()
-    {
-        // When total is set, clear the denomination details
-        foreach ($this->cajaInicialPorDenominacion as $id => $data) {
-            $this->cajaInicialPorDenominacion[$id]['cantidad'] = 0;
-            $this->cajaInicialPorDenominacion[$id]['monto'] = 0;
-        }
-    }
-
-    public function updatedCierreTotal()
-    {
-        // When total is set, clear the denomination details
-        foreach ($this->cierrePorDenominacion as $id => $data) {
-            $this->cierrePorDenominacion[$id]['cantidad'] = 0;
-            $this->cierrePorDenominacion[$id]['monto'] = 0;
-        }
-    }
-
     private function calcularCajaInicialTotal()
     {
         $this->cajaInicialTotal = array_sum(array_column($this->cajaInicialPorDenominacion, 'monto'));
@@ -117,56 +133,151 @@ class Resumen extends Component
     {
         try {
             $fecha = Carbon::parse($this->fecha);
+            $this->inicializarCajas(); // Reiniciar siempre
 
-            // Verificar si existe una caja diaria para la fecha
-            $cajaDiaria = TesCajaDiarias::whereDate('fecha', $fecha)->first();
+            $cajaDiaria = TesCajaDiarias::whereDate('fecha', $fecha)->with('iniciales')->first();
 
             if ($cajaDiaria) {
                 $this->saldoInicial = floatval($cajaDiaria->monto_inicial);
                 $this->cajaDiariaExists = true;
+
+                foreach ($cajaDiaria->iniciales as $inicial) {
+                    if (isset($this->cajaInicialPorDenominacion[$inicial->tes_denominaciones_monedas_id])) {
+                        $denominacion = $this->denominaciones->find($inicial->tes_denominaciones_monedas_id);
+                        $this->cajaInicialPorDenominacion[$inicial->tes_denominaciones_monedas_id]['monto'] = (float)$inicial->monto;
+                        if ($denominacion && (float)$denominacion->denominacion > 0) {
+                            $this->cajaInicialPorDenominacion[$inicial->tes_denominaciones_monedas_id]['cantidad'] = (float)$inicial->monto / (float)$denominacion->denominacion;
+                        }
+                    }
+                }
+                $this->calcularCajaInicialTotal();
+
             } else {
                 $this->saldoInicial = 0;
                 $this->cajaDiariaExists = false;
             }
 
-            // Obtener cobros del día (solo efectivo)
             $this->totalCobros = Cobro::whereDate('fecha', $fecha)
                 ->where('medio_pago', 'efectivo')
                 ->sum('monto');
 
-            // Obtener pagos del día (solo efectivo)
             $this->totalPagos = Pago::whereDate('fecha', $fecha)
                 ->where('medio_pago', 'efectivo')
                 ->sum('monto');
 
-            // Asegurarse de que los valores son numéricos
             $this->totalCobros = floatval($this->totalCobros);
             $this->totalPagos = floatval($this->totalPagos);
 
-            // Calcular saldo actual
             $this->saldoActual = $this->saldoInicial + $this->totalCobros - $this->totalPagos;
         } catch (\Exception $e) {
-            // En caso de error, inicializar todo en cero
             $this->totalCobros = 0;
             $this->totalPagos = 0;
             $this->saldoInicial = 0;
             $this->saldoActual = 0;
-            $this->cajaDiariaExists = true; // Asumir que existe para no mostrar alerta por error
+            $this->cajaDiariaExists = true; 
         }
     }
 
     public function guardarCajaInicial()
     {
-        // Lógica para guardar caja inicial
-        // Por ejemplo, validar y guardar en base de datos
-        session()->flash('message', 'Caja Inicial guardada correctamente.');
+        if ($this->cajaInicialTotal <= 0) {
+            $this->dispatchBrowserEvent('swal:error', ['title' => 'Error', 'text' => 'Debe ingresar valores para guardar la Caja Inicial.']);
+            return;
+        }
+
+        try {
+            $cajaDiaria = TesCajaDiarias::firstOrNew(['fecha' => $this->fecha]);
+
+            if (!$cajaDiaria->exists) {
+                $cajaDiaria->created_by = auth()->id();
+            } else {
+                $cajaDiaria->updated_by = auth()->id();
+            }
+
+            $cajaDiaria->monto_inicial = $this->cajaInicialTotal;
+            $cajaDiaria->save();
+
+            foreach ($this->cajaInicialPorDenominacion as $denominacionId => $datos) {
+                if (is_numeric($datos['monto']) && $datos['monto'] > 0) {
+                    $cajaInicial = TesCdInicial::firstOrNew([
+                        'tes_caja_diarias_id' => $cajaDiaria->id,
+                        'tes_denominaciones_monedas_id' => $denominacionId,
+                    ]);
+
+                    if (!$cajaInicial->exists) {
+                        $cajaInicial->created_by = auth()->id();
+                    } else {
+                        $cajaInicial->updated_by = auth()->id();
+                    }
+
+                    $cajaInicial->monto = $datos['monto'];
+                    $cajaInicial->save();
+                }
+            }
+
+            $this->emit('cajaInicialGuardada');
+            $this->dispatchBrowserEvent('swal:success', ['text' => 'Caja Inicial guardada correctamente.']);
+
+        } catch (\Exception $e) {
+            $this->dispatchBrowserEvent('swal:error', ['title' => 'Error al guardar', 'text' => 'Error al guardar la caja inicial: ' . $e->getMessage()]);
+        }
     }
 
     public function guardarCierreCaja()
     {
-        // Lógica para guardar cierre de caja
-        // Por ejemplo, validar y guardar en base de datos
-        session()->flash('message', 'Cierre de Caja guardado correctamente.');
+        if (!$this->cajaDiariaExists) {
+            $this->dispatchBrowserEvent('swal:error', ['title' => 'Error', 'text' => 'No se ha abierto la caja para la fecha seleccionada.']);
+            return;
+        }
+
+        if ($this->cierreTotal <= 0) {
+            $this->dispatchBrowserEvent('swal:error', ['title' => 'Error', 'text' => 'Debe ingresar valores para guardar el Cierre de Caja.']);
+            return;
+        }
+
+        try {
+            $cajaDiaria = TesCajaDiarias::whereDate('fecha', $this->fecha)->first();
+
+            if (!$cajaDiaria) {
+                $this->dispatchBrowserEvent('swal:error', ['title' => 'Error', 'text' => 'No se encontró la caja diaria para la fecha seleccionada.']);
+                return;
+            }
+
+            // Guardar el registro de cierre de caja
+            $cierreCaja = TesCdCierre::firstOrNew([
+                'tes_caja_diarias_id' => $cajaDiaria->id,
+            ]);
+
+            if (!$cierreCaja->exists) {
+                $cierreCaja->created_by = auth()->id();
+            } else {
+                $cierreCaja->updated_by = auth()->id();
+            }
+            $cierreCaja->monto_cierre = $this->cierreTotal;
+            $cierreCaja->save();
+
+            // Guardar el detalle de las denominaciones del cierre
+            foreach ($this->cierrePorDenominacion as $denominacionId => $datos) {
+                if (is_numeric($datos['monto']) && $datos['monto'] > 0) {
+                    $cierreDenominacion = TesCdCierreDenominacion::firstOrNew([
+                        'tes_cd_cierres_id' => $cierreCaja->id,
+                        'tes_denominaciones_monedas_id' => $denominacionId,
+                    ]);
+
+                    if (!$cierreDenominacion->exists) {
+                        $cierreDenominacion->created_by = auth()->id();
+                    } else {
+                        $cierreDenominacion->updated_by = auth()->id();
+                    }
+                    $cierreDenominacion->monto = $datos['monto'];
+                    $cierreDenominacion->save();
+                }
+            }
+
+            $this->dispatchBrowserEvent('swal:success', ['text' => 'Cierre de Caja guardado correctamente.']);
+        } catch (\Exception $e) {
+            $this->dispatchBrowserEvent('swal:error', ['title' => 'Error al guardar', 'text' => 'Error al guardar el cierre de caja: ' . $e->getMessage()]);
+        }
     }
 
     public function render()

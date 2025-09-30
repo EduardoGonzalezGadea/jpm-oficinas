@@ -4,10 +4,11 @@ namespace App\Models\Tesoreria;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class EventualInstitucion extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $table = 'tes_eventuales_instituciones';
 
@@ -15,6 +16,9 @@ class EventualInstitucion extends Model
         'nombre',
         'descripcion',
         'activa',
+        'created_by',
+        'updated_by',
+        'deleted_by',
     ];
 
     protected $casts = [

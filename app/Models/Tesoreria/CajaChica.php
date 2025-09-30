@@ -18,6 +18,9 @@ class CajaChica extends Model
         'mes',
         'anio',
         'montoCajaChica',
+        'created_by',
+        'updated_by',
+        'deleted_by',
     ];
 
     protected $dates = ['deleted_at']; // <-- Especificar la columna deleted_at si no sigue la convención

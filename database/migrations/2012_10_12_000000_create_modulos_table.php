@@ -13,6 +13,7 @@ return new class extends Migration
             $table->string('nombre');
             $table->string('descripcion')->nullable();
             $table->boolean('activo')->default(true);
+            $table->softDeletes();
             $table->timestamps();
         });
     }

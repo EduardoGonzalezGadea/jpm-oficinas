@@ -18,7 +18,10 @@ class InfraccionTransito extends Model
         'descripcion',
         'importe_ur',
         'decreto',
-        'activo'
+        'activo',
+        'created_by',
+        'updated_by',
+        'deleted_by'
     ];
 
     protected $casts = [

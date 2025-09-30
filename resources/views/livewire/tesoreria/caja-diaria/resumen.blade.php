@@ -53,71 +53,53 @@
     @endif
 
     {{-- Cajas Inicial y Cierre --}}
-    <div class="row mt-4">
+    <div class="row mt-2">
         {{-- Caja Inicial --}}
         <div class="col-md-6">
             <div class="accordion" id="accordionCajaInicial">
                 <div class="card">
-                    <div class="card-header" id="headingCajaInicial">
+                    <div class="card-header p-0" id="headingCajaInicial">
                         <h5 class="mb-0">
-                            <button class="btn btn-primary btn-block" type="button" data-toggle="collapse" data-target="#collapseCajaInicial" aria-expanded="false" aria-controls="collapseCajaInicial">
+                            <button class="btn btn-info btn-block" type="button" data-toggle="collapse" data-target="#collapseCajaInicial" aria-expanded="false" aria-controls="collapseCajaInicial">
                                 Caja Inicial
                             </button>
                         </h5>
                     </div>
                     <div id="collapseCajaInicial" class="collapse" aria-labelledby="headingCajaInicial" data-parent="#accordionCajaInicial" wire:ignore.self>
-                        <div class="card-body">
-                            <ul class="nav nav-tabs" id="tabCajaInicial" role="tablist">
-                                <li class="nav-item">
-                                    <a class="nav-link active" id="por-denominacion-inicial-tab" data-toggle="tab" href="#por-denominacion-inicial" role="tab" aria-controls="por-denominacion-inicial" aria-selected="true">Por denominación</a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link" id="por-monto-total-inicial-tab" data-toggle="tab" href="#por-monto-total-inicial" role="tab" aria-controls="por-monto-total-inicial" aria-selected="false">Por monto total</a>
-                                </li>
-                            </ul>
-                            <div class="tab-content mt-3" id="tabContentCajaInicial">
-                                <div class="tab-pane fade show active" id="por-denominacion-inicial" role="tabpanel" aria-labelledby="por-denominacion-inicial-tab">
-                                    <div class="table-responsive">
-                                        <table class="table table-sm">
-                                            <thead>
-                                                <tr>
-                                                    <th>Tipo</th>
-                                                    <th>Denominación</th>
-                                                    <th>Monto</th>
-                                                    <th>Cantidad</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                @foreach($denominaciones as $denominacion)
-                                                <tr>
-                                                    <td>{{ $denominacion->tipo_moneda }}</td>
-                                                    <td>{{ $denominacion->denominacion_formateada }}</td>
-                                                    <td>
-                                                        <input type="number" class="form-control form-control-sm monto-input tab-on-enter" wire:model="cajaInicialPorDenominacion.{{ $denominacion->id }}.monto" value="{{ $cajaInicialPorDenominacion[$denominacion->id]['monto'] ?? 0 }}" min="0" step="0.01" onfocus="this.select()" @if($loop->first) autofocus @endif>
-                                                    </td>
-                                                    <td>
-                                                        <input type="number" class="form-control form-control-sm cantidad-input tab-on-enter" wire:model="cajaInicialPorDenominacion.{{ $denominacion->id }}.cantidad" value="{{ $cajaInicialPorDenominacion[$denominacion->id]['cantidad'] ?? 0 }}" min="0" step="1" onfocus="this.select()">
-                                                    </td>
-                                                </tr>
-                                                @endforeach
-                                            </tbody>
-                                            <tfoot>
-                                                <tr class="table-info">
-                                                    <td colspan="2" class="text-right font-weight-bold">Total Cargado:</td>
-                                                    <td colspan="2" class="font-weight-bold">$ {{ number_format($cajaInicialTotal, 2, ',', '.') }}</td>
-                                                </tr>
-                                            </tfoot>
-                                        </table>
-                                    </div>
-                                </div>
-                                <div class="tab-pane fade" id="por-monto-total-inicial" role="tabpanel" aria-labelledby="por-monto-total-inicial-tab">
-                                    <div class="form-group">
-                                        <label for="cajaInicialTotal">Monto Total</label>
-                                        <input type="number" class="form-control" id="cajaInicialTotal" wire:model="cajaInicialTotal" min="0" step="0.01">
-                                    </div>
-                                </div>
+                        <div class="card-body p-2">
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Tipo</th>
+                                            <th>Denominación</th>
+                                            <th>Monto</th>
+                                            <th>Cantidad</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach($denominaciones as $denominacion)
+                                        <tr>
+                                            <td>{{ $denominacion->tipo_moneda }}</td>
+                                            <td>{{ $denominacion->denominacion_formateada }}</td>
+                                            <td>
+                                                <input type="number" class="form-control form-control-sm monto-input tab-on-enter" wire:model.debounce.200ms="cajaInicialPorDenominacion.{{ $denominacion->id }}.monto" value="{{ $cajaInicialPorDenominacion[$denominacion->id]['monto'] ?? 0 }}" min="0" step="0.01" onfocus="this.select()">
+                                            </td>
+                                            <td>
+                                                <input type="number" class="form-control form-control-sm cantidad-input tab-on-enter" wire:model.debounce.200ms="cajaInicialPorDenominacion.{{ $denominacion->id }}.cantidad" value="{{ $cajaInicialPorDenominacion[$denominacion->id]['cantidad'] ?? 0 }}" min="0" step="1" onfocus="this.select()">
+                                            </td>
+                                        </tr>
+                                        @endforeach
+                                    </tbody>
+                                    <tfoot>
+                                        <tr class="table-info">
+                                            <td colspan="2" class="text-right font-weight-bold">Total Cargado:</td>
+                                            <td colspan="2" class="font-weight-bold">$ {{ number_format($cajaInicialTotal, 2, ',', '.') }}</td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
                             </div>
-                            <div class="text-right mt-3">
+                            <div class="text-right mt-2">
                                 <button type="button" class="btn btn-success" wire:click="guardarCajaInicial">Guardar</button>
                             </div>
                         </div>
@@ -130,67 +112,55 @@
         <div class="col-md-6">
             <div class="accordion" id="accordionCierre">
                 <div class="card">
-                    <div class="card-header" id="headingCierre">
+                    <div class="card-header p-0" id="headingCierre">
                         <h5 class="mb-0">
-                            <button class="btn btn-primary btn-block" type="button" data-toggle="collapse" data-target="#collapseCierre" aria-expanded="false" aria-controls="collapseCierre">
+                            <button class="btn btn-info btn-block" type="button" data-toggle="collapse" data-target="#collapseCierre" aria-expanded="false" aria-controls="collapseCierre">
                                 Cierre de Caja
                             </button>
                         </h5>
                     </div>
                     <div id="collapseCierre" class="collapse" aria-labelledby="headingCierre" data-parent="#accordionCierre" wire:ignore.self>
-                        <div class="card-body">
-                            <ul class="nav nav-tabs" id="tabCierre" role="tablist">
-                                <li class="nav-item">
-                                    <a class="nav-link active" id="por-denominacion-cierre-tab" data-toggle="tab" href="#por-denominacion-cierre" role="tab" aria-controls="por-denominacion-cierre" aria-selected="true">Por denominación</a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link" id="por-monto-total-cierre-tab" data-toggle="tab" href="#por-monto-total-cierre" role="tab" aria-controls="por-monto-total-cierre" aria-selected="false">Por monto total</a>
-                                </li>
-                            </ul>
-                            <div class="tab-content mt-3" id="tabContentCierre">
-                                <div class="tab-pane fade show active" id="por-denominacion-cierre" role="tabpanel" aria-labelledby="por-denominacion-cierre-tab">
-                                    <div class="table-responsive">
-                                        <table class="table table-sm">
-                                            <thead>
-                                                <tr>
-                                                    <th>Tipo</th>
-                                                    <th>Denominación</th>
-                                                    <th>Monto</th>
-                                                    <th>Cantidad</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                @foreach($denominaciones as $denominacion)
-                                                <tr>
-                                                    <td>{{ $denominacion->tipo_moneda }}</td>
-                                                    <td>{{ $denominacion->denominacion_formateada }}</td>
-                                                    <td>
-                                                        <input type="number" class="form-control form-control-sm monto-input tab-on-enter" wire:model="cierrePorDenominacion.{{ $denominacion->id }}.monto" value="{{ $cierrePorDenominacion[$denominacion->id]['monto'] ?? 0 }}" min="0" step="0.01" onfocus="this.select()" @if($loop->first) autofocus @endif>
-                                                    </td>
-                                                    <td>
-                                                        <input type="number" class="form-control form-control-sm cantidad-input tab-on-enter" wire:model="cierrePorDenominacion.{{ $denominacion->id }}.cantidad" value="{{ $cierrePorDenominacion[$denominacion->id]['cantidad'] ?? 0 }}" min="0" step="1" onfocus="this.select()">
-                                                    </td>
-                                                </tr>
-                                                @endforeach
-                                            </tbody>
-                                            <tfoot>
-                                                <tr class="table-info">
-                                                    <td colspan="2" class="text-right font-weight-bold">Total Cargado:</td>
-                                                    <td colspan="2" class="font-weight-bold">$ {{ number_format($cierreTotal, 2, ',', '.') }}</td>
-                                                </tr>
-                                            </tfoot>
-                                        </table>
-                                    </div>
-                                </div>
-                                <div class="tab-pane fade" id="por-monto-total-cierre" role="tabpanel" aria-labelledby="por-monto-total-cierre-tab">
-                                    <div class="form-group">
-                                        <label for="cierreTotal">Monto Total</label>
-                                        <input type="number" class="form-control" id="cierreTotal" wire:model="cierreTotal" min="0" step="0.01">
-                                    </div>
-                                </div>
+                        <div class="card-body p-2">
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Tipo</th>
+                                            <th>Denominación</th>
+                                            <th>Monto</th>
+                                            <th>Cantidad</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach($denominaciones as $denominacion)
+                                        <tr>
+                                            <td>{{ $denominacion->tipo_moneda }}</td>
+                                            <td>{{ $denominacion->denominacion_formateada }}</td>
+                                            <td>
+                                                <input type="number" class="form-control form-control-sm monto-input tab-on-enter" wire:model.debounce.200ms="cierrePorDenominacion.{{ $denominacion->id }}.monto" value="{{ $cierrePorDenominacion[$denominacion->id]['monto'] ?? 0 }}" min="0" step="0.01" onfocus="this.select()">
+                                            </td>
+                                            <td>
+                                                <input type="number" class="form-control form-control-sm cantidad-input tab-on-enter" wire:model.debounce.200ms="cierrePorDenominacion.{{ $denominacion->id }}.cantidad" value="{{ $cierrePorDenominacion[$denominacion->id]['cantidad'] ?? 0 }}" min="0" step="1" onfocus="this.select()">
+                                            </td>
+                                        </tr>
+                                        @endforeach
+                                    </tbody>
+                                    <tfoot>
+                                        <tr class="table-info">
+                                            <td colspan="2" class="text-right font-weight-bold">Total Cargado:</td>
+                                            <td colspan="2" class="font-weight-bold">$ {{ number_format($cierreTotal, 2, ',', '.') }}</td>
+                                        </tr>
+                                        @if ($cierreTotal != $saldoActual)
+                                        <tr class="table-danger">
+                                            <td colspan="2" class="text-right font-weight-bold">Diferencia:</td>
+                                            <td colspan="2" class="font-weight-bold">$ {{ number_format($cierreTotal - $saldoActual, 2, ',', '.') }}</td>
+                                        </tr>
+                                        @endif
+                                    </tfoot>
+                                </table>
                             </div>
-                            <div class="text-right mt-3">
-                                <button type="button" class="btn btn-success" wire:click="guardarCierreCaja">Guardar</button>
+                            <div class="text-right mt-2">
+                                <button type="button" class="btn btn-success" wire:click="guardarCierreCaja" @if(!$cajaDiariaExists) disabled @endif>Guardar</button>
                             </div>
                         </div>
                     </div>
@@ -200,35 +170,39 @@
     </div>
     @push('scripts')
     <script>
+
+        // Usar delegación de eventos de jQuery para máxima robustez con Livewire
+        $(document).on('shown.bs.collapse', '#accordionCajaInicial, #accordionCierre', function (e) {
+            const firstInput = e.target.querySelector('input[type="number"]');
+            if (firstInput) {
+                setTimeout(() => {
+                    firstInput.focus();
+                    firstInput.select();
+                }, 50); // Pequeño retardo para asegurar compatibilidad
+            }
+        });
+
         function handleEnter(e) {
             if (e.key === 'Enter') {
                 e.preventDefault();
 
                 const activeElement = document.activeElement;
-
-                // Encuentra el contenedor del formulario actual (el acordeón)
                 const formContainer = activeElement.closest('.collapse');
                 if (!formContainer) return;
 
                 let inputs = [];
-                let currentIndex = -1;
-
-                // Determina si estamos en un campo de monto o cantidad
                 if (activeElement.classList.contains('monto-input')) {
                     inputs = Array.from(formContainer.querySelectorAll('.monto-input'));
                 } else if (activeElement.classList.contains('cantidad-input')) {
                     inputs = Array.from(formContainer.querySelectorAll('.cantidad-input'));
                 } else {
-                    return; // No es un campo que nos interese
+                    return;
                 }
 
-                currentIndex = inputs.indexOf(activeElement);
-
+                const currentIndex = inputs.indexOf(activeElement);
                 if (currentIndex > -1 && currentIndex < inputs.length - 1) {
-                    // Si hay un siguiente campo en la lista, enfócalo
                     inputs[currentIndex + 1].focus();
                 } else {
-                    // Si es el último campo, enfoca el botón de guardar de ese formulario
                     const button = formContainer.querySelector('.btn-success');
                     if (button) button.focus();
                 }
@@ -237,15 +211,8 @@
 
         document.addEventListener('keydown', handleEnter, true);
 
-        // Limpia el listener cuando el componente de Livewire se destruye para evitar duplicados
         document.addEventListener('livewire:destroy', () => {
             document.removeEventListener('keydown', handleEnter, true);
-        });
-
-        document.addEventListener('shown.bs.collapse', function(e) {
-            const collapse = e.target;
-            const firstInput = collapse.querySelector('input[type="number"]');
-            if (firstInput) firstInput.focus();
         });
 
         document.addEventListener('shown.bs.tab', function(e) {

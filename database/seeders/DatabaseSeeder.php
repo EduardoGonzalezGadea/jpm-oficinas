@@ -17,7 +17,6 @@ class DatabaseSeeder extends Seeder
             ModuloSeeder::class,
             RoleAndPermissionSeeder::class,
             UserSeeder::class,
-            ValoresSeeder::class,
             Tesoreria\MedioDePagoSeeder::class,
             Tesoreria\MultaSeeder::class,
             Tesoreria\TesDenominacionMonedaSeeder::class,

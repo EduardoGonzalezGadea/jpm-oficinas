@@ -50,7 +50,7 @@
                             @can('operador_tesoreria')
 
                                 <div class="col-md-4 mb-3">
-                                    <a href="{{ route('tesoreria.caja_diaria', ['tab' => 'resumen', 'fecha' => session('caja_diaria_fecha', date('Y-m-d'))]) }}"
+                                    <a href="{{ route('tesoreria.caja_diaria', ['tab' => 'resumen']) }}"
                                         class="btn btn-outline-info btn-block btn-lg d-flex flex-column justify-content-center align-items-center btn-quick-access">
                                         <i class="fas fa-cash-register fa-2x d-block mb-2"></i>
                                         Tesorería | Caja Diaria

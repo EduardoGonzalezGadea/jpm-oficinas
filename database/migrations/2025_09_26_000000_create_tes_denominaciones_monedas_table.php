@@ -13,23 +13,23 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::dropIfExists('tes_caja_diarias');
-
-        Schema::create('tes_caja_diarias', function (Blueprint $table) {
+        Schema::create('tes_denominaciones_monedas', function (Blueprint $table) {
             $table->id();
-            $table->date('fecha');
-            $table->decimal('monto_inicial', 10, 2);
-            $table->text('observaciones')->nullable();
-            $table->string('estado')->default('activo');
+            $table->string('denominacion');
+            $table->decimal('valor', 18, 2);
+            $table->string('moneda');
+            $table->string('tipo_moneda');
+            $table->string('descripcion')->nullable();
+            $table->boolean('activo')->default(true);
             $table->unsignedInteger('created_by')->nullable();
             $table->unsignedInteger('updated_by')->nullable();
-            $table->unsignedInteger('default_by')->nullable();
+            $table->unsignedInteger('deleted_by')->nullable();
             $table->timestamps();
             $table->softDeletes();
 
             $table->foreign('created_by')->references('id')->on('users');
             $table->foreign('updated_by')->references('id')->on('users');
-            $table->foreign('default_by')->references('id')->on('users');
+            $table->foreign('deleted_by')->references('id')->on('users');
         });
     }
 
@@ -40,6 +40,6 @@ return new class extends Migration
      */
     public function down()
     {
-        //
+        Schema::dropIfExists('tes_denominaciones_monedas');
     }
 };

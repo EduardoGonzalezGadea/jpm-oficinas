@@ -93,12 +93,13 @@ class CajaDiariaPrincipal extends Component
             // Calcular saldo actual
             $this->saldoActual = $this->saldoInicial + $this->totalCobros - $this->totalPagos;
         } catch (\Exception $e) {
-            // En caso de error, inicializar todo en cero
+            // En caso de error, registrar y mostrar.
+            session()->flash('error', 'Error al calcular saldos: ' . $e->getMessage());
             $this->totalCobros = 0;
             $this->totalPagos = 0;
             $this->saldoInicial = 0;
             $this->saldoActual = 0;
-            $this->cajaDiariaExists = true; // Asumir que existe para no mostrar alerta por error
+            $this->cajaDiariaExists = false; // Forzar a false en caso de error
         }
     }
 
@@ -179,12 +180,6 @@ class CajaDiariaPrincipal extends Component
     {
         // Lógica para guardar cierre de caja
         session()->flash('message', 'Cierre de Caja guardado correctamente.');
-    }
-
-
-    public function cambiarPestana($pestana)
-    {
-        $this->activeTab = $pestana;
     }
 
     public function render()

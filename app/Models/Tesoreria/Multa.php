@@ -21,6 +21,9 @@ class Multa extends Model
         'importe_original',
         'importe_unificado',
         'decreto',
+        'created_by',
+        'updated_by',
+        'deleted_by',
     ];
 
     protected $casts = [

@@ -7,10 +7,11 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use PHPOpenSourceSaver\JWTAuth\Contracts\JWTSubject;
 use Spatie\Permission\Traits\HasRoles;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class User extends Authenticatable implements JWTSubject
 {
-    use HasFactory, Notifiable, HasRoles;
+    use HasFactory, Notifiable, HasRoles, SoftDeletes;
 
     protected $guard_name = 'api';
 
@@ -25,7 +26,10 @@ class User extends Authenticatable implements JWTSubject
         'cedula',
         'password',
         'activo',
-        'modulo_id'
+        'modulo_id',
+        'created_by',
+        'updated_by',
+        'deleted_by'
     ];
 
     protected $hidden = [

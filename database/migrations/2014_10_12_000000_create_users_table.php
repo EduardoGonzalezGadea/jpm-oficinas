@@ -27,6 +27,7 @@ return new class extends Migration
             $table->unsignedBigInteger('modulo_id')->nullable();
             $table->rememberToken();
             $table->timestamps();
+            $table->softDeletes();
 
             // Clave foránea
             $table->foreign('modulo_id')->references('id')->on('modulos');

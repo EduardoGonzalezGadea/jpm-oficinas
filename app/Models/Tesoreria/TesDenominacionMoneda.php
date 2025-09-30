@@ -51,10 +51,10 @@ class TesDenominacionMoneda extends Model
         return $query->where('activo', true);
     }
 
-    // Scope para ordenar por tipo y denominación
+    // Scope para ordenar por tipo y valor
     public function scopeOrdenado($query)
     {
-        return $query->orderBy('tipo_moneda')->orderBy('denominacion', 'desc');
+        return $query->orderBy('tipo_moneda')->orderBy('valor', 'desc');
     }
 
     // Scope para filtrar por tipo de moneda

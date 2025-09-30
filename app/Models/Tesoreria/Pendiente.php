@@ -20,6 +20,9 @@ class Pendiente extends Model
         'fechaPendientes',
         'relDependencia',
         'montoPendientes',
+        'created_by',
+        'updated_by',
+        'deleted_by',
     ];
 
     protected $casts = [

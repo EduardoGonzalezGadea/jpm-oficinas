@@ -4,17 +4,21 @@ namespace App\Models\Tesoreria;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class MedioDePago extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $table = 'tes_medio_de_pagos';
 
     protected $fillable = [
         'nombre',
         'descripcion',
-        'activo'
+        'activo',
+        'created_by',
+        'updated_by',
+        'deleted_by'
     ];
 
     protected $casts = [

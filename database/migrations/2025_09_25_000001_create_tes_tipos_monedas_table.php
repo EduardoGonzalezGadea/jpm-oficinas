@@ -13,11 +13,11 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('tes_caja_diaria', function (Blueprint $table) {
+        Schema::create('tes_tipos_monedas', function (Blueprint $table) {
             $table->id();
-            $table->date('fecha');
-            $table->decimal('monto_inicial', 10, 2);
-            $table->text('observaciones')->nullable();
+            $table->string('nombre');
+            $table->string('descripcion')->nullable();
+            $table->boolean('activo')->default(true);
             $table->unsignedInteger('created_by')->nullable();
             $table->unsignedInteger('updated_by')->nullable();
             $table->unsignedInteger('deleted_by')->nullable();
@@ -37,6 +37,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('tes_caja_diaria');
+        Schema::dropIfExists('tes_tipos_monedas');
     }
 };

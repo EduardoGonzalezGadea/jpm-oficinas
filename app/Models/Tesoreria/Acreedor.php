@@ -16,6 +16,9 @@ class Acreedor extends Model
 
     protected $fillable = [
         'acreedor',
+        'created_by',
+        'updated_by',
+        'deleted_by',
     ];
 
     protected $dates = ['deleted_at']; // <-- Especificar la columna deleted_at

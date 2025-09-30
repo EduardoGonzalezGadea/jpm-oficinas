@@ -13,7 +13,9 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::dropIfExists('tes_caja_diaria');
+        Schema::table('tes_arrendamientos', function (Blueprint $table) {
+            $table->foreignId('planilla_id')->nullable()->constrained('tes_arr_planillas')->onDelete('set null');
+        });
     }
 
     /**
@@ -23,6 +25,9 @@ return new class extends Migration
      */
     public function down()
     {
-        //
+        Schema::table('tes_arrendamientos', function (Blueprint $table) {
+            $table->dropForeign(['planilla_id']);
+            $table->dropColumn('planilla_id');
+        });
     }
 };

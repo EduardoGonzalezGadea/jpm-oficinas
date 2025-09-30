@@ -17,6 +17,9 @@ class Planilla extends Model
         'numero',
         'fecha_creacion',
         'user_id',
+        'created_by',
+        'updated_by',
+        'deleted_by',
     ];
 
     protected $dates = ['fecha_creacion'];

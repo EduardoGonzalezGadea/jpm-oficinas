@@ -25,6 +25,9 @@ class Pago extends Model
         'ingresoPagos',
         'ingresoPagosBSE',
         'recuperadoPagos',
+        'created_by',
+        'updated_by',
+        'deleted_by',
     ];
 
     protected $casts = [
