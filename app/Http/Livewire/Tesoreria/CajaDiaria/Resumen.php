@@ -174,7 +174,7 @@ class Resumen extends Component
             $this->totalPagos = 0;
             $this->saldoInicial = 0;
             $this->saldoActual = 0;
-            $this->cajaDiariaExists = true; 
+            $this->cajaDiariaExists = true;
         }
     }
 
@@ -215,6 +215,7 @@ class Resumen extends Component
                 }
             }
 
+            $this->calcularSaldos();
             $this->emit('cajaInicialGuardada');
             $this->dispatchBrowserEvent('swal:success', ['text' => 'Caja Inicial guardada correctamente.']);
 

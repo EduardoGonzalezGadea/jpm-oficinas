@@ -16,6 +16,8 @@ class CajaDiariaPrincipal extends Component
     public $activeTab;
     public $fechaKey = 0;
 
+    protected $listeners = ['cajaInicialGuardada' => 'refreshCajaDiariaExists'];
+
     // Resumen properties
     public $saldoInicial = 0;
     public $totalCobros = 0;
@@ -101,6 +103,11 @@ class CajaDiariaPrincipal extends Component
             $this->saldoActual = 0;
             $this->cajaDiariaExists = false; // Forzar a false en caso de error
         }
+    }
+
+    public function refreshCajaDiariaExists()
+    {
+        $this->calcularSaldos();
     }
 
     public function updatedCajaInicialPorDenominacion($value, $key)
