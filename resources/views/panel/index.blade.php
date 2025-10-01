@@ -49,6 +49,7 @@
                         <div class="row">
                             @can('operador_tesoreria')
 
+                                @hasrole('administrador')
                                 <div class="col-md-4 mb-3">
                                     <a href="{{ route('tesoreria.caja_diaria', ['tab' => 'resumen']) }}"
                                         class="btn btn-outline-info btn-block btn-lg d-flex flex-column justify-content-center align-items-center btn-quick-access">
@@ -56,6 +57,7 @@
                                         Tesorería | Caja Diaria
                                     </a>
                                 </div>
+                                @endhasrole
 
                                 <div class="col-md-4 mb-3">
                                     <a href="{{ route('tesoreria.caja-chica.index') }}"

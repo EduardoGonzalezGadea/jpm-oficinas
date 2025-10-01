@@ -231,7 +231,7 @@
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label for="fecha">Fecha</label>
-                                    <input type="date" wire:model.defer="fecha" id="fecha"
+                                    <input type="date" wire:model="fecha" id="fecha"
                                         class="form-control form-control-sm">
                                     @error('fecha')
                                         <span class="text-danger">{{ $message }}</span>

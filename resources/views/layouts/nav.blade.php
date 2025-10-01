@@ -17,6 +17,7 @@
                         <i class="fas fa-dollar-sign mr-2"></i>Tesorería
                     </a>
                     <div class="dropdown-menu" aria-labelledby="navbarDropdownTesoreria">
+                        @hasrole('administrador')
                         {{-- Submenu Caja Diaria --}}
                         <div class="dropdown-submenu submenu-right">
                             <a class="dropdown-item dropdown-toggle" href="#" role="button">
@@ -40,6 +41,7 @@
                                 </a>
                             </div>
                         </div>
+                        @endhasrole
                         {{-- Link Caja Chica --}}
                         <a class="dropdown-item" href="{{ route('tesoreria.caja-chica.index') }}" wire:navigate>
                             <i class="fas fa-coins mr-2"></i>Caja Chica

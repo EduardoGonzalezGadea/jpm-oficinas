@@ -96,6 +96,7 @@ class TesPorteArmas extends Component
         $this->resetForm();
         $this->editMode = false;
         $this->showModal = true;
+        $this->emit('modalOpened');
     }
 
     public function edit($id)
@@ -115,6 +116,7 @@ class TesPorteArmas extends Component
 
         $this->editMode = true;
         $this->showModal = true;
+        $this->emit('modalOpened');
     }
 
     public function save()

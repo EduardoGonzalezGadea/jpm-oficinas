@@ -287,6 +287,20 @@
                     }
                 }
             });
+
+            // Listener for modal opened event
+            Livewire.on('modalOpened', () => {
+                setTimeout(() => {
+                    const modalBody = document.querySelector('.modal.show .modal-body');
+                    if (modalBody) {
+                        modalBody.scrollTop = 0;
+                    }
+                    const fechaInput = document.getElementById('fecha');
+                    if (fechaInput) {
+                        fechaInput.focus();
+                    }
+                }, 100); // Small delay to ensure modal is fully rendered
+            });
         });
     </script>
     @endpush

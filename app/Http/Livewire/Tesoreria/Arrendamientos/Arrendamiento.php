@@ -76,6 +76,10 @@ class Arrendamiento extends Component
             return redirect()->route('login')->with('error', 'La sesión ha expirado. Por favor, inicie sesión de nuevo.');
         }
 
+        if (!$this->fecha) {
+            $this->fecha = Carbon::now()->format('Y-m-d');
+        }
+
         $this->validate([
             'fecha' => 'required|date',
             'ingreso' => 'nullable|integer',
