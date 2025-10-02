@@ -7,8 +7,8 @@ use Carbon\Carbon;
 use App\Models\Cobro;
 use App\Models\Pago;
 use App\Models\Tesoreria\TesDenominacionMoneda;
-use App\Tesoreria\CajaDiaria\TesCajaDiarias;
-use App\Tesoreria\CajaDiaria\TesCdInicial;
+use App\Models\Tesoreria\CajaDiaria\TesCajaDiarias;
+use App\Models\Tesoreria\CajaDiaria\TesCdInicial;
 use App\Models\Tesoreria\CajaDiaria\TesCdCierre;
 use App\Models\Tesoreria\CajaDiaria\TesCdCierreDenominacion;
 
