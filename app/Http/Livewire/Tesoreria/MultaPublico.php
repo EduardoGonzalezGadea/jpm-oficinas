@@ -32,7 +32,7 @@ class MultaPublico extends Component
     public function mount()
     {
         try {
-            $response = Http::get('https://www.bps.gub.uy/bps/valores.jsp');
+            $response = Http::get('https://www.bps.gub.uy/bps/valores.jsp?contentid=5478');
             if ($response->successful()) {
                 $html = $response->body();
                 $dom = new DOMDocument();

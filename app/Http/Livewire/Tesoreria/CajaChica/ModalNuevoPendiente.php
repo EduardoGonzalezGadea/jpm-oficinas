@@ -6,6 +6,7 @@ use Livewire\Component;
 use App\Models\Tesoreria\Pendiente;
 use App\Models\Tesoreria\CajaChica;
 use App\Models\Tesoreria\Dependencia;
+use Illuminate\Support\Facades\DB;
 
 class ModalNuevoPendiente extends Component
 {
@@ -96,6 +97,7 @@ class ModalNuevoPendiente extends Component
             return;
         }
 
+        DB::beginTransaction();
         try {
             Pendiente::create([
                 'relCajaChica' => $this->idCajaChica,
@@ -105,11 +107,13 @@ class ModalNuevoPendiente extends Component
                 'montoPendientes' => $this->montoPendientes,
             ]);
 
+            DB::commit();
             session()->flash('message', 'Pendiente creado correctamente.');
             $this->dispatchBrowserEvent('hide-modal', ['id' => 'modalNuevoPendiente']);
             $this->emitTo('tesoreria.caja-chica.index', 'pendienteCreado');
         } catch (\Exception $e) {
-            session()->flash('error', 'Error al crear el pendiente.');
+            DB::rollBack();
+            session()->flash('error', 'Error al crear el pendiente: ' . $e->getMessage());
         }
     }
 

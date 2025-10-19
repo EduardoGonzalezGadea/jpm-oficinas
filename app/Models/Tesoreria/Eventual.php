@@ -13,15 +13,17 @@ class Eventual extends Model
     protected $table = 'tes_eventuales';
 
     protected $fillable = [
-        'nombre',
-        'apellido',
-        'cedula',
-        'telefono',
-        'direccion',
-        'activo',
-        'created_by',
-        'updated_by',
-        'deleted_by'
+        'fecha',
+        'ingreso',
+        'institucion',
+        'titular',
+        'monto',
+        'medio_de_pago',
+        'detalle',
+        'orden_cobro',
+        'recibo',
+        'confirmado',
+        'planilla_id'
     ];
 
     protected $dates = ['fecha'];

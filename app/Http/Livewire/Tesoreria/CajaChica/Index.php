@@ -154,9 +154,8 @@ class Index extends Component
 
     public function mount()
     {
-        $this->mesActual = now()->locale('es')->translatedFormat('F');
-
-        $this->anioActual = now()->year;
+        $this->mesActual = session('caja_chica_mes') ?: now()->locale('es')->translatedFormat('F');
+        $this->anioActual = session('caja_chica_anio') ?: now()->year;
         $this->fechaHasta = now()->format('Y-m-d');
         $this->tablaCajaChica = collect();
         $this->tablaPendientesDetalle = collect();
@@ -203,15 +202,23 @@ class Index extends Component
 
     public function updatedMesActual()
     {
+        session()->forget(['caja_chica_mes', 'caja_chica_anio']);
         $this->cargarDatos();
     }
     public function updatedAnioActual()
     {
+        session()->forget(['caja_chica_mes', 'caja_chica_anio']);
         $this->cargarDatos();
     }
     public function updatedFechaHasta()
     {
         $this->cargarDatos();
+    }
+
+    public function irAEditar($id)
+    {
+        session(['caja_chica_mes' => $this->mesActual, 'caja_chica_anio' => $this->anioActual]);
+        return redirect()->route('tesoreria.caja-chica.pendientes.editar', $id);
     }
 
     public function cargarDatos()
@@ -648,6 +655,11 @@ class Index extends Component
             $fechaRecuperacion = $this->recuperacion['fecha'];
             $nroIngreso = $this->recuperacion['numero_ingreso'];
 
+            // Procesar el número de ingreso
+            if (ctype_digit($nroIngreso)) {
+                $nroIngreso = "INGRESO " . $nroIngreso;
+            }
+
             $itemsCollection = collect($this->itemsParaRecuperar);
 
             foreach ($this->itemsSeleccionados as $itemId) {
@@ -660,10 +672,9 @@ class Index extends Component
                         'relPendiente' => $item['origen_id'],
                         'fechaMovimientos' => $fechaRecuperacion,
                         'recuperado' => $item['saldo'],
-                        'ingresoNro' => $nroIngreso,
+                        'documentos' => $nroIngreso,
                         'rendido' => 0,
                         'reintegrado' => 0,
-                        'saldo' => 0,
                     ]);
                 } elseif ($item['origen_type'] === Pago::class) {
                     $pago = Pago::find($item['origen_id']);

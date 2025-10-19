@@ -13,22 +13,22 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('tes_cd_cobros', function (Blueprint $table) {
+        Schema::create('tes_cd_conceptos_cobro_campos', function (Blueprint $table) {
             $table->id();
-            $table->date('fecha');
-            $table->decimal('monto', 10, 2);
-            $table->string('medio_pago');
-            $table->string('descripcion')->nullable();
-            $table->unsignedBigInteger('recibo')->nullable();
+            $table->unsignedBigInteger('concepto_id');
+            $table->string('nombre');
+            $table->string('titulo')->nullable();
+            $table->enum('tipo', ['text', 'number', 'date', 'select', 'textarea', 'checkbox']);
+            $table->boolean('requerido')->default(false);
+            $table->json('opciones')->nullable(); // Para select: array de opciones
+            $table->integer('orden')->default(0);
             $table->unsignedInteger('created_by')->nullable();
             $table->unsignedInteger('updated_by')->nullable();
-            $table->unsignedInteger('deleted_by')->nullable();
             $table->timestamps();
-            $table->softDeletes();
 
+            $table->foreign('concepto_id')->references('id')->on('tes_cd_conceptos_cobro')->onDelete('cascade');
             $table->foreign('created_by')->references('id')->on('users');
             $table->foreign('updated_by')->references('id')->on('users');
-            $table->foreign('deleted_by')->references('id')->on('users');
         });
     }
 
@@ -39,6 +39,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('tes_cd_cobros');
+        Schema::dropIfExists('tes_cd_conceptos_cobro_campos');
     }
 };

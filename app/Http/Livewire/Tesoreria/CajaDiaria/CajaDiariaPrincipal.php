@@ -7,7 +7,6 @@ use Illuminate\Support\Facades\Route;
 use Carbon\Carbon;
 use App\Models\Cobro;
 use App\Models\Pago;
-use App\Models\Tesoreria\TesDenominacionMoneda;
 use App\Models\Tesoreria\CajaDiaria\TesCajaDiarias;
 
 class CajaDiariaPrincipal extends Component
@@ -25,19 +24,10 @@ class CajaDiariaPrincipal extends Component
     public $saldoActual = 0;
     public $cajaDiariaExists = true;
 
-    public $denominaciones = [];
-    public $cajaInicialPorDenominacion = [];
-    public $cajaInicialTotal = 0;
-    public $cierrePorDenominacion = [];
-    public $cierreTotal = 0;
-
     public function mount($tab = null)
     {
         $this->activeTab = $tab ?: 'resumen';
         $this->fecha = session('caja_diaria_fecha', date('Y-m-d'));
-
-        $this->denominaciones = TesDenominacionMoneda::activos()->ordenado()->get();
-        $this->inicializarCajas();
         $this->calcularSaldos();
     }
 
@@ -46,20 +36,6 @@ class CajaDiariaPrincipal extends Component
         session(['caja_diaria_fecha' => $this->fecha]);
         $this->fechaKey++;
         $this->calcularSaldos();
-    }
-
-    private function inicializarCajas()
-    {
-        foreach ($this->denominaciones as $denominacion) {
-            $this->cajaInicialPorDenominacion[$denominacion->id] = [
-                'cantidad' => 0,
-                'monto' => 0
-            ];
-            $this->cierrePorDenominacion[$denominacion->id] = [
-                'cantidad' => 0,
-                'monto' => 0
-            ];
-        }
     }
 
     private function calcularSaldos()
@@ -108,88 +84,6 @@ class CajaDiariaPrincipal extends Component
     public function refreshCajaDiariaExists()
     {
         $this->calcularSaldos();
-    }
-
-    public function updatedCajaInicialPorDenominacion($value, $key)
-    {
-        $parts = explode('.', $key);
-        $id = $parts[0];
-        $field = $parts[1];
-
-        $value = is_numeric($value) ? (float)$value : 0;
-
-        if ($field === 'cantidad') {
-            $denominacion = $this->denominaciones->find($id);
-            $this->cajaInicialPorDenominacion[$id]['monto'] = $value * (float)$denominacion->denominacion;
-        } elseif ($field === 'monto') {
-            $denominacion = $this->denominaciones->find($id);
-            $this->cajaInicialPorDenominacion[$id]['cantidad'] = $value / (float)$denominacion->denominacion;
-        }
-
-        $this->calcularCajaInicialTotal();
-    }
-
-    public function updatedCierrePorDenominacion($value, $key)
-    {
-        $parts = explode('.', $key);
-        $id = $parts[0];
-        $field = $parts[1];
-
-        $value = is_numeric($value) ? (float)$value : 0;
-
-        if ($field === 'cantidad') {
-            $denominacion = $this->denominaciones->find($id);
-            $this->cierrePorDenominacion[$id]['monto'] = $value * (float)$denominacion->denominacion;
-        } elseif ($field === 'monto') {
-            $denominacion = $this->denominaciones->find($id);
-            $this->cierrePorDenominacion[$id]['cantidad'] = $value / (float)$denominacion->denominacion;
-        }
-
-        $this->calcularCierreTotal();
-    }
-
-    public function updatedCajaInicialTotal()
-    {
-        // When total is set, clear the denomination details
-        foreach ($this->cajaInicialPorDenominacion as $id => $data) {
-            $this->cajaInicialPorDenominacion[$id]['cantidad'] = 0;
-            $this->cajaInicialPorDenominacion[$id]['monto'] = 0;
-        }
-    }
-
-    public function updatedCierreTotal()
-    {
-        // When total is set, clear the denomination details
-        foreach ($this->cierrePorDenominacion as $id => $data) {
-            $this->cierrePorDenominacion[$id]['cantidad'] = 0;
-            $this->cierrePorDenominacion[$id]['monto'] = 0;
-        }
-    }
-
-    private function calcularCajaInicialTotal()
-    {
-        $this->cajaInicialTotal = array_sum(array_column($this->cajaInicialPorDenominacion, 'monto'));
-    }
-
-    private function calcularCierreTotal()
-    {
-        $this->cierreTotal = array_sum(array_column($this->cierrePorDenominacion, 'monto'));
-    }
-
-    public function guardarCajaInicial()
-    {
-        // Lógica para guardar caja inicial
-        // Por ejemplo, validar y guardar en base de datos
-        session()->flash('message', 'Caja Inicial guardada correctamente.');
-        $this->cajaDiariaExists = true;
-        $this->dispatch('cajaInicialGuardada');
-    }
-
-    public function guardarCierreCaja()
-    {
-        // Lógica para guardar cierre de caja
-        session()->flash('message', 'Cierre de Caja guardado correctamente.');
-        $this->dispatch('cierreCajaGuardado');
     }
 
     public function render()

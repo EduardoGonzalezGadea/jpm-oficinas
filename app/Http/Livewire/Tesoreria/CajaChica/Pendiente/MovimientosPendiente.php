@@ -6,6 +6,7 @@ use Livewire\Component;
 use App\Models\Tesoreria\Pendiente;
 use App\Models\Tesoreria\Movimiento;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class MovimientosPendiente extends Component
 {
@@ -163,6 +164,7 @@ class MovimientosPendiente extends Component
             return;
         }
 
+        DB::beginTransaction();
         try {
             if ($this->editMode) {
                 $movimiento = Movimiento::findOrFail($this->movimientoId);
@@ -181,6 +183,7 @@ class MovimientosPendiente extends Component
 
             $movimiento->save();
 
+            DB::commit();
             $this->cargarMovimientos();
             $this->pendiente->refresh();
             $this->emit('movimientoActualizado');
@@ -192,8 +195,9 @@ class MovimientosPendiente extends Component
                 'text' => $mensaje,
             ]);
         } catch (\Exception $e) {
+            DB::rollBack();
             $error = 'Error al guardar el movimiento: ' . $e->getMessage();
-            
+
             // Evento para notificación de error con SweetAlert2
             $this->dispatchBrowserEvent('swal:error', [
                 'title' => 'Error',
@@ -206,22 +210,25 @@ class MovimientosPendiente extends Component
 
     public function eliminarMovimiento($id)
     {
+        DB::beginTransaction();
         try {
             $movimiento = Movimiento::findOrFail($id);
             $movimiento->delete();
 
+            DB::commit();
             $this->cargarMovimientos();
             $this->pendiente->refresh();
             $this->emit('movimientoActualizado');
 
             $mensaje = 'Movimiento eliminado exitosamente.';
-            
+
             // Evento para notificación con SweetAlert2
             $this->dispatchBrowserEvent('swal:success', [
                 'title' => 'Eliminado',
                 'text' => $mensaje,
             ]);
         } catch (\Exception $e) {
+            DB::rollBack();
             $error = 'Error al eliminar el movimiento: ' . $e->getMessage();
 
             // Evento para notificación de error con SweetAlert2

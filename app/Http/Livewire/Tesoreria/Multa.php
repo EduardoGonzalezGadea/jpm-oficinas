@@ -60,7 +60,7 @@ class Multa extends Component
     public function mount()
     {
         try {
-            $url = 'https://www.bps.gub.uy/bps/valores.jsp';
+            $url = 'https://www.bps.gub.uy/bps/valores.jsp?contentid=5478';
             $command = 'curl -s --compressed "' . $url . '"';
             $html = shell_exec($command);
 

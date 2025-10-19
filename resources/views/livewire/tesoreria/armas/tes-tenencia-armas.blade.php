@@ -1,36 +1,34 @@
 <div>
-    <div class="card mt-3">
-        <div class="card-header">
-            <div class="row">
-                <div class="col-md-6">
-                    <h4>Listado de Tenencia de Armas</h4>
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h3 class="mb-0">Listado de Tenencia de Armas</h3>
+                    <div class="btn-group d-print-none">
+                        <button wire:click="create" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Nuevo Registro
+                        </button>
+                    </div>
                 </div>
-                <div class="col-md-6 text-right">
-                    <button wire:click="create" class="btn btn-primary">
-                        <i class="fas fa-plus"></i> Nuevo Registro
-                    </button>
-                </div>
-            </div>
-        </div>
+                <div class="card-body p-2">
+                    @if (session()->has('message'))
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            {{ session('message') }}
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                    @endif
 
-        <div class="card-body">
-            @if (session()->has('message'))
-                <div class="alert alert-success alert-dismissible fade show" role="alert">
-                    {{ session('message') }}
-                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-            @endif
+                    <div class="form-row mb-2">
+                        <div class="col-md-12">
+                            <div class="input-group">
+                                <input type="text" class="form-control form-control-sm" placeholder="Buscar..." wire:model="search">
+                            </div>
+                        </div>
+                    </div>
 
-            <div class="row mb-3">
-                <div class="col-md-4">
-                    <input type="text" class="form-control" placeholder="Buscar..." wire:model="search">
-                </div>
-            </div>
-
-            <div class="table-responsive">
-                <table class="table table-striped table-hover">
+                    <table class="table table-bordered table-sm">
                     <thead>
                         <tr>
                             <th>Fecha</th>
@@ -39,19 +37,21 @@
                             <th>Orden Cobro</th>
                             <th>N° Trámite</th>
                             <th>Monto</th>
+                            <th>Recibo</th>
                             <th>Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse($registros as $registro)
                             <tr>
-                                <td>{{ $registro->fecha->format('d/m/Y') }}</td>
-                                <td>{{ $registro->titular }}</td>
-                                <td>{{ $registro->cedula }}</td>
-                                <td>{{ $registro->orden_cobro }}</td>
-                                <td>{{ $registro->numero_tramite }}</td>
-                                <td>$ {{ number_format($registro->monto, 2, ',', '.') }}</td>
-                                <td>
+                                <td class="align-middle">{{ $registro->fecha->format('d/m/Y') }}</td>
+                                <td class="align-middle">{{ $registro->titular }}</td>
+                                <td class="align-middle">{{ $registro->cedula }}</td>
+                                <td class="align-middle">{{ $registro->orden_cobro }}</td>
+                                <td class="align-middle">{{ $registro->numero_tramite }}</td>
+                                <td class="align-middle text-nowrap">$ {{ number_format($registro->monto, 2, ',', '.') }}</td>
+                                <td class="align-middle">{{ $registro->recibo }}</td>
+                                <td class="align-middle text-nowrap">
                                     <button wire:click="showDetails({{ $registro->id }})" class="btn btn-sm btn-secondary" title="Ver Detalle">
                                         <i class="fas fa-eye"></i>
                                     </button>
@@ -65,15 +65,16 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7" class="text-center">No hay registros disponibles</td>
+                                <td colspan="8" class="text-center">No hay registros disponibles</td>
                             </tr>
                         @endforelse
                     </tbody>
                 </table>
-            </div>
 
-            <div class="mt-3 d-flex justify-content-center">
-                {{ $registros->links() }}
+                    <div class="d-flex justify-content-center">
+                        {{ $registros->links() }}
+                    </div>
+                </div>
             </div>
         </div>
     </div>

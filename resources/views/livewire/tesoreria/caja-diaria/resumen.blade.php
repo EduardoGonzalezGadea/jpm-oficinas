@@ -15,7 +15,7 @@
             <div class="card shadow-sm" style="background-color: #e8f5e9;">
                 <div class="card-body p-2">
                     <div class="d-flex flex-column">
-                        <h6 class="card-title mb-1 text-success small text-uppercase">Total Cobros</h6>
+                        <h6 class="card-title mb-1 text-success small text-uppercase">Cobros en Efectivo</h6>
                         <p class="card-text h4 mb-0 text-dark font-weight-bold">$ {{ number_format($totalCobros ?? 0, 2, ',', '.') }}</p>
                     </div>
                 </div>
@@ -25,7 +25,7 @@
             <div class="card shadow-sm" style="background-color: #ffebee;">
                 <div class="card-body p-2">
                     <div class="d-flex flex-column">
-                        <h6 class="card-title mb-1 text-danger small text-uppercase">Total Pagos</h6>
+                        <h6 class="card-title mb-1 text-danger small text-uppercase">Pagos en Efectivo</h6>
                         <p class="card-text h4 mb-0 text-dark font-weight-bold">$ {{ number_format($totalPagos ?? 0, 2, ',', '.') }}</p>
                     </div>
                 </div>
@@ -51,6 +51,17 @@
         </button>
     </div>
     @endif
+
+    @if($cierreExistente)
+    <div class="alert alert-info alert-dismissible fade show" role="alert">
+        <strong>Información:</strong> Ya existe un cierre de caja para la fecha seleccionada. Si vuelve a guardar, se sobrescribirá.
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close" wire:click="$set('cierreExistente', false)">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+    @endif
+
+
 
     {{-- Cajas Inicial y Cierre --}}
     <div class="row mt-2">

@@ -13,13 +13,11 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('tes_cd_cobros', function (Blueprint $table) {
+        Schema::create('tes_cd_conceptos_cobro', function (Blueprint $table) {
             $table->id();
-            $table->date('fecha');
-            $table->decimal('monto', 10, 2);
-            $table->string('medio_pago');
-            $table->string('descripcion')->nullable();
-            $table->unsignedBigInteger('recibo')->nullable();
+            $table->string('nombre');
+            $table->text('descripcion')->nullable();
+            $table->boolean('activo')->default(true);
             $table->unsignedInteger('created_by')->nullable();
             $table->unsignedInteger('updated_by')->nullable();
             $table->unsignedInteger('deleted_by')->nullable();
@@ -39,6 +37,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('tes_cd_cobros');
+        Schema::dropIfExists('tes_cd_conceptos_cobro');
     }
 };

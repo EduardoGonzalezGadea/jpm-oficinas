@@ -47,4 +47,9 @@ class TesCajaDiarias extends Model
     {
         return $this->hasMany(TesCdInicial::class, 'tes_caja_diarias_id');
     }
+
+    public function cierre()
+    {
+        return $this->hasOne(TesCdCierre::class, 'tes_caja_diarias_id');
+    }
 }

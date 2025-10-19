@@ -27,6 +27,8 @@ class Resumen extends Component
     public $cierrePorDenominacion = [];
     public $cierreTotal = 0;
 
+    public $cierreExistente = false;
+
     public function mount($fecha, $cajaDiariaExists, $saldoInicial, $totalCobros, $totalPagos, $saldoActual)
     {
         $this->fecha = $fecha;
@@ -39,6 +41,13 @@ class Resumen extends Component
         $this->denominaciones = TesDenominacionMoneda::activos()->ordenado()->get();
         $this->inicializarCajas();
         $this->loadCajaData();
+    }
+
+    public function updated($propertyName)
+    {
+        if ($propertyName === 'fecha') {
+            $this->cierreExistente = false;
+        }
     }
 
     private function inicializarCajas()
@@ -60,9 +69,10 @@ class Resumen extends Component
         if ($this->cajaDiariaExists) {
             try {
                 $fecha = Carbon::parse($this->fecha);
-                $cajaDiaria = TesCajaDiarias::whereDate('fecha', $fecha)->with('iniciales')->first();
+                $cajaDiaria = TesCajaDiarias::whereDate('fecha', $fecha)->with(['iniciales', 'cierre.denominaciones'])->first();
 
                 if ($cajaDiaria) {
+                    // Cargar datos de caja inicial
                     foreach ($cajaDiaria->iniciales as $inicial) {
                         if (isset($this->cajaInicialPorDenominacion[$inicial->tes_denominaciones_monedas_id])) {
                             $denominacion = $this->denominaciones->find($inicial->tes_denominaciones_monedas_id);
@@ -73,6 +83,22 @@ class Resumen extends Component
                         }
                     }
                     $this->calcularCajaInicialTotal();
+
+                    // Cargar datos de cierre de caja
+                    if ($cajaDiaria->cierre) {
+                        $this->cierreExistente = true;
+                        $this->cierreTotal = (float)$cajaDiaria->cierre->monto_cierre;
+                        foreach ($cajaDiaria->cierre->denominaciones as $cierreDenominacion) {
+                            if (isset($this->cierrePorDenominacion[$cierreDenominacion->tes_denominaciones_monedas_id])) {
+                                $denominacion = $this->denominaciones->find($cierreDenominacion->tes_denominaciones_monedas_id);
+                                $this->cierrePorDenominacion[$cierreDenominacion->tes_denominaciones_monedas_id]['monto'] = (float)$cierreDenominacion->monto;
+                                if ($denominacion && (float)$denominacion->denominacion > 0) {
+                                    $this->cierrePorDenominacion[$cierreDenominacion->tes_denominaciones_monedas_id]['cantidad'] = (float)$cierreDenominacion->monto / (float)$denominacion->denominacion;
+                                }
+                            }
+                        }
+                        $this->calcularCierreTotal();
+                    }
                 }
             } catch (\Exception $e) {
                 // Log or handle error, for now, do nothing to prevent crash
@@ -272,6 +298,11 @@ class Resumen extends Component
                     }
                     $cierreDenominacion->monto = $datos['monto'];
                     $cierreDenominacion->save();
+                } else {
+                    // Delete if exists and amount is 0
+                    TesCdCierreDenominacion::where('tes_cd_cierres_id', $cierreCaja->id)
+                        ->where('tes_denominaciones_monedas_id', $denominacionId)
+                        ->delete();
                 }
             }
 

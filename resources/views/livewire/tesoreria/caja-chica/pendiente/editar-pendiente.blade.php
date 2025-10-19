@@ -26,96 +26,109 @@
 
     <hr>
 
-    {{-- Formulario para editar pendiente con el nuevo diseño de "Input Group" --}}
-    <h4 class="mt-4">Modificar datos del Pendiente</h4>
-
-    <form wire:submit.prevent="guardarCambios">
-        <div class="row">
-            
-            <!-- ====== Columna Izquierda ====== -->
-            <div class="col-md-6">
-                
-                {{-- Grupo de campo para "Número" --}}
-                <div class="mb-3">
-                    <div class="input-group">
-                        <span class="input-group-text">Número</span>
-                        <input type="number" wire:model.live="nroPendiente"
-                               class="form-control @error('nroPendiente') is-invalid @enderror"
-                               placeholder="Ingrese el número" 
-                               value="{{ $pendiente->pendiente }}">
-                    </div>
-                    @error('nroPendiente')
-                        {{-- La clase d-block asegura que el mensaje se muestre bajo el input-group --}}
-                        <div class="invalid-feedback d-block">{{ $message }}</div>
-                    @enderror
-                </div>
-
-                {{-- Grupo de campo para "Fecha" --}}
-                <div class="mb-3">
-                    <div class="input-group">
-                        <span class="input-group-text">Fecha</span>
-                        <input type="date" wire:model.live="fechaPendientes"
-                               class="form-control @error('fechaPendientes') is-invalid @enderror" 
-                               placeholder="Seleccione la fecha"
-                               value="{{ $pendiente->fechaPendientes->format('Y-m-d') }}">
-                    </div>
-                    @error('fechaPendientes')
-                        <div class="invalid-feedback d-block">{{ $message }}</div>
-                    @enderror
-                </div>
+    {{-- Acordeón para editar pendiente --}}
+    <div class="accordion mt-4" id="accordionEditarPendiente">
+        <div class="card">
+            <div class="card-header p-0" id="headingEditar">
+                <h5 class="mb-0">
+                    <button class="btn btn-info btn-block" type="button" data-toggle="collapse" data-target="#collapseEditar" aria-expanded="false" aria-controls="collapseEditar">
+                        Modificar datos del Pendiente
+                    </button>
+                </h5>
             </div>
+            <div id="collapseEditar" class="collapse" aria-labelledby="headingEditar" data-parent="#accordionEditarPendiente" wire:ignore.self>
+                <div class="card-body">
+                    <form wire:submit.prevent="guardarCambios">
+                        <div class="row">
 
-            <!-- ====== Columna Derecha ====== -->
-            <div class="col-md-6">
+                            <!-- ====== Columna Izquierda ====== -->
+                            <div class="col-md-6">
 
-                {{-- Grupo de campo para "Dependencia" --}}
-                <div class="mb-3">
-                    <div class="input-group">
-                        <span class="input-group-text">Dependencia</span>
-                        <select wire:model.live="relDependencia"
-                                class="form-control @error('relDependencia') is-invalid @enderror" 
-                                value="{{ $pendiente->dependencia->idDependencias }}">
-                            <option value="">Seleccione una dependencia</option>
-                            @foreach ($dependencias as $dependencia)
-                                @if ($pendiente->dependencia->idDependencias == $dependencia->idDependencias)
-                                    <option value="{{ $dependencia->idDependencias }}" selected>{{ $dependencia->dependencia }}</option>
-                                @else
-                                    <option value="{{ $dependencia->idDependencias }}">{{ $dependencia->dependencia }}</option>
-                                @endif
-                            @endforeach
-                        </select>
-                    </div>
-                    @error('relDependencia')
-                        <div class="invalid-feedback d-block">{{ $message }}</div>
-                    @enderror
-                </div>
+                                {{-- Grupo de campo para "Número" --}}
+                                <div class="mb-3">
+                                    <div class="input-group">
+                                        <span class="input-group-text">Número</span>
+                                        <input type="number" wire:model.live="nroPendiente"
+                                               class="form-control @error('nroPendiente') is-invalid @enderror"
+                                               placeholder="Ingrese el número"
+                                               value="{{ $pendiente->pendiente }}">
+                                    </div>
+                                    @error('nroPendiente')
+                                        {{-- La clase d-block asegura que el mensaje se muestre bajo el input-group --}}
+                                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                                    @enderror
+                                </div>
 
-                {{-- Grupo de campo para "Monto" --}}
-                <div class="mb-3">
-                    <div class="input-group">
-                        {{-- Usamos el signo '$' para que coincida con tu ejemplo --}}
-                        <span class="input-group-text">Monto en $</span>
-                        <input type="number" step="1.00" min="0.0" wire:model.live="montoPendientes"
-                               class="form-control @error('montoPendientes') is-invalid @enderror"
-                               placeholder="Ingrese el monto"
-                               value="{{ $pendiente->montoPendientes }}">
-                    </div>
-                    @error('montoPendientes')
-                        <div class="invalid-feedback d-block">{{ $message }}</div>
-                    @enderror
+                                {{-- Grupo de campo para "Fecha" --}}
+                                <div class="mb-3">
+                                    <div class="input-group">
+                                        <span class="input-group-text">Fecha</span>
+                                        <input type="date" wire:model.live="fechaPendientes"
+                                               class="form-control @error('fechaPendientes') is-invalid @enderror"
+                                               placeholder="Seleccione la fecha"
+                                               value="{{ $pendiente->fechaPendientes->format('Y-m-d') }}">
+                                    </div>
+                                    @error('fechaPendientes')
+                                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+
+                            <!-- ====== Columna Derecha ====== -->
+                            <div class="col-md-6">
+
+                                {{-- Grupo de campo para "Dependencia" --}}
+                                <div class="mb-3">
+                                    <div class="input-group">
+                                        <span class="input-group-text">Dependencia</span>
+                                        <select wire:model.live="relDependencia"
+                                                class="form-control @error('relDependencia') is-invalid @enderror"
+                                                value="{{ $pendiente->dependencia->idDependencias }}">
+                                            <option value="">Seleccione una dependencia</option>
+                                            @foreach ($dependencias as $dependencia)
+                                                @if ($pendiente->dependencia->idDependencias == $dependencia->idDependencias)
+                                                    <option value="{{ $dependencia->idDependencias }}" selected>{{ $dependencia->dependencia }}</option>
+                                                @else
+                                                    <option value="{{ $dependencia->idDependencias }}">{{ $dependencia->dependencia }}</option>
+                                                @endif
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    @error('relDependencia')
+                                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+                                {{-- Grupo de campo para "Monto" --}}
+                                <div class="mb-3">
+                                    <div class="input-group">
+                                        {{-- Usamos el signo '$' para que coincida con tu ejemplo --}}
+                                        <span class="input-group-text">Monto en $</span>
+                                        <input type="number" step="1.00" min="0.0" wire:model.live="montoPendientes"
+                                               class="form-control @error('montoPendientes') is-invalid @enderror"
+                                               placeholder="Ingrese el monto"
+                                               value="{{ $pendiente->montoPendientes }}">
+                                    </div>
+                                    @error('montoPendientes')
+                                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Fila para los botones --}}
+                        <div class="row mt-3">
+                            <div class="col-md-12 text-right">
+                                <button type="reset" class="btn btn-secondary">Cancelar</button>
+                                <button type="submit" class="btn btn-primary">Guardar cambios</button>
+                            </div>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
+    </div>
 
-        {{-- Fila para los botones --}}
-        <div class="row mt-3">
-            <div class="col-md-12 text-right">
-                <button type="reset" class="btn btn-secondary">Cancelar</button>
-                <button type="submit" class="btn btn-primary">Guardar cambios</button>
-            </div>
-        </div>
-    </form>
-    
     <hr>
 
     {{-- El componente hijo recibe los datos actualizados automáticamente --}}

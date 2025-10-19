@@ -6,6 +6,7 @@ namespace App\Http\Livewire\Tesoreria\CajaChica;
 use Livewire\Component;
 use App\Models\Tesoreria\Pago;
 use App\Models\Tesoreria\Acreedor;
+use Illuminate\Support\Facades\DB;
 
 class ModalNuevoPago extends Component
 {
@@ -78,6 +79,7 @@ class ModalNuevoPago extends Component
     {
         $this->validate();
 
+        DB::beginTransaction();
         try {
             Pago::create([
                 'relCajaChica_Pagos' => $this->idCajaChica,
@@ -89,10 +91,12 @@ class ModalNuevoPago extends Component
                 // Los campos fechaIngresoPagos, ingresoPagos, recuperadoPagos se dejan null por defecto
             ]);
 
+            DB::commit();
             session()->flash('message', 'Pago Directo creado correctamente.');
             $this->dispatchBrowserEvent('hide-modal', ['id' => 'modalNuevoPago']);
             $this->emitTo('tesoreria.caja-chica.index', 'pagoCreado');
         } catch (\Exception $e) {
+            DB::rollBack();
             session()->flash('error', 'Error al crear el pago directo: ' . $e->getMessage());
         }
     }

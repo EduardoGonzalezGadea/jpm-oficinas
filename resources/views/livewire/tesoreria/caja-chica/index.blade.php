@@ -69,7 +69,7 @@
         <tbody>
             @forelse ($tablaCajaChica as $item)
                 <tr wire:key="cajachica-{{ $item->idCajaChica }}">
-                    <td class="text-center font-weight-bold">{{ $item->mes }}</td>
+                    <td class="text-center font-weight-bold">{{ mb_strtoupper($item->mes, 'UTF-8') }}</td>
                     <td class="text-center font-weight-bold">{{ $item->anio }}</td>
                     <td class="text-center font-weight-bold classCajaChicaActual">
                         {{ number_format($item->montoCajaChica, 2, ',', '.') }}
@@ -349,6 +349,7 @@
                 <th class="text-center align-middle">REINTEG.</th>
                 <th class="text-center align-middle">RECUPER.</th>
                 <th class="text-center align-middle">SALDO</th>
+                <th class="text-center align-middle"><i class="fas fa-info-circle" title="Estado del pendiente"></i></th>
                 <th class="text-center align-middle d-print-none">ACCIONES</th>
             </tr>
         </thead>
@@ -374,13 +375,30 @@
                         class="text-right align-middle {{ ($item->saldo ?? 0) > 0 ? 'text-danger font-weight-bold' : '' }}">
                         {{ number_format($item->saldo ?? 0, 2, ',', '.') }}
                     </td>
+                    <td class="text-center align-middle">
+                        @php
+                            $hasMovements =
+                                ($item->tot_rendido ?? 0) > 0 ||
+                                ($item->extra ?? 0) > 0 ||
+                                ($item->tot_reintegrado ?? 0) > 0 ||
+                                ($item->tot_recuperado ?? 0) > 0;
+                            $saldo = $item->saldo ?? 0;
+                        @endphp
+                        @if (!$hasMovements)
+                            <i class="fas fa-check text-success" title="Sin movimientos"></i>
+                        @elseif($hasMovements && $saldo > 0)
+                            <i class="fas fa-dollar-sign text-warning" title="Con movimientos, saldo pendiente"></i>
+                        @elseif($hasMovements && $saldo == 0)
+                            <i class="fas fa-check-circle text-info" title="Finalizado"></i>
+                        @endif
+                    </td>
                     <td class="text-center align-middle d-print-none">
                         <input type='hidden' name='selIdPendientes' value='{{ $item->idPendientes }}'>
                         <div class='btn-group' role='group'>
-                            <a href="{{ route('tesoreria.caja-chica.pendientes.editar', $item->idPendientes) }}"
+                            <button type="button" wire:click="irAEditar({{ $item->idPendientes }})"
                                 class="btn btn-sm btn-dark mr-1" title="Editar Pendiente">
                                 <i class="fas fa-pencil-alt"></i>
-                            </a>
+                            </button>
                             @if (($item->tot_recuperado ?? 0) < ($item->tot_rendido ?? 0) && ($item->tot_rendido ?? 0) > 0)
                                 <button type="button" class="btn btn-sm btn-info mr-1"
                                     title="Recuperar Dinero Rendido"
@@ -397,7 +415,7 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="10" class="text-center">No hay datos de Pendientes para el mes y año
+                    <td colspan="11" class="text-center">No hay datos de Pendientes para el mes y año
                         seleccionados
                         hasta la fecha
                         {{ \Carbon\Carbon::createFromFormat('Y-m-d', $fechaHasta)->format('d/m/Y') }}.
@@ -450,7 +468,8 @@
                     <td class="text-center align-middle">{{ $item->acreedor->acreedor ?? '' }}</td>
                     <td>{{ $item->conceptoPagos }}</td>
                     <td class="text-right align-middle">{{ number_format($item->montoPagos, 2, ',', '.') }}</td>
-                    <td class="text-right align-middle">{{ number_format($item->recuperado_en_periodo ?? 0, 2, ',', '.') }}
+                    <td class="text-right align-middle">
+                        {{ number_format($item->recuperado_en_periodo ?? 0, 2, ',', '.') }}
                     </td>
                     <td
                         class="text-right align-middle

@@ -9,11 +9,11 @@ trait ConvertirMayusculas
      */
     protected function toUpper($value)
     {
-        if (is_null($value)) {
-            return null;
+        if (is_string($value)) {
+            return mb_strtoupper($value, 'UTF-8');
         }
 
-        return mb_strtoupper($value, 'UTF-8');
+        return $value;
     }
 
     /**

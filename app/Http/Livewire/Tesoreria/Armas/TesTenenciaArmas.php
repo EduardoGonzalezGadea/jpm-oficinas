@@ -80,7 +80,8 @@ class TesTenenciaArmas extends Component
                   ->orWhere('orden_cobro', 'like', '%' . $this->search . '%')
                   ->orWhere('numero_tramite', 'like', '%' . $this->search . '%');
         })
-        ->orderBy('fecha', 'desc')
+        ->orderBy('fecha', 'asc')
+        ->orderBy('recibo', 'asc')
         ->paginate(10);
 
         return view('livewire.tesoreria.armas.tes-tenencia-armas', compact('registros'));

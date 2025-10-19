@@ -2,13 +2,13 @@
 
 namespace App\Http\Livewire\Tesoreria\Arrendamientos;
 
-use App\Models\Tesoreria\Arrendamiento as Model;
-use App\Models\Tesoreria\MedioDePago;
-use Livewire\Component;
-use Livewire\WithPagination;
-use Carbon\Carbon;
-use Illuminate\Support\Facades\DB;
-use App\Traits\ConvertirMayusculas;
+    use App\Models\Tesoreria\Arrendamiento as Model;
+    use App\Models\Tesoreria\MedioDePago;
+    use Livewire\Component;
+    use Livewire\WithPagination;
+    use Carbon\Carbon;
+    use Illuminate\Support\Facades\DB;
+    use App\Traits\ConvertirMayusculas;
 
 class Arrendamiento extends Component
 {
@@ -70,51 +70,62 @@ class Arrendamiento extends Component
         $this->resetInput();
     }
 
-    public function store()
-    {
-        if (!auth()->check()) {
-            return redirect()->route('login')->with('error', 'La sesión ha expirado. Por favor, inicie sesión de nuevo.');
-        }
-
-        if (!$this->fecha) {
-            $this->fecha = Carbon::now()->format('Y-m-d');
-        }
-
-        $this->validate([
-            'fecha' => 'required|date',
-            'ingreso' => 'nullable|integer',
-            'nombre' => 'nullable|string|max:255',
-            'cedula' => 'nullable|string|max:255',
-            'telefono' => 'nullable|string|max:255',
-            'monto' => 'required|numeric',
-            'detalle' => 'nullable|string',
-            'orden_cobro' => 'nullable|string|max:255',
-            'recibo' => 'nullable|string|max:255',
-            'medio_de_pago' => 'required|string|max:255',
-        ]);
-
-        $datos = $this->convertirCamposAMayusculas(
-            ['nombre', 'cedula', 'telefono', 'detalle', 'orden_cobro', 'recibo', 'medio_de_pago'],
-            [
-                'fecha' => $this->fecha,
-                'ingreso' => $this->ingreso,
-                'nombre' => $this->nombre,
-                'cedula' => $this->cedula,
-                'telefono' => $this->telefono,
-                'monto' => $this->monto,
-                'detalle' => $this->detalle,
-                'orden_cobro' => $this->orden_cobro,
-                'recibo' => $this->recibo,
-                'medio_de_pago' => $this->medio_de_pago,
-            ]
-        );
-
-        Model::create($datos);
-
-        $this->resetInput();
-        $this->emit('arrendamientoStore');
-        $this->dispatchBrowserEvent('alert', ['type' => 'success', 'message' => 'Arrendamiento creado con éxito!']);
+public function store()
+{
+    if (!auth()->check()) {
+        return redirect()->route('login')->with('error', 'La sesión ha expirado. Por favor, inicie sesión de nuevo.');
     }
+
+    if (!$this->fecha) {
+        $this->fecha = Carbon::now()->format('Y-m-d');
+    }
+
+    // Validación y obtención de datos
+    $validated = $this->validate([
+        'fecha' => 'required|date',
+        'ingreso' => 'nullable|integer',
+        'nombre' => 'nullable|string|max:255',
+        'cedula' => 'nullable|string|max:255',
+        'telefono' => 'nullable|string|max:255',
+        'monto' => 'required|numeric',
+        'detalle' => 'nullable|string',
+        'orden_cobro' => 'nullable|string|max:255',
+        'recibo' => 'nullable|string|max:255',
+        'medio_de_pago' => 'required|string|max:255',
+    ]);
+
+    // Puedo tener medible datos para manejos de error en creación.
+    $datos = $this->convertirCamposAMayusculas(
+        ['nombre', 'cedula', 'telefono', 'detalle', 'orden_cobro', 'recibo', 'medio_de_pago'],
+        [
+            'fecha' => $this->fecha,
+            'ingreso' => $this->ingreso,
+            'nombre' => $this->nombre,
+            'cedula' => $this->cedula,
+            'telefono' => $this->telefono,
+            'monto' => $this->monto,
+            'detalle' => $this->detalle,
+            'orden_cobro' => $this->orden_cobro,
+            'recibo' => $this->recibo,
+            'medio_de_pago' => $this->medio_de_pago,
+        ]
+    );
+
+    try {
+        DB::beginTransaction();
+        Model::create($datos);
+        DB::commit();
+    } catch (\Exception $e) {
+        DB::rollBack();
+        // Puedo retornar un mensaje de error significativo, o revertir la operación.
+        $this->dispatchBrowserEvent('alert', ['type' => 'error', 'message' => 'Hubo un error al crear el arrendamiento. Por favor, inténtalo nuevamente.']);
+        return;
+    }
+
+    $this->resetInput();
+    $this->emit('arrendamientoStore');
+    $this->dispatchBrowserEvent('alert', ['type' => 'success', 'message' => 'Arrendamiento creado con éxito!']);
+}
 
     public function edit($id)
     {
@@ -167,90 +178,117 @@ class Arrendamiento extends Component
         $this->dispatchBrowserEvent('show-modal', ['id' => 'ingresoModal']);
     }
 
-    public function updateIngreso()
-    {
-        if (!auth()->check()) {
-            return redirect()->route('login')->with('error', 'La sesión ha expirado. Por favor, inicie sesión de nuevo.');
-        }
+public function updateIngreso()
+{
+    if (!auth()->check()) {
+        return redirect()->route('login')->with('error', 'La sesión ha expirado. Por favor, inicie sesión de nuevo.');
+    }
 
-        $this->validate([
-            'ingreso' => 'nullable|integer',
-        ]);
+    $this->validate([
+        'ingreso' => 'nullable|integer',
+    ]);
 
-        if ($this->arrendamiento_id) {
-            $arrendamiento = Model::findOrFail($this->arrendamiento_id);
+    if ($this->arrendamiento_id) {
+        $arrendamiento = Model::findOrFail($this->arrendamiento_id);
+
+        try {
+            DB::beginTransaction();
             $arrendamiento->update([
                 'ingreso' => $this->ingreso,
             ]);
-            $this->resetInput();
-            $this->emit('arrendamientoUpdate');
-            $this->dispatchBrowserEvent('alert', ['type' => 'success', 'message' => 'Ingreso actualizado con éxito!']);
-        }
-    }
-
-    public function update()
-    {
-        if (!auth()->check()) {
-            return redirect()->route('login')->with('error', 'La sesión ha expirado. Por favor, inicie sesión de nuevo.');
-        }
-
-        $this->validate([
-            'fecha' => 'required|date',
-            'ingreso' => 'nullable|integer',
-            'nombre' => 'nullable|string|max:255',
-            'cedula' => 'nullable|string|max:255',
-            'telefono' => 'nullable|string|max:255',
-            'monto' => 'required|numeric',
-            'detalle' => 'nullable|string',
-            'orden_cobro' => 'nullable|string|max:255',
-            'recibo' => 'nullable|string|max:255',
-            'medio_de_pago' => 'required|string|max:255',
-        ]);
-
-        if ($this->arrendamiento_id) {
-            $arrendamiento = Model::findOrFail($this->arrendamiento_id);
-            $datos = $this->convertirCamposAMayusculas(
-                ['nombre', 'cedula', 'telefono', 'detalle', 'orden_cobro', 'recibo', 'medio_de_pago'],
-                [
-                    'fecha' => $this->fecha,
-                    'ingreso' => $this->ingreso,
-                    'nombre' => $this->nombre,
-                    'cedula' => $this->cedula,
-                    'telefono' => $this->telefono,
-                    'monto' => $this->monto,
-                    'detalle' => $this->detalle,
-                    'orden_cobro' => $this->orden_cobro,
-                    'recibo' => $this->recibo,
-                    'medio_de_pago' => $this->medio_de_pago,
-                ]
-            );
-
-            $arrendamiento->update($datos);
-            $this->resetInput();
-            $this->emit('arrendamientoUpdate');
-            $this->dispatchBrowserEvent('alert', ['type' => 'success', 'message' => 'Arrendamiento actualizado con éxito!']);
-        }
-    }
-
-    public function destroy($id)
-    {
-        if (!auth()->check()) {
-            return redirect()->route('login')->with('error', 'La sesión ha expirado. Por favor, inicie sesión de nuevo.');
-        }
-
-        $arrendamiento = Model::findOrFail($id);
-
-        if ($arrendamiento->planilla_id !== null) {
-            $this->dispatchBrowserEvent('alert', [
-                'type' => 'error',
-                'message' => 'El arrendamiento está incluído en una planilla y no se puede eliminar.'
-            ]);
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            $this->dispatchBrowserEvent('alert', ['type' => 'error', 'message' => 'Hubo un error al actualizar el ingreso. Por favor, inténtalo nuevamente.']);
             return;
         }
 
-        $arrendamiento->delete();
-        session()->flash('message', 'Arrendamiento eliminado con éxito.');
+        $this->resetInput();
+        $this->emit('arrendamientoUpdate');
+        $this->dispatchBrowserEvent('alert', ['type' => 'success', 'message' => 'Ingreso actualizado con éxito!']);
     }
+}
+
+public function update()
+{
+    if (!auth()->check()) {
+        return redirect()->route('login')->with('error', 'La sesión ha expirado. Por favor, inicie sesión de nuevo.');
+    }
+
+    // Validation first to ensure data integrity.
+    $validated = $this->validate([
+        'fecha' => 'required|date',
+        'ingreso' => 'nullable|integer',
+        'nombre' => 'nullable|string|max:255',
+        'cedula' => 'nullable|string|max:255',
+        'telefono' => 'nullable|string|max:255',
+        'monto' => 'required|numeric',
+        'detalle' => 'nullable|string',
+        'orden_cobro' => 'nullable|string|max:255',
+        'recibo' => 'nullable|string|max:255',
+        'medio_de_pago' => 'required|string|max:255',
+    ]);
+
+    if ($this->arrendamiento_id) {
+        $arrendamiento = Model::findOrFail($this->arrendamiento_id);
+        $datos = $this->convertirCamposAMayusculas(
+            ['nombre', 'cedula', 'telefono', 'detalle', 'orden_cobro', 'recibo', 'medio_de_pago'],
+            [
+                'fecha' => $this->fecha,
+                'ingreso' => $this->ingreso,
+                'nombre' => $this->nombre,
+                'cedula' => $this->cedula,
+                'telefono' => $this->telefono,
+                'monto' => $this->monto,
+                'detalle' => $this->detalle,
+                'orden_cobro' => $this->orden_cobro,
+                'recibo' => $this->recibo,
+                'medio_de_pago' => $this->medio_de_pago,
+            ]
+        );
+
+        try {
+            DB::beginTransaction();
+            $arrendamiento->update($datos);
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            $this->dispatchBrowserEvent('alert', ['type' => 'error', 'message' => 'Hubo un error al actualizar el arrendamiento. Por favor, inténtalo nuevamente.']);
+            return;
+        }
+
+        $this->resetInput();
+        $this->emit('arrendamientoUpdate');
+        $this->dispatchBrowserEvent('alert', ['type' => 'success', 'message' => 'Arrendamiento actualizado con éxito!']);
+    }
+}
+
+public function destroy($id)
+{
+    if (!auth()->check()) {
+        return redirect()->route('login')->with('error', 'La sesión ha expirado. Por favor, inicie sesión de nuevo.');
+    }
+
+    $arrendamiento = Model::findOrFail($id);
+
+    if ($arrendamiento->planilla_id !== null) {
+        $this->dispatchBrowserEvent('alert', [
+            'type' => 'error',
+            'message' => 'El arrendamiento está incluido en una planilla y no puede ser eliminado.'
+        ]);
+        return;
+    }
+
+    try {
+        DB::beginTransaction();
+        $arrendamiento->delete();
+        DB::commit();
+        session()->flash('message', 'Arrendamiento eliminado con éxito.');
+    } catch (\Exception $e) {
+        DB::rollBack();
+        $this->dispatchBrowserEvent('alert', ['type' => 'error', 'message' => 'Hubo un error al eliminar el arrendamiento. Por favor, inténtalo nuevamente.']);
+    }
+}
 
     public function showDetails($id)
     {

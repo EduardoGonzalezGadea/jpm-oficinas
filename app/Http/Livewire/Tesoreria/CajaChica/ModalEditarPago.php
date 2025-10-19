@@ -6,6 +6,7 @@ use Livewire\Component;
 use App\Models\Tesoreria\Pago;
 use App\Models\Tesoreria\Acreedor;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class ModalEditarPago extends Component
 {
@@ -70,6 +71,7 @@ class ModalEditarPago extends Component
     {
         $this->validate();
 
+        DB::beginTransaction();
         try {
             $pago = Pago::findOrFail($this->idPago);
             $pago->update([
@@ -84,10 +86,12 @@ class ModalEditarPago extends Component
                 'ingresoPagosBSE' => $this->pago['ingresoPagosBSE'],
             ]);
 
+            DB::commit();
             $this->emitUp('pagoCreado');
             $this->cerrarModal();
             session()->flash('message', 'Pago actualizado exitosamente.');
         } catch (\Exception $e) {
+            DB::rollBack();
             session()->flash('error', 'Error al actualizar el pago: ' . $e->getMessage());
         }
     }

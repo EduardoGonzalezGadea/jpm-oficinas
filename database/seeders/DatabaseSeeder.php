@@ -21,6 +21,8 @@ class DatabaseSeeder extends Seeder
             Tesoreria\MultaSeeder::class,
             Tesoreria\TesDenominacionMonedaSeeder::class,
             Tesoreria\TesTipoMonedaSeeder::class,
+            Tesoreria\ConceptoCobroSeeder::class,
+            Tesoreria\ConceptoCobroCampoSeeder::class,
         ]);
     }
 }

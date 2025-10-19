@@ -131,7 +131,15 @@ class Eventuales extends Component
             ]
         );
 
-        Model::create($datos);
+        try {
+            DB::beginTransaction();
+            Model::create($datos);
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            $this->dispatchBrowserEvent('alert', ['type' => 'error', 'message' => 'Error al crear el eventual. Por favor, inténtalo nuevamente.', 'toast' => true]);
+            return;
+        }
 
         $this->resetInput();
         $this->emit('eventualStore');
@@ -212,7 +220,16 @@ class Eventuales extends Component
                 ]
             );
 
-            $eventual->update($datos);
+            try {
+                DB::beginTransaction();
+                $eventual->update($datos);
+                DB::commit();
+            } catch (\Exception $e) {
+                DB::rollBack();
+                $this->dispatchBrowserEvent('alert', ['type' => 'error', 'message' => 'Error al actualizar el eventual. Por favor, inténtalo nuevamente.', 'toast' => true]);
+                return;
+            }
+
             $this->resetInput();
             $this->emit('eventualUpdate');
             $this->dispatchBrowserEvent('alert', ['type' => 'success', 'message' => 'Eventual actualizado con éxito!', 'toast' => true]);
@@ -235,8 +252,15 @@ class Eventuales extends Component
             return;
         }
 
-        $eventual->delete();
-        session()->flash('message', 'Eventual eliminado con éxito.');
+        try {
+            DB::beginTransaction();
+            $eventual->delete();
+            DB::commit();
+            session()->flash('message', 'Eventual eliminado con éxito.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            $this->dispatchBrowserEvent('alert', ['type' => 'error', 'message' => 'Error al eliminar el eventual. Por favor, inténtalo nuevamente.']);
+        }
     }
 
     public function showDetails($id)

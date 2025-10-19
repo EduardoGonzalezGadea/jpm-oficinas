@@ -110,7 +110,7 @@
                                 sessionStorage.removeItem('jwt_token');
                             } catch (e) {}
                             // Redirigir explícitamente al login para evitar vistas parciales rotas
-                            window.location.href = '/login';
+                            window.location.href = '{{ route("login") }}';
                         }
                     });
                     return false; // Detiene el manejo de errores de Livewire
@@ -143,6 +143,19 @@
                 title: event.detail.title,
                 text: event.detail.text,
                 confirmButtonText: 'Cerrar'
+            });
+        });
+
+        window.addEventListener('swal:alert', event => {
+            Swal.fire({
+                icon: event.detail.type,
+                title: event.detail.title,
+                text: event.detail.text,
+                confirmButtonText: 'Cerrar'
+            }).then(() => {
+                if (event.detail.modalToClose) {
+                    $('#' + event.detail.modalToClose).modal('hide');
+                }
             });
         });
 

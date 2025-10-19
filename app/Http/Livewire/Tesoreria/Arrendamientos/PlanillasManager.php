@@ -14,7 +14,7 @@ class PlanillasManager extends Component
     public $arrendamientosDisponibles;
     public $mes, $year;
 
-    protected $listeners = ['planillaCreated' => 'refreshPlanillas', 'arrendamientoStatusUpdated' => 'loadArrendamientosDisponibles', 'deletePlanilla'];
+    protected $listeners = ['planillaCreated' => 'loadPlanillas', 'arrendamientoStatusUpdated' => 'loadArrendamientosDisponibles', 'deletePlanilla'];
 
     public function mount($mes = null, $year = null)
     {

@@ -9,7 +9,7 @@
                 <h3 class="mb-0 ml-2">
                     <strong>Caja Chica | Editar Pendiente</strong>
                 </h3>
-                <a href="{{ route('tesoreria.caja-chica.index') }}" class="btn btn-secondary">
+                <a href="{{ route('tesoreria.caja-chica.index') }}" class="btn btn-success">
                     <i class="fas fa-arrow-left"></i> Volver
                 </a>
             </div>

@@ -5,6 +5,7 @@ namespace App\Http\Livewire\Tesoreria\CajaChica\Pendiente;
 use Livewire\Component;
 use App\Models\Tesoreria\Pendiente;
 use App\Models\Tesoreria\Dependencia;
+use Illuminate\Support\Facades\DB;
 
 class EditarPendiente extends Component
 {
@@ -76,16 +77,22 @@ class EditarPendiente extends Component
             return;
         }
 
-        // GUARDADO
-        $pendiente = Pendiente::findOrFail($this->idPendiente);
-        $pendiente->pendiente = $this->nroPendiente;
-        $pendiente->fechaPendientes = $this->fechaPendientes;
-        $pendiente->relDependencia = $this->relDependencia;
-        $pendiente->montoPendientes = $this->montoPendientes;
-        $pendiente->save();
+        DB::beginTransaction();
+        try {
+            $pendiente = Pendiente::findOrFail($this->idPendiente);
+            $pendiente->pendiente = $this->nroPendiente;
+            $pendiente->fechaPendientes = $this->fechaPendientes;
+            $pendiente->relDependencia = $this->relDependencia;
+            $pendiente->montoPendientes = $this->montoPendientes;
+            $pendiente->save();
 
-        // MENSAJE Y REDIRECCIÓN
-        session()->flash('success', 'Pendiente actualizado con éxito');
-        return redirect()->route('tesoreria.caja-chica.pendientes.editar', ['id' => $this->idPendiente]);
+            DB::commit();
+            session()->flash('success', 'Pendiente actualizado con éxito');
+            return redirect()->route('tesoreria.caja-chica.pendientes.editar', ['id' => $this->idPendiente]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            session()->flash('error', 'Error al actualizar el pendiente: ' . $e->getMessage());
+            return;
+        }
     }
 }

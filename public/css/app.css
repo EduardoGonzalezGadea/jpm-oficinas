@@ -199,6 +199,11 @@ input:checked + .slider:before {
   box-shadow: 0 2px 8px rgba(40, 167, 69, 0.4);
 }
 
+/* Input group prepend minimum width */
+.input-group-prepend {
+    min-width: 40px !important;
+}
+
 /* Media query para pantallas pequeñas */
 @media (max-width: 768px) {
   .btn-float-base {
