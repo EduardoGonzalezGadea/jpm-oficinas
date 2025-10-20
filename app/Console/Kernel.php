@@ -15,7 +15,17 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        // $schedule->command('inspire')->hourly();
+        // Limpieza de backups (elimina backups antiguos) a la 01:00 todos los días
+        $schedule->command('backup:clean')
+                 ->dailyAt('01:00')
+                 ->withoutOverlapping()
+                 ->onOneServer();
+
+        // Crear backup completo a las 03:00 todos los días
+        $schedule->command('backup:run')
+                 ->dailyAt('03:00')
+                 ->withoutOverlapping()
+                 ->onOneServer();
     }
 
     /**

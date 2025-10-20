@@ -33,15 +33,25 @@
     <hr class="mt-0 mb-1">
     <div class="tab-content" id="pills-tabContent">
         @if ($activeTab == 'resumen')
-            @livewire('tesoreria.caja-diaria.resumen', ['fecha' => $fecha, 'cajaDiariaExists' => $cajaDiariaExists, 'saldoInicial' => $saldoInicial, 'totalCobros' => $totalCobros, 'totalPagos' => $totalPagos, 'saldoActual' => $saldoActual], key('resumen-' . $fecha))
+            <div class="mt-3">
+                @livewire('tesoreria.caja-diaria.resumen', ['fecha' => $fecha, 'cajaDiariaExists' => $cajaDiariaExists, 'saldoInicial' => $saldoInicial, 'totalCobros' => $totalCobros, 'totalPagos' => $totalPagos, 'saldoActual' => $saldoActual], key('resumen-' . $fecha))
+            </div>
         @elseif ($activeTab == 'cobros')
-            @livewire('tesoreria.caja-diaria.cobros', ['fecha' => $fecha], key('cobros-' . $fecha))
+            <div class="mt-3">
+                @livewire('tesoreria.caja-diaria.cobros', ['fecha' => $fecha], key('cobros-' . $fecha))
+            </div>
         @elseif ($activeTab == 'pagos')
-            @livewire('tesoreria.caja-diaria.pagos', ['fecha' => $fecha], key('pagos-' . $fecha))
+            <div class="mt-3">
+                @livewire('tesoreria.caja-diaria.pagos', ['fecha' => $fecha], key('pagos-' . $fechaKey))
+            </div>
         @elseif ($activeTab == 'art222')
-            @livewire('tesoreria.caja-diaria.art222', ['fecha' => $fecha], key('art222-' . $fecha))
+            <div class="mt-3">
+                @livewire('tesoreria.caja-diaria.art222', ['fecha' => $fecha], key('art222-' . $fecha))
+            </div>
         @elseif ($activeTab == 'opciones')
-            @livewire('tesoreria.caja-diaria.opciones', ['fecha' => $fecha], key('opciones-' . $fecha))
+            <div class="mt-3">
+                @livewire('tesoreria.caja-diaria.opciones', ['fecha' => $fecha], key('opciones-' . $fechaKey))
+            </div>
         @endif
     </div>
 </div>

@@ -32,8 +32,12 @@ class AppServiceProvider extends ServiceProvider
             $path = rtrim(dirname(request()->server('SCRIPT_NAME')), '/');
 
             config(['livewire.asset_url' => $protocol . $host . '/oficinas/public']);
-            
+
             config(['app.url' => $protocol . $host . $path . '/oficinas/public']);
         }
+
+        // Registrar componentes Livewire manualmente
+        Livewire::component('tesoreria.caja-diaria.pagos', \App\Http\Livewire\Tesoreria\CajaDiaria\Pagos::class);
+        Livewire::component('tesoreria.caja-diaria.opciones', \App\Http\Livewire\Tesoreria\CajaDiaria\Opciones::class);
     }
 }

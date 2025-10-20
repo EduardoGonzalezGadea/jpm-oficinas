@@ -15,7 +15,10 @@ class CajaDiariaPrincipal extends Component
     public $activeTab;
     public $fechaKey = 0;
 
-    protected $listeners = ['cajaInicialGuardada' => 'refreshCajaDiariaExists'];
+    protected $listeners = [
+        'cajaInicialGuardada' => 'refreshCajaDiariaExists',
+        'refresh' => '$refresh'
+    ];
 
     // Resumen properties
     public $saldoInicial = 0;

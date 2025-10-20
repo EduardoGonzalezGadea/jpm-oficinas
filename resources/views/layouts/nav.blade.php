@@ -91,12 +91,25 @@
                     <i class="fas fa-cogs mr-2"></i>Sistema
                 </a>
                 <div class="dropdown-menu" aria-labelledby="navbarDropdownSistema">
-                    {{-- @can('administrar_sistema') --}}
+                    @can('administrar_sistema', 'web')
+                    <div class="dropdown-submenu submenu-left">
+                        <a class="dropdown-item dropdown-toggle" href="#">
+                            <i class="fas fa-database mr-2"></i>Respaldos
+                        </a>
+                        <div class="dropdown-menu">
+                            <a class="dropdown-item" href="#" id="btn-crear-respaldo-menu">
+                                <i class="fas fa-plus mr-2"></i>Realizar Respaldo
+                            </a>
+                            <a class="dropdown-item" href="{{ route('system.backups.index') }}">
+                                <i class="fas fa-undo mr-2"></i>Gestionar Respaldos
+                            </a>
+                        </div>
+                    </div>
                     <a class="dropdown-item" href="{{ route('pendrive.index') }}">
                         <i class="fas fa-hdd mr-2"></i>Pendrive Virtual
                     </a>
                     <div class="dropdown-divider"></div>
-                    {{-- @endcan --}}
+                    @endcan
                     <div class="dropdown-submenu submenu-left">
                         <a class="dropdown-item dropdown-toggle" href="#">
                             <i class="fas fa-cog mr-2"></i>Configuración

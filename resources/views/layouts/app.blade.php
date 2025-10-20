@@ -48,6 +48,17 @@
 </head>
 
 <body>
+    <!-- Global Spinner Overlay -->
+    <div id="global-spinner-overlay"
+        style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(255,255,255,0.7); z-index:9999;">
+        <div
+            style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%;">
+            <div class="spinner-border text-primary" style="width: 4rem; height: 4rem;" role="status">
+                <span class="sr-only">Procesando...</span>
+            </div>
+            <div class="mt-3 text-dark font-weight-bold">Procesando, por favor espere...</div>
+        </div>
+    </div>
     @auth
         @include('layouts.nav')
     @endauth
@@ -235,7 +246,65 @@
                 behavior: 'smooth'
             });
         }
+
+        $(function() {
+            // Spinner helpers
+            function showGlobalSpinner() {
+                $('#global-spinner-overlay').fadeIn(200);
+            }
+
+            function hideGlobalSpinner() {
+                $('#global-spinner-overlay').fadeOut(200);
+            }
+
+            // Crear respaldo from menu
+            $('#btn-crear-respaldo-menu').on('click', function(e) {
+                e.preventDefault();
+                Swal.fire({
+                    title: '¿Crear nuevo respaldo?',
+                    text: 'Esto puede tardar unos minutos. ¿Desea continuar?',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Sí, crear respaldo',
+                    cancelButtonText: 'Cancelar'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        showGlobalSpinner();
+                        $.ajax({
+                            url: '{{ route('system.backups.create') }}',
+                            method: 'GET',
+                            headers: {
+                                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                            },
+                            success: function(data) {
+                                hideGlobalSpinner();
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Respaldo creado',
+                                    text: data.message || 'El respaldo se ha creado correctamente.'
+                                }).then(() => {
+                                    // Optionally, redirect or reload part of the page
+                                    if (window.location.pathname.includes('/system/backups')) {
+                                        window.location.reload();
+                                    }
+                                });
+                            },
+                            error: function(xhr) {
+                                hideGlobalSpinner();
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: (xhr.responseJSON && xhr.responseJSON.message) ||
+                                        'Ocurrió un error al crear el respaldo.'
+                                });
+                            }
+                        });
+                    }
+                });
+            });
+        });
     </script>
+
 </body>
 
 </html>

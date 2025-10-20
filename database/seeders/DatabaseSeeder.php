@@ -23,6 +23,7 @@ class DatabaseSeeder extends Seeder
             Tesoreria\TesTipoMonedaSeeder::class,
             Tesoreria\ConceptoCobroSeeder::class,
             Tesoreria\ConceptoCobroCampoSeeder::class,
+            Tesoreria\ConceptoPagoSeeder::class,
         ]);
     }
 }

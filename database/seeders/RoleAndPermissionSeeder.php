@@ -33,6 +33,12 @@ class RoleAndPermissionSeeder extends Seeder
             'gestionar_tesoreria',
             'supervisar_tesoreria',
             'operador_tesoreria',
+            'gestionar_pagos',
+            'crear_pagos',
+            'editar_pagos',
+            'eliminar_pagos',
+            'ver_pagos',
+            'gestionar_conceptos_pago',
 
             // Módulo Contabilidad
             'gestionar_contabilidad',
@@ -87,6 +93,12 @@ class RoleAndPermissionSeeder extends Seeder
             'gestionar_tesoreria',
             'cambiar_propia_contraseña',
             'editar_propio_perfil',
+            'gestionar_pagos',
+            'crear_pagos',
+            'editar_pagos',
+            'eliminar_pagos',
+            'ver_pagos',
+            'gestionar_conceptos_pago',
         ]);
 
         $gerente_contabilidad->givePermissionTo([

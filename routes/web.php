@@ -12,7 +12,7 @@ use App\Http\Controllers\Tesoreria\ArrendamientoController;
 use App\Http\Controllers\Tesoreria\CajaChica\ImpresionController;
 use App\Http\Controllers\Tesoreria\CajaChica\CajaChicaController;
 use App\Http\Controllers\Tesoreria\CajaChica\PendienteController;
-
+use App\Http\Controllers\BackupController;
 use App\Http\Controllers\Tesoreria\ArmasController;
 use App\Http\Controllers\ThemeController;
 use App\Http\Livewire\Tesoreria\Arrendamientos\PrintArrendamientos;
@@ -71,6 +71,16 @@ Route::middleware(['web', 'jwt.verify'])->group(function () {
     // PANEL PRINCIPAL
     // ------------------------------------------------------------------------
     Route::get('/panel', [PanelController::class, 'index'])->name('panel');
+
+    // ------------------------------------------------------------------------
+    // GESTIÓN DE RESPALDOS
+    // ------------------------------------------------------------------------
+    Route::prefix('system/backups')->name('system.backups.')->middleware(['can:administrar_sistema,web'])->group(function () {
+        Route::get('/', [BackupController::class, 'index'])->name('index');
+        Route::get('/create', [BackupController::class, 'create'])->name('create');
+        Route::post('/restore', [BackupController::class, 'restore'])->name('restore');
+        Route::get('/download/{file}', [BackupController::class, 'download'])->name('download');
+    });
 
     // ------------------------------------------------------------------------
     // GESTIÓN DE USUARIOS
@@ -196,6 +206,25 @@ Route::middleware(['web', 'jwt.verify'])->group(function () {
         // Caja Diaria
         Route::get('/caja-diaria/{tab?}', [TesoreriaController::class, 'cajaDiaria'])
             ->name('caja_diaria');
+
+        // Pagos
+        Route::prefix('pagos')->name('pagos.')->group(function () {
+            Route::get('/', 'PagoController@index')->name('index');
+            Route::post('/', 'PagoController@store')->name('store');
+            Route::get('/{id}', 'PagoController@show')->name('show');
+            Route::put('/{id}', 'PagoController@update')->name('update');
+            Route::delete('/{id}', 'PagoController@destroy')->name('destroy');
+            Route::get('/conceptos/lista', 'PagoController@getConceptos')->name('conceptos.lista');
+        });
+
+        // Conceptos de Pago
+        Route::prefix('conceptos-pago')->name('conceptos-pago.')->group(function () {
+            Route::get('/', 'ConceptoPagoController@index')->name('index');
+            Route::post('/', 'ConceptoPagoController@store')->name('store');
+            Route::get('/{id}', 'ConceptoPagoController@show')->name('show');
+            Route::put('/{id}', 'ConceptoPagoController@update')->name('update');
+            Route::delete('/{id}', 'ConceptoPagoController@destroy')->name('destroy');
+        });
 
 
         // Rutas de multas
