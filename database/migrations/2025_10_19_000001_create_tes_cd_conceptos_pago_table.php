@@ -17,7 +17,7 @@ return new class extends Migration
         Schema::dropIfExists('tes_cd_conceptos_pago');
 
         Schema::create('tes_cd_conceptos_pago', function (Blueprint $table) {
-            $table->increments('id');
+            $table->id();
             $table->string('nombre');
             $table->string('descripcion')->nullable();
             $table->boolean('activo')->default(true);

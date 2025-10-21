@@ -281,7 +281,8 @@
                                 Swal.fire({
                                     icon: 'success',
                                     title: 'Respaldo creado',
-                                    text: data.message || 'El respaldo se ha creado correctamente.'
+                                    text: data.message || 'El respaldo se ha creado correctamente.',
+                                    confirmButtonText: 'Aceptar'
                                 }).then(() => {
                                     // Optionally, redirect or reload part of the page
                                     if (window.location.pathname.includes('/system/backups')) {
@@ -295,7 +296,8 @@
                                     icon: 'error',
                                     title: 'Error',
                                     text: (xhr.responseJSON && xhr.responseJSON.message) ||
-                                        'Ocurrió un error al crear el respaldo.'
+                                        'Ocurrió un error al crear el respaldo.',
+                                    confirmButtonText: 'Aceptar'
                                 });
                             }
                         });

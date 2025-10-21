@@ -3,7 +3,7 @@
         <div class="card-header">
             <div class="d-flex justify-content-between align-items-center">
                 <h5 class="card-title">Gestión de Conceptos de Cobro</h5>
-                <button wire:click="openModal()" class="btn btn-primary">Crear Concepto</button>
+                <button wire:click="openModal()" class="btn btn-primary"><i class="fas fa-plus"></i> Nuevo Concepto de Cobro</button>
             </div>
         </div>
         <div class="card-body">
@@ -44,16 +44,24 @@
                             <tr>
                                 
                                 <td>{{ $concepto->nombre }}</td>
-                                <td>{{ $concepto->descripcion }}</td>
-                                <td>
+                                <td class="align-middle">{{ $concepto->descripcion }}</td>
+                                <td class="align-middle">
                                     <span class="badge badge-{{ $concepto->activo ? 'success' : 'secondary' }}">
                                         {{ $concepto->activo ? 'Sí' : 'No' }}
                                     </span>
                                 </td>
-                                <td>
-                                    <button wire:click="edit({{ $concepto->id }})" class="btn btn-sm btn-primary">Editar</button>
-                                    <button wire:click="openCampoModal({{ $concepto->id }})" class="btn btn-sm btn-info">Campos</button>
-                                    <button wire:click="delete({{ $concepto->id }})" class="btn btn-sm btn-danger">Eliminar</button>
+                                <td class="align-middle">
+                                    <div class="btn-group">
+                                        <button wire:click="edit({{ $concepto->id }})" class="btn btn-sm btn-primary" title="Editar">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button wire:click="openCampoModal({{ $concepto->id }})" class="btn btn-sm btn-info" title="Campos">
+                                            <i class="fas fa-th-list"></i>
+                                        </button>
+                                        <button wire:click="delete({{ $concepto->id }})" class="btn btn-sm btn-danger" title="Eliminar">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                         @endforeach

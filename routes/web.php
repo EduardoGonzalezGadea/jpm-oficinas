@@ -79,7 +79,8 @@ Route::middleware(['web', 'jwt.verify'])->group(function () {
         Route::get('/', [BackupController::class, 'index'])->name('index');
         Route::get('/create', [BackupController::class, 'create'])->name('create');
         Route::post('/restore', [BackupController::class, 'restore'])->name('restore');
-        Route::get('/download/{file}', [BackupController::class, 'download'])->name('download');
+        Route::get('/download/{file}', [BackupController::class, 'download'])->name('download')->where('file', '.*');
+        Route::delete('/', [BackupController::class, 'delete'])->name('delete');
     });
 
     // ------------------------------------------------------------------------

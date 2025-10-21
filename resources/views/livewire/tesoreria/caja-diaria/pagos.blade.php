@@ -23,7 +23,7 @@
 				</div>
 			</div>
 		</div>
-		<div class="card-body">
+    <div class="card-body">
 			<div class="table-responsive">
 				<table class="table table-hover">
 					<thead>
@@ -71,9 +71,9 @@
 				{{ $pagos->links() }}
 			</div>
 		</div>
-	</div>
 
-	<!-- Modal para Crear/Editar Pago -->
+
+<!-- Modal para Crear/Editar Pago -->
 	<div class="modal fade" wire:ignore.self id="modalPago" tabindex="-1" aria-labelledby="modalPagoLabel" aria-hidden="true">
 		<div class="modal-dialog modal-dialog-scrollable">
 			<div class="modal-content">
@@ -138,4 +138,3 @@
 		});
 	</script>
 	@endpush
-</div>

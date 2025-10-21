@@ -1,0 +1,4 @@
+- [x] Define the audit scope.
+- [x] SAST Recon on `scripts/backup.ps1`.
+  - [x] Investigate data flow from `$backupOutput` on line 25.
+- [ ] Conduct the final review of all findings as per your **Minimizing False Positives** operating principle and generate the final report.

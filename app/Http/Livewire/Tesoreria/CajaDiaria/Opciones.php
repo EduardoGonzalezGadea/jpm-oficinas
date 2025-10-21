@@ -69,14 +69,14 @@ class Opciones extends Component
                 'descripcion' => $this->descripcion,
                 'activo' => $this->activo,
             ]);
-            session()->flash('message', 'Concepto actualizado correctamente.');
+            $this->dispatchBrowserEvent('swal:success', ['text' => 'Concepto actualizado correctamente.']);
         } else {
             ConceptoPago::create([
                 'nombre' => $this->nombre,
                 'descripcion' => $this->descripcion,
                 'activo' => $this->activo,
             ]);
-            session()->flash('message', 'Concepto creado correctamente.');
+            $this->dispatchBrowserEvent('swal:success', ['text' => 'Concepto creado correctamente.']);
         }
         $this->dispatchBrowserEvent('hide-modal-concepto');
         $this->reset(['conceptoId', 'nombre', 'descripcion', 'activo']);
@@ -84,9 +84,21 @@ class Opciones extends Component
 
     public function eliminarConcepto($id)
     {
+        $this->dispatchBrowserEvent('swal:confirm', [
+            'title' => '¿Está seguro?',
+            'text' => '¡No podrás revertir esto!',
+            'icon' => 'warning',
+            'confirmButtonText' => 'Sí, eliminar',
+            'method' => 'confirmDeleteConcepto',
+            'id' => $id
+        ]);
+    }
+
+    public function confirmDeleteConcepto($id)
+    {
         $concepto = ConceptoPago::findOrFail($id);
         $concepto->delete();
-        session()->flash('message', 'Concepto eliminado correctamente.');
+        $this->dispatchBrowserEvent('swal:success', ['text' => 'Concepto eliminado correctamente.']);
     }
 
     public function toggleActivo($id)
@@ -94,6 +106,6 @@ class Opciones extends Component
         $concepto = ConceptoPago::findOrFail($id);
         $concepto->activo = !$concepto->activo;
         $concepto->save();
-        session()->flash('message', 'Estado actualizado.');
+        $this->dispatchBrowserEvent('swal:success', ['text' => 'Estado actualizado.']);
     }
 }

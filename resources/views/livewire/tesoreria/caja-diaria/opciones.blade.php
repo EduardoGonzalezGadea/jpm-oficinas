@@ -1,4 +1,3 @@
-
 <div>
     @if (session()->has('message'))
         <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -17,77 +16,110 @@
         </div>
     @endif
 
-    <div class="card">
-        <div class="card-header">
-            <div class="row align-items-center">
-                <div class="col-md-6">
-                    <h5 class="card-title mb-0">Conceptos de Pago</h5>
-                </div>
-                <div class="col-md-6 text-right">
-                    @can('gestionar_conceptos_pago')
-                        <button class="btn btn-primary" wire:click="crearConcepto">
-                            <i class="fas fa-plus"></i> Nuevo Concepto
-                        </button>
-                    @endcan
+    <div class="accordion" id="accordionOpciones">
+        <!-- Conceptos de Cobro Accordion Item -->
+        <div class="card">
+            <div class="card-header" id="headingConceptosCobro">
+                <h2 class="mb-0">
+                    <button class="btn btn-primary btn-block text-left" type="button" data-toggle="collapse" data-target="#collapseConceptosCobro" aria-expanded="false" aria-controls="collapseConceptosCobro">
+                        Gestión de Conceptos de Cobro
+                    </button>
+                </h2>
+            </div>
+            <div id="collapseConceptosCobro" class="collapse" aria-labelledby="headingConceptosCobro" data-parent="#accordionOpciones">
+                <div class="card-body">
+                    <!-- Livewire component for Conceptos de Cobro will go here -->
+                    @livewire('tesoreria.caja-diaria.conceptos-cobro')
                 </div>
             </div>
         </div>
-        <div class="card-body">
-            <div class="row mb-3">
-                <div class="col-md-6">
-                    <input type="text" wire:model.debounce.300ms="search" class="form-control" placeholder="Buscar conceptos...">
+
+        <!-- Conceptos de Pago Accordion Item -->
+        <div class="card">
+            <div class="card-header" id="headingConceptosPago">
+                <h2 class="mb-0">
+                    <button class="btn btn-primary btn-block text-left" type="button" data-toggle="collapse" data-target="#collapseConceptosPago" aria-expanded="false" aria-controls="collapseConceptosPago">
+                        Gestión de Conceptos de Pago
+                    </button>
+                </h2>
+            </div>
+
+            <div id="collapseConceptosPago" class="collapse" aria-labelledby="headingConceptosPago" data-parent="#accordionOpciones" wire:ignore.self>
+                <div class="card-body">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="row align-items-center">
+                                <div class="col-md-6">
+                                    <h5 class="card-title mb-0">Conceptos de Pago</h5>
+                                </div>
+                                <div class="col-md-6 text-right">
+                                    @can('gestionar_conceptos_pago')
+                                        <button class="btn btn-primary" wire:click="crearConcepto">
+                                            <i class="fas fa-plus"></i> Nuevo Concepto de Pago
+                                        </button>
+                                    @endcan
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <input type="text" wire:model.debounce.300ms="search" class="form-control" placeholder="Buscar conceptos...">
+                                </div>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Nombre</th>
+                                            <th>Descripción</th>
+                                            <th>Estado</th>
+                                            <th>Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @forelse($conceptos as $concepto)
+                                            <tr>
+                                                <td>{{ $concepto->nombre }}</td>
+                                                <td>{{ $concepto->descripcion }}</td>
+                                                <td>
+                                                    <span class="badge badge-{{ $concepto->activo ? 'success' : 'danger' }}">
+                                                        {{ $concepto->activo ? 'Activo' : 'Inactivo' }}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <div class="btn-group">
+                                                        @can('gestionar_conceptos_pago')
+                                                            <button class="btn btn-sm btn-info" wire:click="editarConcepto({{ $concepto->id }})">
+                                                                <i class="fas fa-edit"></i>
+                                                            </button>
+                                                            <button class="btn btn-sm btn-{{ $concepto->activo ? 'warning' : 'success' }}"
+                                                                wire:click="toggleActivo({{ $concepto->id }})"
+                                                                title="{{ $concepto->activo ? 'Desactivar' : 'Activar' }}">
+                                                                <i class="fas fa-{{ $concepto->activo ? 'ban' : 'check' }}"></i>
+                                                            </button>
+                                                            <button class="btn btn-sm btn-danger"
+                                                                wire:click="eliminarConcepto({{ $concepto->id }})">
+                                                                <i class="fas fa-trash"></i>
+                                                            </button>
+                                                        @endcan
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        @empty
+                                            <tr>
+                                                <td colspan="4" class="text-center">No hay conceptos registrados</td>
+                                            </tr>
+                                        @endforelse
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="mt-3">
+                                {{ $conceptos->links() }}
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            </div>
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead>
-                        <tr>
-                            <th>Nombre</th>
-                            <th>Descripción</th>
-                            <th>Estado</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($conceptos as $concepto)
-                            <tr>
-                                <td>{{ $concepto->nombre }}</td>
-                                <td>{{ $concepto->descripcion }}</td>
-                                <td>
-                                    <span class="badge badge-{{ $concepto->activo ? 'success' : 'danger' }}">
-                                        {{ $concepto->activo ? 'Activo' : 'Inactivo' }}
-                                    </span>
-                                </td>
-                                <td>
-                                    <div class="btn-group">
-                                        @can('gestionar_conceptos_pago')
-                                            <button class="btn btn-sm btn-info" wire:click="editarConcepto({{ $concepto->id }})">
-                                                <i class="fas fa-edit"></i>
-                                            </button>
-                                            <button class="btn btn-sm btn-{{ $concepto->activo ? 'warning' : 'success' }}"
-                                                wire:click="toggleActivo({{ $concepto->id }})"
-                                                title="{{ $concepto->activo ? 'Desactivar' : 'Activar' }}">
-                                                <i class="fas fa-{{ $concepto->activo ? 'ban' : 'check' }}"></i>
-                                            </button>
-                                            <button class="btn btn-sm btn-danger"
-                                                wire:click="eliminarConcepto({{ $concepto->id }})"
-                                                onclick="return confirm('¿Está seguro de eliminar este concepto?')">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        @endcan
-                                    </div>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="4" class="text-center">No hay conceptos registrados</td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-            <div class="mt-3">
-                {{ $conceptos->links() }}
             </div>
         </div>
     </div>
@@ -130,3 +162,15 @@
         </div>
     </div>
 </div>
+
+@push('scripts')
+    <script>
+        document.addEventListener('livewire:load', function () {
+            window.addEventListener('show-modal-concepto', () => {
+                $('#modalConcepto').modal('show');
+            });
+            window.addEventListener('hide-modal-concepto', () => {
+                $('#modalConcepto').modal('hide');
+            });
+        });
+    </script>@endpush

@@ -17,13 +17,13 @@ return new class extends Migration
         Schema::dropIfExists('tes_cd_pagos');
 
         Schema::create('tes_cd_pagos', function (Blueprint $table) {
-            $table->increments('id');
+            $table->id();
             $table->date('fecha');
             $table->decimal('monto', 10, 2);
             $table->string('medio_pago');
             $table->string('descripcion')->nullable();
             $table->string('numero_comprobante')->nullable();
-            $table->unsignedInteger('concepto_id')->nullable();
+            $table->foreignId('concepto_id')->nullable()->constrained('tes_cd_conceptos_pago');
             $table->unsignedInteger('created_by')->nullable();
             $table->unsignedInteger('updated_by')->nullable();
             $table->unsignedInteger('deleted_by')->nullable();

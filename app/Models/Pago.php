@@ -17,7 +17,9 @@ class Pago extends Model
         'fecha',
         'monto',
         'medio_pago',
+        'concepto_id',
         'descripcion',
+        'numero_comprobante',
         'created_at',
         'updated_at',
         'created_by',
@@ -38,5 +40,10 @@ class Pago extends Model
     public function setDescripcionAttribute($value)
     {
         $this->attributes['descripcion'] = $this->toUpper($value);
+    }
+
+    public function concepto()
+    {
+        return $this->belongsTo(Tesoreria\ConceptoPago::class, 'concepto_id');
     }
 }

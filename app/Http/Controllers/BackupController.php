@@ -16,11 +16,10 @@ class BackupController extends Controller
 
     public function download($file)
     {
-        $filePath = 'Laravel/' . basename($file);
-        if (!Storage::disk('local')->exists($filePath)) {
+        if (!Storage::disk('local')->exists($file)) {
             abort(404);
         }
-        return Storage::disk('local')->download($filePath);
+        return Storage::disk('local')->download($file);
     }
 
     public function index()
@@ -84,108 +83,140 @@ class BackupController extends Controller
             // Restaurar la base de datos
             $this->restoreDatabase($backupPath);
 
+            if ($request->ajax()) {
+                return response()->json(['message' => 'Base de datos restaurada exitosamente.']);
+            }
+
             return redirect()->route('system.backups.index')
                 ->with('success', 'Base de datos restaurada exitosamente.');
         } catch (\Exception $e) {
+            if ($request->ajax()) {
+                return response()->json(['message' => 'Error al restaurar la base de datos: ' . $e->getMessage()], 500);
+            }
             return redirect()->route('system.backups.index')
                 ->with('error', 'Error al restaurar la base de datos: ' . $e->getMessage());
         }
     }
 
-    private function cleanDirectory($path)
-    {
-        if (!is_dir($path)) {
-            return;
-        }
-
-        $files = array_diff(scandir($path), ['.', '..']);
-        foreach ($files as $file) {
-            $fullPath = $path . DIRECTORY_SEPARATOR . $file;
-            is_dir($fullPath) ? $this->cleanDirectory($fullPath) : unlink($fullPath);
-        }
-        return;
-    }
 
     private function restoreDatabase($backupPath)
     {
-        // Extraer el archivo SQL del zip
-        $zip = new \ZipArchive();
-        $zipPath = storage_path('app/' . $backupPath);
+        $filesystem = new \Illuminate\Filesystem\Filesystem();
+        $tempPath = storage_path('app/temp_restore');
 
-        if (!$zip->open($zipPath)) {
-            throw new \Exception('No se pudo abrir el archivo ZIP: ' . $zipPath);
-        }
-
-        $sqlFile = null;
-
-        // Buscar el archivo SQL en el zip
-        for ($i = 0; $i < $zip->numFiles; $i++) {
-            $filename = $zip->getNameIndex($i);
-            // Buscar específicamente en la carpeta db-dumps si existe
-            if (str_ends_with($filename, '.sql') && strpos($filename, 'db-dumps/') !== false) {
-                $sqlFile = $filename;
-                break;
+        try {
+            // Ensure temp directory is clean and exists
+            if ($filesystem->isDirectory($tempPath)) {
+                $filesystem->deleteDirectory($tempPath);
             }
-        }
+            $filesystem->makeDirectory($tempPath, 0755, true);
 
-        // Si no se encontró en db-dumps, buscar en la raíz
-        if (!$sqlFile) {
+            // Extraer el archivo SQL del zip
+            $zip = new \ZipArchive();
+            $zipPath = storage_path('app/' . $backupPath);
+
+            if (!$zip->open($zipPath)) {
+                throw new \Exception('No se pudo abrir el archivo ZIP: ' . $zipPath);
+            }
+
+            $sqlFile = null;
+
+            // Buscar el archivo SQL en el zip
             for ($i = 0; $i < $zip->numFiles; $i++) {
                 $filename = $zip->getNameIndex($i);
-                if (str_ends_with($filename, '.sql')) {
+                if (str_ends_with($filename, '.sql') && strpos($filename, 'db-dumps/') !== false) {
                     $sqlFile = $filename;
                     break;
                 }
             }
-        }
 
-        if (!$sqlFile) {
-            $zip->close();
-            throw new \Exception('No se encontró el archivo SQL en el respaldo');
-        }
+            if (!$sqlFile) {
+                for ($i = 0; $i < $zip->numFiles; $i++) {
+                    $filename = $zip->getNameIndex($i);
+                    if (str_ends_with($filename, '.sql')) {
+                        $sqlFile = $filename;
+                        break;
+                    }
+                }
+            }
 
-        // Crear y limpiar el directorio temporal
-        $tempPath = storage_path('app/temp');
-        if (file_exists($tempPath)) {
-            $this->cleanDirectory($tempPath);
-        } else {
-            mkdir($tempPath, 0755, true);
-        }
+            if (!$sqlFile) {
+                $zip->close();
+                throw new \Exception('No se encontró el archivo SQL en el respaldo');
+            }
 
-        // Extraer el archivo SQL
-        try {
+            // Extraer el archivo SQL
             $zip->extractTo($tempPath, $sqlFile);
             $zip->close();
-        } catch (\Exception $e) {
-            throw new \Exception('Error al extraer el archivo SQL: ' . $e->getMessage());
+
+            // Configuración de la base de datos
+            $host = config('database.connections.mysql.host');
+            $database = config('database.connections.mysql.database');
+            $username = config('database.connections.mysql.username');
+            $password = config('database.connections.mysql.password');
+
+            $sqlFilePath = $tempPath . '/' . $sqlFile;
+
+            // Get the path to the mysql executable from the config
+            $mysqlPath = config('database.connections.mysql.dump.mysql_binary_path');
+            if ($mysqlPath) {
+                $mysqlPath = rtrim($mysqlPath, '/\\') . DIRECTORY_SEPARATOR;
+            }
+
+            // Construir el comando mysql
+            $command = sprintf(
+                '"%smysql" -h %s -u %s -p%s %s < %s',
+                $mysqlPath,
+                escapeshellarg($host),
+                escapeshellarg($username),
+                escapeshellarg($password),
+                escapeshellarg($database),
+                escapeshellarg($sqlFilePath)
+            );
+
+            // Ejecutar el comando
+            $process = Process::fromShellCommandline($command);
+            $process->run();
+
+            if (!$process->isSuccessful()) {
+                throw new ProcessFailedException($process);
+            }
+        } finally {
+            // Limpiar archivos temporales
+            if ($filesystem->isDirectory($tempPath)) {
+                $filesystem->deleteDirectory($tempPath);
+            }
         }
+    }
 
-        // Configuración de la base de datos
-        $host = config('database.connections.mysql.host');
-        $database = config('database.connections.mysql.database');
-        $username = config('database.connections.mysql.username');
-        $password = config('database.connections.mysql.password');
+    public function delete(Request $request)
+    {
+        $request->validate([
+            'backup' => 'required|string',
+        ]);
 
-        // Construir el comando mysql
-        $command = sprintf(
-            'mysql -h %s -u %s -p%s %s < %s',
-            escapeshellarg($host),
-            escapeshellarg($username),
-            escapeshellarg($password),
-            escapeshellarg($database),
-            escapeshellarg($tempPath . '/' . $sqlFile)
-        );
+        try {
+            $backupPath = $request->input('backup');
 
-        // Ejecutar el comando
-        $process = Process::fromShellCommandline($command);
-        $process->run();
+            if (!Storage::disk('local')->exists($backupPath)) {
+                throw new \Exception('Archivo de respaldo no encontrado.');
+            }
 
-        // Limpiar archivos temporales
-        unlink($tempPath . '/' . $sqlFile);
-        rmdir($tempPath);
+            Storage::disk('local')->delete($backupPath);
 
-        if (!$process->isSuccessful()) {
-            throw new ProcessFailedException($process);
+            if ($request->ajax()) {
+                return response()->json(['message' => 'Respaldo eliminado exitosamente.']);
+            }
+
+            return redirect()->route('system.backups.index')
+                ->with('success', 'Respaldo eliminado exitosamente.');
+
+        } catch (\Exception $e) {
+            if ($request->ajax()) {
+                return response()->json(['message' => 'Error al eliminar el respaldo: ' . $e->getMessage()], 500);
+            }
+            return redirect()->route('system.backups.index')
+                ->with('error', 'Error al eliminar el respaldo: ' . $e->getMessage());
         }
     }
 }

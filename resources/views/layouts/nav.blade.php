@@ -105,11 +105,11 @@
                             </a>
                         </div>
                     </div>
+                    <div class="dropdown-divider"></div>
+                    @endcan
                     <a class="dropdown-item" href="{{ route('pendrive.index') }}">
                         <i class="fas fa-hdd mr-2"></i>Pendrive Virtual
                     </a>
-                    <div class="dropdown-divider"></div>
-                    @endcan
                     <div class="dropdown-submenu submenu-left">
                         <a class="dropdown-item dropdown-toggle" href="#">
                             <i class="fas fa-cog mr-2"></i>Configuración
