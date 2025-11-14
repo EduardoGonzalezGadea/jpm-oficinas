@@ -8,7 +8,7 @@
 
     <link rel="icon" type="image/x-icon" href="{{ asset('images/icons/jpm.png') }}">
 
-    <title>@yield('title', 'JPM Oficinas')</title>
+    <title>@yield('title', 'Tesorería | Oficinas')</title>
 
     <!-- Bootstrap 4 CSS -->
     <link href="{{ asset('libs/bootstrap-4.6.2-dist/css/bootstrap.min.css') }}" rel="stylesheet">
@@ -51,7 +51,7 @@
         <div class="container">
             <a class="navbar-brand" href="{{ url('/') }}">
                 <i class="fas fa-building mr-2"></i>
-                JPM Oficinas
+                Tesorería | Oficinas
             </a>
             <div class="navbar-nav ml-auto">
                 <a class="nav-item nav-link" href="{{ url('/') }}">

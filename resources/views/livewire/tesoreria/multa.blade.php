@@ -1,23 +1,13 @@
 <div>
-    @if (session()->has('message'))
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            {{ session('message') }}
-            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-            </button>
-        </div>
-    @endif
 
     <div class="card">
         <div class="card-header">
             <div class="row">
-                <div class="col-md-8">
+                <div class="col-md-8 d-flex align-items-center">
                     <h4 class="mb-0 d-inline-block">
-                        Listado de Multas de Tránsito
+                        Listado de Artículos de Multas de Tránsito
                     </h4>
-                    @if ($valorUr)
-                        <span class="text-muted ml-2">(UR = $ {{ $valorUr }})</span>
-                    @endif
+                    <span id="ur-value-container" class="text-muted ml-2 font-weight-bold"></span>
                 </div>
                 <div class="col-md-4 text-right">
                     <button wire:click="create()" class="btn btn-primary d-print-none">
@@ -27,7 +17,8 @@
             </div>
         </div>
 
-        <div class="card-body">
+        <div class="card-body px-2">
+            <!-- Mostrar controles de búsqueda inmediatamente -->
             <div class="row mb-3 align-items-center">
                 <div class="col-md-5">
                     <input wire:model.debounce.500ms="search" type="text" class="form-control d-print-none"
@@ -46,89 +37,100 @@
                 </div>
             </div>
 
-            <div class="table-responsive">
-                <table class="table table-striped table-hover">
-                    <thead class="thead-dark">
-                        <tr>
-                            <th class="text-center align-middle">
-                                <button class="btn btn-link text-white p-0 text-nowrap" wire:click="sortBy('articulo')">
-                                    Art.
-                                    @if ($sortField === 'articulo')
-                                        <i class="fas fa-sort-{{ $sortDirection === 'asc' ? 'up' : 'down' }}"></i>
-                                    @endif
-                                </button>
-                            </th>
-                            <th class="text-center align-middle">
-                                <button class="btn btn-link text-white p-0 text-nowrap" wire:click="sortBy('apartado')">
-                                    Apartado
-                                    @if ($sortField === 'apartado')
-                                        <i class="fas fa-sort-{{ $sortDirection === 'asc' ? 'up' : 'down' }}"></i>
-                                    @endif
-                                </button>
-                            </th>
-                            <th class="text-center align-middle">
-                                <button class="btn btn-link text-white p-0 text-nowrap" wire:click="sortBy('descripcion')">
-                                    Descripción
-                                    @if ($sortField === 'descripcion')
-                                        <i class="fas fa-sort-{{ $sortDirection === 'asc' ? 'up' : 'down' }}"></i>
-                                    @endif
-                                </button>
-                            </th>
-                            <!-- --- REFACTORIZADO --- -->
-                            <th class="text-center align-middle">
-                                <button class="btn btn-link text-white p-0 text-nowrap" wire:click="sortBy('importe_original')">
-                                    Original
-                                    @if ($sortField === 'importe_original')
-                                        <i class="fas fa-sort-{{ $sortDirection === 'asc' ? 'up' : 'down' }}"></i>
-                                    @endif
-                                </button>
-                            </th>
-                            <th class="text-center align-middle">
-                                <button class="btn btn-link text-white p-0 text-nowrap" wire:click="sortBy('importe_unificado')">
-                                    Unificado
-                                    @if ($sortField === 'importe_unificado')
-                                        <i class="fas fa-sort-{{ $sortDirection === 'asc' ? 'up' : 'down' }}"></i>
-                                    @endif
-                                </button>
-                            </th>
-                            <!-- --------------------- -->
-                            <th width="150" class="text-center align-middle d-print-none">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse ($multas as $multa)
-                            <tr>
-                                                                <td class="align-middle"><strong>{{ $multa->articulo }}</strong></td>
-                                <td class="align-middle">{{ $multa->apartado }}</td>
-                                <td class="align-middle">
-                                    {{ $multa->descripcion }}
-                                    @if ($multa->decreto)
-                                        <small class="text-muted d-block">{{ $multa->decreto }}</small>
-                                    @endif
-                                </td>
-                                <!-- --- REFACTORIZADO --- -->
-                                <td class="text-right align-middle">{!! $multa->importe_original_formateado !!}</td>
-                                <td class="text-right align-middle">{!! $multa->importe_unificado_formateado !!}</td>
-                                <!-- --------------------- -->
-
-                                <td class="text-center align-middle d-print-none">
-                                    <button wire:click="edit({{ $multa->id }})" class="btn btn-sm btn-warning" title="Editar"><i class="fas fa-edit"></i></button>
-                                    <button onclick="confirmDelete({{ $multa->id }})" class="btn btn-sm btn-danger" title="Eliminar"><i class="fas fa-trash"></i></button>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="6" class="text-center">No se encontraron multas</td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
+            <!-- Loader mientras se cargan las multas automáticamente -->
+            <div wire:loading wire:target="loadMultasAutomaticamente" class="text-center py-4">
+                <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+                    <span class="sr-only">Cargando...</span>
+                </div>
+                <div class="mt-3">
+                    <h6 class="text-muted">Cargando listado de multas...</h6>
+                    <small class="text-muted">Esto puede tomar unos segundos</small>
+                </div>
             </div>
 
-            @if ($multas instanceof \Illuminate\Pagination\LengthAwarePaginator && $multas->hasPages())
-                <div class="d-flex justify-content-center mt-3 d-print-none">
-                    {{ $multas->links() }}
+            @if((isset($multas) && $multas->isNotEmpty()) || !empty($search))
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead class="thead-dark">
+                            <tr>
+                                <th class="text-center align-middle">
+                                    <button class="btn btn-link text-white p-0 text-nowrap" wire:click="sortBy('articulo')">
+                                        Art.
+                                        @if ($sortField === 'articulo')
+                                            <i class="fas fa-sort-{{ $sortDirection === 'asc' ? 'up' : 'down' }}"></i>
+                                        @endif
+                                    </button>
+                                </th>
+                                <th class="text-center align-middle">
+                                    <button class="btn btn-link text-white p-0 text-nowrap" wire:click="sortBy('apartado')">
+                                        Apartado
+                                        @if ($sortField === 'apartado')
+                                            <i class="fas fa-sort-{{ $sortDirection === 'asc' ? 'up' : 'down' }}"></i>
+                                        @endif
+                                    </button>
+                                </th>
+                                <th class="text-center align-middle">
+                                    <button class="btn btn-link text-white p-0 text-nowrap" wire:click="sortBy('descripcion')">
+                                        Descripción
+                                        @if ($sortField === 'descripcion')
+                                            <i class="fas fa-sort-{{ $sortDirection === 'asc' ? 'up' : 'down' }}"></i>
+                                        @endif
+                                    </button>
+                                </th>
+                                <th class="text-center align-middle">
+                                    <button class="btn btn-link text-white p-0 text-nowrap" wire:click="sortBy('importe_original')">
+                                        Original
+                                        @if ($sortField === 'importe_original')
+                                            <i class="fas fa-sort-{{ $sortDirection === 'asc' ? 'up' : 'down' }}"></i>
+                                        @endif
+                                    </button>
+                                </th>
+                                <th class="text-center align-middle">
+                                    <button class="btn btn-link text-white p-0 text-nowrap" wire:click="sortBy('importe_unificado')">
+                                        Unificado
+                                        @if ($sortField === 'importe_unificado')
+                                            <i class="fas fa-sort-{{ $sortDirection === 'asc' ? 'up' : 'down' }}"></i>
+                                        @endif
+                                    </button>
+                                </th>
+                                <th width="150" class="text-center align-middle d-print-none">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse ($multas as $multa)
+                                <tr>
+                                    <td class="align-middle"><strong>{{ $multa->articulo }}</strong></td>
+                                    <td class="align-middle">{{ $multa->apartado }}</td>
+                                    <td class="align-middle">
+                                        {{ $multa->descripcion }}
+                                        @if ($multa->decreto)
+                                            <small class="text-muted d-block">{{ $multa->decreto }}</small>
+                                        @endif
+                                    </td>
+                                    <td class="text-right align-middle">{!! $multa->importe_original_formateado !!}</td>
+                                    <td class="text-right align-middle">{!! $multa->importe_unificado_formateado !!}</td>
+
+                                    <td class="text-center align-middle d-print-none">
+                                        <button wire:click="edit({{ $multa->id }})" class="btn btn-sm btn-warning" title="Editar"><i class="fas fa-edit"></i></button>
+                                        <button onclick="confirmDelete({{ $multa->id }})" class="btn btn-sm btn-danger" title="Eliminar"><i class="fas fa-trash"></i></button>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="6" class="text-center">No se encontraron multas</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
                 </div>
+            @endif
+
+            @if((isset($multas) && $multas->isNotEmpty()) || !empty($search))
+                @if ($multas instanceof \Illuminate\Pagination\LengthAwarePaginator && $multas->hasPages())
+                    <div class="d-flex justify-content-center mt-3 d-print-none">
+                        {{ $multas->links() }}
+                    </div>
+                @endif
             @endif
         </div>
     </div>
@@ -196,7 +198,10 @@
 
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" wire:click="closeModal()">Cancelar</button>
-                            <button type="submit" class="btn btn-primary">{{ $isEdit ? 'Actualizar' : 'Guardar' }}</button>
+                            <button type="submit" class="btn btn-primary" wire:loading.attr="disabled">
+                                <span wire:loading.remove>{{ $isEdit ? 'Actualizar' : 'Guardar' }}</span>
+                                <span wire:loading>{{ $isEdit ? 'Actualizando...' : 'Guardando...' }}</span>
+                            </button>
                         </div>
                     </form>
                 </div>
@@ -224,5 +229,42 @@
             }
         })
     }
+
+    function loadURValue() {
+        const urContainer = document.getElementById('ur-value-container');
+        if (urContainer) {
+            urContainer.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Cargando UR...';
+
+            fetch('{{ route('utilidad.valor-ur') }}')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Error en la respuesta de la red');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.valorUr) {
+                        urContainer.textContent = '(UR = ' + data.valorUr + ')';
+                    } else {
+                        urContainer.textContent = '(UR no disponible)';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error al obtener el valor de la UR:', error);
+                    urContainer.textContent = '(Error al cargar UR)';
+                });
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        loadURValue();
+    });
+
+    // Recargar el valor UR cuando se actualiza el componente Livewire
+    Livewire.on('updated', function () {
+        setTimeout(function() {
+            loadURValue();
+        }, 100);
+    });
 </script>
 @endpush

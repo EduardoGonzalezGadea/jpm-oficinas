@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Gestión de Permisos - JPM Oficinas')
+@section('title', 'Tesorería | Oficinas - Gestión de Permisos')
 
 @section('content')
     <div class="container-fluid">

@@ -14,7 +14,6 @@ class UserSeeder extends Seeder
     {
         // Obtener módulos
         $tesoreria = Modulo::where('nombre', 'Tesorería')->first();
-        $contabilidad = Modulo::where('nombre', 'Contabilidad')->first();
 
         // Usuario Administrador
         $admin = User::create([
@@ -71,47 +70,5 @@ class UserSeeder extends Seeder
         ]);
         $usuario_tesoreriaRole = Role::findByName('usuario_tesoreria', 'api');
         $usuario_tes->assignRole($usuario_tesoreriaRole);
-
-        // Gerente Contabilidad
-        $gerente_cont = User::create([
-            'nombre' => 'Graciela',
-            'apellido' => 'Maidana',
-            'email' => 'graciela.maidana@minterior.gub.uy',
-            'cedula' => null,
-            'telefono' => '2030 2099',
-            'password' => Hash::make('123456'),
-            'activo' => true,
-            'modulo_id' => $contabilidad->id,
-        ]);
-        $gerente_contabilidadRole = Role::findByName('gerente_contabilidad', 'api');
-        $gerente_cont->assignRole($gerente_contabilidadRole);
-
-        // Supervisor Contabilidad
-        $supervisor_cont = User::create([
-            'nombre' => 'Cristina',
-            'apellido' => 'Fernández',
-            'email' => 'cristina.fernandez@minterior.gub.uy',
-            'cedula' => null,
-            'telefono' => '2030 2108',
-            'password' => Hash::make('123456'),
-            'activo' => true,
-            'modulo_id' => $contabilidad->id,
-        ]);
-        $supervisor_contabilidadRole = Role::findByName('supervisor_contabilidad', 'api');
-        $supervisor_cont->assignRole($supervisor_contabilidadRole);
-
-        // Usuario Contabilidad
-        $usuario_cont = User::create([
-            'nombre' => 'Mónica',
-            'apellido' => 'López',
-            'email' => 'monica.lopez@minterior.gub.uy',
-            'cedula' => null,
-            'telefono' => '2030 2108',
-            'password' => Hash::make('123456'),
-            'activo' => true,
-            'modulo_id' => $contabilidad->id,
-        ]);
-        $usuario_contabilidadRole = Role::findByName('usuario_contabilidad', 'api');
-        $usuario_cont->assignRole($usuario_contabilidadRole);
     }
 }

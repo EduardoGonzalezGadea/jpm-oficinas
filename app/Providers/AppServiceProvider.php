@@ -37,7 +37,5 @@ class AppServiceProvider extends ServiceProvider
         }
 
         // Registrar componentes Livewire manualmente
-        Livewire::component('tesoreria.caja-diaria.pagos', \App\Http\Livewire\Tesoreria\CajaDiaria\Pagos::class);
-        Livewire::component('tesoreria.caja-diaria.opciones', \App\Http\Livewire\Tesoreria\CajaDiaria\Opciones::class);
     }
 }

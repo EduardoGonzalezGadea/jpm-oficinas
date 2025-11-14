@@ -20,7 +20,6 @@ class MultaPublico extends Component
     public $sortField = 'articulo';
     public $sortDirection = 'asc';
     public $perPage = 25;
-    public $valorUr;
 
     protected $queryString = [
         'search' => ['except' => ''],
@@ -28,27 +27,6 @@ class MultaPublico extends Component
         'sortDirection' => ['except' => 'asc'],
         'page' => ['except' => 1],
     ];
-
-    public function mount()
-    {
-        try {
-            $response = Http::get('https://www.bps.gub.uy/bps/valores.jsp?contentid=5478');
-            if ($response->successful()) {
-                $html = $response->body();
-                $dom = new DOMDocument();
-                @$dom->loadHTML($html);
-                $xpath = new DOMXPath($dom);
-
-                // Buscar la fila que contiene "Unidad Reajustable (UR)" en la primera columna
-                $valor = $xpath->query("//table//tr[td[1][contains(., 'Unidad Reajustable (UR)')]]/td[3]");
-                if ($valor->length > 0) {
-                    $this->valorUr = trim($valor->item(0)->nodeValue);
-                }
-            }
-        } catch (\Exception $e) {
-            // Silently fail, so the page still loads
-        }
-    }
 
     public function updatingSearch()
     {

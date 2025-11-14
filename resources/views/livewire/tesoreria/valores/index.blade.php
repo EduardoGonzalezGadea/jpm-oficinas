@@ -1,453 +1,242 @@
 <div>
-    {{-- Encabezado --}}
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <p class="text-muted mb-0">Gestión de libretas de recibos y su stock disponible</p>
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h4 class="card-title">
+                <i class="fas fa-barcode mr-2"></i>Libretas de Valores
+            </h4>
+            <div>
+                <a href="{{ route('tesoreria.valores.entregas') }}" class="btn btn-success mr-2">
+                    <i class="fas fa-handshake mr-1"></i> Entregas
+                </a>
+                <a href="{{ route('tesoreria.valores.servicios') }}" class="btn btn-success mr-2">
+                    <i class="fas fa-cogs mr-1"></i> Servicios
+                </a>
+                <a href="{{ route('tesoreria.valores.tipos-libreta') }}" class="btn btn-success mr-2">
+                    <i class="fas fa-book mr-1"></i> Tipos
+                </a>
+                <button wire:click="create()" class="btn btn-primary">
+                    <i class="fas fa-plus mr-1"></i> Ingreso de Libreta
+                </button>
+            </div>
         </div>
-        <button type="button" class="btn btn-primary" wire:click="openCreateModal">
-            <i class="fas fa-plus me-2"></i>Nuevo Valor
-        </button>
-    </div>
-
-    {{-- Filtros y búsqueda --}}
-    <div class="card mb-4">
-        <div class="card-header">
-            <h5 class="mb-0"><i class="fas fa-filter me-2"></i>Filtros de Búsqueda</h5>
-        </div>
-        <div class="card-body">
-            <div class="d-flex justify-content-between align-content-between">
-                <div class="flex-grow-1">
-                    <div class="form-group">
-                        {{-- <label class="form-label font-weight-bold col-form-label-sm">Buscar</label> --}}
-                        <div class="input-group input-group-sm">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text"><i class="fas fa-search"></i></span>
-                            </div>
-                            <input type="text" class="form-control" wire:model="search"
-                                placeholder="Buscar por nombre o descripción...">
+        <div class="card-body px-2">
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <div class="input-group">
+                        <input type="text" wire:model.debounce.300ms="search" class="form-control" placeholder="Buscar por tipo, serie o número...">
+                        <div class="input-group-append">
+                            <span class="input-group-text"><i class="fas fa-search"></i></span>
                         </div>
                     </div>
                 </div>
-                <div>
-                    <div class="form-group">
-                        {{-- <label class="form-label font-weight-bold col-form-label-sm">Tipo de Valor</label> --}}
-                        <select class="form-select form-control-sm" wire:model="filterTipo">
-                            <option value="">Todos</option>
-                            <option value="pesos">Pesos</option>
-                            <option value="UR">UR</option>
-                            <option value="SVE">Sin Valor</option>
-                        </select>
-                    </div>
-                </div>
-                <div>
-                    <div class="form-group">
-                        {{-- <label class="form-label font-weight-bold col-form-label-sm">Estado</label> --}}
-                        <select class="form-select form-control-sm" wire:model="filterActivo">
-                            <option value="">Todos</option>
-                            <option value="1">Activos</option>
-                            <option value="0">Inactivos</option>
-                        </select>
-                    </div>
-                </div>
-                <div>
-                    <div class="form-group">
-                        {{-- <label class="form-label font-weight-bold col-form-label-sm">Por página</label> --}}
-                        <select class="form-select form-control-sm" wire:model="perPage">
-                            <option value="10">10</option>
-                            <option value="25">25</option>
-                            <option value="50">50</option>
-                        </select>
-                    </div>
-                </div>
-                <div>
-                    <button type="button" class="btn btn-outline-primary btn-sm" wire:click="$set('search', '')">
-                        <i class="fas fa-times me-1"></i>Limpiar
-                    </button>
+                <div class="col-md-3">
+                    <select wire:model="estado" class="form-control">
+                        <option value="">Todos los estados</option>
+                        <option value="en_stock">En Stock</option>
+                        <option value="asignada">Asignada</option>
+                        <option value="agotada">Agotada</option>
+                    </select>
                 </div>
             </div>
-        </div>
-    </div>
-
-    {{-- Tabla de valores --}}
-    <div class="card">
-        <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table table-hover mb-0">
-                    <thead class="table-light">
+                <table class="table table-striped table-hover">
+                    <thead class="thead-dark">
                         <tr>
-                            <th wire:click="sortBy('nombre')" style="cursor: pointer;" class="text-nowrap text-start">
-                                Nombre
-                                @if ($sortField === 'nombre')
-                                    <i class="fas fa-sort-{{ $sortDirection === 'asc' ? 'up' : 'down' }} ms-1"></i>
-                                @endif
-                            </th>
-                            <th wire:click="sortBy('recibos')" style="cursor: pointer;" class="text-nowrap text-center">
-                                Recibos/Libreta
-                                @if ($sortField === 'recibos')
-                                    <i class="fas fa-sort-{{ $sortDirection === 'asc' ? 'up' : 'down' }} ms-1"></i>
-                                @endif
-                            </th>
-                            <th wire:click="sortBy('tipo_valor')" style="cursor: pointer;"
-                                class="text-nowrap text-center">
-                                Tipo
-                                @if ($sortField === 'tipo_valor')
-                                    <i class="fas fa-sort-{{ $sortDirection === 'asc' ? 'up' : 'down' }} ms-1"></i>
-                                @endif
-                            </th>
-                            <th class="text-nowrap text-center">Valor</th>
-                            <th class="text-nowrap text-center">Stock Disponible</th>
-                            <th class="text-nowrap text-center">Estado</th>
-                            <th width="180" class="text-nowrap text-center">Acciones</th>
+                            <th>Tipo</th>
+                            <th>Serie</th>
+                            <th class="text-center">Numeración</th>
+                            <th class="text-center">Próximo Recibo</th>
+                            <th class="text-center">Estado</th>
+                            <th class="text-center">Fecha Recepción</th>
+                            <th class="text-center">Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($valores as $valor)
+                        @forelse($libretas as $libreta)
                             <tr>
-                                <td>
-                                    <div>
-                                        <strong>{{ $valor->nombre }}</strong>
-                                        @if ($valor->descripcion)
-                                            <br><small
-                                                class="text-muted">{{ Str::limit($valor->descripcion, 50) }}</small>
-                                        @endif
-                                    </div>
-                                </td>
-                                <td>
-                                    <span class="badge bg-info text-white">{{ number_format($valor->recibos) }}</span>
-                                </td>
-                                <td>
-                                    <span class="badge bg-primary text-white">{{ $valor->tipo_valor_texto }}</span>
-                                </td>
-                                <td>
-                                    @if ($valor->valor)
-                                        ${{ number_format($valor->valor, 2) }}
-                                    @else
-                                        <span class="text-muted">N/A</span>
+                                <td>{{ $libreta->tipoLibreta->nombre }}</td>
+                                <td>{{ $libreta->serie ?? '-' }}</td>
+                                <td class="text-center">{{ $libreta->numero_inicial }} al {{ $libreta->numero_final }}</td>
+                                <td class="text-center">{{ $libreta->proximo_recibo_disponible }}</td>
+                                <td class="text-center"><span class="badge badge-primary">{{ $libreta->estado }}</span></td>
+                                <td class="text-center">{{ $libreta->fecha_recepcion->format('d/m/Y') }}</td>
+                                <td class="text-center">
+                                    @if($libreta->estado === 'en_stock')
+                                    <button class="btn btn-sm btn-info mr-1" title="Entregar Libreta" wire:click="entregarLibreta({{ $libreta->id }})">
+                                        <i class="fas fa-handshake"></i>
+                                    </button>
                                     @endif
-                                </td>
-                                <td>
-                                    <div class="d-flex flex-column">
-                                        <small><strong>{{ number_format($valor->resumen_stock['stock_total']) }}</strong>
-                                            recibos</small>
-                                        <small
-                                            class="text-muted">{{ number_format($valor->resumen_stock['libretas_completas']) }}
-                                            libretas completas</small>
-                                        @if ($valor->resumen_stock['recibos_en_uso'] > 0)
-                                            <small
-                                                class="text-warning">{{ number_format($valor->resumen_stock['recibos_en_uso']) }}
-                                                en uso</small>
-                                        @endif
-                                    </div>
-                                </td>
-                                <td>
-                                    @if ($valor->activo)
-                                        <span class="badge bg-success text-white">Activo</span>
-                                    @else
-                                        <span class="badge bg-danger text-white">Inactivo</span>
-                                    @endif
-                                </td>
-                                <td>
-                                    <div class="btn-group btn-group-sm" role="group">
-                                        <button type="button" class="btn btn-outline-info"
-                                            wire:click="openStockModal({{ $valor->id }})" title="Ver Stock">
-                                            <i class="fas fa-chart-bar"></i>
-                                        </button>
-                                        <button type="button" class="btn btn-outline-primary"
-                                            wire:click="openEditModal({{ $valor->id }})" title="Editar">
-                                            <i class="fas fa-edit"></i>
-                                        </button>
-                                        <button type="button"
-                                            class="btn btn-outline-{{ $valor->activo ? 'warning' : 'success' }}"
-                                            wire:click="toggleActive({{ $valor->id }})"
-                                            title="{{ $valor->activo ? 'Desactivar' : 'Activar' }}">
-                                            <i class="fas fa-{{ $valor->activo ? 'pause' : 'play' }}"></i>
-                                        </button>
-                                        <button type="button" class="btn btn-outline-danger"
-                                            wire:click="openDeleteModal({{ $valor->id }})" title="Eliminar">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </div>
+                                    <button class="btn btn-sm btn-danger" title="Eliminar" wire:click="confirmDelete({{ $libreta->id }})">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7" class="text-center py-4 text-muted">
-                                    <i class="fas fa-inbox fa-3x mb-3 d-block"></i>
-                                    No se encontraron valores registrados
-                                </td>
+                                <td colspan="7" class="text-center">No hay libretas registradas.</td>
                             </tr>
                         @endforelse
                     </tbody>
                 </table>
             </div>
-
-            @if ($valores->hasPages())
-                <div class="card-footer">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div class="text-muted">
-                            Mostrando {{ $valores->firstItem() }} a {{ $valores->lastItem() }} de
-                            {{ $valores->total() }} resultados
-                        </div>
-                        {{ $valores->links() }}
-                    </div>
-                </div>
-            @endif
+            <div class="mt-3 d-flex justify-content-center">
+                {{ $libretas->links() }}
+            </div>
         </div>
     </div>
 
-    {{-- Modal Crear/Editar --}}
-    <div class="modal fade" id="createEditModal" tabindex="-1" wire:ignore.self>
-        <div class="modal-dialog modal-lg">
+    <!-- Modal Ingreso -->
+    @if($showModal)
+    <div class="modal fade show" style="display: block;" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-dialog-scrollable" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">
-                        {{ $showCreateModal ? 'Crear Nuevo Valor' : 'Editar Valor' }}
-                    </h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <h5 class="modal-title">Ingreso de Libreta</h5>
+                    <button type="button" class="close" wire:click="closeModal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
                 <div class="modal-body">
-                    <form>
-                        <div class="row g-3">
-                            <div class="col-md-8">
-                                <label class="form-label">Nombre <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control @error('nombre') is-invalid @enderror"
-                                    wire:model="nombre" placeholder="Ej: Recibos de Agua">
-                                @error('nombre')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label">Recibos por Libreta <span
-                                        class="text-danger">*</span></label>
-                                <input type="number" class="form-control @error('recibos') is-invalid @enderror"
-                                    wire:model="recibos" placeholder="100" min="1">
-                                @error('recibos')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Tipo de Valor <span class="text-danger">*</span></label>
-                                <select class="form-select @error('tipo_valor') is-invalid @enderror"
-                                    wire:model="tipo_valor">
-                                    <option value="pesos">Pesos</option>
-                                    <option value="UR">Unidad Reajustable</option>
-                                    <option value="SVE">Sin Valor Escrito</option>
-                                </select>
-                                @error('tipo_valor')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Valor
-                                    @if ($tipo_valor !== 'SVE')
-                                        <span class="text-danger">*</span>
-                                    @endif
-                                </label>
-                                <div class="input-group">
-                                    <span class="input-group-text">$</span>
-                                    <input type="number" step="0.01"
-                                        class="form-control @error('valor') is-invalid @enderror" wire:model="valor"
-                                        placeholder="0.00" @if ($tipo_valor === 'SVE') disabled @endif>
-                                </div>
-                                @error('valor')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                                @if ($tipo_valor === 'SVE')
-                                    <small class="text-muted">El valor no aplica para "Sin Valor Escrito"</small>
-                                @endif
-                            </div>
-                            <div class="col-12">
-                                <label class="form-label">Descripción</label>
-                                <textarea class="form-control @error('descripcion') is-invalid @enderror" wire:model="descripcion" rows="3"
-                                    placeholder="Descripción opcional del valor..."></textarea>
-                                @error('descripcion')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-                            <div class="col-12">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" wire:model="activo"
-                                        id="activo">
-                                    <label class="form-check-label" for="activo">
-                                        Activo
-                                    </label>
-                                </div>
+                    <div class="form-group">
+                        <label for="tipo_libreta_id">Tipo de Libreta</label>
+                        <select wire:model.live="tipo_libreta_id" id="tipo_libreta_id" class="form-control @error('tipo_libreta_id') is-invalid @enderror">
+                            <option value="">Seleccione un tipo...</option>
+                            @foreach($tiposLibreta as $tipo)
+                                <option value="{{ $tipo->id }}">{{ $tipo->nombre }} ({{ $tipo->cantidad_recibos }} recibos)</option>
+                            @endforeach
+                        </select>
+                        @error('tipo_libreta_id') <span class="invalid-feedback">{{ $message }}</span> @enderror
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="serie">Serie (opcional)</label>
+                                <input type="text" wire:model.defer="serie" id="serie" class="form-control @error('serie') is-invalid @enderror">
+                                @error('serie') <span class="invalid-feedback">{{ $message }}</span> @enderror
                             </div>
                         </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
-                    @if ($showCreateModal)
-                        <button type="button" class="btn btn-primary" wire:click="create">
-                            <i class="fas fa-save me-2"></i>Crear Valor
-                        </button>
-                    @else
-                        <button type="button" class="btn btn-primary" wire:click="update">
-                            <i class="fas fa-save me-2"></i>Actualizar Valor
-                        </button>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="fecha_recepcion">Fecha de Recepción</label>
+                                <input type="date" wire:model.defer="fecha_recepcion" id="fecha_recepcion" class="form-control @error('fecha_recepcion') is-invalid @enderror">
+                                @error('fecha_recepcion') <span class="invalid-feedback">{{ $message }}</span> @enderror
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="numero_inicial">N° Recibo Inicial</label>
+                                <input type="number" wire:model.live="numero_inicial" id="numero_inicial" class="form-control @error('numero_inicial') is-invalid @enderror">
+                                @error('numero_inicial') <span class="invalid-feedback">{{ $message }}</span> @enderror
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="cantidad_libretas">Cantidad de Libretas</label>
+                                <input type="number" wire:model.live="cantidad_libretas" id="cantidad_libretas" class="form-control @error('cantidad_libretas') is-invalid @enderror">
+                                @error('cantidad_libretas') <span class="invalid-feedback">{{ $message }}</span> @enderror
+                            </div>
+                        </div>
+                    </div>
+                    @if($numero_final_calculado)
+                    <div class="alert alert-info">
+                        El lote de libretas finalizará en el recibo N° <strong>{{ $numero_final_calculado }}</strong>.
+                    </div>
                     @endif
                 </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" wire:click="closeModal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" wire:click="save()">Registrar</button>
+                </div>
             </div>
         </div>
     </div>
+    <div class="modal-backdrop fade show"></div>
+    @endif
 
-    {{-- Modal Stock --}}
-    <div class="modal fade" id="stockModal" tabindex="-1" wire:ignore.self>
-        <div class="modal-dialog modal-xl">
+    <!-- Modal Entregar Libreta -->
+    @if($showEntregaModal)
+    <div class="modal fade show" style="display: block;" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable" role="document">
             <div class="modal-content">
-                @if ($selectedValor)
-                    <div class="modal-header">
-                        <h5 class="modal-title">
-                            <i class="fas fa-chart-bar me-2"></i>Resumen de Stock - {{ $selectedValor->nombre }}
-                        </h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
+                <div class="modal-header">
+                    <h5 class="modal-title">Entregar Libreta de Valores</h5>
+                    <button type="button" class="close" wire:click="closeEntregaModal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    @if($libretaSeleccionada)
+                    <div class="alert alert-info">
+                        <strong>Libreta seleccionada:</strong> {{ $libretaSeleccionada->tipoLibreta->nombre }} - N° {{ $libretaSeleccionada->numero_inicial }} al {{ $libretaSeleccionada->numero_final }}
+                        @if($libretaSeleccionada->serie) (Serie: {{ $libretaSeleccionada->serie }}) @endif
                     </div>
-                    <div class="modal-body">
-                        {{-- Resumen General --}}
-                        <div class="row mb-4">
-                            <div class="col-md-3">
-                                <div class="card bg-primary text-white">
-                                    <div class="card-body text-center">
-                                        @if ($selectedValor && isset($selectedValor->resumen_stock))
-                                            <h3 class="mb-1">
-                                                {{ number_format($selectedValor->resumen_stock['stock_total']) }}</h3>
-                                        @else
-                                            <h3 class="mb-1">0</h3>
-                                        @endif
-                                        <small>Total Recibos</small>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="card bg-success text-white">
-                                    <div class="card-body text-center">
-                                        <h3 class="mb-1">
-                                            {{ number_format($selectedValor->resumen_stock['libretas_completas'] ?? 0) }}
-                                        </h3>
-                                        <small>Libretas Completas</small>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="card bg-warning text-white">
-                                    <div class="card-body text-center">
-                                        <h3 class="mb-1">
-                                            {{ number_format($selectedValor->resumen_stock['recibos_en_uso'] ?? 0) }}
-                                        </h3>
-                                        <small>Recibos en Uso</small>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="card bg-info text-white">
-                                    <div class="card-body text-center">
-                                        <h3 class="mb-1">
-                                            {{ number_format($selectedValor->resumen_stock['recibos_disponibles'] ?? 0) }}
-                                        </h3>
-                                        <small>Recibos Disponibles</small>
-                                    </div>
-                                </div>
+                    @endif
+                    <div class="form-group">
+                        <label for="servicio_entrega_id">Servicio de Asignación</label>
+                        <select wire:model.defer="servicio_entrega_id" id="servicio_entrega_id" class="form-control @error('servicio_entrega_id') is-invalid @enderror">
+                            <option value="">Seleccione un servicio...</option>
+                            @foreach($servicios as $servicio)
+                                <option value="{{ $servicio->id }}">{{ $servicio->nombre }}</option>
+                            @endforeach
+                        </select>
+                        @error('servicio_entrega_id') <span class="invalid-feedback">{{ $message }}</span> @enderror
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="numero_recibo_entrega">N° Recibo de Entrega</label>
+                                <input type="text" wire:model.defer="numero_recibo_entrega" id="numero_recibo_entrega" class="form-control @error('numero_recibo_entrega') is-invalid @enderror" placeholder="Ingrese el número de recibo">
+                                @error('numero_recibo_entrega') <span class="invalid-feedback">{{ $message }}</span> @enderror
                             </div>
                         </div>
-
-                        {{-- Detalle por Concepto --}}
-                        @if ($selectedValor->conceptosActivos->count() > 0)
-                            <h6 class="mb-3">Detalle por Concepto</h6>
-                            <div class="table-responsive">
-                                <table class="table table-sm">
-                                    <thead class="table-light">
-                                        <tr>
-                                            <th>Concepto</th>
-                                            <th>Asignados</th>
-                                            <th>Disponibles</th>
-                                            <th>Utilizados</th>
-                                            <th>% Uso</th>
-                                            <th>Libretas en Uso</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach ($selectedValor->conceptosActivos as $concepto)
-                                            @php
-                                                $resumenConcepto = $concepto->getResumenUso();
-                                                $porcentaje =
-                                                    $resumenConcepto['total_asignados'] > 0
-                                                        ? round(
-                                                            ($resumenConcepto['total_utilizados'] /
-                                                                $resumenConcepto['total_asignados']) *
-                                                                100,
-                                                            1,
-                                                        )
-                                                        : 0;
-                                            @endphp
-                                            <tr>
-                                                <td>{{ $concepto->concepto }}</td>
-                                                <td>{{ number_format($resumenConcepto['total_asignados']) }}</td>
-                                                <td>{{ number_format($resumenConcepto['total_disponibles']) }}</td>
-                                                <td>{{ number_format($resumenConcepto['total_utilizados']) }}</td>
-                                                <td>
-                                                    <div class="progress" style="height: 20px;">
-                                                        <div class="progress-bar bg-{{ $porcentaje > 75 ? 'danger' : ($porcentaje > 50 ? 'warning' : 'success') }}"
-                                                            style="width: {{ $porcentaje }}%">
-                                                            {{ $porcentaje }}%
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td>{{ $resumenConcepto['libretas_en_uso'] }}</td>
-                                            </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="fecha_entrega">Fecha de Entrega</label>
+                                <input type="date" wire:model.defer="fecha_entrega" id="fecha_entrega" class="form-control @error('fecha_entrega') is-invalid @enderror">
+                                @error('fecha_entrega') <span class="invalid-feedback">{{ $message }}</span> @enderror
                             </div>
-                        @else
-                            <div class="alert alert-info">
-                                <i class="fas fa-info-circle me-2"></i>
-                                No hay conceptos activos para este valor.
-                            </div>
-                        @endif
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
-                    </div>
-                @endif
-            </div>
-        </div>
-    </div>
-
-    {{-- Modal Eliminar --}}
-    <div class="modal fade" id="deleteModal" tabindex="-1" wire:ignore.self>
-        <div class="modal-dialog">
-            <div class="modal-content">
-                @if ($selectedValor)
-                    <div class="modal-header">
-                        <h5 class="modal-title text-danger">
-                            <i class="fas fa-exclamation-triangle me-2"></i>Confirmar Eliminación
-                        </h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-                    <div class="modal-body">
-                        <p>¿Está seguro que desea eliminar el valor <strong>{{ $selectedValor->nombre }}</strong>?</p>
-                        <div class="alert alert-warning">
-                            <i class="fas fa-exclamation-triangle me-2"></i>
-                            Esta acción no se puede deshacer. Solo se pueden eliminar valores sin movimientos asociados.
                         </div>
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
-                        <button type="button" class="btn btn-danger" wire:click="delete">
-                            <i class="fas fa-trash me-2"></i>Eliminar
-                        </button>
+                    <div class="form-group">
+                        <label for="observaciones_entrega">Observaciones (opcional)</label>
+                        <textarea wire:model.defer="observaciones_entrega" id="observaciones_entrega" class="form-control @error('observaciones_entrega') is-invalid @enderror" rows="3" placeholder="Observaciones adicionales..."></textarea>
+                        @error('observaciones_entrega') <span class="invalid-feedback">{{ $message }}</span> @enderror
                     </div>
-                @endif
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" wire:click="closeEntregaModal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" wire:click="registrarEntrega()">Registrar Entrega</button>
+                </div>
             </div>
         </div>
     </div>
 
+    @if($showEntregaModal)
+        <div class="modal-backdrop fade show"></div>
+    @endif
+    @endif
 
+    @push('scripts')
+    <script>
+        document.addEventListener('livewire:load', function () {
+            // Listener for modal opened event
+            Livewire.on('modalOpened', () => {
+                setTimeout(() => {
+                    const modalBody = document.querySelector('.modal.show .modal-body');
+                    if (modalBody) {
+                        modalBody.scrollTop = 0;
+                    }
+                    const campoId = '{{ $campoEnfoque }}';
+                    const campo = document.getElementById(campoId);
+                    if (campo) {
+                        campo.focus();
+                        campo.select();
+                    }
+                }, 200); // Increased delay to ensure modal is fully rendered
+            });
+        });
+    </script>
+    @endpush
 </div>

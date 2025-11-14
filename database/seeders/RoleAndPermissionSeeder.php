@@ -42,11 +42,6 @@ class RoleAndPermissionSeeder extends Seeder
             'ver_pagos',
             'gestionar_conceptos_pago',
 
-            // Módulo Contabilidad
-            'gestionar_contabilidad',
-            'supervisar_contabilidad',
-            'operador_contabilidad',
-
             // Módulo Sistema
             'administrar_sistema',
 
@@ -78,10 +73,6 @@ class RoleAndPermissionSeeder extends Seeder
             $supervisor_tesoreria = Role::firstOrCreate(['name' => 'supervisor_tesoreria', 'guard_name' => $guard]);
             $usuario_tesoreria = Role::firstOrCreate(['name' => 'usuario_tesoreria', 'guard_name' => $guard]);
 
-            $gerente_contabilidad = Role::firstOrCreate(['name' => 'gerente_contabilidad', 'guard_name' => $guard]);
-            $supervisor_contabilidad = Role::firstOrCreate(['name' => 'supervisor_contabilidad', 'guard_name' => $guard]);
-            $usuario_contabilidad = Role::firstOrCreate(['name' => 'usuario_contabilidad', 'guard_name' => $guard]);
-
             // Asignar permisos a roles
 
             // Administrador: todos los permisos
@@ -108,20 +99,6 @@ class RoleAndPermissionSeeder extends Seeder
                 'administrar_sistema',
             ]);
 
-            $gerente_contabilidad->givePermissionTo([
-                'operador_contabilidad',
-                'acceso_gerente',
-                'gestionar_usuarios',
-                'crear_usuarios',
-                'editar_usuarios',
-                'eliminar_usuarios',
-                'ver_usuarios',
-                'gestionar_contabilidad',
-                'cambiar_propia_contraseña',
-                'editar_propio_perfil',
-                'administrar_sistema',
-            ]);
-
             // Supervisores: pueden gestionar usuarios de su módulo
             $supervisor_tesoreria->givePermissionTo([
                 'operador_tesoreria',
@@ -136,19 +113,6 @@ class RoleAndPermissionSeeder extends Seeder
                 'administrar_sistema',
             ]);
 
-            $supervisor_contabilidad->givePermissionTo([
-                'operador_contabilidad',
-                'acceso_supervisor',
-                'gestionar_usuarios',
-                'crear_usuarios',
-                'editar_usuarios',
-                'ver_usuarios',
-                'supervisar_contabilidad',
-                'cambiar_propia_contraseña',
-                'editar_propio_perfil',
-                'administrar_sistema',
-            ]);
-
             // Usuarios normales: solo su módulo
             $usuario_tesoreria->givePermissionTo([
                 'operador_tesoreria',
@@ -156,11 +120,6 @@ class RoleAndPermissionSeeder extends Seeder
                 'editar_propio_perfil'
             ]);
 
-            $usuario_contabilidad->givePermissionTo([
-                'operador_contabilidad',
-                'cambiar_propia_contraseña',
-                'editar_propio_perfil'
-            ]);
         }
     }
 }

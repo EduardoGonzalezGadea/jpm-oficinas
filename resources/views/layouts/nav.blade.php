@@ -1,6 +1,6 @@
 <nav class="navbar navbar-expand-md navbar-dark bg-dark barra-oscura" style="margin-bottom: 0px;">
     <a class="navbar-brand" href="{{ route('panel') }}">
-        <i class="fas fa-building mr-2"></i> JPM Oficinas
+        <i class="fas fa-building mr-2"></i> Tesorería | Oficinas
     </a>
 
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav">
@@ -17,38 +17,20 @@
                         <i class="fas fa-dollar-sign mr-2"></i>Tesorería
                     </a>
                     <div class="dropdown-menu" aria-labelledby="navbarDropdownTesoreria">
-                        @hasrole('administrador')
-                        {{-- Submenu Caja Diaria --}}
-                        <div class="dropdown-submenu submenu-right">
-                            <a class="dropdown-item dropdown-toggle" href="#" role="button">
-                                <i class="fas fa-cash-register mr-2"></i>Caja Diaria
-                            </a>
-                            <div class="dropdown-menu">
-                                <a class="dropdown-item" href="{{ route('tesoreria.caja_diaria', ['tab' => 'resumen']) }}">
-                                    <i class="fas fa-chart-line mr-2"></i>Resumen
-                                </a>
-                                <a class="dropdown-item" href="{{ route('tesoreria.caja_diaria', ['tab' => 'cobros']) }}">
-                                    <i class="fas fa-plus-circle mr-2"></i>Cobros
-                                </a>
-                                <a class="dropdown-item" href="{{ route('tesoreria.caja_diaria', ['tab' => 'pagos']) }}">
-                                    <i class="fas fa-minus-circle mr-2"></i>Pagos
-                                </a>
-                                <a class="dropdown-item" href="{{ route('tesoreria.caja_diaria', ['tab' => 'art222']) }}">
-                                    <i class="fas fa-file-alt mr-2"></i>Art. 222
-                                </a>
-                                <a class="dropdown-item" href="{{ route('tesoreria.caja_diaria', ['tab' => 'opciones']) }}">
-                                    <i class="fas fa-cogs mr-2"></i>Opciones
-                                </a>
-                            </div>
-                        </div>
-                        @endhasrole
+
+                        {{-- Link Infracciones de Tránsito --}}
+                        <a class="dropdown-item" href="{{ route('tesoreria.multas-transito') }}">
+                            <i class="fas fa-list"></i> Multas de Tránsito
+                        </a>
+                        {{-- Separador --}}
+                        <div class="dropdown-divider"></div>
                         {{-- Link Caja Chica --}}
                         <a class="dropdown-item" href="{{ route('tesoreria.caja-chica.index') }}" wire:navigate>
                             <i class="fas fa-coins mr-2"></i>Caja Chica
                         </a>
-                        {{-- Link Infracciones de Tránsito --}}
-                        <a class="dropdown-item" href="{{ route('tesoreria.multas-transito') }}">
-                            <i class="fas fa-list"></i> Multas de Tránsito
+                        {{-- Link Cheques --}}
+                        <a class="dropdown-item" href="{{ route('tesoreria.cheques.index') }}" wire:navigate>
+                            <i class="fas fa-money-check mr-2"></i>Cheques
                         </a>
                         {{-- Link Arrendamientos --}}
                         <a class="dropdown-item" href="{{ route('tesoreria.arrendamientos.index') }}">
@@ -57,6 +39,33 @@
                         <a class="dropdown-item" href="{{ route('tesoreria.eventuales.index') }}">
                             <i class="fas fa-hand-holding-usd mr-2"></i> Eventuales
                         </a>
+                        <a class="dropdown-item" href="{{ route('tesoreria.certificados-residencia.index') }}" wire:navigate>
+                            <i class="fas fa-file-alt mr-2"></i> Certificados de Residencia
+                        </a>
+                        <div class="dropdown-submenu submenu-right">
+                            <a class="dropdown-item dropdown-toggle" href="#" role="button">
+                                <i class="fas fa-barcode mr-2"></i>Valores
+                            </a>
+                            <div class="dropdown-menu">
+                                <a class="dropdown-item" href="{{ route('tesoreria.valores.index') }}">
+                                    <i class="fas fa-tasks mr-2"></i>Gestión de Libretas
+                                </a>
+                                <div class="dropdown-divider"></div>
+                                <div class="dropdown-submenu submenu-left">
+                                    <a class="dropdown-item dropdown-toggle" href="#">
+                                        <i class="fas fa-cog mr-2"></i>Configuración
+                                    </a>
+                                    <div class="dropdown-menu">
+                                        <a class="dropdown-item" href="{{ route('tesoreria.valores.servicios') }}">
+                                            <i class="fas fa-cogs mr-2"></i>Servicios
+                                        </a>
+                                        <a class="dropdown-item" href="{{ route('tesoreria.valores.tipos-libreta') }}">
+                                            <i class="fas fa-book mr-2"></i>Tipos de Libreta
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                         {{-- Link Armas --}}
                         <div class="dropdown-submenu submenu-right">
                             <a class="dropdown-item dropdown-toggle" href="#" role="button">
@@ -75,13 +84,6 @@
                 </li>
             @endcan
 
-            @can('operador_contabilidad')
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ route('contabilidad.index') }}">
-                        <i class="fas fa-calculator mr-2"></i>Contabilidad
-                    </a>
-                </li>
-            @endcan
         </ul>
 
         <ul class="navbar-nav">
@@ -92,20 +94,20 @@
                 </a>
                 <div class="dropdown-menu" aria-labelledby="navbarDropdownSistema">
                     @can('administrar_sistema', 'web')
-                    <div class="dropdown-submenu submenu-left">
-                        <a class="dropdown-item dropdown-toggle" href="#">
-                            <i class="fas fa-database mr-2"></i>Respaldos
-                        </a>
-                        <div class="dropdown-menu">
-                            <a class="dropdown-item" href="#" id="btn-crear-respaldo-menu">
-                                <i class="fas fa-plus mr-2"></i>Realizar Respaldo
+                        <div class="dropdown-submenu submenu-left">
+                            <a class="dropdown-item dropdown-toggle" href="#">
+                                <i class="fas fa-database mr-2"></i>Respaldos
                             </a>
-                            <a class="dropdown-item" href="{{ route('system.backups.index') }}">
-                                <i class="fas fa-undo mr-2"></i>Gestionar Respaldos
-                            </a>
+                            <div class="dropdown-menu">
+                                <a class="dropdown-item" href="#" id="btn-crear-respaldo-menu">
+                                    <i class="fas fa-plus mr-2"></i>Realizar Respaldo
+                                </a>
+                                <a class="dropdown-item" href="{{ route('system.backups.index') }}">
+                                    <i class="fas fa-undo mr-2"></i>Gestionar Respaldos
+                                </a>
+                            </div>
                         </div>
-                    </div>
-                    <div class="dropdown-divider"></div>
+                        <div class="dropdown-divider"></div>
                     @endcan
                     <a class="dropdown-item" href="{{ route('pendrive.index') }}">
                         <i class="fas fa-hdd mr-2"></i>Pendrive Virtual
@@ -118,11 +120,19 @@
                             <a class="dropdown-item" href="{{ route('tesoreria.configuracion.medios-de-pago.index') }}">
                                 <i class="fas fa-credit-card mr-2"></i>Medios de Pago
                             </a>
-                            <a class="dropdown-item" href="{{ route('tesoreria.configuracion.tes-tipos-monedas.index') }}">
+                            <a class="dropdown-item"
+                                href="{{ route('tesoreria.configuracion.tes-tipos-monedas.index') }}">
                                 <i class="fas fa-money-bill-wave mr-2"></i>Tipos de Monedas
                             </a>
-                            <a class="dropdown-item" href="{{ route('tesoreria.configuracion.tes-denominaciones-monedas.index') }}">
+                            <a class="dropdown-item"
+                                href="{{ route('tesoreria.configuracion.tes-denominaciones-monedas.index') }}">
                                 <i class="fas fa-coins mr-2"></i>Denominaciones
+                            </a>
+                            <a class="dropdown-item" href="{{ route('tesoreria.bancos.index') }}">
+                                <i class="fas fa-tags mr-2"></i>Bancos
+                            </a>
+                            <a class="dropdown-item" href="{{ route('tesoreria.cuentas-bancarias.index') }}">
+                                <i class="fas fa-credit-card mr-2"></i>Cuentas Bancarias
                             </a>
                         </div>
                     </div>
@@ -140,9 +150,6 @@
                                 <span class="text-success theme-active-indicator" style="display: none;">✔</span>
                             </button>
 
-                            <div class="dropdown-divider"></div>
-                            <h6 class="dropdown-header">Temas Claros</h6>
-
                             {{-- Tema Cosmo --}}
                             <button type="button" class="dropdown-item theme-select-button" data-theme-name="cosmo"
                                 data-theme-path="{{ asset('libs/bootswatch@4.6.2/dist/cosmo/bootstrap.min.css') }}">
@@ -151,7 +158,8 @@
                             </button>
 
                             {{-- Tema Cerulean --}}
-                            <button type="button" class="dropdown-item theme-select-button" data-theme-name="cerulean"
+                            <button type="button" class="dropdown-item theme-select-button"
+                                data-theme-name="cerulean"
                                 data-theme-path="{{ asset('libs/bootswatch@4.6.2/dist/cerulean/bootstrap.min.css') }}">
                                 Cerulean
                                 <span class="text-success theme-active-indicator" style="display: none;">✔</span>
@@ -165,14 +173,12 @@
                             </button>
 
                             {{-- Tema Materia --}}
-                            <button type="button" class="dropdown-item theme-select-button" data-theme-name="material"
+                            <button type="button" class="dropdown-item theme-select-button"
+                                data-theme-name="material"
                                 data-theme-path="{{ asset('libs/bootswatch@4.6.2/dist/materia/bootstrap.min.css') }}">
                                 Materia
                                 <span class="text-success theme-active-indicator" style="display: none;">✔</span>
                             </button>
-
-                            <div class="dropdown-divider"></div>
-                            <h6 class="dropdown-header">Temas Oscuros</h6>
 
                             {{-- Tema Cyborg --}}
                             <button type="button" class="dropdown-item theme-select-button" data-theme-name="cyborg"

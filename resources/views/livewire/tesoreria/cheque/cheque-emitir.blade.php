@@ -128,8 +128,11 @@
                                             <td class="text-nowrap py-1">{{ \Carbon\Carbon::parse($cheque->fecha_emision)->format('d/m/Y') }}</td>
                                             <td class="text-nowrap py-1">{{ $cheque->beneficiario }}</td>
                                             <td class="text-nowrap py-1 text-center">
-                                                <button class="btn btn-sm btn-warning btn-xs py-0 px-1" wire:click.prevent="openEditarModal({{ $cheque->id }})" data-toggle="modal" data-target="#editarChequeModal" title="Editar cheque">
+                                                <button class="btn btn-sm btn-warning btn-xs py-0 px-1 mr-1" wire:click.prevent="openEditarModal({{ $cheque->id }})" data-toggle="modal" data-target="#editarChequeModal" title="Editar cheque">
                                                     <i class="fas fa-edit"></i>
+                                                </button>
+                                                <button class="btn btn-sm btn-danger btn-xs py-0 px-1" wire:click.prevent="openAnularModal({{ $cheque->id }})" data-toggle="modal" data-target="#anularChequeModal" title="Anular cheque">
+                                                    <i class="fas fa-ban"></i>
                                                 </button>
                                             </td>
                                         </tr>
@@ -179,7 +182,7 @@
 
     <!-- Modal para emitir cheque -->
     <div wire:ignore.self class="modal fade" id="emitirChequeModal" tabindex="-1" role="dialog" aria-labelledby="emitirChequeModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable" role="document">
             <div class="modal-content">
                 <div class="modal-header py-2">
                     <h5 class="modal-title h6" id="emitirChequeModalLabel">
@@ -191,23 +194,16 @@
                 </div>
                 <div class="modal-body py-2">
                     @if($selectedCheque)
-                        <div class="mb-2 py-1 bg-light rounded px-2">
-                            <div class="d-flex justify-content-between">
-                                <small class="text-muted mb-0">
-                                    <i class="fas fa-university mr-1"></i>{{ $selectedCheque['cuenta_bancaria']['banco']['nombre'] }}
-                                </small>
-                                <small class="text-muted mb-0">
-                                    <i class="fas fa-credit-card mr-1"></i>{{ $selectedCheque['cuenta_bancaria']['numero_cuenta'] }}
-                                </small>
-                            </div>
-                            <div class="d-flex justify-content-between">
-                                <small class="text-muted mb-0">
-                                    <i class="fas fa-hashtag mr-1"></i>{{ $selectedCheque['numero_cheque'] }}
-                                </small>
-                                <small class="text-muted mb-0">
-                                    <i class="fas fa-barcode mr-1"></i>Serie: {{ $selectedCheque['serie'] ?? 'SIN DATO' }}
-                                </small>
-                            </div>
+                        <div class="d-flex justify-content-between align-items-center mb-2 py-1 bg-light rounded px-2">
+                            <small class="text-muted mb-0">
+                                <i class="fas fa-university mr-1"></i>{{ $selectedCheque['cuenta_bancaria']['banco']['nombre'] }}
+                            </small>
+                            <small class="text-muted mb-0">
+                                <i class="fas fa-credit-card mr-1"></i>{{ $selectedCheque['cuenta_bancaria']['numero_cuenta'] }}
+                            </small>
+                            <small class="text-muted mb-0">
+                                <i class="fas fa-barcode mr-1"></i>Serie: {{ $selectedCheque['serie'] ?? 'SIN DATO' }} - N°: {{ $selectedCheque['numero_cheque'] }}
+                            </small>
                         </div>
                     @endif
 
@@ -278,7 +274,7 @@
 
     <!-- Modal para editar cheque -->
     <div wire:ignore.self class="modal fade" id="editarChequeModal" tabindex="-1" role="dialog" aria-labelledby="editarChequeModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable" role="document">
             <div class="modal-content">
                 <div class="modal-header py-2">
                     <h5 class="modal-title h6" id="editarChequeModalLabel">
@@ -298,7 +294,7 @@
                                 <i class="fas fa-credit-card mr-1"></i>{{ $selectedChequeEditar['cuenta_bancaria']['numero_cuenta'] }}
                             </small>
                             <small class="text-muted mb-0">
-                                <i class="fas fa-hashtag mr-1"></i>{{ $selectedChequeEditar['numero_cheque'] }}
+                                <i class="fas fa-barcode mr-1"></i>Serie: {{ $selectedChequeEditar['serie'] ?? 'SIN DATO' }} - N°: {{ $selectedChequeEditar['numero_cheque'] }}
                             </small>
                         </div>
                     @endif
@@ -314,15 +310,7 @@
                                     @enderror
                                 </div>
                             </div>
-                            <div class="col-md-6">
-                                <div class="form-group mb-2">
-                                    <label for="edit_serie" class="mb-1 small">Serie</label>
-                                    <input type="text" wire:model="edit_serie" class="form-control form-control-sm @error('edit_serie') is-invalid @enderror" id="edit_serie" placeholder="Serie del cheque" maxlength="11">
-                                    @error('edit_serie')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                            </div>
+
                             <div class="col-md-6">
                                 <div class="form-group mb-2">
                                     <label for="edit_monto" class="mb-1 small">Monto *</label>
@@ -379,7 +367,7 @@
 
     <!-- Modal para anular cheque -->
     <div wire:ignore.self class="modal fade" id="anularChequeModal" tabindex="-1" role="dialog" aria-labelledby="anularChequeModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable" role="document">
             <div class="modal-content">
                 <div class="modal-header py-2">
                     <h5 class="modal-title h6" id="anularChequeModalLabel">
@@ -399,7 +387,7 @@
                                 <i class="fas fa-credit-card mr-1"></i>{{ $selectedChequeAnular['cuenta_bancaria']['numero_cuenta'] }}
                             </small>
                             <small class="text-muted mb-0">
-                                <i class="fas fa-hashtag mr-1"></i>{{ $selectedChequeAnular['numero_cheque'] }}
+                                <i class="fas fa-barcode mr-1"></i>Serie: {{ $selectedChequeAnular['serie'] ?? 'SIN DATO' }} - N°: {{ $selectedChequeAnular['numero_cheque'] }}
                             </small>
                         </div>
                     @endif

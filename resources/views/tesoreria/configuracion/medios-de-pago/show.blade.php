@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Ver Medio de Pago - JPM Oficinas')
+@section('title', 'Tesorería | Oficinas - Ver Medio de Pago')
 
 @section('content')
     <div class="row">

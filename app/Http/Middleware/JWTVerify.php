@@ -78,6 +78,11 @@ class JWTVerify
             return response()->json(['error' => $message], 401);
         }
 
+        // Para errores de sesión expirada, mostrar pantalla 500 informativa
+        if (str_contains(strtolower($message), 'expirado')) {
+            abort(500, $message);
+        }
+
         return redirect()->route('login')
             ->with('error', $message)
             ->withoutCookie('jwt_token');

@@ -1,117 +1,106 @@
 @extends('layouts.app')
 
 @push('styles')
-    <style>
-        #drop-zone {
-            border: 2px dashed #ccc;
-            border-radius: 10px;
-            padding: 40px;
-            text-align: center;
-            color: #aaa;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            position: relative;
-        }
-
-        #drop-zone.drag-over {
-            border-color: #007bff;
-            color: #007bff;
-            background-color: rgba(0, 123, 255, 0.05);
-        }
-
-        #drop-zone .icon {
-            font-size: 48px;
-        }
-
-        #drop-zone .text {
-            margin-top: 15px;
-            font-size: 18px;
-        }
-
-        #file-input {
-            display: none;
-        }
-
-        #upload-progress {
-            margin-top: 20px;
-            display: none;
-        }
-
-        .progress-bar {
-            transition: width 0.3s ease;
-        }
-
-        #alert-container {
-            position: fixed;
-            top: 80px;
-            right: 20px;
-            z-index: 1050;
-            width: 350px;
-        }
-
-        .list-group-item span {
-            word-break: break-all;
-        }
-    </style>
+    <link rel="stylesheet" href="{{ asset('css/pendrive-styles.css') }}">
 @endpush
 
 @section('content')
-    <div class="container">
-        <div id="alert-container"></div>
-        <h2>Pendrive Virtual</h2>
+    <div id="pendrive-container">
+        <div class="main-container">
+            <div id="alert-container"></div>
 
-        <div class="card mb-4">
-            <div class="card-header">Subir Archivo</div>
-            <div class="card-body">
-                <form id="upload-form" action="{{ route('pendrive.upload') }}" method="POST" enctype="multipart/form-data">
-                    @csrf
-                    <div id="drop-zone">
-                        <div class="icon"><i class="fas fa-cloud-upload-alt"></i></div>
-                        <div class="text">Arrastra y suelta un archivo aquí, o haz clic para seleccionarlo.</div>
-                        <small class="text-muted">Tamaño máximo: 100MB</small>
-                    </div>
-                    <input type="file" name="file" id="file-input">
-                    <div id="upload-progress" class="mt-3" style="display: none;">
-                        <div class="progress">
-                            <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar"
-                                style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
+            <h1 class="main-title">
+                <i class="fas fa-hdd me-3"></i>Pendrive Virtual
+            </h1>
+
+            <div class="row">
+                <div class="col-12">
+                    <!-- Upload Card -->
+                    <div class="card upload-card mb-4">
+                        <div class="card-header bg-primary text-white">
+                            <i class="fas fa-cloud-upload-alt me-2"></i>Subir Archivos
+                        </div>
+                        <div class="card-body">
+                            <form id="upload-form" action="{{ route('pendrive.upload') }}" method="POST" enctype="multipart/form-data">
+                                @csrf
+                                <div id="drop-zone">
+                                    <div class="icon pulse-icon"><i class="fas fa-cloud-upload-alt"></i></div>
+                                    <div class="text">Arrastra y suelta tu archivo aquí</div>
+                                    <div class="subtitle">o haz clic para seleccionar desde tu dispositivo</div>
+                                    <small class="text-muted d-block mt-3">
+                                        <i class="fas fa-info-circle me-1"></i>Tamaño máximo permitido: 100MB
+                                    </small>
+                                </div>
+                                <input type="file" name="file" id="file-input">
+                                <div id="upload-progress" class="mt-3" style="display: none;">
+                                    <div class="progress">
+                                        <div class="progress-bar progress-bar-striped progress-bar-animated"
+                                             role="progressbar" style="width: 0%;" aria-valuenow="0"
+                                             aria-valuemin="0" aria-valuemax="100">0%</div>
+                                    </div>
+                                    <div class="text-center mt-2">
+                                        <small class="text-muted">Subiendo archivo...</small>
+                                    </div>
+                                </div>
+                            </form>
                         </div>
                     </div>
-                </form>
-            </div>
-        </div>
 
-        <div class="card">
-            <div class="card-header">Archivos Almacenados</div>
-            <div class="card-body">
-                <ul id="file-list" class="list-group" data-url-base="{{ route('pendrive.index') }}">
-                    @forelse ($files as $file)
-                        <li class="list-group-item d-flex justify-content-between align-items-center"
-                            data-filename="{{ basename($file) }}">
-                            <div class="d-flex align-items-center">
-                                <img src="{{ route('pendrive.thumbnail', ['filename' => basename($file)]) }}"
-                                    alt="Miniatura de {{ basename($file) }}" class="thumbnail me-3"
-                                    style="width: 60px; height: 60px; object-fit: cover; border-radius: 4px;">
-                                <span>
-                                    {{ basename($file) }}
-                                </span>
-                            </div>
-                            <div class="btn-group" role="group">
-                                <a href="{{ route('pendrive.download', ['filename' => basename($file)]) }}"
-                                    class="btn btn-secondary btn-sm" title="Descargar archivo"
-                                    onclick="showDownloadToast('{{ basename($file) }}'); return false;">
-                                    <i class="fas fa-download"></i>
-                                </a>
-                                <button type="button" class="btn btn-danger btn-sm delete-btn"
-                                    data-filename="{{ basename($file) }}" title="Eliminar archivo">
-                                    <i class="fas fa-trash-alt"></i>
-                                </button>
-                            </div>
-                        </li>
-                    @empty
-                        <li class="list-group-item no-files">No hay archivos almacenados.</li>
-                    @endforelse
-                </ul>
+                    <!-- Files List Card -->
+                    <div class="card files-card">
+                        <div class="card-header bg-success text-white">
+                            <i class="fas fa-folder-open me-2"></i>Archivos Almacenados
+                            <span class="badge badge-light ml-2" id="file-count">
+                                @if(isset($files) && count($files) > 0)
+                                    {{ count($files) }} archivo{{ count($files) != 1 ? 's' : '' }}
+                                @else
+                                    0 archivos
+                                @endif
+                            </span>
+                        </div>
+                        <div class="card-body p-4">
+                            <ul id="file-list" class="list-group list-group-flush" data-url-base="{{ route('pendrive.index') }}">
+                                @forelse ($files as $file)
+                                    <li class="list-group-item d-flex justify-content-between align-items-center flex-column flex-md-row"
+                                        data-filename="{{ basename($file) }}">
+                                        <div class="d-flex align-items-center flex-grow-1 mb-2 mb-md-0">
+                                            <img src="{{ route('pendrive.thumbnail', ['filename' => basename($file)]) }}"
+                                                 alt="Miniatura" class="thumbnail me-3"
+                                                 onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjYwIiBoZWlnaHQ9IjYwIiBmaWxsPSIjZTVlN2ViIi8+CjxyZWN0IHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgZmlsbD0iI2ZmZiIvPgo8cmVjdCB4PSI1MCIgeT0iMzAiIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCIgZmlsbD0iI2ZmZiIvPgo8cmVjdCB4PSI0MCIgeT0iMzAiIHdpZHRoPSIxMCIgaGVpZ2h0PSIxMCIgZmlsbD0iI2ZmZiIvPgo8L3N2Zz4K';">
+                                            <div>
+                                                <div class="filename">{{ basename($file) }}</div>
+                                                <div class="file-info">
+                                                    <i class="fas fa-calendar-alt me-1"></i>
+                                                    {{ date('d/m/Y H:i', filemtime($file)) }}
+                                                    <span class="mx-2">•</span>
+                                                    <i class="fas fa-weight-hanging me-1"></i>
+                                                    {{ formatBytes(filesize($file)) }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="action-buttons">
+                                            <a href="{{ route('pendrive.download', ['filename' => basename($file)]) }}"
+                                               class="btn btn-download btn-sm" title="Descargar archivo"
+                                               onclick="showDownloadToast('{{ basename($file) }}'); return false;">
+                                                <i class="fas fa-download me-1"></i>Descargar
+                                            </a>
+                                            <button type="button" class="btn btn-delete btn-sm delete-btn"
+                                                    data-filename="{{ basename($file) }}" title="Eliminar archivo">
+                                                <i class="fas fa-trash-alt me-1"></i>Eliminar
+                                            </button>
+                                        </div>
+                                    </li>
+                                @empty
+                                    <li class="no-files-message">
+                                        <i class="fas fa-folder-open fa-3x text-muted mb-3 d-block"></i>
+                                        <div>No hay archivos almacenados</div>
+                                        <small class="text-muted">Comienza subiendo tu primer archivo</small>
+                                    </li>
+                                @endforelse
+                            </ul>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -119,6 +108,16 @@
 
 @push('scripts')
     <script>
+        // Helper function to format bytes
+        function formatBytes(bytes, decimals = 2) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const dm = decimals < 0 ? 0 : decimals;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
             // --- Existing variables ---
             const dropZone = document.getElementById('drop-zone');
@@ -128,6 +127,7 @@
             const progressBar = progressContainer.querySelector('.progress-bar');
             const fileList = document.getElementById('file-list');
             const alertContainer = document.getElementById('alert-container');
+            const fileCount = document.getElementById('file-count');
 
             // --- CSRF Token for all AJAX requests ---
             const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
@@ -163,6 +163,16 @@
                 const formData = new FormData();
                 formData.append('file', file);
 
+                // Show progress
+                progressContainer.style.display = 'block';
+                let progress = 0;
+                const interval = setInterval(() => {
+                    progress += Math.random() * 30;
+                    if (progress > 90) progress = 90;
+                    progressBar.style.width = progress + '%';
+                    progressBar.textContent = Math.round(progress) + '%';
+                }, 200);
+
                 fetch(uploadForm.action, {
                         method: 'POST',
                         body: formData,
@@ -178,16 +188,25 @@
                         status,
                         body
                     }) => {
+                        clearInterval(interval);
+                        progressBar.style.width = '100%';
+                        progressBar.textContent = '100%';
+
+                        setTimeout(() => {
+                            progressContainer.style.display = 'none';
+                            progressBar.style.width = '0%';
+                            progressBar.textContent = '0%';
+                        }, 500);
+
                         if (status >= 200 && status < 300) {
-                            // Mostrar notificación con SweetAlert2
                             window.dispatchEvent(new CustomEvent('swal:success', {
                                 detail: {
                                     text: body.success
                                 }
                             }));
                             addFileToList(file.name);
+                            updateFileCount();
                         } else {
-                            // Mostrar error con SweetAlert2
                             window.dispatchEvent(new CustomEvent('swal:toast-error', {
                                 detail: {
                                     text: body.error || 'Error en la subida.'
@@ -196,7 +215,8 @@
                         }
                     })
                     .catch(() => {
-                        // Mostrar error de red con SweetAlert2
+                        clearInterval(interval);
+                        progressContainer.style.display = 'none';
                         window.dispatchEvent(new CustomEvent('swal:toast-error', {
                             detail: {
                                 text: 'Error de red. No se pudo completar la subida.'
@@ -216,10 +236,11 @@
                         text: `El archivo "${filename}" se eliminará permanentemente.`,
                         icon: 'warning',
                         showCancelButton: true,
-                        confirmButtonColor: '#d33',
-                        cancelButtonColor: '#3085d6',
+                        confirmButtonColor: '#f5576c',
+                        cancelButtonColor: '#6b7280',
                         confirmButtonText: 'Sí, ¡eliminar!',
-                        cancelButtonText: 'Cancelar'
+                        cancelButtonText: 'Cancelar',
+                        backdrop: 'rgba(0, 0, 0, 0.5)'
                     }).then((result) => {
                         if (result.isConfirmed) {
                             performDelete(filename);
@@ -247,15 +268,14 @@
                         body
                     }) => {
                         if (ok) {
-                            // Mostrar notificación de eliminación con SweetAlert2 toast
                             window.dispatchEvent(new CustomEvent('swal:success', {
                                 detail: {
                                     text: body.success || 'El archivo ha sido eliminado.'
                                 }
                             }));
                             removeFileFromList(filename);
+                            updateFileCount();
                         } else {
-                            // Mostrar error de eliminación con SweetAlert2 toast
                             window.dispatchEvent(new CustomEvent('swal:toast-error', {
                                 detail: {
                                     text: body.error || 'No se pudo eliminar el archivo.'
@@ -265,7 +285,6 @@
                     })
                     .catch(error => {
                         console.error('Error:', error);
-                        // Mostrar error de red con SweetAlert2 toast
                         window.dispatchEvent(new CustomEvent('swal:toast-error', {
                             detail: {
                                 text: 'Error de Red. No se pudo conectar con el servidor.'
@@ -275,31 +294,16 @@
             }
 
             // --- Helper Functions ---
-            function showAlert(message, type = 'info') {
-                const alertId = `alert-${Date.now()}`;
-                const alert = document.createElement('div');
-                alert.id = alertId;
-                alert.className = `alert alert-${type} alert-dismissible fade show`;
-                alert.role = 'alert';
-                alert.innerHTML = `
-            ${message}
-            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-            </button>
-        `;
-                alertContainer.appendChild(alert);
-
-                setTimeout(() => {
-                    const alertElement = document.getElementById(alertId);
-                    if (alertElement) {
-                        // Bootstrap's collapse/fade requires jQuery for events, so we just remove it
-                        alertElement.remove();
-                    }
-                }, 5000);
+            function updateFileCount() {
+                const items = fileList.querySelectorAll('li[data-filename]');
+                const count = items.length;
+                if (fileCount) {
+                    fileCount.textContent = count + ' archivo' + (count !== 1 ? 's' : '');
+                }
             }
 
             function addFileToList(filename) {
-                const noFilesLi = fileList.querySelector('.no-files');
+                const noFilesLi = fileList.querySelector('.no-files-message');
                 if (noFilesLi) {
                     noFilesLi.remove();
                 }
@@ -308,41 +312,65 @@
                 const thumbnailUrl = `${urlBase}/thumbnail/${encodeURIComponent(filename)}`;
 
                 const li = document.createElement('li');
-                li.className = 'list-group-item d-flex justify-content-between align-items-center';
+                li.className = 'list-group-item d-flex justify-content-between align-items-center flex-column flex-md-row';
                 li.dataset.filename = filename;
                 li.innerHTML = `
-            <div class="d-flex align-items-center">
-                <img src="${thumbnailUrl}"
-                     alt="Miniatura de ${filename}"
-                     class="thumbnail me-3"
-                     style="width: 60px; height: 60px; object-fit: cover; border-radius: 4px;"
-                     onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjYwIiBoZWlnaHQ9IjYwIiBmaWxsPSIjZTVlN2ViIi8+CjxyZWN0IHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgZmlsbD0iI2ZmZiIvPgo8cmVjdCB4PSI1MCIgeT0iMzAiIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCIgZmlsbD0iI2ZmZiIvPgo8cmVjdCB4PSI0MCIgeT0iMzAiIHdpZHRoPSIxMCIgaGVpZ2h0PSIxMCIgZmlsbD0iI2ZmZiIvPgo8L3N2Zz4K';">
-                <span>
-                    ${filename}
-                </span>
-            </div>
-            <div class="btn-group" role="group">
-                <a href="${downloadUrl}" class="btn btn-secondary btn-sm" title="Descargar archivo">
-                    <i class="fas fa-download"></i>
-                </a>
-                <button type="button" class="btn btn-danger btn-sm delete-btn" data-filename="${filename}" title="Eliminar archivo">
-                    <i class="fas fa-trash-alt"></i>
-                </button>
-            </div>
-        `;
+                    <div class="d-flex align-items-center flex-grow-1 mb-2 mb-md-0">
+                        <img src="${thumbnailUrl}"
+                             alt="Miniatura"
+                             class="thumbnail me-3"
+                             onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjYwIiBoZWlnaHQ9IjYwIiBmaWxsPSIjZTVlN2ViIi8+CjxyZWN0IHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgZmlsbD0iI2ZmZiIvPgo8cmVjdCB4PSI1MCIgeT0iMzAiIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCIgZmlsbD0iI2ZmZiIvPgo8cmVjdCB4PSI0MCIgeT0iMzAiIHdpZHRoPSIxMCIgaGVpZ2h0PSIxMCIgZmlsbD0iI2ZmZiIvPgo8L3N2Zz4K';">
+                        <div>
+                            <div class="filename">${filename}</div>
+                            <div class="file-info">
+                                <i class="fas fa-calendar-alt me-1"></i>
+                                ${new Date().toLocaleDateString('es-ES')} ${new Date().toLocaleTimeString('es-ES')}
+                                <span class="mx-2">•</span>
+                                <i class="fas fa-weight-hanging me-1"></i>
+                                Reciente
+                            </div>
+                        </div>
+                    </div>
+                    <div class="action-buttons">
+                        <a href="${downloadUrl}" class="btn btn-download btn-sm" title="Descargar archivo">
+                            <i class="fas fa-download me-1"></i>Descargar
+                        </a>
+                        <button type="button" class="btn btn-delete btn-sm delete-btn" data-filename="${filename}" title="Eliminar archivo">
+                            <i class="fas fa-trash-alt me-1"></i>Eliminar
+                        </button>
+                    </div>
+                `;
                 fileList.prepend(li);
+
+                // Add animation
+                li.style.opacity = '0';
+                li.style.transform = 'translateY(-20px)';
+                setTimeout(() => {
+                    li.style.transition = 'all 0.5s ease';
+                    li.style.opacity = '1';
+                    li.style.transform = 'translateY(0)';
+                }, 100);
             }
 
             function removeFileFromList(filename) {
                 const li = fileList.querySelector(`li[data-filename="${filename}"]`);
                 if (li) {
-                    li.remove();
-                }
-                if (fileList.children.length === 0) {
-                    const noFilesLi = document.createElement('li');
-                    noFilesLi.className = 'list-group-item no-files';
-                    noFilesLi.textContent = 'No hay archivos almacenados.';
-                    fileList.appendChild(noFilesLi);
+                    li.style.transition = 'all 0.3s ease';
+                    li.style.opacity = '0';
+                    li.style.transform = 'translateX(100px)';
+                    setTimeout(() => {
+                        li.remove();
+                        if (fileList.children.length === 0) {
+                            const noFilesLi = document.createElement('li');
+                            noFilesLi.className = 'no-files-message';
+                            noFilesLi.innerHTML = `
+                                <i class="fas fa-folder-open fa-3x text-muted mb-3 d-block"></i>
+                                <div>No hay archivos almacenados</div>
+                                <small class="text-muted">Comienza subiendo tu primer archivo</small>
+                            `;
+                            fileList.appendChild(noFilesLi);
+                        }
+                    }, 300);
                 }
             }
 
@@ -354,7 +382,6 @@
                     }
                 }));
 
-                // Realizar la descarga después de mostrar el toast
                 const downloadUrl = `${urlBase}/download/${encodeURIComponent(filename)}`;
                 window.location.href = downloadUrl;
             }

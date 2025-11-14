@@ -97,6 +97,11 @@
                                     DIRECCI&Oacute;N DE TESORER&Iacute;A
                                 </strong>
                             </h3>
+                            @isset($reportTitle)
+                                <h2 class="text-center" style="margin-top: 10px; margin-bottom: 10px;">
+                                    <strong>{{ $reportTitle }}</strong>
+                                </h2>
+                            @endisset
                         </th>
                     </tr>
                     <tr>

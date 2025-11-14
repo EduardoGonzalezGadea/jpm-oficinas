@@ -79,3 +79,56 @@ input:checked + .slider:before {
 .slider.round:before {
   border-radius: 50%;
 }
+
+/* Botones flotantes fijos */
+.btn-float-base {
+    position: fixed;
+    bottom: 20px;
+    right: 5px;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: none;
+    color: white;
+    font-size: 12px;
+    cursor: pointer;
+    z-index: 1000;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-float-base:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+}
+
+.btn-home-float {
+    background-color: #007bff;
+    bottom: 55px;
+}
+
+.btn-home-float:hover {
+    background-color: #0056b3;
+    color: white !important;
+}
+
+.btn-scroll-top-float {
+    background-color: #28a745;
+    bottom: 90px;
+}
+
+.btn-scroll-top-float:hover {
+    background-color: #1e7e34;
+}
+
+.btn-scroll-bottom-float {
+    background-color: #28a745;
+    bottom: 20px;
+}
+
+.btn-scroll-bottom-float:hover {
+    background-color: #1e7e34;
+}

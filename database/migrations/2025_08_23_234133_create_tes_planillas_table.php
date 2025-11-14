@@ -15,7 +15,8 @@ return new class extends Migration
     {
         Schema::create('tes_arr_planillas', function (Blueprint $table) {
             $table->id();
-            $table->string('numero')->unique();
+            $table->string('numero');
+            $table->unique(['numero', 'deleted_at']);
             $table->date('fecha_creacion');
             $table->unsignedInteger('user_id')->nullable();
             $table->foreign('user_id')->references('id')->on('users')->onDelete('set null');

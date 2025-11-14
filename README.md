@@ -47,6 +47,15 @@ We would like to extend our thanks to the following sponsors for funding Laravel
 - **[WebReinvent](https://webreinvent.com/?utm_source=laravel&utm_medium=github&utm_campaign=patreon-sponsors)**
 - **[Lendio](https://lendio.com)**
 
+## Deployment
+
+When deploying the application to a production environment (like the intranet), you need to configure the specific environment variables.
+
+1.  Copy the `.env.example` file to a new `.env` file: `cp .env.example .env`.
+2.  Generate an application key: `php artisan key:generate`.
+3.  Configure all the necessary environment variables for your database, mail, etc.
+4.  **Proxy Configuration**: If the production server is behind a proxy, copy the contents of `.env.production.example` into your production `.env` file to apply the necessary proxy settings.
+
 ## Contributing
 
 Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).

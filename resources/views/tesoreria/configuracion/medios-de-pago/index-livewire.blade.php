@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Medios de Pago - JPM Oficinas')
+@section('title', 'Tesorería | Oficinas - Medios de Pago')
 
 @section('content')
     @livewire('tesoreria.configuracion.medios-de-pago')

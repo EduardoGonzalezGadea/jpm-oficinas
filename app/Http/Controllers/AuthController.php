@@ -66,26 +66,26 @@ class AuthController extends Controller
 
         // Cargar roles y permisos de manera eficiente
         $user->load(['roles.permissions', 'permissions']);
-        
+
         // Asegurar que los permisos estén en la sesión
         session(['permissions' => $user->getAllPermissions()->pluck('name')]);
         session(['roles' => $user->getRoleNames()]);
-        
+
         // Forzar la recarga de permisos y almacenar en caché
         $user->getPermissionsViaRoles();
         $user->getDirectPermissions();
-        
+
         // Refrescar la caché de permisos
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
         $user->getAllPermissions();
-        
+
         // Asegurar que los permisos estén disponibles en la sesión actual
         session()->save();
 
         // Inicia una sesión de Laravel tradicional para este usuario
         Auth::login($user, false); // Remember me = true
         session()->put('auth.password_confirmed_at', time());
-        
+
         // Regenerar la sesión para prevenir ataques de fijación de sesión
         session()->regenerate(true);
 
@@ -103,10 +103,10 @@ class AuthController extends Controller
         // Para peticiones web, guardar token en cookie y redirigir
         $minutes = config('jwt.ttl', 60);
         $cookie = cookie('jwt_token', $token, 0, '/', null, false, true); // httpOnly = true
-        
+
         // Establecer el token en JWTAuth para la sesión actual
         JWTAuth::setToken($token);
-        
+
         // Asegurar que el usuario esté autenticado en la sesión web
         if (!auth()->check()) {
             auth()->login($user, true);
@@ -354,5 +354,29 @@ class AuthController extends Controller
         // ...
 
         return redirect()->route('login')->with('success', 'Contraseña actualizada exitosamente');
+    }
+
+    /**
+     * Método helper para manejar errores de sesión de forma centralizada
+     */
+    protected function handleSessionError(Request $request, string $message, string $type = 'expired')
+    {
+        // Limpiar sesión
+        Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        if ($request->expectsJson()) {
+            $statusCode = $type === 'expired' ? 401 : 500;
+            return response()->json(['error' => $message], $statusCode);
+        }
+
+        // Para errores de sesión expirada, mostrar pantalla 500
+        if ($type === 'expired') {
+            abort(500, $message);
+        }
+
+        // Para otros errores, redirigir al login
+        return redirect()->route('login')->with('error', $message);
     }
 }

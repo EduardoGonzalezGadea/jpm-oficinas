@@ -1,10 +1,31 @@
 /**
  * Lógica para el cambio de tema dinámico de Bootswatch
+ * Incluye respaldo con cookies para compatibilidad con sistemas que no soportan LocalStorage
  */
 (() => {
     // Si el script ya se ejecutó, salir
     if (window.themeScriptLoaded) return;
     window.themeScriptLoaded = true;
+
+    // Funciones helper para manejo de cookies
+    const setCookie = (name, value, days = 365) => {
+        const expires = new Date();
+        expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000);
+        document.cookie = `${name}=${encodeURIComponent(value)};expires=${expires.toUTCString()};path=/;SameSite=Lax`;
+    };
+
+    const getCookie = (name) => {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) {
+            return decodeURIComponent(parts.pop().split(';').shift());
+        }
+        return null;
+    };
+
+    const deleteCookie = (name) => {
+        document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
+    };
 
     const setupTheme = () => {
         const themeStylesheet = document.getElementById("bootswatch-theme");
@@ -12,16 +33,39 @@
             "{{ assets('libs/bootstrap-4.6.2-dist/css/bootstrap.min.css') }}";
         const defaultThemeName = "bootstrap-default";
 
-        // Cargar el tema guardado en LocalStorage al iniciar
+        // Cargar el tema guardado al iniciar (LocalStorage primero, luego cookies como respaldo)
         let savedThemePath = localStorage.getItem("bootswatch-theme");
         let savedThemeName = localStorage.getItem("bootswatch-theme-name");
 
+        // Si no hay en LocalStorage, intentar cargar desde cookies
         if (!savedThemePath) {
-            // Si no hay tema en LocalStorage, usar el por defecto y guardarlo
+            savedThemePath = getCookie("bootswatch-theme");
+            savedThemeName = getCookie("bootswatch-theme-name");
+
+            // Si se cargó desde cookies, sincronizar con LocalStorage
+            if (savedThemePath && savedThemeName) {
+                try {
+                    localStorage.setItem("bootswatch-theme", savedThemePath);
+                    localStorage.setItem("bootswatch-theme-name", savedThemeName);
+                } catch (e) {
+                    // Si LocalStorage falla, continuar con cookies
+                    console.warn("No se pudo sincronizar con LocalStorage, usando cookies como respaldo");
+                }
+            }
+        }
+
+        if (!savedThemePath) {
+            // Si no hay tema guardado en ningún lugar, usar el por defecto y guardarlo
             savedThemePath = defaultThemePath;
             savedThemeName = defaultThemeName;
-            localStorage.setItem("bootswatch-theme", savedThemePath);
-            localStorage.setItem("bootswatch-theme-name", savedThemeName);
+            try {
+                localStorage.setItem("bootswatch-theme", savedThemePath);
+                localStorage.setItem("bootswatch-theme-name", savedThemeName);
+            } catch (e) {
+                // Si LocalStorage falla, guardar en cookies
+                setCookie("bootswatch-theme", savedThemePath);
+                setCookie("bootswatch-theme-name", savedThemeName);
+            }
         }
 
         if (themeStylesheet) {
@@ -79,9 +123,17 @@
             : "#ffffff";
         document.body.style.backgroundColor = isDark ? "#222222" : "#ffffff";
 
-        // Guardar la elección en LocalStorage
-        localStorage.setItem("bootswatch-theme", themePath);
-        localStorage.setItem("bootswatch-theme-name", themeName);
+        // Guardar la elección en LocalStorage y cookies (doble respaldo)
+        try {
+            localStorage.setItem("bootswatch-theme", themePath);
+            localStorage.setItem("bootswatch-theme-name", themeName);
+        } catch (e) {
+            console.warn("LocalStorage no disponible, guardando solo en cookies");
+        }
+
+        // Siempre guardar en cookies como respaldo
+        setCookie("bootswatch-theme", themePath);
+        setCookie("bootswatch-theme-name", themeName);
 
         // Actualizar la marca de 'activo' en la UI
         updateActiveThemeIndicator(themeName);

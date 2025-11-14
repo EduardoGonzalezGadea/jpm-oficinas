@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Gestión de Roles - JPM Oficinas')
+@section('title', 'Tesorería | Oficinas - Gestión de Roles')
 
 @section('content')
     <div class="container-fluid">
@@ -38,6 +38,7 @@
                                     <tr>
                                         <th class="align-middle">ID</th>
                                         <th class="align-middle">Nombre del Rol</th>
+                                        <th class="align-middle">Guard</th>
                                         <th class="align-middle">Permisos Asignados</th>
                                         <th class="align-middle">Usuarios con este Rol</th>
                                         <th class="align-middle">Fecha de Creación</th>
@@ -50,6 +51,9 @@
                                             <td>{{ $role->id }}</td>
                                             <td>
                                                 <strong>{{ $role->name }}</strong>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-info text-white">{{ $role->guard_name }}</span>
                                             </td>
                                             <td>
                                                 <span class="badge badge-info">{{ $role->permissions->count() }}

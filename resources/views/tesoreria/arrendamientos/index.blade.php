@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Arrendamiento - JPM Oficinas')
+@section('title', 'Tesorería | Oficinas - Arrendamiento')
 
 @section('content')
     @livewire('tesoreria.arrendamientos.arrendamiento')

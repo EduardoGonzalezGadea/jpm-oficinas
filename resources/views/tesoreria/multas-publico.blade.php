@@ -1,9 +1,9 @@
 @extends('layouts.publico')
 
-@section('title', 'Multas de Tránsito - Consulta Pública - JPM Oficinas')
+@section('title', 'Tesorería | Oficinas - Multas de Tránsito')
 
 @section('content')
-    <div class="container-fluid">
+    <div class="container-fluid p-0">
         <div class="row mb-4">
             <div class="col-12">
                 <div class="card bg-info text-white">
@@ -12,7 +12,7 @@
                             <div class="col-md-8">
                                 <h2 class="mb-0">
                                     <i class="fas fa-list mr-2"></i>
-                                    Multas de Tránsito
+                                    Artículos de Multas de Tránsito
                                 </h2>
                                 <p class="mb-0 mt-2">
                                     <i class="fas fa-eye mr-1"></i>

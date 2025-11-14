@@ -19,6 +19,12 @@ class EditarPendiente extends Component
 
     protected $listeners = ['movimientoActualizado' => 'render'];
 
+    // Almacenar los valores originales para poder resetear
+    public $originalNroPendiente;
+    public $originalFechaPendientes;
+    public $originalRelDependencia;
+    public $originalMontoPendientes;
+
     /**
      * Reglas de validación.
      */
@@ -45,6 +51,12 @@ class EditarPendiente extends Component
         $this->fechaPendientes = $pendiente->fechaPendientes->format('Y-m-d');
         $this->relDependencia = $pendiente->relDependencia;
         $this->montoPendientes = $pendiente->montoPendientes;
+
+        // Guardar los valores originales
+        $this->originalNroPendiente = $pendiente->pendiente;
+        $this->originalFechaPendientes = $pendiente->fechaPendientes->format('Y-m-d');
+        $this->originalRelDependencia = $pendiente->relDependencia;
+        $this->originalMontoPendientes = $pendiente->montoPendientes;
     }
 
     /**
@@ -59,6 +71,19 @@ class EditarPendiente extends Component
             'pendiente' => $pendiente,
             'dependencias' => $dependencias
         ]);
+    }
+
+    // Nuevo método para resetear el formulario
+    public function resetearFormulario()
+    {
+        // Restaurar las propiedades a sus valores originales
+        $this->nroPendiente = $this->originalNroPendiente;
+        $this->fechaPendientes = $this->originalFechaPendientes;
+        $this->relDependencia = $this->originalRelDependencia;
+        $this->montoPendientes = $this->originalMontoPendientes;
+
+        // Limpiar cualquier error de validación
+        $this->resetErrorBag();
     }
 
     /**

@@ -15,11 +15,6 @@ class ModuloSeeder extends Seeder
                 'descripcion' => 'Módulo de gestión de tesorería y finanzas',
                 'activo' => true,
             ],
-            [
-                'nombre' => 'Contabilidad',
-                'descripcion' => 'Módulo de gestión contable y fiscal',
-                'activo' => true,
-            ],
         ];
 
         foreach ($modulos as $modulo) {

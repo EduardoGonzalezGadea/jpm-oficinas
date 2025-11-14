@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Multas de Tránsito - JPM Oficinas')
+@section('title', 'Tesorería | Oficinas - Multas de Tránsito')
 
 @section('content')
     <div>

@@ -31,7 +31,7 @@ class Multa extends Component
     public $sortField = 'articulo';
     public $sortDirection = 'asc';
     public $perPage = 25;
-    public $valorUr;
+    public $multasCargadas = false; // Flag para controlar carga progresiva
 
     protected $queryString = [
         'search' => ['except' => ''],
@@ -59,31 +59,24 @@ class Multa extends Component
 
     public function mount()
     {
-        try {
-            $url = 'https://www.bps.gub.uy/bps/valores.jsp?contentid=5478';
-            $command = 'curl -s --compressed "' . $url . '"';
-            $html = shell_exec($command);
-
-            if (!empty($html)) {
-                $pattern = '/Unidad Reajustable \(UR\).*?<td class="celda-numero">\$(.*?)<\/td>.*?<td class="celda-numero">\$(.*?)<\/td>/s';
-                if (preg_match($pattern, $html, $matches)) {
-                    // El valor actual es el segundo que se captura
-                    $this->valorUr = trim($matches[2]);
-                } else {
-                    $this->valorUr = 'No disponible';
-                }
-            } else {
-                $this->valorUr = 'Error al cargar';
-            }
-        } catch (\Exception $e) {
-            $this->valorUr = 'Error';
-        }
+        // Iniciar carga automática de multas después de mount
+        $this->loadMultasAutomaticamente();
     }
+
+
 
     public function updatingSearch()
     {
         $this->resetPage();
+        $this->multasCargadas = false; // Reset flag para recargar datos
     }
+
+    public function loadMultas()
+    {
+        $this->multasCargadas = true;
+    }
+
+
 
     public function sortBy($field)
     {
@@ -123,29 +116,51 @@ class Multa extends Component
     {
         $this->validate();
 
-        MultaModel::updateOrCreate(
-            ['id' => $this->multa_id],
-            [
+        try {
+            // Log the operation for debugging
+            \Log::info('Multa store operation started', [
+                'multa_id' => $this->multa_id,
                 'articulo' => $this->articulo,
-                'apartado' => $this->apartado,
-                'descripcion' => $this->descripcion,
-                'moneda' => $this->moneda,
-                'importe_original' => $this->importe_original,
-                'importe_unificado' => $this->importe_unificado,
-                'decreto' => $this->decreto
-            ]
-        );
+                'is_edit' => $this->isEdit
+            ]);
 
-        session()->flash('message', $this->isEdit ? 'Multa actualizada exitosamente.' : 'Multa creada exitosamente.');
+            $multa = MultaModel::updateOrCreate(
+                ['id' => $this->multa_id],
+                [
+                    'articulo' => $this->articulo,
+                    'apartado' => $this->apartado,
+                    'descripcion' => $this->descripcion,
+                    'moneda' => $this->moneda,
+                    'importe_original' => $this->importe_original,
+                    'importe_unificado' => $this->importe_unificado,
+                    'decreto' => $this->decreto
+                ]
+            );
 
-        $this->closeModal();
-        $this->resetInputFields();
+            \Log::info('Multa store operation completed', ['multa_id' => $multa->id]);
+
+            $this->closeModal();
+            $this->resetInputFields();
+
+            $this->dispatchBrowserEvent('swal:success', ['text' => $this->isEdit ? 'Multa actualizada exitosamente.' : 'Multa creada exitosamente.']);
+        } catch (\Exception $e) {
+            \Log::error('Multa store operation failed', [
+                'error' => $e->getMessage(),
+                'multa_id' => $this->multa_id,
+                'articulo' => $this->articulo
+            ]);
+
+            $this->dispatchBrowserEvent('swal:error', [
+                'title' => 'Error',
+                'text' => 'Ocurrió un error al guardar la multa: ' . $e->getMessage()
+            ]);
+        }
     }
 
     public function delete($id)
     {
         MultaModel::find($id)->delete();
-        session()->flash('message', 'Multa eliminada exitosamente.');
+        $this->dispatchBrowserEvent('swal:success', ['text' => 'Multa eliminada exitosamente.']);
     }
 
     public function openModal()
@@ -173,21 +188,36 @@ class Multa extends Component
 
     public function render()
     {
-        $query = MultaModel::query()
-            ->when($this->search, function ($query) {
+        // Mostrar vista vacía inicialmente, luego cargar datos
+        $multas = collect();
+
+        // Si hay búsqueda o multas cargadas, mostrar datos
+        if (!empty($this->search) || $this->multasCargadas) {
+            $query = MultaModel::query();
+
+            if (!empty($this->search)) {
                 $query->where(function ($q) {
                     $q->whereRaw("CONCAT_WS('.', articulo, apartado) like ?", ["%" . $this->search . "%"])
                         ->orWhere('descripcion', 'like', '%' . $this->search . '%');
                 });
-            })
-            ->orderBy($this->sortField, $this->sortDirection);
+            }
 
-        if ((int)$this->perPage === -1) {
-            $multas = $query->get();
-        } else {
-            $multas = $query->paginate($this->perPage);
+            $query->orderBy($this->sortField, $this->sortDirection);
+
+            if ((int)$this->perPage === -1) {
+                $multas = $query->get();
+            } else {
+                $multas = $query->paginate($this->perPage);
+            }
         }
 
         return view('livewire.tesoreria.multa', compact('multas'));
     }
+
+    public function loadMultasAutomaticamente()
+    {
+        $this->multasCargadas = true;
+    }
+
+
 }

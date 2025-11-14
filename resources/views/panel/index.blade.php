@@ -1,9 +1,9 @@
 @extends('layouts.app')
 
-@section('title', 'Panel Principal - JPM Oficinas')
+@section('title', 'Tesorería | Oficinas')
 
 @section('content')
-    <div class="container-fluid">
+    <div class="container-fluid pl-0 pr-0">
 
         <!-- Header del Panel -->
         <div class="row mb-4">
@@ -11,9 +11,9 @@
                 <div class="card bg-primary text-white">
                     <div class="card-body">
                         <div class="row align-items-center">
-                            <div class="col-md-8">
+                            <div class="col-md-10">
                                 <h2 class="mb-0">
-                                    <i class="fas fa-home mr-2"></i>
+                                    <i class="fas fa-home"></i>
                                     ¡Bienvenid@, {{ $usuario->nombre }} {{ $usuario->apellido }}!
                                 </h2>
                                 <p class="mb-0 mt-2">
@@ -26,8 +26,8 @@
                                     @endif
                                 </p>
                             </div>
-                            <div class="col-md-4 text-right">
-                                <i class="fas fa-building display-4"></i>
+                            <div class="col-md-2 text-right">
+                                <i class="fas fa-building display-3"></i>
                             </div>
                         </div>
                     </div>
@@ -49,15 +49,13 @@
                         <div class="row">
                             @can('operador_tesoreria')
 
-                                @hasrole('administrador')
                                 <div class="col-md-4 mb-3">
-                                    <a href="{{ route('tesoreria.caja_diaria', ['tab' => 'resumen']) }}"
+                                    <a href="{{ route('tesoreria.multas-transito') }}"
                                         class="btn btn-outline-info btn-block btn-lg d-flex flex-column justify-content-center align-items-center btn-quick-access">
-                                        <i class="fas fa-cash-register fa-2x d-block mb-2"></i>
-                                        Tesorería | Caja Diaria
+                                        <i class="fas fa-list fa-2x d-block mb-2"></i>
+                                        Tesorería | Multas Tránsito
                                     </a>
                                 </div>
-                                @endhasrole
 
                                 <div class="col-md-4 mb-3">
                                     <a href="{{ route('tesoreria.caja-chica.index') }}"
@@ -68,10 +66,10 @@
                                 </div>
 
                                 <div class="col-md-4 mb-3">
-                                    <a href="{{ route('tesoreria.multas-transito') }}"
+                                    <a href="{{ route('tesoreria.cheques.index') }}"
                                         class="btn btn-outline-info btn-block btn-lg d-flex flex-column justify-content-center align-items-center btn-quick-access">
-                                        <i class="fas fa-list fa-2x d-block mb-2"></i>
-                                        Tesorería | Multas Tránsito
+                                        <i class="fas fa-money-check fa-2x d-block mb-2"></i>
+                                        Tesorería | Cheques
                                     </a>
                                 </div>
 
@@ -91,6 +89,22 @@
                                     </a>
                                 </div>
 
+                                <div class="col-md-4 mb-3">
+                                    <a href="{{ route('tesoreria.certificados-residencia.index') }}"
+                                        class="btn btn-outline-info btn-block btn-lg d-flex flex-column justify-content-center align-items-center btn-quick-access">
+                                        <i class="fas fa-file-alt fa-2x d-block mb-2"></i>
+                                        Tesorería | Cert. Residencia
+                                    </a>
+                                </div>
+
+                                <div class="col-md-4 mb-3">
+                                    <a href="{{ route('tesoreria.valores.index') }}"
+                                        class="btn btn-outline-info btn-block btn-lg d-flex flex-column justify-content-center align-items-center btn-quick-access">
+                                        <i class="fas fa-barcode fa-2x d-block mb-2"></i>
+                                        Tesorería | Valores
+                                    </a>
+                                </div>
+
                                 @hasrole('administrador')
                                 {{-- Acceso directo a Tesorería | Valores eliminado --}}
                                 @endhasrole
@@ -102,24 +116,9 @@
                                         Tesorería | Porte
                                     </a>
                                 </div>
-                                <div class="col-md-4 mb-3">
-                                    <a href="{{ route('tesoreria.armas.tenencia') }}"
-                                        class="btn btn-outline-info btn-block btn-lg d-flex flex-column justify-content-center align-items-center btn-quick-access">
-                                        <i class="fas fa-shield-alt fa-2x d-block mb-2"></i>
-                                        Tesorería | Tenencia
-                                    </a>
-                                </div>
                             @endcan
 
-                            @can('operador_contabilidad')
-                                <div class="col-md-4 mb-3">
-                                    <a href="{{ route('contabilidad.index') }}"
-                                        class="btn btn-outline-warning btn-block btn-lg d-flex flex-column justify-content-center align-items-center btn-quick-access">
-                                        <i class="fas fa-calculator fa-2x d-block mb-2"></i>
-                                        Módulo Contabilidad
-                                    </a>
-                                </div>
-                            @endcan
+
 
                             @can('ver_usuarios')
                                 <div class="col-md-4 mb-3">
@@ -157,7 +156,7 @@
                         <div class="card-body">
                             <div class="row">
                                 @hasrole('administrador')
-                                    <div class="col-lg-3 col-md-6 mb-3">
+                                    <div class="col-lg-4 col-md-6 mb-3">
                                         <div class="card border-left-primary shadow h-100">
                                             <div class="card-body">
                                                 <div class="row no-gutters align-items-center">
@@ -177,7 +176,7 @@
                                         </div>
                                     </div>
 
-                                    <div class="col-lg-3 col-md-6 mb-3">
+                                    <div class="col-lg-4 col-md-6 mb-3">
                                         <div class="card border-left-success shadow h-100">
                                             <div class="card-body">
                                                 <div class="row no-gutters align-items-center">
@@ -199,7 +198,7 @@
                                 @endhasrole
 
                                 @can('operador_tesoreria')
-                                    <div class="col-lg-3 col-md-6 mb-3">
+                                    <div class="col-lg-4 col-md-6 mb-3">
                                         <div class="card border-left-info shadow h-100">
                                             <div class="card-body">
                                                 <div class="row no-gutters align-items-center">
@@ -220,27 +219,6 @@
                                     </div>
                                 @endcan
 
-                                @can('operador_contabilidad')
-                                    <div class="col-lg-3 col-md-6 mb-3">
-                                        <div class="card border-left-warning shadow h-100">
-                                            <div class="card-body">
-                                                <div class="row no-gutters align-items-center">
-                                                    <div class="col mr-2">
-                                                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
-                                                            Contabilidad
-                                                        </div>
-                                                        <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                                            {{ $estadisticas['usuarios_contabilidad'] }} usuarios
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-auto">
-                                                        <i class="fas fa-calculator fa-2x text-gray-300"></i>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                @endcan
                             </div>
                         </div>
                     </div>
@@ -259,18 +237,6 @@
                         </h6>
                     </div>
                     <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <p><strong>Sistema:</strong> JPM Oficinas v1.0</p>
-                                <p><strong>Framework:</strong> Laravel 9</p>
-                                <p><strong>Autenticación:</strong> JWT (JSON Web Token)</p>
-                            </div>
-                            <div class="col-md-6">
-                                <p><strong>Roles y Permisos:</strong> Spatie Permission</p>
-                                <p><strong>Base de Datos:</strong> MySQL</p>
-                                <p><strong>Interfaz:</strong> Bootstrap 4</p>
-                            </div>
-                        </div>
                         <div class="row">
                             <div class="col-12 text-center">
                                 Creado por el Cabo (P.A.) Eduardo González Gadea (Dirección de Tesorería) en el año 2025

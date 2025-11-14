@@ -35,8 +35,7 @@ class RoleController extends Controller
         }
 
         // Obtener los roles
-        $roles = $query->latest()
-            ->orderBy('created_at', 'desc')
+        $roles = $query->orderBy('name', 'asc')
             ->paginate(10);
 
         // Datos adicionales para estadísticas

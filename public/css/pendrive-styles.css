@@ -1,0 +1,437 @@
+/*
+ * Pendrive Virtual - Estilos Personalizados
+ * Aplicados con máxima prioridad para asegurar compatibilidad
+ */
+
+/* ==================== */
+/* TÍTULO PRINCIPAL    */
+/* ==================== */
+body #pendrive-container h1.main-title,
+body #pendrive-container .main-title,
+#pendrive-container h1.main-title {
+    color: #2c3e50 !important;
+    font-weight: 300 !important;
+    margin-bottom: 3rem !important;
+    text-align: center !important;
+    position: relative !important;
+    font-size: 2.5rem !important;
+    line-height: 1.2 !important;
+}
+
+#pendrive-container .main-title::after {
+    content: '' !important;
+    position: absolute !important;
+    bottom: -15px !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    width: 80px !important;
+    height: 4px !important;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    border-radius: 2px !important;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3) !important;
+}
+
+#pendrive-container .main-title i {
+    color: #667eea !important;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    background-clip: text !important;
+}
+
+/* ==================== */
+/* CONTAINER PRINCIPAL */
+/* ==================== */
+#pendrive-container {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%) !important;
+    min-height: 100vh !important;
+    padding: 2rem 0 !important;
+    margin: 0 !important;
+}
+
+#pendrive-container .main-container {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 auto !important;
+    padding: 0 2rem !important;
+    box-sizing: border-box !important;
+}
+
+/* ==================== */
+/* TARJETAS            */
+/* ==================== */
+#pendrive-container .card {
+    border: none !important;
+    border-radius: 15px !important;
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15) !important;
+    overflow: hidden !important;
+    margin-bottom: 2rem !important;
+    background: rgba(255, 255, 255, 0.95) !important;
+    backdrop-filter: blur(10px) !important;
+}
+
+#pendrive-container .upload-card {
+    animation: float 6s ease-in-out infinite !important;
+}
+
+#pendrive-container .upload-card .card-header {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%) !important;
+    color: white !important;
+    border: none !important;
+    padding: 1.5rem 2rem !important;
+    font-weight: 600 !important;
+    font-size: 1.2rem !important;
+}
+
+#pendrive-container .files-card .card-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    color: white !important;
+    border: none !important;
+    padding: 1.5rem 2rem !important;
+    font-weight: 600 !important;
+    font-size: 1.2rem !important;
+}
+
+/* ==================== */
+/* DROP ZONE           */
+/* ==================== */
+#pendrive-container #drop-zone {
+    border: 2px dashed #cbd5e0 !important;
+    border-radius: 15px !important;
+    padding: 80px 40px !important;
+    text-align: center !important;
+    color: #64748b !important;
+    cursor: pointer !important;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    position: relative !important;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%) !important;
+    backdrop-filter: blur(10px) !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+}
+
+#pendrive-container #drop-zone:hover {
+    border-color: #667eea !important;
+    color: #4f46e5 !important;
+    background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%) !important;
+    transform: translateY(-2px) scale(1.01) !important;
+    box-shadow: 0 10px 25px -3px rgba(102, 126, 234, 0.15), 0 4px 6px -2px rgba(102, 126, 234, 0.1) !important;
+}
+
+#pendrive-container #drop-zone.drag-over {
+    border-color: #4f46e5 !important;
+    color: #4f46e5 !important;
+    background: linear-gradient(135deg, #ddd6fe 0%, #c7d2fe 100%) !important;
+    transform: scale(1.02) !important;
+    box-shadow: 0 20px 40px -5px rgba(79, 70, 229, 0.15), 0 10px 10px -5px rgba(79, 70, 229, 0.1) !important;
+}
+
+#pendrive-container #drop-zone .icon {
+    font-size: 80px !important;
+    margin-bottom: 25px !important;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    background-clip: text !important;
+    transition: all 0.3s ease !important;
+    display: block !important;
+    margin: 0 auto !important;
+}
+
+#pendrive-container #drop-zone:hover .icon {
+    transform: scale(1.15) !important;
+    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    background-clip: text !important;
+}
+
+#pendrive-container #drop-zone .pulse-icon {
+    animation: pulse 2s infinite !important;
+}
+
+#pendrive-container #drop-zone .text {
+    margin: 25px 0 15px !important;
+    font-size: 20px !important;
+    font-weight: 600 !important;
+    color: #374151 !important;
+}
+
+#pendrive-container #drop-zone .subtitle {
+    font-size: 16px !important;
+    color: #6b7280 !important;
+    font-weight: 500 !important;
+    margin-bottom: 15px !important;
+}
+
+/* ==================== */
+/* BOTONES             */
+/* ==================== */
+#pendrive-container .btn {
+    border: none !important;
+    border-radius: 8px !important;
+    font-weight: 500 !important;
+    transition: all 0.3s ease !important;
+    position: relative !important;
+    overflow: hidden !important;
+}
+
+#pendrive-container .btn::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: -100% !important;
+    width: 100% !important;
+    height: 100% !important;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent) !important;
+    transition: left 0.5s !important;
+}
+
+#pendrive-container .btn:hover::before {
+    left: 100% !important;
+}
+
+#pendrive-container .btn-download {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    color: white !important;
+    padding: 0.75rem 1.25rem !important;
+    margin-right: 0.75rem !important;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3) !important;
+}
+
+#pendrive-container .btn-download:hover {
+    transform: translateY(-3px) scale(1.05) !important;
+    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4) !important;
+    background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%) !important;
+}
+
+#pendrive-container .btn-delete {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%) !important;
+    color: white !important;
+    padding: 0.75rem 1.25rem !important;
+    box-shadow: 0 4px 12px rgba(240, 147, 251, 0.3) !important;
+}
+
+#pendrive-container .btn-delete:hover {
+    transform: translateY(-3px) scale(1.05) !important;
+    box-shadow: 0 8px 20px rgba(240, 147, 251, 0.4) !important;
+    background: linear-gradient(135deg, #ec4899 0%, #dc2626 100%) !important;
+}
+
+/* ==================== */
+/* LISTA DE ARCHIVOS   */
+/* ==================== */
+#pendrive-container .list-group-item {
+    border: none !important;
+    margin-bottom: 1px !important;
+    padding: 1.5rem 2rem !important;
+    background: rgba(255, 255, 255, 0.98) !important;
+    transition: all 0.3s ease !important;
+    border-left: 4px solid transparent !important;
+    position: relative !important;
+}
+
+#pendrive-container .list-group-item:hover {
+    background: rgba(103, 126, 234, 0.05) !important;
+    border-left-color: #667eea !important;
+    transform: translateX(6px) !important;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.1) !important;
+}
+
+#pendrive-container .list-group-item .thumbnail {
+    width: 70px !important;
+    height: 70px !important;
+    object-fit: cover !important;
+    border-radius: 10px !important;
+    border: 3px solid #e5e7eb !important;
+    transition: all 0.3s ease !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+}
+
+#pendrive-container .list-group-item:hover .thumbnail {
+    border-color: #667eea !important;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3) !important;
+    transform: scale(1.05) !important;
+}
+
+#pendrive-container .filename {
+    font-weight: 600 !important;
+    color: #374151 !important;
+    margin-bottom: 6px !important;
+    word-break: break-word !important;
+    font-size: 1.1rem !important;
+}
+
+#pendrive-container .file-info {
+    font-size: 0.9rem !important;
+    color: #6b7280 !important;
+}
+
+#pendrive-container .action-buttons {
+    opacity: 0.8 !important;
+    transition: all 0.3s ease !important;
+}
+
+#pendrive-container .list-group-item:hover .action-buttons {
+    opacity: 1 !important;
+}
+
+/* ==================== */
+/* MENSAJE SIN ARCHIVOS */
+/* ==================== */
+#pendrive-container .no-files-message {
+    text-align: center !important;
+    color: #6b7280 !important;
+    font-style: italic !important;
+    padding: 4rem 2rem !important;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%) !important;
+    border-radius: 15px !important;
+    margin: 2rem !important;
+    border: 2px dashed #e5e7eb !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+#pendrive-container .no-files-message i {
+    color: #9ca3af !important;
+    margin-bottom: 1.5rem !important;
+    font-size: 4rem !important;
+}
+
+#pendrive-container .no-files-message div {
+    font-size: 1.2rem !important;
+    font-weight: 500 !important;
+    color: #4b5563 !important;
+    margin-bottom: 0.5rem !important;
+}
+
+#pendrive-container .no-files-message small {
+    color: #9ca3af !important;
+    font-size: 1rem !important;
+}
+
+/* ==================== */
+/* PROGRESS BAR        */
+/* ==================== */
+#pendrive-container .progress {
+    height: 10px !important;
+    border-radius: 6px !important;
+    background: #e5e7eb !important;
+    overflow: hidden !important;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+}
+
+#pendrive-container .progress-bar {
+    border-radius: 6px !important;
+    transition: width 0.6s ease !important;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3) !important;
+}
+
+/* ==================== */
+/* RESPONSIVE DESIGN   */
+/* ==================== */
+@media (max-width: 768px) {
+    #pendrive-container .main-container {
+        padding: 1rem !important;
+    }
+
+    #pendrive-container h1.main-title {
+        font-size: 2rem !important;
+        margin-bottom: 2rem !important;
+    }
+
+    #pendrive-container #drop-zone {
+        padding: 60px 20px !important;
+    }
+
+    #pendrive-container #drop-zone .icon {
+        font-size: 60px !important;
+    }
+
+    #pendrive-container #drop-zone .text {
+        font-size: 18px !important;
+    }
+
+    #pendrive-container #drop-zone .subtitle {
+        font-size: 14px !important;
+    }
+
+    #pendrive-container .list-group-item {
+        padding: 1rem !important;
+    }
+
+    #pendrive-container .list-group-item .thumbnail {
+        width: 60px !important;
+        height: 60px !important;
+    }
+
+    #pendrive-container .action-buttons {
+        margin-top: 1rem !important;
+        width: 100% !important;
+    }
+
+    #pendrive-container .btn-download,
+    #pendrive-container .btn-delete {
+        width: 48% !important;
+        margin: 0 !important;
+    }
+}
+
+@media (max-width: 480px) {
+    #pendrive-container h1.main-title {
+        font-size: 1.75rem !important;
+    }
+
+    #pendrive-container #drop-zone {
+        padding: 40px 15px !important;
+    }
+
+    #pendrive-container .list-group-item {
+        padding: 0.75rem !important;
+    }
+
+    #pendrive-container .filename {
+        font-size: 1rem !important;
+    }
+
+    #pendrive-container .file-info {
+        font-size: 0.85rem !important;
+    }
+}
+
+/* ==================== */
+/* ANIMACIONES         */
+/* ==================== */
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0px) !important;
+    }
+    50% {
+        transform: translateY(-8px) !important;
+    }
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1) !important;
+    }
+    50% {
+        transform: scale(1.1) !important;
+    }
+    100% {
+        transform: scale(1) !important;
+    }
+}
+
+/* ==================== */
+/* UTILIDADES          */
+/* ==================== */
+#pendrive-container .text-muted {
+    color: #6b7280 !important;
+}
+
+#pendrive-container .badge-light {
+    background: rgba(255, 255, 255, 0.2) !important;
+    color: #374151 !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+}

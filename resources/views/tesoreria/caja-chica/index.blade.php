@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Caja Chica - JPM Oficinas')
+@section('title', 'Tesorería | Oficinas - Caja Chica')
 
 @section('content')
     <div>

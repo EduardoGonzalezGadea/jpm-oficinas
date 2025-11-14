@@ -2,13 +2,11 @@
     <div class="card">
         <div class="card-header">
             <div class="row">
-                <div class="col-md-8">
+                <div class="col-md-8 d-flex align-items-center">
                     <h4 class="mb-0 d-inline-block">
-                        Listado Público de Multas de Tránsito
+                        Artículos de Multas de Tránsito
                     </h4>
-                    @if ($valorUr)
-                        <span class="text-muted ml-2">(UR = $ {{ $valorUr }})</span>
-                    @endif
+                    <span id="ur-value-container-public" class="text-muted ml-2 font-weight-bold"></span>
                 </div>
                 <div class="col-md-4 text-right">
                     <small class="text-muted">
@@ -115,3 +113,44 @@
         </div>
     </div>
 </div>
+
+@push('scripts')
+<script>
+    function loadURValuePublic() {
+        const urContainer = document.getElementById('ur-value-container-public');
+        if (urContainer) {
+            urContainer.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Cargando UR...';
+
+            fetch('{{ route('utilidad.valor-ur') }}')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Error en la respuesta de la red');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.valorUr) {
+                        urContainer.textContent = '(UR = ' + data.valorUr + ')';
+                    } else {
+                        urContainer.textContent = '(UR no disponible)';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error al obtener el valor de la UR:', error);
+                    urContainer.textContent = '(Error al cargar UR)';
+                });
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        loadURValuePublic();
+    });
+
+    // Recargar el valor UR cuando se actualiza el componente Livewire
+    Livewire.on('updated', function () {
+        setTimeout(function() {
+            loadURValuePublic();
+        }, 100);
+    });
+</script>
+@endpush

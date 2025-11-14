@@ -19,9 +19,6 @@ class PanelController extends Controller
             'usuarios_tesoreria' => User::activos()->whereHas('modulo', function ($q) {
                 $q->where('nombre', 'Tesorería');
             })->count(),
-            'usuarios_contabilidad' => User::activos()->whereHas('modulo', function ($q) {
-                $q->where('nombre', 'Contabilidad');
-            })->count(),
         ];
 
         return view('panel.index', compact('usuario', 'estadisticas'));

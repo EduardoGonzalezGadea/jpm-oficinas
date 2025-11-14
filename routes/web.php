@@ -6,7 +6,7 @@ use App\Http\Controllers\UsuarioController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\ModuloController;
 use App\Http\Controllers\Tesoreria\TesoreriaController;
-use App\Http\Controllers\ContabilidadController;
+
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\Tesoreria\ArrendamientoController;
 use App\Http\Controllers\Tesoreria\CajaChica\ImpresionController;
@@ -21,6 +21,11 @@ use App\Http\Livewire\Tesoreria\Eventuales\PrintEventuales;
 use App\Http\Livewire\Tesoreria\Eventuales\PrintEventualesFull;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PendriveController;
+
+use App\Http\Controllers\Tesoreria\BancoController;
+use App\Http\Controllers\Tesoreria\CuentaBancariaController;
+use App\Http\Controllers\Tesoreria\ChequeController;
+use App\Http\Controllers\UtilidadController;
 
 /*
 |--------------------------------------------------------------------------
@@ -54,6 +59,8 @@ Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
 
 
+// Ruta para obtener el valor de la UR de forma asíncrona
+Route::get('/valor-ur', [UtilidadController::class, 'getValorUr'])->name('utilidad.valor-ur');
 
 
 // ============================================================================
@@ -204,28 +211,20 @@ Route::middleware(['web', 'jwt.verify'])->group(function () {
     Route::prefix('tesoreria')->name('tesoreria.')->group(function () {
         Route::get('/', [TesoreriaController::class, 'index'])->name('index');
 
-        // Caja Diaria
-        Route::get('/caja-diaria/{tab?}', [TesoreriaController::class, 'cajaDiaria'])
-            ->name('caja_diaria');
+        // Rutas de Bancos y Cuentas Bancarias
+        Route::get('bancos', [BancoController::class, 'index'])->name('bancos.index')->middleware('auth');
+        Route::get('cuentas-bancarias', [CuentaBancariaController::class, 'index'])->name('cuentas-bancarias.index');
 
-        // Pagos
-        Route::prefix('pagos')->name('pagos.')->group(function () {
-            Route::get('/', 'PagoController@index')->name('index');
-            Route::post('/', 'PagoController@store')->name('store');
-            Route::get('/{id}', 'PagoController@show')->name('show');
-            Route::put('/{id}', 'PagoController@update')->name('update');
-            Route::delete('/{id}', 'PagoController@destroy')->name('destroy');
-            Route::get('/conceptos/lista', 'PagoController@getConceptos')->name('conceptos.lista');
-        });
-
-        // Conceptos de Pago
-        Route::prefix('conceptos-pago')->name('conceptos-pago.')->group(function () {
-            Route::get('/', 'ConceptoPagoController@index')->name('index');
-            Route::post('/', 'ConceptoPagoController@store')->name('store');
-            Route::get('/{id}', 'ConceptoPagoController@show')->name('show');
-            Route::put('/{id}', 'ConceptoPagoController@update')->name('update');
-            Route::delete('/{id}', 'ConceptoPagoController@destroy')->name('destroy');
-        });
+        // Rutas de cheques
+        Route::get('cheques', function () {
+            return view('tesoreria.cheques.index');
+        })->name('cheques.index');
+        Route::get('cheques/libreta', [ChequeController::class, 'libreta'])->name('cheques.libreta');
+        Route::get('cheques/emitir', [ChequeController::class, 'emitir'])->name('cheques.emitir');
+        Route::get('cheques/planilla/generar', [ChequeController::class, 'planillaGenerar'])->name('cheques.planilla.generar');
+        Route::get('cheques/planilla/{id}', [ChequeController::class, 'planillaVer'])->name('cheques.planilla.ver');
+        Route::get('cheques/planilla/{id}/imprimir', [ChequeController::class, 'imprimirPlanilla'])->name('cheques.planilla.imprimir');
+        Route::get('cheques/reportes', [ChequeController::class, 'reportes'])->name('cheques.reportes');
 
 
         // Rutas de multas
@@ -270,6 +269,9 @@ Route::middleware(['web', 'jwt.verify'])->group(function () {
             Route::get('/tenencia', [ArmasController::class, 'tenencia'])->name('tenencia');
         });
 
+        // Rutas de Certificados de Residencia
+        Route::get('/certificados-residencia', \App\Http\Livewire\Tesoreria\CertificadosResidencia\Index::class)->name('certificados-residencia.index');
+
         // Rutas de Configuración - Medios de Pago
         Route::get('/configuracion/medios-de-pago', function () {
             return view('tesoreria.configuracion.medios-de-pago.index-livewire');
@@ -284,14 +286,9 @@ Route::middleware(['web', 'jwt.verify'])->group(function () {
         Route::get('/configuracion/denominaciones-monedas', function () {
             return view('tesoreria.configuracion.tes-denominaciones-monedas.index-livewire');
         })->name('configuracion.tes-denominaciones-monedas.index');
-    });
 
-    // Contabilidad
-    Route::prefix('contabilidad')->name('contabilidad.')->group(function () {
-        Route::get('/', [ContabilidadController::class, 'index'])->name('index');
-        // Agregar más rutas según necesidades
-        // Route::get('/balance', [ContabilidadController::class, 'balance'])->name('balance');
-        // Route::get('/asientos', [ContabilidadController::class, 'asientos'])->name('asientos');
+        // Rutas para Gestión de Valores
+        require __DIR__.'/valores.php';
     });
 
     // ------------------------------------------------------------------------

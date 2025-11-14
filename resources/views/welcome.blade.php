@@ -7,7 +7,7 @@
 
     <link rel="icon" type="image/x-icon" href="{{ asset('images/icons/jpm.png') }}">
 
-    <title>JPM Oficinas</title>
+    <title>Tesorería | Oficinas</title>
 
     <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
@@ -523,8 +523,8 @@
                     <div class="logo-container">
                         <img src="{{ asset('images/icons/jpm.png') }}" alt="JPM Logo" class="img-fluid">
                         <div class="logo-text">
-                            <h1>JPM Oficinas</h1>
-                            <p class="lead mb-1">Sistema de Gestión de Oficinas</p>
+                            <h1>Tesorería | Oficinas</h1>
+                            <p class="lead mb-1">Sistema de Gestión de la Dirección de Tesorería</p>
                         </div>
                     </div>
 
@@ -535,8 +535,8 @@
                                     <h5 class="mb-0"><i class="fas fa-sign-in-alt mr-2"></i>Acceso al Sistema</h5>
                                 </div>
                                 <div class="card-body p-4">
-                                    <p class="mb-3">Bienvenido al sistema de gestión de oficinas de la Jefatura de
-                                        Policía de Montevideo.</p>
+                                    <p class="mb-3">Bienvenido al sistema de gestión de la Dirección de Tesorería
+                                        de la Jefatura de Policía de Montevideo.</p>
                                     <div class="text-center">
                                         <a href="{{ route('login') }}" class="btn btn-primary btn-lg">
                                             <i class="fas fa-lock mr-2"></i>Iniciar Sesión
@@ -544,7 +544,7 @@
 
                                         <div class="mt-3">
                                             <a href="{{ route('multas-transito-publico') }}" class="btn btn-info btn-lg">
-                                                <i class="fas fa-list mr-2"></i>Consultar Multas de Tránsito
+                                                <i class="fas fa-list mr-2"></i>Consultar Artículos de Multas CPT
                                             </a>
                                         </div>
 
@@ -575,7 +575,7 @@
                                         Diferentes estilos de visualización
                                     </p>
                                     <p class="small mb-2"><i class="fas fa-check-circle text-success mr-1"></i>
-                                        Varios módulos de diversas oficinas
+                                        Varios módulos de diversas funcionalidades
                                     </p>
                                     <p class="small mb-0"><i class="fas fa-check-circle text-success mr-1"></i>
                                         Información general del sistema
@@ -588,7 +588,7 @@
                     <div class="footer mt-2">
                         <p class="small mb-1"><i class="fas fa-code mr-1"></i> Desarrollado por el Cabo (P.A.) Eduardo
                             González Gadea - Dirección de Tesorería</p>
-                        <p class="small mb-0">República Oriental del Uruguay | Ministerio del Interior | Jefatura de Policía de Montevideo</p>
+                        <p class="small mb-0">República Oriental del Uruguay | Ministerio del Interior | Jefatura de Policía de Montevideo | Año 2025</p>
                     </div>
                 </div>
             </div>

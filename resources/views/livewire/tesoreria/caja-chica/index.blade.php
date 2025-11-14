@@ -238,8 +238,7 @@
                             wire:click="closeRecuperarModal">Cancelar</button>
                         <button type="button" class="btn btn-primary" wire:click="guardarRecuperacion"
                             wire:loading.attr="disabled">
-                            <span wire:loading wire:target="guardarRecuperacion"
-                                class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                            <i wire:loading wire:target="guardarRecuperacion" class="fas fa-spinner fa-spin"></i>
                             Guardar Recuperación
                         </button>
                     </div>
@@ -837,6 +836,15 @@
             Livewire.on('recargaCompletada', function() {
                 console.log('Recarga completa finalizada');
                 // Aquí se pueden agregar acciones adicionales si es necesario
+            });
+
+            // Listeners para gestión de modales de acreedores y dependencias
+            Livewire.on('cerrarModalAcreedores', function() {
+                $('#modalAcreedores').modal('hide');
+            });
+
+            Livewire.on('cerrarModalDependencias', function() {
+                $('#modalDependencias').modal('hide');
             });
 
             // === Gestión de Estados de Carga ===

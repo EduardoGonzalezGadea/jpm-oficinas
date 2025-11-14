@@ -32,7 +32,6 @@ class ChequeEmitir extends Component
     public $edit_monto = '';
     public $edit_beneficiario = '';
     public $edit_concepto = '';
-    public $edit_serie = '';
     public $beneficiariosSugerencias = [];
     public $conceptosSugerencias = [];
     protected $listeners = [
@@ -182,39 +181,46 @@ class ChequeEmitir extends Component
             return;
         }
 
-        // Crear la planilla directamente
-        $planilla = PlanillaCheque::create([
-            'numero_planilla' => 'PL-' . now()->format('Y') . '-' . str_pad(PlanillaCheque::count() + 1, 4, '0', STR_PAD_LEFT),
-            'fecha_generacion' => now(),
-            'estado' => 'generada',
-            'generada_por' => auth()->id()
-        ]);
+        $chequesCount = count($this->selectedCheques);
 
-        // Asignar los cheques seleccionados a la planilla
-        Cheque::whereIn('id', $this->selectedCheques)
-            ->where('estado', 'emitido')
-            ->whereNull('planilla_id')
-            ->update(['planilla_id' => $planilla->id]);
+        \Illuminate\Support\Facades\DB::transaction(function () use ($chequesCount) {
+            // Crear la planilla directamente
+            $planilla = PlanillaCheque::create([
+                'numero_planilla' => 'PL-' . now()->format('Y') . '-' . str_pad(PlanillaCheque::whereYear('created_at', now()->year)->count() + 1, 4, '0', STR_PAD_LEFT),
+                'fecha_generacion' => now(),
+                'estado' => 'generada',
+                'generada_por' => auth()->id()
+            ]);
 
-        // Limpiar la selección
-        $this->selectedCheques = [];
-        $this->selectAll = false;
+            // Asignar los cheques seleccionados a la planilla y actualizar su estado
+            Cheque::whereIn('id', $this->selectedCheques)
+                ->where('estado', 'emitido')
+                ->whereNull('planilla_id')
+                ->update([
+                    'planilla_id' => $planilla->id,
+                    'estado' => 'en_planilla'
+                ]);
 
-        // Mostrar mensaje de éxito y redirigir al listado de planillas
-        $this->dispatchBrowserEvent('swal', [
-            'title' => 'Planilla creada exitosamente',
-            'text' => "Se creó la planilla {$planilla->numero_planilla} con " . count($this->selectedCheques) . " cheques.",
-            'type' => 'success'
-        ]);
+            // Limpiar la selección
+            $this->selectedCheques = [];
+            $this->selectAll = false;
 
-        // Emitir evento para actualizar el listado de planillas
-        $this->emit('planillaCreada');
+            // Mostrar mensaje de éxito y redirigir al listado de planillas
+            $this->dispatchBrowserEvent('swal', [
+                'title' => 'Planilla creada exitosamente',
+                'text' => "Se creó la planilla {$planilla->numero_planilla} con " . $chequesCount . " cheques.",
+                'type' => 'success'
+            ]);
 
-        // Redirigir al listado de planillas después de un breve delay
-        $this->dispatchBrowserEvent('redirect-after-success', [
-            'url' => route('tesoreria.cheques.index') . '#planillas',
-            'delay' => 2000
-        ]);
+            // Emitir evento para actualizar el listado de planillas
+            $this->emit('planillaCreada');
+
+            // Redirigir al listado de planillas después de un breve delay
+            $this->dispatchBrowserEvent('redirect-after-success', [
+                'url' => route('tesoreria.cheques.index') . '#planillas',
+                'delay' => 2000
+            ]);
+        });
     }
 
     public function getTotalSeleccionadosProperty()
@@ -280,7 +286,6 @@ class ChequeEmitir extends Component
         $this->edit_monto = '';
         $this->edit_beneficiario = '';
         $this->edit_concepto = '';
-        $this->edit_serie = '';
     }
 
     public function emitir()
@@ -313,13 +318,18 @@ class ChequeEmitir extends Component
 
     public function openAnularModal($chequeId)
     {
-        $this->selectedChequeAnular = Cheque::with('cuentaBancaria.banco')
+        $cheque = Cheque::with('cuentaBancaria.banco')
             ->where('id', $chequeId)
-            ->where('estado', 'disponible')
-            ->first()
-            ->toArray();
-        $this->motivo_anulacion = '';
-        $this->dispatchBrowserEvent('showAnularModal');
+            ->whereIn('estado', ['disponible', 'emitido'])
+            ->first();
+
+        if ($cheque) {
+            $this->selectedChequeAnular = $cheque->toArray();
+            $this->motivo_anulacion = '';
+            $this->dispatchBrowserEvent('showAnularModal');
+        } else {
+            $this->dispatchBrowserEvent('swal', ['title' => 'Acción no permitida', 'text' => 'Este cheque no se puede anular.', 'type' => 'error']);
+        }
     }
 
     public function openEditarModal($chequeId)
@@ -331,11 +341,10 @@ class ChequeEmitir extends Component
             ->toArray();
 
         if ($this->selectedChequeEditar) {
-            $this->edit_fecha_emision = $this->selectedChequeEditar['fecha_emision'];
+            $this->edit_fecha_emision = \Carbon\Carbon::parse($this->selectedChequeEditar['fecha_emision'])->format('Y-m-d');
             $this->edit_monto = $this->selectedChequeEditar['monto'];
             $this->edit_beneficiario = $this->selectedChequeEditar['beneficiario'];
             $this->edit_concepto = $this->selectedChequeEditar['concepto'];
-            $this->edit_serie = $this->selectedChequeEditar['serie'];
             $this->dispatchBrowserEvent('showEditarModal');
         }
     }
@@ -346,8 +355,19 @@ class ChequeEmitir extends Component
             'motivo_anulacion' => 'required|string|max:500',
         ]);
 
+        if (empty($this->selectedChequeAnular)) {
+            $this->dispatchBrowserEvent('swal', ['title' => 'Error', 'text' => 'No se ha seleccionado ningún cheque para anular.', 'type' => 'error']);
+            return;
+        }
+
         $cheque = Cheque::find($this->selectedChequeAnular['id']);
-        if ($cheque && $cheque->estado === 'disponible') {
+
+        if (!$cheque) {
+            $this->dispatchBrowserEvent('swal', ['title' => 'Error', 'text' => 'El cheque que intenta anular no fue encontrado.', 'type' => 'error']);
+            return;
+        }
+
+        if (in_array($cheque->estado, ['disponible', 'emitido'])) {
             $cheque->update([
                 'estado' => 'anulado',
                 'fecha_anulacion' => now(),
@@ -359,13 +379,13 @@ class ChequeEmitir extends Component
             $this->selectedChequeAnular = null;
             $this->motivo_anulacion = '';
 
-            // Cerrar modal usando el mismo patrón que los arrendamientos
+            // Cerrar modal
             $this->dispatchBrowserEvent('hideAnularModal');
 
-            // Emitir evento para mostrar mensaje
+            // Emitir evento para mostrar mensaje de éxito
             $this->emit('chequeAnulado');
         } else {
-            $this->dispatchBrowserEvent('swal', ['title' => 'Error al anular el cheque', 'type' => 'error']);
+            $this->dispatchBrowserEvent('swal', ['title' => 'Error al anular', 'text' => 'El estado actual del cheque (' . $cheque->estado . ') no permite la anulación.', 'type' => 'error']);
         }
     }
 
@@ -376,7 +396,6 @@ class ChequeEmitir extends Component
             'edit_monto' => 'required|numeric|min:0.01',
             'edit_beneficiario' => 'required|string|max:255',
             'edit_concepto' => 'required|string|max:500',
-            'edit_serie' => 'nullable|string|max:11',
         ]);
 
         $cheque = Cheque::find($this->selectedChequeEditar['id']);
@@ -386,7 +405,6 @@ class ChequeEmitir extends Component
                 'monto' => $this->edit_monto,
                 'beneficiario' => $this->edit_beneficiario,
                 'concepto' => $this->edit_concepto,
-                'serie' => $this->edit_serie,
                 'modificado_por' => auth()->id(),
                 'fecha_modificacion' => now()
             ]);

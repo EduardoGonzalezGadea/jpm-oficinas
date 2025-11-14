@@ -25,7 +25,7 @@ class BackupController extends Controller
     public function index()
     {
         // Obtener lista de respaldos disponibles
-        $backups = collect(Storage::disk('local')->files('JPM Oficinas'))
+        $backups = collect(Storage::disk('local')->files('Oficinas'))
             ->filter(function($file) {
                 return str_ends_with($file, '.zip');
             })

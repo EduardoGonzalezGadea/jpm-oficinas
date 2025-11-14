@@ -13,7 +13,7 @@
                         <i class="fas fa-plus"></i> Nueva Denominación
                     </button>
                 </div>
-                <div class="card-body">
+                <div class="card-body px-2">
                     <!-- Selector de búsqueda -->
                     <div class="form-row mb-3">
                         <div class="col-md-12">

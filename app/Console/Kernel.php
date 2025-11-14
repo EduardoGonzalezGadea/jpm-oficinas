@@ -23,7 +23,7 @@ class Kernel extends ConsoleKernel
 
         // Crear backup completo a las 03:00 todos los días
         $schedule->command('backup:run')
-                 ->dailyAt('03:00')
+                 ->dailyAt('02:00')
                  ->withoutOverlapping()
                  ->onOneServer();
     }

@@ -1,0 +1,272 @@
+<?php
+
+namespace App\Http\Livewire\Tesoreria\Valores;
+
+use App\Models\Tesoreria\LibretaValor;
+use App\Models\Tesoreria\TipoLibreta;
+use Livewire\Component;
+use Livewire\WithPagination;
+
+class Index extends Component
+{
+    use WithPagination;
+
+    protected $paginationTheme = 'bootstrap';
+
+    public $showModal = false;
+    public $tipo_libreta_id, $serie, $numero_inicial, $fecha_recepcion;
+    public $cantidad_libretas = 1;
+    public $numero_final_calculado = '';
+
+    public $showEntregaModal = false;
+    public $libretaSeleccionada = null;
+    public $servicio_entrega_id, $numero_recibo_entrega, $fecha_entrega, $observaciones_entrega;
+    public $campoEnfoque = 'servicio_entrega_id'; // Campo que debe tener el foco
+
+    public $search = '';
+    public $estado = 'en_stock';
+
+    protected function rules()
+    {
+        return [
+            'tipo_libreta_id' => 'required|exists:tes_tipos_libretas,id',
+            'serie' => 'nullable|string|max:255',
+            'numero_inicial' => 'required|integer|min:1',
+            'fecha_recepcion' => 'required|date',
+            'cantidad_libretas' => 'required|integer|min:1',
+        ];
+    }
+
+    protected function rulesEntrega()
+    {
+        return [
+            'servicio_entrega_id' => 'required|exists:tes_servicios,id',
+            'numero_recibo_entrega' => 'required|string|max:255|unique:tes_entregas_libretas_valores,numero_recibo_entrega',
+            'fecha_entrega' => 'required|date|before_or_equal:today',
+            'observaciones_entrega' => 'nullable|string|max:1000',
+        ];
+    }
+
+    public function updated($propertyName)
+    {
+        if (in_array($propertyName, ['numero_inicial', 'cantidad_libretas', 'tipo_libreta_id'])) {
+            $this->calcularNumeroFinal();
+        }
+    }
+
+    public function updatingSearch()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingEstado()
+    {
+        $this->resetPage();
+    }
+
+    public function confirmDelete($id)
+    {
+        $this->dispatchBrowserEvent('swal:confirm', [
+            'title' => '¿Eliminar Libreta?',
+            'text' => 'Esta acción no se puede revertir.',
+            'method' => 'delete',
+            'id' => $id,
+            'componentId' => $this->id,
+        ]);
+    }
+
+    public function delete($id)
+    {
+        LibretaValor::find($id)->delete();
+        $this->dispatchBrowserEvent('swal:success', ['text' => 'Libreta eliminada correctamente.']);
+    }
+
+    public function entregarLibreta($libretaId)
+    {
+        $libreta = LibretaValor::find($libretaId);
+        if ($libreta && $libreta->estado === 'en_stock') {
+            $this->libretaSeleccionada = $libreta;
+            $this->resetEntregaInput();
+            $this->showEntregaModal = true;
+            $this->dispatchBrowserEvent('modalOpened');
+        }
+    }
+
+    public function updatedLibretaSeleccionada()
+    {
+        // Reset servicio selection when libreta changes
+        $this->servicio_entrega_id = null;
+    }
+
+    public function registrarEntrega()
+    {
+        $this->validate($this->rulesEntrega());
+
+        // Verificar que el servicio esté activo
+        $servicio = \App\Models\Tesoreria\Servicio::find($this->servicio_entrega_id);
+        if (!$servicio->activo) {
+            $this->addError('servicio_entrega_id', 'El servicio seleccionado no está activo.');
+            return;
+        }
+
+        // Crear la entrega
+        \App\Models\Tesoreria\EntregaLibretaValor::create([
+            'libreta_valor_id' => $this->libretaSeleccionada->id,
+            'servicio_id' => $this->servicio_entrega_id,
+            'numero_recibo_entrega' => $this->numero_recibo_entrega,
+            'fecha_entrega' => $this->fecha_entrega,
+            'observaciones' => $this->observaciones_entrega,
+            'estado' => 'activo',
+        ]);
+
+        // Actualizar estado de la libreta
+        $this->libretaSeleccionada->update([
+            'estado' => 'asignada',
+            'servicio_asignado_id' => $this->servicio_entrega_id,
+        ]);
+
+        $this->dispatchBrowserEvent('swal', [
+            'title' => 'Éxito',
+            'text' => 'Entrega de libreta registrada correctamente.',
+            'type' => 'success'
+        ]);
+
+        $this->showEntregaModal = false;
+        $this->libretaSeleccionada = null;
+    }
+
+    public function closeEntregaModal()
+    {
+        $this->showEntregaModal = false;
+        $this->libretaSeleccionada = null;
+        $this->resetEntregaInput();
+    }
+
+
+    private function resetEntregaInput()
+    {
+        $this->servicio_entrega_id = null;
+        $this->numero_recibo_entrega = '';
+        $this->fecha_entrega = now()->format('Y-m-d');
+        $this->observaciones_entrega = '';
+    }
+
+    public function calcularNumeroFinal()
+    {
+        $numero_inicial = intval($this->numero_inicial);
+        $cantidad_libretas = intval($this->cantidad_libretas);
+
+        if (!$this->tipo_libreta_id || $numero_inicial < 1 || $cantidad_libretas < 1) {
+            $this->numero_final_calculado = '';
+            return;
+        }
+
+        $tipoLibreta = TipoLibreta::find($this->tipo_libreta_id);
+        if ($tipoLibreta) {
+            $totalRecibos = $cantidad_libretas * $tipoLibreta->cantidad_recibos;
+            $this->numero_final_calculado = $numero_inicial + $totalRecibos - 1;
+        }
+    }
+
+    public function render()
+    {
+        $query = LibretaValor::with('tipoLibreta');
+
+        // Aplicar filtros de búsqueda
+        if (!empty($this->search)) {
+            $query->where(function ($q) {
+                $q->whereHas('tipoLibreta', function ($subQuery) {
+                    $subQuery->where('nombre', 'like', '%' . $this->search . '%');
+                })
+                ->orWhere('serie', 'like', '%' . $this->search . '%')
+                ->orWhere('numero_inicial', 'like', '%' . $this->search . '%')
+                ->orWhere('numero_final', 'like', '%' . $this->search . '%');
+            });
+        }
+
+        // Aplicar filtro de estado
+        if (!empty($this->estado)) {
+            $query->where('estado', $this->estado);
+        }
+
+        $libretas = $query->orderBy('fecha_recepcion', 'desc')->paginate(10);
+        $tiposLibreta = TipoLibreta::orderBy('nombre')->get();
+
+        // Si hay una libreta seleccionada, obtener solo los servicios asociados a su tipo
+        $servicios = [];
+        if ($this->libretaSeleccionada) {
+            $servicios = $this->libretaSeleccionada->tipoLibreta->servicios()->where('activo', true)->orderBy('nombre')->get();
+
+            // Si hay solo un servicio asociado, preseleccionarlo y enfocar en número de recibo
+            if ($servicios->count() === 1 && !$this->servicio_entrega_id) {
+                $this->servicio_entrega_id = $servicios->first()->id;
+                $this->campoEnfoque = 'numero_recibo_entrega';
+            } else {
+                // Si hay múltiples servicios, enfocar en el selector de servicios
+                $this->campoEnfoque = 'servicio_entrega_id';
+            }
+        } else {
+            $servicios = \App\Models\Tesoreria\Servicio::where('activo', true)->orderBy('nombre')->get();
+            $this->campoEnfoque = 'servicio_entrega_id';
+        }
+
+        return view('livewire.tesoreria.valores.index', compact('libretas', 'tiposLibreta', 'servicios'))
+            ->extends('layouts.app')
+            ->section('content');
+    }
+
+    public function create()
+    {
+        $this->resetInput();
+        $this->showModal = true;
+    }
+
+    public function save()
+    {
+        $this->validate();
+
+        $tipoLibreta = TipoLibreta::find($this->tipo_libreta_id);
+        $recibosPorLibreta = $tipoLibreta->cantidad_recibos;
+        $numeroActual = intval($this->numero_inicial);
+
+        for ($i = 0; $i < $this->cantidad_libretas; $i++) {
+            $numero_final_libreta = $numeroActual + $recibosPorLibreta - 1;
+
+            LibretaValor::create([
+                'tipo_libreta_id' => $this->tipo_libreta_id,
+                'serie' => $this->serie,
+                'numero_inicial' => $numeroActual,
+                'numero_final' => $numero_final_libreta,
+                'proximo_recibo_disponible' => $numeroActual,
+                'fecha_recepcion' => $this->fecha_recepcion,
+                'estado' => 'en_stock',
+            ]);
+
+            $numeroActual = $numero_final_libreta + 1;
+        }
+
+        $this->dispatchBrowserEvent('swal', [
+            'title' => 'Éxito',
+            'text' => $this->cantidad_libretas . ' libreta(s) de valores registrada(s) correctamente.',
+            'type' => 'success'
+        ]);
+
+        $this->showModal = false;
+    }
+
+    public function closeModal()
+    {
+        $this->showModal = false;
+        $this->resetInput();
+    }
+
+    private function resetInput()
+    {
+        $this->tipo_libreta_id = null;
+        $this->serie = '';
+        $this->numero_inicial = '';
+        $this->fecha_recepcion = now()->format('Y-m-d');
+        $this->cantidad_libretas = 1;
+        $this->numero_final_calculado = '';
+    }
+}

@@ -103,12 +103,6 @@ class Index extends Component
         'pendienteCreado' => 'cargarDatos',
         'pagoCreado' => 'cargarDatos',
         'mostrarAlerta' => 'mostrarAlertaSweet',
-        'dependenciaCreada' => 'cargarDatos',
-        'dependenciaActualizada' => 'cargarDatos',
-        'dependenciaEliminada' => 'cargarDatos',
-        'acreedorCreado' => 'cargarDatos',
-        'acreedorActualizado' => 'cargarDatos',
-        'acreedorEliminado' => 'cargarDatos',
     ];
 
     protected function rules()
@@ -322,7 +316,7 @@ class Index extends Component
 
             $this->tablaPendientesDetalle = $pendientesActual->concat($pendientesAnterior)->sortBy('pendiente')->values();
         } catch (\Exception $e) {
-            session()->flash('error', 'Error al cargar pendientes: ' . $e->getMessage());
+            $this->dispatchBrowserEvent('swal:toast-error', ['text' => 'Error al cargar pendientes: ' . $e->getMessage()]);
             $this->tablaPendientesDetalle = collect();
         }
     }
@@ -386,7 +380,7 @@ class Index extends Component
 
             $this->tablaPagos = $pagosActual->concat($pagosAnterior)->sortBy('fechaEgresoPagos')->values();
         } catch (\Exception $e) {
-            session()->flash('error', 'Error al cargar pagos: ' . $e->getMessage());
+            $this->dispatchBrowserEvent('swal:toast-error', ['text' => 'Error al cargar pagos: ' . $e->getMessage()]);
             $this->tablaPagos = collect();
         }
     }
@@ -448,10 +442,10 @@ class Index extends Component
             $stSaldo = $montoCajaChica - $stPendientes - $stRendidos - $stExtras - $saldoPagosConEgreso - $saldoPagosSinEgreso;
             $this->tablaTotales['Saldo Total'] = $stSaldo;
         } catch (\Exception $e) {
-            session()->flash('error', 'Error al calcular los totales: ' . $e->getMessage());
+            $this->dispatchBrowserEvent('swal:toast-error', ['text' => 'Error al calcular los totales: ' . $e->getMessage()]);
             $this->tablaTotales = [];
         } catch (\Error $e) {
-            session()->flash('error', 'Error fatal al calcular los totales. Por favor, contacte al administrador.');
+            $this->dispatchBrowserEvent('swal:toast-error', ['text' => 'Error fatal al calcular los totales. Por favor, contacte al administrador.']);
             $this->tablaTotales = [];
         }
     }
@@ -603,7 +597,7 @@ class Index extends Component
         $items = $pendientes->concat($pendientesAnterior)->concat($pagos)->concat($pagosAnterior)->values();
 
         if ($items->isEmpty()) {
-            session()->flash('message', 'No hay saldos pendientes de recuperar para el período y fecha seleccionados.');
+            $this->dispatchBrowserEvent('swal:success', ['text' => 'No hay saldos pendientes de recuperar para el período y fecha seleccionados.']);
             return;
         }
         $this->itemsParaRecuperar = $items->toArray();
@@ -690,10 +684,10 @@ class Index extends Component
             DB::commit();
             $this->closeRecuperarModal();
             $this->cargarDatos();
-            session()->flash('message', 'Recuperación guardada exitosamente.');
+            $this->dispatchBrowserEvent('swal:success', ['text' => 'Recuperación guardada exitosamente.']);
         } catch (\Exception $e) {
             DB::rollBack();
-            session()->flash('error', 'Error al guardar la recuperación: ' . $e->getMessage());
+            $this->dispatchBrowserEvent('swal:toast-error', ['text' => 'Error al guardar la recuperación: ' . $e->getMessage()]);
         }
     }
 
@@ -714,7 +708,7 @@ class Index extends Component
         $pendiente = Pendiente::find($pendienteId);
 
         if (!$pendiente) {
-            session()->flash('error', 'Pendiente no encontrado.');
+            $this->dispatchBrowserEvent('swal:toast-error', ['text' => 'Pendiente no encontrado.']);
             return;
         }
 
@@ -763,7 +757,7 @@ class Index extends Component
             $pendiente = Pendiente::find($this->recuperarRendidoData['relPendiente']);
 
             if (!$pendiente) {
-                $this->modalRecuperarRendidoError = 'Pendiente no encontrado para la validación.';
+                $this->dispatchBrowserEvent('swal:toast-error', ['text' => 'Pendiente no encontrado para la validación.']);
                 DB::rollBack();
                 return;
             }
@@ -780,7 +774,7 @@ class Index extends Component
             $montoRecuperableActual = $tot_rendido_actual - $tot_recuperado_existente_actual;
 
             if ($this->recuperarRendidoData['monto_recuperado'] > $montoRecuperableActual) {
-                $this->modalRecuperarRendidoError = 'El monto a recuperar ( ' . number_format($this->recuperarRendidoData['monto_recuperado'], 2, ',', '.') . ' ) no puede ser mayor que el saldo rendido actual del pendiente ( ' . number_format($montoRecuperableActual, 2, ',', '.') . ' ).';
+                $this->dispatchBrowserEvent('swal:toast-error', ['text' => 'El monto a recuperar ( ' . number_format($this->recuperarRendidoData['monto_recuperado'], 2, ',', '.') . ' ) no puede ser mayor que el saldo rendido actual del pendiente ( ' . number_format($montoRecuperableActual, 2, ',', '.') . ' ).']);
                 DB::rollBack();
                 return;
             }
@@ -797,11 +791,11 @@ class Index extends Component
 
             DB::commit();
             $this->cargarDatos();
-            $this->modalRecuperarRendidoMessage = 'Dinero rendido recuperado exitosamente.';
+            $this->dispatchBrowserEvent('swal:success', ['text' => 'Dinero rendido recuperado exitosamente.']);
             $this->closeRecuperarRendidoModal();
         } catch (\Exception $e) {
             DB::rollBack();
-            $this->modalRecuperarRendidoError = 'Error al guardar la recuperación del dinero rendido: ' . $e->getMessage();
+            $this->dispatchBrowserEvent('swal:toast-error', ['text' => 'Error al guardar la recuperación del dinero rendido: ' . $e->getMessage()]);
         }
     }
 
@@ -877,7 +871,7 @@ class Index extends Component
             $pago = Pago::find($this->recuperarPagoData['relPago']);
 
             if (!$pago) {
-                $this->modalRecuperarPagoError = 'Pago no encontrado para la validación.';
+                $this->dispatchBrowserEvent('swal:toast-error', ['text' => 'Pago no encontrado para la validación.']);
                 DB::rollBack();
                 return;
             }
@@ -886,7 +880,7 @@ class Index extends Component
             $saldoDisponible = $pago->montoPagos - $pago->recuperadoPagos;
 
             if ($this->recuperarPagoData['monto_recuperado'] > $saldoDisponible) {
-                $this->modalRecuperarPagoError = 'El monto a recuperar (' . number_format($this->recuperarPagoData['monto_recuperado'], 2, ',', '.') . ') no puede ser mayor que el saldo disponible del pago (' . number_format($saldoDisponible, 2, ',', '.') . ').';
+                $this->dispatchBrowserEvent('swal:toast-error', ['text' => 'El monto a recuperar (' . number_format($this->recuperarPagoData['monto_recuperado'], 2, ',', '.') . ') no puede ser mayor que el saldo disponible del pago (' . number_format($saldoDisponible, 2, ',', '.') . ').']);
                 DB::rollBack();
                 return;
             }
@@ -901,11 +895,11 @@ class Index extends Component
 
             DB::commit();
             $this->cargarDatos();
-            $this->modalRecuperarPagoMessage = 'Pago directo recuperado exitosamente.';
+            $this->dispatchBrowserEvent('swal:success', ['text' => 'Pago directo recuperado exitosamente.']);
             $this->closeRecuperarPagoModal();
         } catch (\Exception $e) {
             DB::rollBack();
-            $this->modalRecuperarPagoError = 'Error al guardar la recuperación del pago directo: ' . $e->getMessage();
+            $this->dispatchBrowserEvent('swal:toast-error', ['text' => 'Error al guardar la recuperación del pago directo: ' . $e->getMessage()]);
         }
     }
 
@@ -932,7 +926,7 @@ class Index extends Component
 
             $this->dispatchBrowserEvent('modal-edit-fondo-opened');
         } catch (\Exception $e) {
-            session()->flash('error', 'Error al cargar los datos del fondo: ' . $e->getMessage());
+            $this->dispatchBrowserEvent('swal:toast-error', ['text' => 'Error al cargar los datos del fondo: ' . $e->getMessage()]);
         }
     }
 
@@ -947,7 +941,7 @@ class Index extends Component
 
             if (abs($montoAnterior - $montoNuevo) < 0.01) {
                 $this->cerrarModalEditFondo();
-                session()->flash('message', 'No se realizaron cambios en el monto del fondo.');
+                $this->dispatchBrowserEvent('swal:success', ['text' => 'No se realizaron cambios en el monto del fondo.']);
                 return;
             }
 
@@ -963,7 +957,7 @@ class Index extends Component
                 number_format($montoNuevo, 2, ',', '.')
             );
 
-            session()->flash('message', $mensaje);
+            $this->dispatchBrowserEvent('swal:success', ['text' => $mensaje]);
 
             $this->dispatchBrowserEvent('fondo-actualizado', [
                 'message' => 'Fondo actualizado exitosamente',
@@ -971,7 +965,7 @@ class Index extends Component
                 'montoNuevo' => $montoNuevo
             ]);
         } catch (\Exception $e) {
-            session()->flash('error', 'Error al actualizar el fondo: ' . $e->getMessage());
+            $this->dispatchBrowserEvent('swal:toast-error', ['text' => 'Error al actualizar el fondo: ' . $e->getMessage()]);
         }
     }
 
@@ -1087,7 +1081,7 @@ class Index extends Component
         if (is_null($mesNumero)) {
             // Esto no debería ocurrir si translatedFormat('F') funciona correctamente,
             // pero es una salvaguarda.
-            session()->flash('error', 'Error interno: Nombre de mes no reconocido: ' . $this->mesActual);
+            $this->dispatchBrowserEvent('swal:toast-error', ['text' => 'Error interno: Nombre de mes no reconocido: ' . $this->mesActual]);
             return ['mes' => '', 'anio' => '']; // Retornar vacío para evitar más errores
         }
 

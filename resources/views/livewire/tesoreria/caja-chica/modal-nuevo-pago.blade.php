@@ -109,6 +109,25 @@
             $(document).on('hidden.bs.modal', '#modalNuevoPago', function() {
                 @this.cerrarModal();
             });
+
+            $('#modalNuevoPago').on('shown.bs.modal', function () {
+                $('#pagoEgreso').focus();
+                
+                const form = document.querySelector('#modalNuevoPago form');
+                const focusable = Array.from(form.querySelectorAll('input, select, button[type="submit"]'));
+                
+                form.addEventListener('keydown', function (e) {
+                    if (e.key === 'Enter' && e.target.tagName !== 'BUTTON') {
+                        e.preventDefault();
+                        const currentIndex = focusable.indexOf(e.target);
+                        const nextElement = focusable[currentIndex + 1];
+                        
+                        if (nextElement) {
+                            nextElement.focus();
+                        }
+                    }
+                });
+            });
         });
     </script>
 </div>

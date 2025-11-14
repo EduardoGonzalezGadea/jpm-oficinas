@@ -93,6 +93,11 @@
                                     JEFATURA DE POLIC&Iacute;A DE MONTEVIDEO
                                 </strong>
                             </h3>
+                            @isset($reportTitle)
+                                <h2 class="text-center" style="margin-top: 10px; margin-bottom: 10px;">
+                                    <strong>{{ $reportTitle }}</strong>
+                                </h2>
+                            @endisset
                         </th>
                         <th colspan="4" class="text-center"></th>
                         <th colspan="2" class="text-center conBorde">{{ $pendiente->fechaPendientes->format('d/m/Y') }}</th>

@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Valores - JPM Oficinas')
+@section('title', 'Tesorería | Oficinas - Valores')
 
 @section('content')
     @livewire('tesoreria.valores.valores-spa')

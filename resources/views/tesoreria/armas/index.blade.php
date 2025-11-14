@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="container-fluid">
+    <div class="container-fluid px-0">
         <ul class="nav nav-pills" id="myTab" role="tablist">
             <li class="nav-item" role="presentation">
                 <a class="nav-link {{ request()->routeIs('tesoreria.armas.porte') ? 'active' : '' }}" href="{{ route('tesoreria.armas.porte') }}">Porte de Armas</a>

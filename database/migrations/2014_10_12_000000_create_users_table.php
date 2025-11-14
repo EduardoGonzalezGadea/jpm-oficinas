@@ -24,13 +24,9 @@ return new class extends Migration
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->boolean('activo')->default(true);
-            $table->unsignedBigInteger('modulo_id')->nullable();
             $table->rememberToken();
             $table->timestamps();
             $table->softDeletes();
-
-            // Clave foránea
-            $table->foreign('modulo_id')->references('id')->on('modulos');
         });
     }
 

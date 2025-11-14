@@ -31,8 +31,7 @@ class Eventuales extends Component
     {
         // Verificar autenticación antes de procesar cualquier lógica
         if (!auth()->check()) {
-            session()->flash('error', 'La sesión ha expirado. Por favor, inicie sesión de nuevo.');
-            return redirect(route('login'));
+            abort(500, 'La sesión ha expirado. Por favor, inicie sesión de nuevo.');
         }
 
         $this->mes = Carbon::now()->month;
@@ -94,7 +93,7 @@ class Eventuales extends Component
     public function store()
     {
         if (!auth()->check()) {
-            return redirect()->route('login')->with('error', 'La sesión ha expirado. Por favor, inicie sesión de nuevo.');
+            abort(500, 'La sesión ha expirado. Por favor, inicie sesión de nuevo.');
         }
 
         if (empty($this->orden_cobro)) {
@@ -149,7 +148,7 @@ class Eventuales extends Component
     public function edit($id)
     {
         if (!auth()->check()) {
-            return redirect()->route('login')->with('error', 'La sesión ha expirado. Por favor, inicie sesión de nuevo.');
+            abort(500, 'La sesión ha expirado. Por favor, inicie sesión de nuevo.');
         }
 
         $eventual = Model::findOrFail($id);
@@ -181,7 +180,7 @@ class Eventuales extends Component
     public function update()
     {
         if (!auth()->check()) {
-            return redirect()->route('login')->with('error', 'La sesión ha expirado. Por favor, inicie sesión de nuevo.');
+            abort(500, 'La sesión ha expirado. Por favor, inicie sesión de nuevo.');
         }
 
         if (empty($this->orden_cobro)) {
@@ -239,7 +238,7 @@ class Eventuales extends Component
     public function destroy($id)
     {
         if (!auth()->check()) {
-            return redirect()->route('login')->with('error', 'La sesión ha expirado. Por favor, inicie sesión de nuevo.');
+            abort(500, 'La sesión ha expirado. Por favor, inicie sesión de nuevo.');
         }
 
         $eventual = Model::findOrFail($id);
@@ -300,7 +299,7 @@ class Eventuales extends Component
     public function toggleConfirmado($id)
     {
         if (!auth()->check()) {
-            return redirect()->route('login')->with('error', 'La sesión ha expirado. Por favor, inicie sesión de nuevo.');
+            abort(500, 'La sesión ha expirado. Por favor, inicie sesión de nuevo.');
         }
 
         if (auth()->user()->cannot('gestionar_tesoreria') && auth()->user()->cannot('supervisar_tesoreria')) {

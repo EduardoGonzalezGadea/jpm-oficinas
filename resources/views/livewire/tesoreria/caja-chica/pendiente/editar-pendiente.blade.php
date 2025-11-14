@@ -119,7 +119,7 @@
                         {{-- Fila para los botones --}}
                         <div class="row mt-3">
                             <div class="col-md-12 text-right">
-                                <button type="reset" class="btn btn-secondary">Cancelar</button>
+                                <button type="button" wire:click="resetearFormulario" class="btn btn-secondary">Cancelar</button>
                                 <button type="submit" class="btn btn-primary">Guardar cambios</button>
                             </div>
                         </div>
