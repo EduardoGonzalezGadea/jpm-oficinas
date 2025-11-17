@@ -16,8 +16,8 @@
                 </button>
             </div>
         </div>
-        <div class="card-body">
-            <div class="row mb-3">
+        <div class="card-body p-1">
+            <div class="row mb-1">
                 <div class="col-md-6">
                     <input type="text" wire:model.live.debounce.300ms="search" class="form-control" placeholder="Buscar por nombre...">
                 </div>
@@ -27,31 +27,33 @@
                 <table class="table table-striped table-hover">
                     <thead class="thead-dark">
                         <tr>
-                            <th>Nombre</th>
-                            <th class="text-center">N° Recibos</th>
-                            <th class="text-center">S./Min.</th>
-                            <th class="text-center">Servicios Asociados</th>
-                            <th class="text-center">Acciones</th>
+                            <th class="align-middle">Nombre</th>
+                            <th class="text-center align-middle">Recibos</th>
+                            <th class="text-center align-middle">S./Min.</th>
+                            <th class="text-center align-middle">Servicios Asociados</th>
+                            <th class="text-center align-middle">Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse($tiposLibreta as $tipo)
                             <tr>
-                                <td>{{ $tipo->nombre }}</td>
-                                <td class="text-center">{{ $tipo->cantidad_recibos }}</td>
-                                <td class="text-center">{{ $tipo->stock_minimo_recibos }}</td>
-                                <td>
+                                <td class="align-middle">{{ $tipo->nombre }}</td>
+                                <td class="text-center align-middle">{{ $tipo->cantidad_recibos }}</td>
+                                <td class="text-center align-middle">{{ $tipo->stock_minimo_recibos }}</td>
+                                <td class="align-middle">
                                     @foreach($tipo->servicios as $servicio)
                                         <span class="badge badge-info">{{ $servicio->nombre }}</span>
                                     @endforeach
                                 </td>
-                                <td class="text-center">
-                                    <button wire:click="edit({{ $tipo->id }})" class="btn btn-sm btn-warning" title="Editar">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                    <button wire:click="confirmDelete({{ $tipo->id }})" class="btn btn-sm btn-danger" title="Eliminar">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
+                                <td class="text-center align-middle">
+                                    <div class="btn-group" role="group">
+                                        <button wire:click="edit({{ $tipo->id }})" class="btn btn-sm btn-warning" title="Editar">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button wire:click="confirmDelete({{ $tipo->id }})" class="btn btn-sm btn-danger" title="Eliminar">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                         @empty

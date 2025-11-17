@@ -3,6 +3,7 @@
 namespace App\Http\Livewire\Tesoreria\Banco;
 
 use App\Models\Tesoreria\Banco;
+use Illuminate\Support\Facades\Cache;
 use Livewire\Component;
 
 class BancoEdit extends Component
@@ -35,6 +36,7 @@ class BancoEdit extends Component
             'observaciones' => $this->observaciones,
         ]);
 
+        Cache::flush();
         $this->emit('bancoUpdate');
         $this->dispatchBrowserEvent('swal', ['title' => 'Banco actualizado!', 'type' => 'success']);
     }

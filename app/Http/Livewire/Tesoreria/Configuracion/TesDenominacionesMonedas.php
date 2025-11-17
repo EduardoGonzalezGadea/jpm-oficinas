@@ -3,6 +3,7 @@
 namespace App\Http\Livewire\Tesoreria\Configuracion;
 
 use App\Models\Tesoreria\TesDenominacionMoneda as Model;
+use Illuminate\Support\Facades\Cache;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -44,9 +45,14 @@ class TesDenominacionesMonedas extends Component
             ]);
         }
 
-        $denominaciones = Model::search($this->search)
-            ->ordenado()
-            ->paginate(15);
+        $page = $this->page ?: 1;
+        $cacheKey = 'denominaciones_search_' . $this->search . '_page_' . $page;
+
+        $denominaciones = Cache::remember($cacheKey, now()->addDay(), function () {
+            return Model::search($this->search)
+                ->ordenado()
+                ->paginate(15);
+        });
 
         return view('livewire.tesoreria.configuracion.tes-denominaciones-monedas', [
             'denominaciones' => $denominaciones,
@@ -75,6 +81,7 @@ class TesDenominacionesMonedas extends Component
             'activo' => $this->activo,
         ]);
 
+        Cache::flush();
         $this->resetInput();
         $this->emit('denominacionStore');
         $this->dispatchBrowserEvent('alert', ['type' => 'success', 'message' => 'Denominación creada con éxito!', 'toast' => true]);
@@ -110,6 +117,7 @@ class TesDenominacionesMonedas extends Component
                 'descripcion' => $this->descripcion,
                 'activo' => $this->activo,
             ]);
+            Cache::flush();
             $this->resetInput();
             $this->emit('denominacionUpdate');
             $this->dispatchBrowserEvent('alert', ['type' => 'success', 'message' => 'Denominación actualizada con éxito!', 'toast' => true]);
@@ -120,6 +128,7 @@ class TesDenominacionesMonedas extends Component
     {
         $denominacion = Model::findOrFail($id);
         $denominacion->delete();
+        Cache::flush();
         $this->dispatchBrowserEvent('alert', ['type' => 'success', 'message' => 'Denominación eliminada con éxito!', 'toast' => true]);
     }
 
@@ -150,5 +159,6 @@ class TesDenominacionesMonedas extends Component
     public function updatingSearch()
     {
         $this->resetPage();
+        Cache::flush();
     }
 }

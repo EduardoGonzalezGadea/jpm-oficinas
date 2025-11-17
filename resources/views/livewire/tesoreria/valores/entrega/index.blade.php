@@ -13,24 +13,21 @@
                 </button>
             </div>
         </div>
-        <div class="card-body px-2">
+        <div class="card-body px-2 py-2">
             <!-- Filtros -->
-            <div class="row mb-3">
-                <div class="col-md-3">
+            <div class="d-flex flex-justify-content-between mb-1">
+                <div>
                     <div class="input-group">
                         <input type="text" wire:model.debounce.300ms="search" class="form-control" placeholder="Buscar por recibo, serie o número...">
-                        <div class="input-group-append">
-                            <span class="input-group-text"><i class="fas fa-search"></i></span>
-                        </div>
                     </div>
                 </div>
-                <div class="col-md-2">
+                <div>
                     <input type="date" wire:model="fecha_desde" class="form-control" placeholder="Fecha desde">
                 </div>
-                <div class="col-md-2">
+                <div>
                     <input type="date" wire:model="fecha_hasta" class="form-control" placeholder="Fecha hasta">
                 </div>
-                <div class="col-md-3">
+                <div>
                     <select wire:model="servicio_filtro" class="form-control">
                         <option value="">Todos los servicios</option>
                         @foreach($servicios as $servicio)
@@ -38,9 +35,9 @@
                         @endforeach
                     </select>
                 </div>
-                <div class="col-md-2">
-                    <button wire:click="$set('search', ''); $set('fecha_desde', ''); $set('fecha_hasta', ''); $set('servicio_filtro', '')" class="btn btn-outline-secondary btn-block">
-                        <i class="fas fa-times"></i> Limpiar
+                <div>
+                    <button class="btn btn-outline-danger btn-block" title="Limpiar filtros" wire:click="$set('search', ''); $set('fecha_desde', ''); $set('fecha_hasta', ''); $set('servicio_filtro', '')" class="btn btn-outline-secondary btn-block">
+                        <i class="fas fa-times"></i>
                     </button>
                 </div>
             </div>

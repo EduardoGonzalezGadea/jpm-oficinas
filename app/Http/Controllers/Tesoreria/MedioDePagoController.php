@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Tesoreria;
 use App\Http\Controllers\Controller;
 use App\Models\Tesoreria\MedioDePago;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 class MedioDePagoController extends Controller
@@ -16,7 +17,12 @@ class MedioDePagoController extends Controller
      */
     public function index()
     {
-        $mediosDePago = MedioDePago::ordenado()->paginate(10);
+        $page = request()->get('page', 1);
+        $cacheKey = 'medios_de_pago_page_' . $page;
+
+        $mediosDePago = Cache::remember($cacheKey, now()->addDay(), function () {
+            return MedioDePago::ordenado()->paginate(10);
+        });
 
         return view('tesoreria.configuracion.medios-de-pago.index', compact('mediosDePago'));
     }
@@ -46,6 +52,8 @@ class MedioDePagoController extends Controller
         ]);
 
         MedioDePago::create($request->all());
+
+        Cache::flush();
 
         return redirect()->route('tesoreria.configuracion.medios-de-pago.index')
             ->with('success', 'Medio de pago creado exitosamente.');
@@ -96,6 +104,8 @@ class MedioDePagoController extends Controller
 
         $medioDePago->update($request->all());
 
+        Cache::flush();
+
         return redirect()->route('tesoreria.configuracion.medios-de-pago.index')
             ->with('success', 'Medio de pago actualizado exitosamente.');
     }
@@ -120,6 +130,8 @@ class MedioDePagoController extends Controller
         }
 
         $medioDePago->delete();
+
+        Cache::flush();
 
         return redirect()->route('tesoreria.configuracion.medios-de-pago.index')
             ->with('success', 'Medio de pago eliminado exitosamente.');

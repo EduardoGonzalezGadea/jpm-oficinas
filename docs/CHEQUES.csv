@@ -1,0 +1,16 @@
+ch_planillas,tes_planillas cheques
+,
+id,id
+numero,numero_planilla
+created_at,fecha_generacion
+“creada/anulada”,estado
+canceled_at,fecha_anulacion
+canceled_motivo,motivo_anulacion
+created_id,generada_por
+canceled_id,anulada_por
+created_id,created_by
+updated_id,updated_by
+deleted_id,deleted_by
+created_at,created_at
+updated_at,updated_at
+deleted_at,deleted_at

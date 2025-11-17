@@ -7,6 +7,7 @@ namespace App\Http\Livewire\Tesoreria\Arrendamientos;
     use Livewire\Component;
     use Livewire\WithPagination;
     use Carbon\Carbon;
+    use Illuminate\Support\Facades\Cache;
     use Illuminate\Support\Facades\DB;
     use App\Traits\ConvertirMayusculas;
 
@@ -39,28 +40,36 @@ class Arrendamiento extends Component
 
     public function render()
     {
+        $page = $this->page ?: 1;
+        $cacheKey = 'arrendamientos_' . $this->year . '_' . $this->mes . '_search_' . $this->search . '_page_' . $page;
 
-        $arrendamientos = Model::whereYear('fecha', $this->year)
-            ->whereMonth('fecha', $this->mes)
-            ->search($this->search)
-            ->orderBy('fecha', 'asc')
-            ->orderBy('recibo', 'asc')
-            ->paginate(10);
+        $data = Cache::remember($cacheKey, now()->addDay(), function () {
+            $arrendamientos = Model::whereYear('fecha', $this->year)
+                ->whereMonth('fecha', $this->mes)
+                ->search($this->search)
+                ->orderBy('fecha', 'asc')
+                ->orderBy('recibo', 'asc')
+                ->paginate(10);
 
-        $this->total = $arrendamientos->sum('monto');
+            $subtotales = Model::whereYear('fecha', $this->year)
+                ->whereMonth('fecha', $this->mes)
+                ->search($this->search)
+                ->select('medio_de_pago', DB::raw('sum(monto) as total'))
+                ->groupBy('medio_de_pago')
+                ->get();
 
-        $subtotales = Model::whereYear('fecha', $this->year)
-            ->whereMonth('fecha', $this->mes)
-            ->search($this->search)
-            ->select('medio_de_pago', DB::raw('sum(monto) as total'))
-            ->groupBy('medio_de_pago')
-            ->get();
+            return ['arrendamientos' => $arrendamientos, 'subtotales' => $subtotales];
+        });
 
-        $mediosDePago = MedioDePago::activos()->ordenado()->get();
+        $this->total = $data['arrendamientos']->sum('monto');
+
+        $mediosDePago = Cache::remember('medios_de_pago_activos', now()->addDay(), function () {
+            return MedioDePago::activos()->ordenado()->get();
+        });
 
         return view('livewire.tesoreria.arrendamientos.arrendamiento', [
-            'arrendamientos' => $arrendamientos,
-            'subtotales' => $subtotales,
+            'arrendamientos' => $data['arrendamientos'],
+            'subtotales' => $data['subtotales'],
             'mediosDePago' => $mediosDePago,
         ]);
     }
@@ -70,62 +79,49 @@ class Arrendamiento extends Component
         $this->resetInput();
     }
 
-public function store()
-{
-    if (!auth()->check()) {
-        return redirect()->route('login')->with('error', 'La sesión ha expirado. Por favor, inicie sesión de nuevo.');
+    public function store()
+    {
+        if (!auth()->check()) {
+            return redirect()->route('login')->with('error', 'La sesión ha expirado. Por favor, inicie sesión de nuevo.');
+        }
+
+        if (!$this->fecha) {
+            $this->fecha = Carbon::now()->format('Y-m-d');
+        }
+
+        $validated = $this->validate([
+            'fecha' => 'required|date',
+            'ingreso' => 'nullable|integer',
+            'nombre' => 'nullable|string|max:255',
+            'cedula' => 'nullable|string|max:255',
+            'telefono' => 'nullable|string|max:255',
+            'monto' => 'required|numeric',
+            'detalle' => 'nullable|string',
+            'orden_cobro' => 'nullable|string|max:255',
+            'recibo' => 'nullable|string|max:255',
+            'medio_de_pago' => 'required|string|max:255',
+        ]);
+
+        $datos = $this->convertirCamposAMayusculas(
+            ['nombre', 'cedula', 'telefono', 'detalle', 'orden_cobro', 'recibo', 'medio_de_pago'],
+            $validated
+        );
+
+        try {
+            DB::beginTransaction();
+            Model::create($datos);
+            Cache::flush();
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            $this->dispatchBrowserEvent('alert', ['type' => 'error', 'message' => 'Hubo un error al crear el arrendamiento. Por favor, inténtalo nuevamente.']);
+            return;
+        }
+
+        $this->resetInput();
+        $this->emit('arrendamientoStore');
+        $this->dispatchBrowserEvent('alert', ['type' => 'success', 'message' => 'Arrendamiento creado con éxito!']);
     }
-
-    if (!$this->fecha) {
-        $this->fecha = Carbon::now()->format('Y-m-d');
-    }
-
-    // Validación y obtención de datos
-    $validated = $this->validate([
-        'fecha' => 'required|date',
-        'ingreso' => 'nullable|integer',
-        'nombre' => 'nullable|string|max:255',
-        'cedula' => 'nullable|string|max:255',
-        'telefono' => 'nullable|string|max:255',
-        'monto' => 'required|numeric',
-        'detalle' => 'nullable|string',
-        'orden_cobro' => 'nullable|string|max:255',
-        'recibo' => 'nullable|string|max:255',
-        'medio_de_pago' => 'required|string|max:255',
-    ]);
-
-    // Puedo tener medible datos para manejos de error en creación.
-    $datos = $this->convertirCamposAMayusculas(
-        ['nombre', 'cedula', 'telefono', 'detalle', 'orden_cobro', 'recibo', 'medio_de_pago'],
-        [
-            'fecha' => $this->fecha,
-            'ingreso' => $this->ingreso,
-            'nombre' => $this->nombre,
-            'cedula' => $this->cedula,
-            'telefono' => $this->telefono,
-            'monto' => $this->monto,
-            'detalle' => $this->detalle,
-            'orden_cobro' => $this->orden_cobro,
-            'recibo' => $this->recibo,
-            'medio_de_pago' => $this->medio_de_pago,
-        ]
-    );
-
-    try {
-        DB::beginTransaction();
-        Model::create($datos);
-        DB::commit();
-    } catch (\Exception $e) {
-        DB::rollBack();
-        // Puedo retornar un mensaje de error significativo, o revertir la operación.
-        $this->dispatchBrowserEvent('alert', ['type' => 'error', 'message' => 'Hubo un error al crear el arrendamiento. Por favor, inténtalo nuevamente.']);
-        return;
-    }
-
-    $this->resetInput();
-    $this->emit('arrendamientoStore');
-    $this->dispatchBrowserEvent('alert', ['type' => 'success', 'message' => 'Arrendamiento creado con éxito!']);
-}
 
     public function edit($id)
     {
@@ -156,7 +152,6 @@ public function store()
         $this->recibo = $arrendamiento->recibo;
         $this->medio_de_pago = $arrendamiento->medio_de_pago;
 
-        // Abrir el modal solo si la edición está permitida
         $this->dispatchBrowserEvent('show-modal', ['id' => 'arrendamientoModal']);
     }
 
@@ -178,117 +173,104 @@ public function store()
         $this->dispatchBrowserEvent('show-modal', ['id' => 'ingresoModal']);
     }
 
-public function updateIngreso()
-{
-    if (!auth()->check()) {
-        return redirect()->route('login')->with('error', 'La sesión ha expirado. Por favor, inicie sesión de nuevo.');
-    }
-
-    $this->validate([
-        'ingreso' => 'nullable|integer',
-    ]);
-
-    if ($this->arrendamiento_id) {
-        $arrendamiento = Model::findOrFail($this->arrendamiento_id);
-
-        try {
-            DB::beginTransaction();
-            $arrendamiento->update([
-                'ingreso' => $this->ingreso,
-            ]);
-            DB::commit();
-        } catch (\Exception $e) {
-            DB::rollBack();
-            $this->dispatchBrowserEvent('alert', ['type' => 'error', 'message' => 'Hubo un error al actualizar el ingreso. Por favor, inténtalo nuevamente.']);
-            return;
+    public function updateIngreso()
+    {
+        if (!auth()->check()) {
+            return redirect()->route('login')->with('error', 'La sesión ha expirado. Por favor, inicie sesión de nuevo.');
         }
 
-        $this->resetInput();
-        $this->emit('arrendamientoUpdate');
-        $this->dispatchBrowserEvent('alert', ['type' => 'success', 'message' => 'Ingreso actualizado con éxito!']);
+        $this->validate(['ingreso' => 'nullable|integer']);
+
+        if ($this->arrendamiento_id) {
+            $arrendamiento = Model::findOrFail($this->arrendamiento_id);
+
+            try {
+                DB::beginTransaction();
+                $arrendamiento->update(['ingreso' => $this->ingreso]);
+                Cache::flush();
+                DB::commit();
+            } catch (\Exception $e) {
+                DB::rollBack();
+                $this->dispatchBrowserEvent('alert', ['type' => 'error', 'message' => 'Hubo un error al actualizar el ingreso. Por favor, inténtalo nuevamente.']);
+                return;
+            }
+
+            $this->resetInput();
+            $this->emit('arrendamientoUpdate');
+            $this->dispatchBrowserEvent('alert', ['type' => 'success', 'message' => 'Ingreso actualizado con éxito!']);
+        }
     }
-}
 
-public function update()
-{
-    if (!auth()->check()) {
-        return redirect()->route('login')->with('error', 'La sesión ha expirado. Por favor, inicie sesión de nuevo.');
-    }
-
-    // Validation first to ensure data integrity.
-    $validated = $this->validate([
-        'fecha' => 'required|date',
-        'ingreso' => 'nullable|integer',
-        'nombre' => 'nullable|string|max:255',
-        'cedula' => 'nullable|string|max:255',
-        'telefono' => 'nullable|string|max:255',
-        'monto' => 'required|numeric',
-        'detalle' => 'nullable|string',
-        'orden_cobro' => 'nullable|string|max:255',
-        'recibo' => 'nullable|string|max:255',
-        'medio_de_pago' => 'required|string|max:255',
-    ]);
-
-    if ($this->arrendamiento_id) {
-        $arrendamiento = Model::findOrFail($this->arrendamiento_id);
-        $datos = $this->convertirCamposAMayusculas(
-            ['nombre', 'cedula', 'telefono', 'detalle', 'orden_cobro', 'recibo', 'medio_de_pago'],
-            [
-                'fecha' => $this->fecha,
-                'ingreso' => $this->ingreso,
-                'nombre' => $this->nombre,
-                'cedula' => $this->cedula,
-                'telefono' => $this->telefono,
-                'monto' => $this->monto,
-                'detalle' => $this->detalle,
-                'orden_cobro' => $this->orden_cobro,
-                'recibo' => $this->recibo,
-                'medio_de_pago' => $this->medio_de_pago,
-            ]
-        );
-
-        try {
-            DB::beginTransaction();
-            $arrendamiento->update($datos);
-            DB::commit();
-        } catch (\Exception $e) {
-            DB::rollBack();
-            $this->dispatchBrowserEvent('alert', ['type' => 'error', 'message' => 'Hubo un error al actualizar el arrendamiento. Por favor, inténtalo nuevamente.']);
-            return;
+    public function update()
+    {
+        if (!auth()->check()) {
+            return redirect()->route('login')->with('error', 'La sesión ha expirado. Por favor, inicie sesión de nuevo.');
         }
 
-        $this->resetInput();
-        $this->emit('arrendamientoUpdate');
-        $this->dispatchBrowserEvent('alert', ['type' => 'success', 'message' => 'Arrendamiento actualizado con éxito!']);
-    }
-}
-
-public function destroy($id)
-{
-    if (!auth()->check()) {
-        return redirect()->route('login')->with('error', 'La sesión ha expirado. Por favor, inicie sesión de nuevo.');
-    }
-
-    $arrendamiento = Model::findOrFail($id);
-
-    if ($arrendamiento->planilla_id !== null) {
-        $this->dispatchBrowserEvent('alert', [
-            'type' => 'error',
-            'message' => 'El arrendamiento está incluido en una planilla y no puede ser eliminado.'
+        $validated = $this->validate([
+            'fecha' => 'required|date',
+            'ingreso' => 'nullable|integer',
+            'nombre' => 'nullable|string|max:255',
+            'cedula' => 'nullable|string|max:255',
+            'telefono' => 'nullable|string|max:255',
+            'monto' => 'required|numeric',
+            'detalle' => 'nullable|string',
+            'orden_cobro' => 'nullable|string|max:255',
+            'recibo' => 'nullable|string|max:255',
+            'medio_de_pago' => 'required|string|max:255',
         ]);
-        return;
+
+        if ($this->arrendamiento_id) {
+            $arrendamiento = Model::findOrFail($this->arrendamiento_id);
+            $datos = $this->convertirCamposAMayusculas(
+                ['nombre', 'cedula', 'telefono', 'detalle', 'orden_cobro', 'recibo', 'medio_de_pago'],
+                $validated
+            );
+
+            try {
+                DB::beginTransaction();
+                $arrendamiento->update($datos);
+                Cache::flush();
+                DB::commit();
+            } catch (\Exception $e) {
+                DB::rollBack();
+                $this->dispatchBrowserEvent('alert', ['type' => 'error', 'message' => 'Hubo un error al actualizar el arrendamiento. Por favor, inténtalo nuevamente.']);
+                return;
+            }
+
+            $this->resetInput();
+            $this->emit('arrendamientoUpdate');
+            $this->dispatchBrowserEvent('alert', ['type' => 'success', 'message' => 'Arrendamiento actualizado con éxito!']);
+        }
     }
 
-    try {
-        DB::beginTransaction();
-        $arrendamiento->delete();
-        DB::commit();
-        session()->flash('message', 'Arrendamiento eliminado con éxito.');
-    } catch (\Exception $e) {
-        DB::rollBack();
-        $this->dispatchBrowserEvent('alert', ['type' => 'error', 'message' => 'Hubo un error al eliminar el arrendamiento. Por favor, inténtalo nuevamente.']);
+    public function destroy($id)
+    {
+        if (!auth()->check()) {
+            return redirect()->route('login')->with('error', 'La sesión ha expirado. Por favor, inicie sesión de nuevo.');
+        }
+
+        $arrendamiento = Model::findOrFail($id);
+
+        if ($arrendamiento->planilla_id !== null) {
+            $this->dispatchBrowserEvent('alert', [
+                'type' => 'error',
+                'message' => 'El arrendamiento está incluido en una planilla y no puede ser eliminado.'
+            ]);
+            return;
+        }
+
+        try {
+            DB::beginTransaction();
+            $arrendamiento->delete();
+            Cache::flush();
+            DB::commit();
+            session()->flash('message', 'Arrendamiento eliminado con éxito.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            $this->dispatchBrowserEvent('alert', ['type' => 'error', 'message' => 'Hubo un error al eliminar el arrendamiento. Por favor, inténtalo nuevamente.']);
+        }
     }
-}
 
     public function showDetails($id)
     {
@@ -323,6 +305,19 @@ public function destroy($id)
     public function updatingSearch()
     {
         $this->resetPage();
+        Cache::flush();
+    }
+
+    public function updatingMes()
+    {
+        $this->resetPage();
+        Cache::flush();
+    }
+
+    public function updatingYear()
+    {
+        $this->resetPage();
+        Cache::flush();
     }
 
     public function toggleConfirmado($id)
@@ -337,7 +332,6 @@ public function destroy($id)
 
         $arrendamiento = Model::findOrFail($id);
 
-        // Check if arrendamiento is included in a planilla
         if ($arrendamiento->planilla_id !== null) {
             $this->dispatchBrowserEvent('alert', [
                 'type' => 'error',
@@ -349,6 +343,7 @@ public function destroy($id)
 
         $arrendamiento->confirmado = !$arrendamiento->confirmado;
         $arrendamiento->save();
+        Cache::flush();
 
         $this->emit('arrendamientoStatusUpdated'); // Emit the event
         $this->dispatchBrowserEvent('alert', ['type' => 'success', 'message' => 'Estado de confirmación actualizado.']);

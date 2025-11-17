@@ -8,6 +8,7 @@ use App\Models\Tesoreria\MedioDePago;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
 use Carbon\Carbon;
 use App\Traits\ConvertirMayusculas;
 
@@ -35,44 +36,64 @@ class Eventuales extends Component
         }
 
         $this->mes = Carbon::now()->month;
-                $this->year = Carbon::now()->year;
+        $this->year = Carbon::now()->year;
         $this->fecha = Carbon::now()->format('Y-m-d');
         $this->medio_de_pago = 'Transferencia';
     }
 
     public function render()
     {
+        $page = $this->page ?: 1;
+        $cacheKey = 'eventuales_' . $this->year . '_' . $this->mes . '_search_' . $this->search . '_page_' . $page;
 
-                        $query = Model::whereYear('fecha', $this->year)
-            ->whereMonth('fecha', $this->mes)
-            ->search($this->search);
+        $data = Cache::remember($cacheKey, now()->addDay(), function () {
+            $query = Model::whereYear('fecha', $this->year)
+                ->whereMonth('fecha', $this->mes)
+                ->search($this->search);
 
-        $this->generalTotal = (float) $query->sum('monto');
+            $generalTotal = (float) $query->sum('monto');
 
-        $eventuales = $query->orderBy('fecha', 'asc')->orderBy('recibo', 'asc')->paginate(10);
+            $eventuales = $query->orderBy('fecha', 'asc')->orderBy('recibo', 'asc')->paginate(10);
 
-                $this->total = $eventuales->sum('monto');
+            $subtotales = Model::whereYear('fecha', $this->year)
+                ->whereMonth('fecha', $this->mes)
+                ->search($this->search)
+                ->select('medio_de_pago', DB::raw('sum(monto) as total_submonto'))
+                ->groupBy('medio_de_pago')
+                ->get();
 
-        $subtotales = Model::whereYear('fecha', $this->year)
-            ->whereMonth('fecha', $this->mes)
-            ->select('medio_de_pago', DB::raw('sum(monto) as total_submonto'))
-            ->groupBy('medio_de_pago')
-            ->get();
+            $totalesPorInstitucion = Model::whereYear('fecha', $this->year)
+                ->whereMonth('fecha', $this->mes)
+                ->search($this->search)
+                ->select('institucion', DB::raw('SUM(monto) as total_monto'))
+                ->groupBy('institucion')
+                ->orderBy('institucion', 'asc')
+                ->toBase()
+                ->get();
 
-                $this->totalesPorInstitucion = Model::whereYear('fecha', $this->year)
-            ->whereMonth('fecha', $this->mes)
-            ->search($this->search)
-            ->select('institucion', DB::raw('SUM(monto) as total_monto'))
-            ->groupBy('institucion')
-            ->orderBy('institucion', 'asc')
-            ->toBase()
-            ->get();
+            return [
+                'eventuales' => $eventuales,
+                'generalTotal' => $generalTotal,
+                'subtotales' => $subtotales,
+                'totalesPorInstitucion' => $totalesPorInstitucion,
+            ];
+        });
+
+        $this->generalTotal = $data['generalTotal'];
+        $eventuales = $data['eventuales'];
+        $subtotales = $data['subtotales'];
+        $this->totalesPorInstitucion = $data['totalesPorInstitucion'];
+        $this->total = $eventuales->sum('monto'); // Recalcular total de la página actual
 
         // Obtener instituciones activas para el select
-        $instituciones = EventualInstitucion::activas()->orderBy('nombre')->get();
+        $instituciones = Cache::remember('eventual_instituciones_activas', now()->addDay(), function () {
+            return EventualInstitucion::activas()->orderBy('nombre')->get();
+        });
 
         // Obtener medios de pago activos
-        $mediosDePago = MedioDePago::activos()->ordenado()->get();
+        $mediosDePago = Cache::remember('medios_de_pago_activos', now()->addDay(), function () {
+            return MedioDePago::activos()->ordenado()->get();
+        });
 
         return view('livewire.tesoreria.eventuales.eventuales', [
             'eventuales' => $eventuales,
@@ -133,6 +154,7 @@ class Eventuales extends Component
         try {
             DB::beginTransaction();
             Model::create($datos);
+            Cache::flush();
             DB::commit();
         } catch (\Exception $e) {
             DB::rollBack();
@@ -206,22 +228,13 @@ class Eventuales extends Component
             $eventual = Model::findOrFail($this->eventual_id);
             $datos = $this->convertirCamposAMayusculas(
                 ['institucion', 'titular', 'detalle', 'orden_cobro', 'recibo', 'medio_de_pago'],
-                [
-                    'fecha' => $this->fecha,
-                    'ingreso' => $this->ingreso,
-                    'institucion' => $this->institucion,
-                    'titular' => $this->titular,
-                    'monto' => $this->monto,
-                    'medio_de_pago' => $this->medio_de_pago,
-                    'detalle' => $this->detalle,
-                    'orden_cobro' => $this->orden_cobro,
-                    'recibo' => $this->recibo,
-                ]
+                $this->validate() // Usar los datos validados directamente
             );
 
             try {
                 DB::beginTransaction();
                 $eventual->update($datos);
+                Cache::flush();
                 DB::commit();
             } catch (\Exception $e) {
                 DB::rollBack();
@@ -254,6 +267,7 @@ class Eventuales extends Component
         try {
             DB::beginTransaction();
             $eventual->delete();
+            Cache::flush();
             DB::commit();
             session()->flash('message', 'Eventual eliminado con éxito.');
         } catch (\Exception $e) {
@@ -294,6 +308,19 @@ class Eventuales extends Component
     public function updatingSearch()
     {
         $this->resetPage();
+        Cache::flush();
+    }
+
+    public function updatingMes()
+    {
+        $this->resetPage();
+        Cache::flush();
+    }
+
+    public function updatingYear()
+    {
+        $this->resetPage();
+        Cache::flush();
     }
 
     public function toggleConfirmado($id)
@@ -319,6 +346,7 @@ class Eventuales extends Component
 
         $eventual->confirmado = !$eventual->confirmado;
         $eventual->save();
+        Cache::flush();
 
         $this->emit('eventualStatusUpdated');
         $this->dispatchBrowserEvent('alert', ['type' => 'success', 'message' => 'Estado de confirmación actualizado.', 'toast' => true]);

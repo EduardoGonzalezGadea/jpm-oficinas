@@ -10,8 +10,12 @@ return new class extends Migration {
         Schema::create('tes_cheques', function (Blueprint $table) {
             $table->id();
             $table->foreignId('cuenta_bancaria_id')->constrained('tes_cuentas_bancarias')->onDelete('cascade');
+            $table->string('serie', 11)->nullable();
             $table->string('numero_cheque', 20);
+            $table->string('documento_tipo', 255)->nullable();
+            $table->string('documento_numero', 255)->nullable();
             $table->date('fecha_emision')->nullable();
+            $table->unsignedInteger('emitido_por')->nullable();
             $table->string('beneficiario', 150)->nullable();
             $table->decimal('monto', 15, 2)->nullable();
             $table->text('concepto')->nullable();
@@ -21,7 +25,6 @@ return new class extends Migration {
             $table->text('motivo_anulacion')->nullable();
             $table->date('fecha_planilla_anulada')->nullable();
             $table->unsignedInteger('planilla_anulada_por')->nullable();
-            $table->unsignedInteger('emitido_por')->nullable();
             $table->unsignedInteger('anulado_por')->nullable();
             $table->unsignedInteger('created_by')->nullable();
             $table->unsignedInteger('updated_by')->nullable();

@@ -13,8 +13,8 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::table('tes_cheques', function (Blueprint $table) {
-            $table->string('serie', 11)->nullable()->before('numero_cheque');
+        Schema::table('tes_anulaciones', function (Blueprint $table) {
+            $table->index('anulado_por');
         });
     }
 
@@ -25,8 +25,8 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::table('tes_cheques', function (Blueprint $table) {
-            $table->dropColumn('serie');
+        Schema::table('tes_anulaciones', function (Blueprint $table) {
+            $table->dropIndex(['anulado_por']);
         });
     }
 };

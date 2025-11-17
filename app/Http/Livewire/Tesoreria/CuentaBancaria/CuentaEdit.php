@@ -4,6 +4,7 @@ namespace App\Http\Livewire\Tesoreria\CuentaBancaria;
 
 use App\Models\Tesoreria\Banco;
 use App\Models\Tesoreria\CuentaBancaria;
+use Illuminate\Support\Facades\Cache;
 use Livewire\Component;
 
 class CuentaEdit extends Component
@@ -42,13 +43,16 @@ class CuentaEdit extends Component
             'observaciones' => $this->observaciones,
         ]);
 
+        Cache::flush();
         $this->emit('cuentaUpdate');
         $this->dispatchBrowserEvent('swal', ['title' => 'Cuenta bancaria actualizada!', 'type' => 'success']);
     }
 
     public function render()
     {
-        $bancos = Banco::orderBy('nombre')->get();
+        $bancos = Cache::remember('bancos_all', now()->addDay(), function () {
+            return Banco::orderBy('nombre')->get();
+        });
         return view('livewire.tesoreria.cuenta-bancaria.cuenta-edit', compact('bancos'));
     }
 }

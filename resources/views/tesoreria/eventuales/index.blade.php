@@ -3,5 +3,7 @@
 @section('title', 'Tesorería | Oficinas - Eventuales')
 
 @section('content')
-    @livewire('tesoreria.eventuales.eventuales')
+    <div class="container-fluid py-1 px-0">
+        @livewire('tesoreria.eventuales.eventuales')
+    </div>
 @endsection

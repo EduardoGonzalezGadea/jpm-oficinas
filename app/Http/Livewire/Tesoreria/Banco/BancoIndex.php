@@ -3,6 +3,7 @@
 namespace App\Http\Livewire\Tesoreria\Banco;
 
 use App\Models\Tesoreria\Banco;
+use Illuminate\Support\Facades\Cache;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -14,15 +15,26 @@ class BancoIndex extends Component
     public $showCreate = false, $showEdit = false;
     public $bancoId;
 
-    protected $listeners = ['delete', 'closeModal'];
+    protected $listeners = ['delete', 'closeModal', 'bancoStore' => '$refresh', 'bancoUpdate' => '$refresh'];
 
     public function render()
     {
-        $bancos = Banco::where('nombre', 'like', "%{$this->search}%")
-            ->orWhere('codigo', 'like', "%{$this->search}%")
-            ->paginate(10);
+        $page = $this->page ?: 1;
+        $cacheKey = 'bancos_search_' . $this->search . '_page_' . $page;
+
+        $bancos = Cache::remember($cacheKey, now()->addDay(), function () {
+            return Banco::where('nombre', 'like', "%{$this->search}%")
+                ->orWhere('codigo', 'like', "%{$this->search}%")
+                ->paginate(10);
+        });
 
         return view('livewire.tesoreria.banco.banco-index', compact('bancos'));
+    }
+
+    public function updatingSearch()
+    {
+        $this->resetPage();
+        Cache::flush();
     }
 
     public function create()
@@ -61,6 +73,7 @@ class BancoIndex extends Component
     public function delete($id)
     {
         Banco::find($id)->delete();
+        Cache::flush();
         $this->emit('swal', [
             'title' => 'Eliminado!',
             'type' => 'success'

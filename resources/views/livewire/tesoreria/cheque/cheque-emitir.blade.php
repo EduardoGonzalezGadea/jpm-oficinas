@@ -86,7 +86,7 @@
                 <!-- Columna Derecha: Cheques Emitidos -->
                 <div class="col-lg-6">
                     <h5 class="mb-3">
-                        <i class="fas fa-check-circle mr-2"></i>Cheques Emitidos (Sin Planilla)
+                        <i class="fas fa-check-circle mr-2"></i>Cheques Emitidos (sin planilla)
                     </h5>
 
                     @if($chequesEmitidos && $chequesEmitidos->count() > 0)
@@ -184,7 +184,7 @@
     <div wire:ignore.self class="modal fade" id="emitirChequeModal" tabindex="-1" role="dialog" aria-labelledby="emitirChequeModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-scrollable" role="document">
             <div class="modal-content">
-                <div class="modal-header py-2">
+                <div class="modal-header text-white bg-primary py-2">
                     <h5 class="modal-title h6" id="emitirChequeModalLabel">
                         <i class="fas fa-paper-plane mr-2"></i>Emitir Cheque
                     </h5>
@@ -195,13 +195,13 @@
                 <div class="modal-body py-2">
                     @if($selectedCheque)
                         <div class="d-flex justify-content-between align-items-center mb-2 py-1 bg-light rounded px-2">
-                            <small class="text-muted mb-0">
+                            <small class="mb-0">
                                 <i class="fas fa-university mr-1"></i>{{ $selectedCheque['cuenta_bancaria']['banco']['nombre'] }}
                             </small>
-                            <small class="text-muted mb-0">
+                            <small class="mb-0">
                                 <i class="fas fa-credit-card mr-1"></i>{{ $selectedCheque['cuenta_bancaria']['numero_cuenta'] }}
                             </small>
-                            <small class="text-muted mb-0">
+                            <small class="mb-0">
                                 <i class="fas fa-barcode mr-1"></i>Serie: {{ $selectedCheque['serie'] ?? 'SIN DATO' }} - N°: {{ $selectedCheque['numero_cheque'] }}
                             </small>
                         </div>
@@ -287,13 +287,13 @@
                 <div class="modal-body py-2">
                     @if($selectedChequeEditar)
                         <div class="d-flex justify-content-between align-items-center mb-2 py-1 bg-light rounded px-2">
-                            <small class="text-muted mb-0">
+                            <small class="mb-0">
                                 <i class="fas fa-university mr-1"></i>{{ $selectedChequeEditar['cuenta_bancaria']['banco']['nombre'] }}
                             </small>
-                            <small class="text-muted mb-0">
+                            <small class="mb-0">
                                 <i class="fas fa-credit-card mr-1"></i>{{ $selectedChequeEditar['cuenta_bancaria']['numero_cuenta'] }}
                             </small>
-                            <small class="text-muted mb-0">
+                            <small class="mb-0">
                                 <i class="fas fa-barcode mr-1"></i>Serie: {{ $selectedChequeEditar['serie'] ?? 'SIN DATO' }} - N°: {{ $selectedChequeEditar['numero_cheque'] }}
                             </small>
                         </div>
@@ -369,7 +369,7 @@
     <div wire:ignore.self class="modal fade" id="anularChequeModal" tabindex="-1" role="dialog" aria-labelledby="anularChequeModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-scrollable" role="document">
             <div class="modal-content">
-                <div class="modal-header py-2">
+                <div class="modal-header text-white bg-danger py-2">
                     <h5 class="modal-title h6" id="anularChequeModalLabel">
                         <i class="fas fa-ban mr-2"></i>Anular Cheque
                     </h5>
@@ -380,13 +380,13 @@
                 <div class="modal-body py-2">
                     @if($selectedChequeAnular)
                         <div class="d-flex justify-content-between align-items-center mb-2 py-1 bg-light rounded px-2">
-                            <small class="text-muted mb-0">
+                            <small class="mb-0">
                                 <i class="fas fa-university mr-1"></i>{{ $selectedChequeAnular['cuenta_bancaria']['banco']['nombre'] }}
                             </small>
-                            <small class="text-muted mb-0">
+                            <small class="mb-0">
                                 <i class="fas fa-credit-card mr-1"></i>{{ $selectedChequeAnular['cuenta_bancaria']['numero_cuenta'] }}
                             </small>
-                            <small class="text-muted mb-0">
+                            <small class="mb-0">
                                 <i class="fas fa-barcode mr-1"></i>Serie: {{ $selectedChequeAnular['serie'] ?? 'SIN DATO' }} - N°: {{ $selectedChequeAnular['numero_cheque'] }}
                             </small>
                         </div>

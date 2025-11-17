@@ -14,14 +14,17 @@
                 <a href="{{ route('tesoreria.valores.tipos-libreta') }}" class="btn btn-success mr-2">
                     <i class="fas fa-book mr-1"></i> Tipos
                 </a>
+                <a href="{{ route('tesoreria.valores.reportes') }}" class="btn btn-info mr-2">
+                    <i class="fas fa-chart-bar mr-1"></i> Reportes
+                </a>
                 <button wire:click="create()" class="btn btn-primary">
                     <i class="fas fa-plus mr-1"></i> Ingreso de Libreta
                 </button>
             </div>
         </div>
-        <div class="card-body px-2">
-            <div class="row mb-3">
-                <div class="col-md-4">
+        <div class="card-body px-2 py-2">
+            <div class="d-flex flex-justify-content-between mb-1">
+                <div class="flex-fill">
                     <div class="input-group">
                         <input type="text" wire:model.debounce.300ms="search" class="form-control" placeholder="Buscar por tipo, serie o número...">
                         <div class="input-group-append">
@@ -29,7 +32,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-md-3">
+                <div class="flex-fill">
                     <select wire:model="estado" class="form-control">
                         <option value="">Todos los estados</option>
                         <option value="en_stock">En Stock</option>

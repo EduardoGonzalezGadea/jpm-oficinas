@@ -1,80 +1,76 @@
 <div>
-    <div class="row">
-        <div class="col-md-12">
-            <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h3 class="mb-0">Listado de Tenencia de Armas</h3>
-                    <div class="btn-group d-print-none">
-                        <button wire:click="create" class="btn btn-primary">
-                            <i class="fas fa-plus"></i> Nuevo Registro
-                        </button>
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h3 class="mb-0">Listado de Tenencia de Armas</h3>
+            <div class="btn-group d-print-none">
+                <button wire:click="create" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Nuevo Registro
+                </button>
+            </div>
+        </div>
+        <div class="card-body p-2">
+            @if (session()->has('message'))
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    {{ session('message') }}
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+            @endif
+
+            <div class="form-row mb-2">
+                <div class="col-md-12">
+                    <div class="input-group">
+                        <input type="text" class="form-control form-control-sm" placeholder="Buscar..." wire:model="search">
                     </div>
                 </div>
-                <div class="card-body p-2">
-                    @if (session()->has('message'))
-                        <div class="alert alert-success alert-dismissible fade show" role="alert">
-                            {{ session('message') }}
-                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                                <span aria-hidden="true">&times;</span>
+            </div>
+
+            <table class="table table-bordered table-sm">
+            <thead>
+                <tr>
+                    <th>Fecha</th>
+                    <th>Titular</th>
+                    <th>Cédula</th>
+                    <th>Orden Cobro</th>
+                    <th>N° Trámite</th>
+                    <th>Monto</th>
+                    <th>Recibo</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($registros as $registro)
+                    <tr>
+                        <td class="align-middle">{{ $registro->fecha->format('d/m/Y') }}</td>
+                        <td class="align-middle">{{ $registro->titular }}</td>
+                        <td class="align-middle">{{ $registro->cedula }}</td>
+                        <td class="align-middle">{{ $registro->orden_cobro }}</td>
+                        <td class="align-middle">{{ $registro->numero_tramite }}</td>
+                        <td class="align-middle text-nowrap">$ {{ number_format($registro->monto, 2, ',', '.') }}</td>
+                        <td class="align-middle">{{ $registro->recibo }}</td>
+                        <td class="align-middle text-nowrap">
+                            <button wire:click="showDetails({{ $registro->id }})" class="btn btn-sm btn-secondary" title="Ver Detalle">
+                                <i class="fas fa-eye"></i>
                             </button>
-                        </div>
-                    @endif
+                            <button wire:click="edit({{ $registro->id }})" class="btn btn-sm btn-info" title="Editar">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button wire:click="confirmDelete({{ $registro->id }})" class="btn btn-sm btn-danger" title="Eliminar">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="8" class="text-center">No hay registros disponibles</td>
+                    </tr>
+                @endforelse
+            </tbody>
+        </table>
 
-                    <div class="form-row mb-2">
-                        <div class="col-md-12">
-                            <div class="input-group">
-                                <input type="text" class="form-control form-control-sm" placeholder="Buscar..." wire:model="search">
-                            </div>
-                        </div>
-                    </div>
-
-                    <table class="table table-bordered table-sm">
-                    <thead>
-                        <tr>
-                            <th>Fecha</th>
-                            <th>Titular</th>
-                            <th>Cédula</th>
-                            <th>Orden Cobro</th>
-                            <th>N° Trámite</th>
-                            <th>Monto</th>
-                            <th>Recibo</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($registros as $registro)
-                            <tr>
-                                <td class="align-middle">{{ $registro->fecha->format('d/m/Y') }}</td>
-                                <td class="align-middle">{{ $registro->titular }}</td>
-                                <td class="align-middle">{{ $registro->cedula }}</td>
-                                <td class="align-middle">{{ $registro->orden_cobro }}</td>
-                                <td class="align-middle">{{ $registro->numero_tramite }}</td>
-                                <td class="align-middle text-nowrap">$ {{ number_format($registro->monto, 2, ',', '.') }}</td>
-                                <td class="align-middle">{{ $registro->recibo }}</td>
-                                <td class="align-middle text-nowrap">
-                                    <button wire:click="showDetails({{ $registro->id }})" class="btn btn-sm btn-secondary" title="Ver Detalle">
-                                        <i class="fas fa-eye"></i>
-                                    </button>
-                                    <button wire:click="edit({{ $registro->id }})" class="btn btn-sm btn-info" title="Editar">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                    <button wire:click="confirmDelete({{ $registro->id }})" class="btn btn-sm btn-danger" title="Eliminar">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="8" class="text-center">No hay registros disponibles</td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-
-                    <div class="d-flex justify-content-center">
-                        {{ $registros->links() }}
-                    </div>
-                </div>
+            <div class="d-flex justify-content-center">
+                {{ $registros->links() }}
             </div>
         </div>
     </div>

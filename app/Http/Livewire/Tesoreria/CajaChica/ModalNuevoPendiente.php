@@ -6,6 +6,7 @@ use Livewire\Component;
 use App\Models\Tesoreria\Pendiente;
 use App\Models\Tesoreria\CajaChica;
 use App\Models\Tesoreria\Dependencia;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 class ModalNuevoPendiente extends Component
@@ -54,7 +55,9 @@ class ModalNuevoPendiente extends Component
 
     public function cargarDependencias()
     {
-        $this->dependencias = Dependencia::orderBy('dependencia', 'ASC')->get();
+        $this->dependencias = Cache::remember('caja_chica_dependencias_all', now()->addDay(), function () {
+            return Dependencia::orderBy('dependencia', 'ASC')->get();
+        });
     }
 
     public function determinarNumeroPendienteSiguiente()
@@ -88,17 +91,19 @@ class ModalNuevoPendiente extends Component
             return;
         }
 
-        $existe = Pendiente::where('relCajaChica', $this->idCajaChica)
-            ->where('pendiente', $this->pendiente)
-            ->exists();
-
-        if ($existe) {
-            $this->addError('pendiente', 'Ya existe un Pendiente con ese número para este Fondo Permanente.');
-            return;
-        }
-
         DB::beginTransaction();
         try {
+            $existe = Pendiente::where('relCajaChica', $this->idCajaChica)
+                ->where('pendiente', $this->pendiente)
+                ->lockForUpdate()
+                ->exists();
+
+            if ($existe) {
+                $this->addError('pendiente', 'Ya existe un Pendiente con ese número para este Fondo Permanente.');
+                DB::rollBack();
+                return;
+            }
+
             Pendiente::create([
                 'relCajaChica' => $this->idCajaChica,
                 'pendiente' => $this->pendiente,
@@ -107,10 +112,13 @@ class ModalNuevoPendiente extends Component
                 'montoPendientes' => $this->montoPendientes,
             ]);
 
+            Cache::flush();
             DB::commit();
+
             session()->flash('message', 'Pendiente creado correctamente.');
             $this->dispatchBrowserEvent('hide-modal', ['id' => 'modalNuevoPendiente']);
             $this->emitTo('tesoreria.caja-chica.index', 'pendienteCreado');
+
         } catch (\Exception $e) {
             DB::rollBack();
             session()->flash('error', 'Error al crear el pendiente: ' . $e->getMessage());

@@ -4,6 +4,8 @@ namespace App\Http\Livewire\Tesoreria\Valores;
 
 use App\Models\Tesoreria\LibretaValor;
 use App\Models\Tesoreria\TipoLibreta;
+use App\Services\Tesoreria\ValoresService;
+use Illuminate\Support\Facades\Cache;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -98,41 +100,25 @@ class Index extends Component
         $this->servicio_entrega_id = null;
     }
 
-    public function registrarEntrega()
+    public function registrarEntrega(ValoresService $valoresService)
     {
-        $this->validate($this->rulesEntrega());
+        $validatedData = $this->validate($this->rulesEntrega());
 
-        // Verificar que el servicio esté activo
-        $servicio = \App\Models\Tesoreria\Servicio::find($this->servicio_entrega_id);
-        if (!$servicio->activo) {
-            $this->addError('servicio_entrega_id', 'El servicio seleccionado no está activo.');
-            return;
+        try {
+            $valoresService->registrarEntrega($this->libretaSeleccionada, $validatedData);
+
+            $this->dispatchBrowserEvent('swal', [
+                'title' => 'Éxito',
+                'text' => 'Entrega de libreta registrada correctamente.',
+                'type' => 'success'
+            ]);
+
+            $this->showEntregaModal = false;
+            $this->libretaSeleccionada = null;
+
+        } catch (\Exception $e) {
+            $this->addError('servicio_entrega_id', $e->getMessage());
         }
-
-        // Crear la entrega
-        \App\Models\Tesoreria\EntregaLibretaValor::create([
-            'libreta_valor_id' => $this->libretaSeleccionada->id,
-            'servicio_id' => $this->servicio_entrega_id,
-            'numero_recibo_entrega' => $this->numero_recibo_entrega,
-            'fecha_entrega' => $this->fecha_entrega,
-            'observaciones' => $this->observaciones_entrega,
-            'estado' => 'activo',
-        ]);
-
-        // Actualizar estado de la libreta
-        $this->libretaSeleccionada->update([
-            'estado' => 'asignada',
-            'servicio_asignado_id' => $this->servicio_entrega_id,
-        ]);
-
-        $this->dispatchBrowserEvent('swal', [
-            'title' => 'Éxito',
-            'text' => 'Entrega de libreta registrada correctamente.',
-            'type' => 'success'
-        ]);
-
-        $this->showEntregaModal = false;
-        $this->libretaSeleccionada = null;
     }
 
     public function closeEntregaModal()
@@ -190,7 +176,10 @@ class Index extends Component
         }
 
         $libretas = $query->orderBy('fecha_recepcion', 'desc')->paginate(10);
-        $tiposLibreta = TipoLibreta::orderBy('nombre')->get();
+
+        $tiposLibreta = Cache::remember('tipos_libreta_all', now()->addDay(), function () {
+            return TipoLibreta::orderBy('nombre')->get();
+        });
 
         // Si hay una libreta seleccionada, obtener solo los servicios asociados a su tipo
         $servicios = [];
@@ -206,7 +195,9 @@ class Index extends Component
                 $this->campoEnfoque = 'servicio_entrega_id';
             }
         } else {
-            $servicios = \App\Models\Tesoreria\Servicio::where('activo', true)->orderBy('nombre')->get();
+            $servicios = Cache::remember('servicios_activos_all', now()->addDay(), function () {
+                return \App\Models\Tesoreria\Servicio::where('activo', true)->orderBy('nombre')->get();
+            });
             $this->campoEnfoque = 'servicio_entrega_id';
         }
 
@@ -221,37 +212,27 @@ class Index extends Component
         $this->showModal = true;
     }
 
-    public function save()
+    public function save(ValoresService $valoresService)
     {
-        $this->validate();
+        $validatedData = $this->validate();
 
-        $tipoLibreta = TipoLibreta::find($this->tipo_libreta_id);
-        $recibosPorLibreta = $tipoLibreta->cantidad_recibos;
-        $numeroActual = intval($this->numero_inicial);
+        try {
+            $valoresService->crearLibretas($validatedData);
 
-        for ($i = 0; $i < $this->cantidad_libretas; $i++) {
-            $numero_final_libreta = $numeroActual + $recibosPorLibreta - 1;
-
-            LibretaValor::create([
-                'tipo_libreta_id' => $this->tipo_libreta_id,
-                'serie' => $this->serie,
-                'numero_inicial' => $numeroActual,
-                'numero_final' => $numero_final_libreta,
-                'proximo_recibo_disponible' => $numeroActual,
-                'fecha_recepcion' => $this->fecha_recepcion,
-                'estado' => 'en_stock',
+            $this->dispatchBrowserEvent('swal', [
+                'title' => 'Éxito',
+                'text' => $this->cantidad_libretas . ' libreta(s) de valores registrada(s) correctamente.',
+                'type' => 'success'
             ]);
 
-            $numeroActual = $numero_final_libreta + 1;
+            $this->showModal = false;
+        } catch (\Exception $e) {
+            $this->dispatchBrowserEvent('swal', [
+                'title' => 'Error',
+                'text' => 'Ocurrió un error al registrar las libretas: ' . $e->getMessage(),
+                'type' => 'error'
+            ]);
         }
-
-        $this->dispatchBrowserEvent('swal', [
-            'title' => 'Éxito',
-            'text' => $this->cantidad_libretas . ' libreta(s) de valores registrada(s) correctamente.',
-            'type' => 'success'
-        ]);
-
-        $this->showModal = false;
     }
 
     public function closeModal()

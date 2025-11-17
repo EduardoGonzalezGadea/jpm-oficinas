@@ -6,6 +6,7 @@ use App\Models\Tesoreria\Multa as MultaModel;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Cache;
 use DOMDocument;
 use DOMXPath;
 
@@ -26,11 +27,19 @@ class MultaPublico extends Component
         'sortField' => ['except' => 'articulo'],
         'sortDirection' => ['except' => 'asc'],
         'page' => ['except' => 1],
+        'perPage' => ['except' => 25],
     ];
 
     public function updatingSearch()
     {
         $this->resetPage();
+        Cache::flush();
+    }
+
+    public function updatingPerPage()
+    {
+        $this->resetPage();
+        Cache::flush();
     }
 
     public function sortBy($field)
@@ -42,24 +51,30 @@ class MultaPublico extends Component
         }
         $this->sortField = $field;
         $this->resetPage();
+        Cache::flush();
     }
 
     public function render()
     {
-        $query = MultaModel::query()
-            ->when($this->search, function ($query) {
-                $query->where(function ($q) {
-                    $q->whereRaw("CONCAT_WS('.', articulo, apartado) like ?", ["%" . $this->search . "%"])
-                        ->orWhere('descripcion', 'like', '%' . $this->search . '%');
-                });
-            })
-            ->orderBy($this->sortField, $this->sortDirection);
+        $page = $this->page ?: 1;
+        $cacheKey = 'multas_publico_search_' . $this->search . '_perpage_' . $this->perPage . '_sortfield_' . $this->sortField . '_sortdirection_' . $this->sortDirection . '_page_' . $page;
 
-        if ((int)$this->perPage === -1) {
-            $multas = $query->get();
-        } else {
-            $multas = $query->paginate($this->perPage);
-        }
+        $multas = Cache::remember($cacheKey, now()->addDay(), function () {
+            $query = MultaModel::query()
+                ->when($this->search, function ($query) {
+                    $query->where(function ($q) {
+                        $q->whereRaw("CONCAT_WS('.', articulo, apartado) like ?", ["%" . $this->search . "%"])
+                            ->orWhere('descripcion', 'like', '%' . $this->search . '%');
+                    });
+                })
+                ->orderBy($this->sortField, $this->sortDirection);
+
+            if ((int)$this->perPage === -1) {
+                return $query->get();
+            } else {
+                return $query->paginate($this->perPage);
+            }
+        });
 
         return view('livewire.tesoreria.multa-publico', compact('multas'));
     }

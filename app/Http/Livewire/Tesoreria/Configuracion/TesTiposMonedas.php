@@ -3,6 +3,7 @@
 namespace App\Http\Livewire\Tesoreria\Configuracion;
 
 use App\Models\Tesoreria\TesTipoMoneda as Model;
+use Illuminate\Support\Facades\Cache;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -35,10 +36,14 @@ class TesTiposMonedas extends Component
             ]);
         }
 
+        $page = $this->page ?: 1;
+        $cacheKey = 'tipos_monedas_search_' . $this->search . '_page_' . $page;
 
-        $tiposMonedas = Model::search($this->search)
-            ->ordenado()
-            ->paginate(10);
+        $tiposMonedas = Cache::remember($cacheKey, now()->addDay(), function () {
+            return Model::search($this->search)
+                ->ordenado()
+                ->paginate(10);
+        });
 
         return view('livewire.tesoreria.configuracion.tes-tipos-monedas', [
             'tiposMonedas' => $tiposMonedas,
@@ -65,6 +70,7 @@ class TesTiposMonedas extends Component
             'activo' => $this->activo,
         ]);
 
+        Cache::flush();
         $this->resetInput();
         $this->emit('tipoMonedaStore');
         $this->dispatchBrowserEvent('alert', ['type' => 'success', 'message' => 'Tipo de moneda creado con éxito!', 'toast' => true]);
@@ -97,6 +103,7 @@ class TesTiposMonedas extends Component
                 'descripcion' => $this->descripcion,
                 'activo' => $this->activo,
             ]);
+            Cache::flush();
             $this->resetInput();
             $this->emit('tipoMonedaUpdate');
             $this->dispatchBrowserEvent('alert', ['type' => 'success', 'message' => 'Tipo de moneda actualizado con éxito!', 'toast' => true]);
@@ -108,6 +115,7 @@ class TesTiposMonedas extends Component
         $tipoMoneda = Model::findOrFail($id);
 
         $tipoMoneda->delete();
+        Cache::flush();
         $this->dispatchBrowserEvent('alert', ['type' => 'success', 'message' => 'Tipo de moneda eliminado con éxito!', 'toast' => true]);
     }
 
@@ -137,5 +145,6 @@ class TesTiposMonedas extends Component
     public function updatingSearch()
     {
         $this->resetPage();
+        Cache::flush();
     }
 }

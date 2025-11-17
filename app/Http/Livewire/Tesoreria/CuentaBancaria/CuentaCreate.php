@@ -4,6 +4,7 @@ namespace App\Http\Livewire\Tesoreria\CuentaBancaria;
 
 use App\Models\Tesoreria\Banco;
 use App\Models\Tesoreria\CuentaBancaria;
+use Illuminate\Support\Facades\Cache;
 use Livewire\Component;
 
 class CuentaCreate extends Component
@@ -33,6 +34,7 @@ class CuentaCreate extends Component
             'observaciones' => $this->observaciones,
         ]);
 
+        Cache::flush();
         $this->reset();
         $this->emit('cuentaStore');
         $this->dispatchBrowserEvent('swal', ['title' => 'Cuenta bancaria creada!', 'type' => 'success']);
@@ -40,7 +42,9 @@ class CuentaCreate extends Component
 
     public function render()
     {
-        $bancos = Banco::orderBy('nombre')->get();
+        $bancos = Cache::remember('bancos_all', now()->addDay(), function () {
+            return Banco::orderBy('nombre')->get();
+        });
         return view('livewire.tesoreria.cuenta-bancaria.cuenta-create', compact('bancos'));
     }
 }

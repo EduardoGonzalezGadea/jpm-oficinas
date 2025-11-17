@@ -6,6 +6,8 @@ use Livewire\Component;
 use Livewire\WithPagination;
 use App\Models\Tesoreria\TesPorteArmas as TesPorteArmasModel;
 use App\Traits\ConvertirMayusculas;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 
 class TesPorteArmas extends Component
 {
@@ -74,15 +76,20 @@ class TesPorteArmas extends Component
 
     public function render()
     {
-        $registros = TesPorteArmasModel::where(function($query) {
-            $query->where('titular', 'like', '%' . $this->search . '%')
-                  ->orWhere('cedula', 'like', '%' . $this->search . '%')
-                  ->orWhere('orden_cobro', 'like', '%' . $this->search . '%')
-                  ->orWhere('numero_tramite', 'like', '%' . $this->search . '%');
-        })
-        ->orderBy('fecha', 'asc')
-        ->orderBy('recibo', 'asc')
-        ->paginate(10);
+        $page = $this->page ?: 1;
+        $cacheKey = 'tes_porte_armas_search_' . $this->search . '_page_' . $page;
+
+        $registros = Cache::remember($cacheKey, now()->addDay(), function () {
+            return TesPorteArmasModel::where(function($query) {
+                $query->where('titular', 'like', '%' . $this->search . '%')
+                      ->orWhere('cedula', 'like', '%' . $this->search . '%')
+                      ->orWhere('orden_cobro', 'like', '%' . $this->search . '%')
+                      ->orWhere('numero_tramite', 'like', '%' . $this->search . '%');
+            })
+            ->orderBy('fecha', 'asc')
+            ->orderBy('recibo', 'asc')
+            ->paginate(10);
+        });
 
         return view('livewire.tesoreria.armas.tes-porte-armas', compact('registros'));
     }
@@ -90,6 +97,7 @@ class TesPorteArmas extends Component
     public function updatingSearch()
     {
         $this->resetPage();
+        Cache::flush();
     }
 
     public function create()
@@ -139,13 +147,16 @@ class TesPorteArmas extends Component
             ]
         );
 
-        if ($this->editMode) {
-            TesPorteArmasModel::find($this->registro_id)->update($data);
-            session()->flash('message', 'Registro actualizado exitosamente.');
-        } else {
-            TesPorteArmasModel::create($data);
-            session()->flash('message', 'Registro creado exitosamente.');
-        }
+        DB::transaction(function () use ($data) {
+            if ($this->editMode) {
+                TesPorteArmasModel::find($this->registro_id)->update($data);
+                session()->flash('message', 'Registro actualizado exitosamente.');
+            } else {
+                TesPorteArmasModel::create($data);
+                session()->flash('message', 'Registro creado exitosamente.');
+            }
+            Cache::flush();
+        });
 
         $this->closeModal();
     }
@@ -158,8 +169,11 @@ class TesPorteArmas extends Component
 
     public function delete()
     {
-        TesPorteArmasModel::find($this->deleteId)->delete();
-        session()->flash('message', 'Registro eliminado exitosamente.');
+        DB::transaction(function () {
+            TesPorteArmasModel::find($this->deleteId)->delete();
+            Cache::flush();
+            session()->flash('message', 'Registro eliminado exitosamente.');
+        });
         $this->showDeleteModal = false;
         $this->deleteId = null;
     }

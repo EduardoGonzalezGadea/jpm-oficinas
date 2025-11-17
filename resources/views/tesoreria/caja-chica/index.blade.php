@@ -3,7 +3,7 @@
 @section('title', 'Tesorería | Oficinas - Caja Chica')
 
 @section('content')
-    <div>
+    <div class="container-fluid py-1 px-0">
         <h2 class="mb-4">
             <strong>Gestión de Caja Chica</strong>
         </h2>

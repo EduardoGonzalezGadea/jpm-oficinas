@@ -3,6 +3,7 @@
 namespace App\Http\Livewire\Tesoreria\CuentaBancaria;
 
 use App\Models\Tesoreria\CuentaBancaria;
+use Illuminate\Support\Facades\Cache;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -13,16 +14,27 @@ class CuentaIndex extends Component
     public $showCreate = false, $showEdit = false;
     public $cuentaId;
 
-    protected $listeners = ['delete', 'closeModal'];
+    protected $listeners = ['delete', 'closeModal', 'cuentaStore' => '$refresh', 'cuentaUpdate' => '$refresh'];
 
     public function render()
     {
-        $cuentas = CuentaBancaria::with('banco')
-            ->whereHas('banco', fn($q) => $q->where('nombre', 'like', "%{$this->search}%"))
-            ->orWhere('numero_cuenta', 'like', "%{$this->search}%")
-            ->paginate(10);
+        $page = $this->page ?: 1;
+        $cacheKey = 'cuentas_bancarias_search_' . $this->search . '_page_' . $page;
+
+        $cuentas = Cache::remember($cacheKey, now()->addDay(), function () {
+            return CuentaBancaria::with('banco')
+                ->whereHas('banco', fn($q) => $q->where('nombre', 'like', "%{$this->search}%"))
+                ->orWhere('numero_cuenta', 'like', "%{$this->search}%")
+                ->paginate(10);
+        });
 
         return view('livewire.tesoreria.cuenta-bancaria.cuenta-index', compact('cuentas'));
+    }
+
+    public function updatingSearch()
+    {
+        $this->resetPage();
+        Cache::flush();
     }
 
     public function create()
@@ -60,6 +72,7 @@ class CuentaIndex extends Component
     public function delete($id)
     {
         CuentaBancaria::find($id)->delete();
+        Cache::flush();
         $this->dispatchBrowserEvent('swal', [
             'title' => 'Eliminado!',
             'type' => 'success'

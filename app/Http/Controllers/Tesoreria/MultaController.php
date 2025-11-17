@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Tesoreria;
 use App\Http\Controllers\Controller;
 use App\Models\Tesoreria\Multa;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
 
 class MultaController extends Controller
 {
@@ -36,7 +38,6 @@ class MultaController extends Controller
      */
     public function store(Request $request)
     {
-        // --- REFACTORIZADO ---
         $request->validate([
             'articulo' => 'required|string|max:10',
             'apartado' => 'nullable|string|max:10',
@@ -47,8 +48,10 @@ class MultaController extends Controller
             'activo' => 'boolean',
         ]);
 
-        Multa::create($request->all());
-        // ---------------------
+        DB::transaction(function () use ($request) {
+            Multa::create($request->all());
+            Cache::flush();
+        });
 
         return redirect()->route('tesoreria.multas.index')->with('success', 'Multa creada exitosamente.');
     }
@@ -84,7 +87,6 @@ class MultaController extends Controller
      */
     public function update(Request $request, Multa $multa)
     {
-        // --- REFACTORIZADO ---
         $request->validate([
             'articulo' => 'required|string|max:10',
             'apartado' => 'nullable|string|max:10',
@@ -95,8 +97,10 @@ class MultaController extends Controller
             'activo' => 'boolean',
         ]);
 
-        $multa->update($request->all());
-        // ---------------------
+        DB::transaction(function () use ($request, $multa) {
+            $multa->update($request->all());
+            Cache::flush();
+        });
 
         return redirect()->route('tesoreria.multas.index')->with('success', 'Multa actualizada exitosamente.');
     }
@@ -109,7 +113,10 @@ class MultaController extends Controller
      */
     public function destroy(Multa $multa)
     {
-        $multa->delete();
+        DB::transaction(function () use ($multa) {
+            $multa->delete();
+            Cache::flush();
+        });
 
         return redirect()->route('tesoreria.multas.index')->with('success', 'Multa eliminada exitosamente.');
     }

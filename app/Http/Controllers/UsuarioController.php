@@ -2,13 +2,17 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
+use App\Http\Requests\StoreUserRequest;
+use App\Http\Requests\UpdateUserRequest;
 use App\Models\Modulo;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
-use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 
 class UsuarioController extends Controller
 {
@@ -50,8 +54,14 @@ class UsuarioController extends Controller
         }
 
         $usuarios = $query->latest()->paginate(10);
-        $modulos = Modulo::activos()->get();
-        $roles = Role::all();
+
+        $modulos = Cache::remember('modulos_activos', now()->addDay(), function () {
+            return Modulo::activos()->get();
+        });
+
+        $roles = Cache::remember('roles_all', now()->addDay(), function () {
+            return Role::all();
+        });
 
         // Datos adicionales para estadísticas
         $totalPermissions = Permission::count();
@@ -59,8 +69,8 @@ class UsuarioController extends Controller
         $totalUsers = User::count();
 
         return view('usuarios.index', compact(
-            'usuarios', 
-            'modulos', 
+            'usuarios',
+            'modulos',
             'roles',
             'totalPermissions',
             'totalRoles',
@@ -72,51 +82,39 @@ class UsuarioController extends Controller
     {
         $this->authorize('crear_usuarios');
 
-        $modulos = Modulo::activos()->get();
-        $roles = Role::all();
+        $modulos = Cache::remember('modulos_activos', now()->addDay(), function () {
+            return Modulo::activos()->get();
+        });
+
+        $roles = Cache::remember('roles_all', now()->addDay(), function () {
+            return Role::all();
+        });
 
         return view('usuarios.create', compact('modulos', 'roles'));
     }
 
-    public function store(Request $request)
+    public function store(StoreUserRequest $request)
     {
-        // $this->authorize('crear_usuarios');
+        $validatedData = $request->validated();
 
-        $request->validate([
-            'nombre' => 'required|string|max:255',
-            'apellido' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email',
-            'cedula' => 'nullable|string|unique:users,cedula|max:15',
-            'telefono' => 'nullable|string|max:30',
-            'direccion' => 'nullable|string|max:500',
-            'modulo_id' => 'nullable|exists:modulos,id',
-            'roles' => 'required|array',
-            'roles.*' => 'exists:roles,name',
-        ], [
-            'nombre.required' => 'El nombre es obligatorio',
-            'apellido.required' => 'El apellido es obligatorio',
-            'email.required' => 'El email es obligatorio',
-            'email.unique' => 'Ya existe un usuario con este email',
-            'cedula.unique' => 'Ya existe un usuario con esta cédula',
-            'roles.required' => 'Debe seleccionar al menos un rol',
-        ]);
+        DB::transaction(function () use ($validatedData) {
+            $usuario = User::create([
+                'nombre' => $validatedData['nombre'],
+                'apellido' => $validatedData['apellido'],
+                'email' => $validatedData['email'],
+                'cedula' => $validatedData['cedula'] ?? null,
+                'telefono' => $validatedData['telefono'] ?? null,
+                'direccion' => $validatedData['direccion'] ?? null,
+                'password' => Hash::make('123456'), // Default password
+                'modulo_id' => $validatedData['modulo_id'] ?? null,
+                'activo' => true,
+            ]);
 
-        $usuario = User::create([
-            'nombre' => $request->nombre,
-            'apellido' => $request->apellido,
-            'email' => $request->email,
-            'cedula' => $request->cedula,
-            'telefono' => $request->telefono,
-            'direccion' => $request->direccion,
-            'password' => Hash::make('123456'), // Default password
-            'modulo_id' => $request->modulo_id,
-            'activo' => true,
-        ]);
-
-        // Asignar roles
-        if ($request->has('roles')) {
-            $usuario->syncRoles($request->roles);
-        }
+            // Asignar roles
+            if (isset($validatedData['roles'])) {
+                $usuario->syncRoles($validatedData['roles']);
+            }
+        });
 
         return redirect()->route('usuarios.index')
             ->with('success', 'Usuario creado exitosamente');
@@ -133,14 +131,18 @@ class UsuarioController extends Controller
     {
         $this->authorize('editar_usuarios');
 
-        if(auth()->user()->esAdministrador()) {
-            $modulos = Modulo::activos()->get();
+        if (auth()->user()->esAdministrador()) {
+            $modulos = Cache::remember('modulos_activos', now()->addDay(), function () {
+                return Modulo::activos()->get();
+            });
         } else {
             $modulos = Modulo::activos()->where('id', auth()->user()->modulo_id)->get();
         }
 
-        if(auth()->user()->esAdministrador()) {
-            $roles = Role::all();
+        if (auth()->user()->esAdministrador()) {
+            $roles = Cache::remember('roles_all', now()->addDay(), function () {
+                return Role::all();
+            });
         } else {
             $userRoleName = $usuario->getRoleNames()->first();
             $parts = explode('_', $userRoleName, 2);
@@ -150,44 +152,35 @@ class UsuarioController extends Controller
                         ->where('name', 'like', '%' . $moduleIdentifier . '%')
                         ->get();
         }
+        $usuario->load('roles');
         $usuarioRoles = $usuario->roles->pluck('name')->toArray();
 
         return view('usuarios.edit', compact('usuario', 'modulos', 'roles', 'usuarioRoles'));
     }
 
-    public function update(Request $request, User $usuario)
+    public function update(UpdateUserRequest $request, User $usuario)
     {
-        $this->authorize('editar_usuarios');
+        $validatedData = $request->validated();
 
-        $request->validate([
-            'nombre' => 'required|string|max:255',
-            'apellido' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email,' . $usuario->id,
-            'cedula' => 'nullable|string|unique:users,cedula,' . $usuario->id . '|max:15',
-            'telefono' => 'nullable|string|max:30',
-            'direccion' => 'nullable|string|max:500',
-            'modulo_id' => 'nullable|exists:modulos,id',
-            'roles' => 'required|exists:roles,name',
-            'activo' => 'boolean',
-        ]);
+        DB::transaction(function () use ($request, $usuario, $validatedData) {
+            $usuario->update([
+                'nombre' => $validatedData['nombre'],
+                'apellido' => $validatedData['apellido'],
+                'email' => $validatedData['email'],
+                'cedula' => $validatedData['cedula'] ?? null,
+                'telefono' => $validatedData['telefono'] ?? null,
+                'direccion' => $validatedData['direccion'] ?? null,
+                'modulo_id' => $validatedData['modulo_id'] ?? null,
+                'activo' => $validatedData['activo'] ?? false,
+            ]);
 
-        $usuario->update([
-            'nombre' => $request->nombre,
-            'apellido' => $request->apellido,
-            'email' => $request->email,
-            'cedula' => $request->cedula,
-            'telefono' => $request->telefono,
-            'direccion' => $request->direccion,
-            'modulo_id' => $request->modulo_id,
-            'activo' => $request->has('activo'),
-        ]);
-
-        // Sincronizar roles
-        if ($request->has('roles')) {
-            $usuario->syncRoles([$request->roles]);
-        } else {
-            $usuario->syncRoles([]);
-        }
+            // Sincronizar roles
+            if (isset($validatedData['roles'])) {
+                $usuario->syncRoles([$validatedData['roles']]);
+            } else {
+                $usuario->syncRoles([]);
+            }
+        });
 
         return redirect()->route('usuarios.index')
             ->with('success', 'Usuario actualizado exitosamente');

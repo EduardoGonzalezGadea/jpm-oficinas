@@ -5,6 +5,8 @@ namespace App\Http\Livewire\Tesoreria\CajaChica;
 
 use Livewire\Component;
 use App\Models\Tesoreria\CajaChica;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 
 class ModalNuevoFondo extends Component
 {
@@ -91,24 +93,30 @@ class ModalNuevoFondo extends Component
             ]
         ]);
 
-        $existe = CajaChica::where('mes', $this->mes)
-            ->where('anio', $this->anio)
-            ->exists();
+        DB::transaction(function () {
+            $existe = CajaChica::where('mes', $this->mes)
+                ->where('anio', $this->anio)
+                ->lockForUpdate()
+                ->exists();
 
-        if ($existe) {
-            // Restaurar alerta normal con sesión
-            session()->flash('error', 'Ya existe un Fondo Permanente para este mes y año.');
-            return;
-        } else {
+            if ($existe) {
+                session()->flash('error', 'Ya existe un Fondo Permanente para este mes y año.');
+                return;
+            }
+
             CajaChica::create([
                 'mes' => $this->mes,
                 'anio' => $this->anio,
                 'montoCajaChica' => $this->parsearMonto($this->monto),
             ]);
 
+            Cache::flush();
             session()->flash('message', 'Fondo Permanente creado correctamente.');
+        });
+
+
+        if (!session()->has('error')) {
             $this->cerrarModal();
-            // Notificar al componente principal para recargar datos
             $this->emitTo('tesoreria.caja-chica.index', 'fondoCreado');
         }
     }

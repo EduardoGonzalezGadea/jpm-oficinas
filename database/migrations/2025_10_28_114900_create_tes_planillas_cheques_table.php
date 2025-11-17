@@ -9,7 +9,7 @@ return new class extends Migration {
     {
         Schema::create('tes_planillas_cheques', function (Blueprint $table) {
             $table->id();
-            $table->string('numero_planilla', 20)->unique();
+            $table->string('numero_planilla', 20);
             $table->date('fecha_generacion');
             $table->enum('estado', ['generada', 'anulada'])->default('generada');
             $table->date('fecha_anulacion')->nullable();

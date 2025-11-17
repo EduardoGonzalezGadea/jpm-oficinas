@@ -115,122 +115,106 @@ class ChequeReportes extends Component
             return collect();
         }
 
-        $sql = "
-            WITH ChequeGrupos AS (
-                SELECT
-                    cuenta_bancaria_id,
-                    serie,
-                    numero_cheque,
-                    (numero_cheque - ROW_NUMBER() OVER (PARTITION BY cuenta_bancaria_id, serie ORDER BY numero_cheque)) as grupo_consecutivo
-                FROM
-                    tes_cheques
-                WHERE
-                    estado = 'disponible'
-            )
-            SELECT
-                cuenta_bancaria_id,
-                serie,
-                MIN(numero_cheque) as rango_inicio,
-                MAX(numero_cheque) as rango_fin,
-                COUNT(*) as cantidad
-            FROM
-                ChequeGrupos
-            GROUP BY
-                cuenta_bancaria_id,
-                serie,
-                grupo_consecutivo
-            ORDER BY
-                cuenta_bancaria_id,
-                serie,
-                rango_inicio;
-        ";
-
-        $rangosCheques = \Illuminate\Support\Facades\DB::select($sql);
-
-        $chequesPorCuenta = collect($rangosCheques)->groupBy('cuenta_bancaria_id');
-        $cuentasInfo = CuentaBancaria::with('banco')->whereIn('id', $chequesPorCuenta->keys())->get()->keyBy('id');
+        $grupos = Cheque::select('cuenta_bancaria_id', 'serie')->distinct()->orderBy('cuenta_bancaria_id')->orderBy('serie')->get();
+        $cuentasInfo = CuentaBancaria::with('banco')->whereIn('id', $grupos->pluck('cuenta_bancaria_id')->unique())->get()->keyBy('id');
         $stockOrganizado = collect();
 
-        foreach ($chequesPorCuenta as $cuentaId => $rangosDeLaCuenta) {
-            $seriesDeLaCuenta = collect();
-            $rangosPorSerie = $rangosDeLaCuenta->groupBy('serie');
+        foreach ($grupos as $grupo) {
+            $cuentaId = $grupo->cuenta_bancaria_id;
+            $serie = $grupo->serie;
 
-            foreach ($rangosPorSerie as $serie => $rangos) {
-                $libretasCompletas = collect();
-                $libretasIncompletas = collect();
+            $rangoTotal = Cheque::where('cuenta_bancaria_id', $cuentaId)
+                ->where('serie', $serie)
+                ->selectRaw('MIN(CAST(numero_cheque AS UNSIGNED)) as min_cheque, MAX(CAST(numero_cheque AS UNSIGNED)) as max_cheque')
+                ->first();
 
-                $minCheque = $rangos->min('rango_inicio');
-                $maxCheque = $rangos->max('rango_fin');
+            if (is_null($rangoTotal->min_cheque)) continue;
 
-                if (is_null($minCheque)) continue;
+            $libretasCompletas = collect();
+            $libretasIncompletas = collect();
+            $libretaActualStart = floor(($rangoTotal->min_cheque - 1) / 25) * 25 + 1;
 
-                $libretaActualStart = floor(($minCheque - 1) / 25) * 25 + 1;
+            while ($libretaActualStart <= $rangoTotal->max_cheque) {
+                $libretaActualEnd = $libretaActualStart + 24;
 
-                while ($libretaActualStart <= $maxCheque) {
-                    $libretaActualEnd = $libretaActualStart + 24;
-                    $countEnLibreta = 0;
-                    $minEnLibreta = null;
-                    $maxEnLibreta = null;
+                $chequesEnLibretaBruto = Cheque::where('cuenta_bancaria_id', $cuentaId)
+                    ->where('serie', $serie)
+                    ->whereRaw('CAST(numero_cheque AS UNSIGNED) BETWEEN ? AND ?', [$libretaActualStart, $libretaActualEnd])
+                    ->get();
 
-                    foreach ($rangos as $rango) {
-                        $overlap_start = max($libretaActualStart, $rango->rango_inicio);
-                        $overlap_end = min($libretaActualEnd, $rango->rango_fin);
-
-                        if ($overlap_start <= $overlap_end) {
-                            $countEnLibreta += $overlap_end - $overlap_start + 1;
-                            if (is_null($minEnLibreta) || $overlap_start < $minEnLibreta) $minEnLibreta = $overlap_start;
-                            if (is_null($maxEnLibreta) || $overlap_end > $maxEnLibreta) $maxEnLibreta = $overlap_end;
-                        }
+                // Sanear datos para manejar duplicados, priorizando el estado más definitivo.
+                $statusPriority = ['emitido' => 1, 'en_planilla' => 2, 'anulado' => 3, 'disponible' => 4];
+                $chequesEnLibreta = $chequesEnLibretaBruto->groupBy('numero_cheque')->map(function ($cheques) use ($statusPriority) {
+                    if ($cheques->count() == 1) {
+                        return $cheques->first();
                     }
+                    return $cheques->sortBy(function ($cheque) use ($statusPriority) {
+                        return $statusPriority[$cheque->estado] ?? 99;
+                    })->first();
+                });
 
-                    if ($countEnLibreta == 25) {
-                        $libretasCompletas->push(['numero_inicial' => $libretaActualStart, 'numero_final' => $libretaActualEnd, 'total_cheques' => 25]);
-                    } elseif ($countEnLibreta > 0) {
-                        $libretasIncompletas->push([
-                            'numero_inicial_libreta' => $libretaActualStart,
-                            'numero_final_libreta' => $libretaActualEnd,
-                            'primer_cheque_disponible' => $minEnLibreta,
-                            'ultimo_cheque_disponible' => $maxEnLibreta,
-                            'cheques_usados' => $minEnLibreta - $libretaActualStart,
-                            'cheques_disponibles' => $countEnLibreta,
-                        ]);
-                    }
+                if ($chequesEnLibreta->isEmpty()) {
                     $libretaActualStart += 25;
+                    continue;
                 }
 
-                $tandasCompletas = collect();
-                if ($libretasCompletas->count() > 0) {
-                    $libretasCompletas = $libretasCompletas->sortBy('numero_inicial')->values();
-                    $tandaActual = ['tanda' => 1, 'numero_inicial' => $libretasCompletas[0]['numero_inicial'], 'numero_final' => $libretasCompletas[0]['numero_final'], 'total_cheques' => 25];
-                    for ($i = 1; $i < $libretasCompletas->count(); $i++) {
-                        if ($tandaActual['numero_final'] + 1 === $libretasCompletas[$i]['numero_inicial']) {
-                            $tandaActual['numero_final'] = $libretasCompletas[$i]['numero_final'];
-                            $tandaActual['total_cheques'] += 25;
-                        } else {
-                            $tandasCompletas->push($tandaActual);
-                            $tandaActual = ['tanda' => $tandasCompletas->count() + 1, 'numero_inicial' => $libretasCompletas[$i]['numero_inicial'], 'numero_final' => $libretasCompletas[$i]['numero_final'], 'total_cheques' => 25];
-                        }
-                    }
-                    $tandasCompletas->push($tandaActual);
-                }
+                $disponibles = $chequesEnLibreta->where('estado', 'disponible');
+                $countDisponibles = $disponibles->count();
 
-                if ($tandasCompletas->isNotEmpty() || $libretasIncompletas->isNotEmpty()) {
-                    $seriesDeLaCuenta->push([
-                        'serie' => $serie ?: 'SIN/VALOR', // Serie Sin especificar
-                        'completas' => $tandasCompletas,
-                        'incompletas' => $libretasIncompletas->sortBy('primer_cheque_disponible')->values(),
+                if ($countDisponibles == 25) {
+                    $libretasCompletas->push(['numero_inicial' => $libretaActualStart, 'numero_final' => $libretaActualEnd, 'total_cheques' => 25]);
+                } elseif ($countDisponibles > 0) {
+                    $primerChequeDisponibleNum = $disponibles->min('numero_cheque');
+
+                    // 'Usados' son solo los consumidos secuencialmente antes del primer disponible.
+                    $chequesUsados = $chequesEnLibreta
+                        ->whereIn('estado', ['emitido', 'en_planilla'])
+                        ->filter(function ($cheque) use ($primerChequeDisponibleNum) {
+                            return (int)$cheque->numero_cheque < (int)$primerChequeDisponibleNum;
+                        })
+                        ->count();
+                    
+                    // 'Anulados' son todos los cheques anulados en la libreta.
+                    $chequesAnulados = $chequesEnLibreta->where('estado', 'anulado')->count();
+
+                    $libretasIncompletas->push([
+                        'numero_inicial_libreta' => $libretaActualStart,
+                        'numero_final_libreta' => $libretaActualEnd,
+                        'primer_cheque_disponible' => $primerChequeDisponibleNum,
+                        'ultimo_cheque_disponible' => $disponibles->max('numero_cheque'),
+                        'cheques_usados' => $chequesUsados,
+                        'cheques_anulados' => $chequesAnulados,
+                        'cheques_disponibles' => $countDisponibles,
                     ]);
                 }
+                $libretaActualStart += 25;
             }
 
-            if ($seriesDeLaCuenta->isNotEmpty()) {
-                $stockOrganizado->push([
-                    'cuenta' => $cuentasInfo[$cuentaId],
-                    'series' => $seriesDeLaCuenta->sortBy('serie'),
-                ]);
+            $tandasCompletas = collect();
+            if ($libretasCompletas->count() > 0) {
+                $libretasCompletas = $libretasCompletas->sortBy('numero_inicial')->values();
+                $tandaActual = ['tanda' => 1, 'numero_inicial' => $libretasCompletas[0]['numero_inicial'], 'numero_final' => $libretasCompletas[0]['numero_final'], 'total_cheques' => 25];
+                for ($i = 1; $i < $libretasCompletas->count(); $i++) {
+                    if ($tandaActual['numero_final'] + 1 === $libretasCompletas[$i]['numero_inicial']) {
+                        $tandaActual['numero_final'] = $libretasCompletas[$i]['numero_final'];
+                        $tandaActual['total_cheques'] += 25;
+                    } else {
+                        $tandasCompletas->push($tandaActual);
+                        $tandaActual = ['tanda' => $tandasCompletas->count() + 1, 'numero_inicial' => $libretasCompletas[$i]['numero_inicial'], 'numero_final' => $libretasCompletas[$i]['numero_final'], 'total_cheques' => 25];
+                    }
+                }
+                $tandasCompletas->push($tandaActual);
+            }
+
+            if ($tandasCompletas->isNotEmpty() || $libretasIncompletas->isNotEmpty()) {
+                $cuentaIndex = $stockOrganizado->search(fn($item) => $item['cuenta']->id === $cuentaId);
+                if ($cuentaIndex !== false) {
+                    $stockOrganizado[$cuentaIndex]['series']->push(['serie' => $serie ?: 'SIN/VALOR', 'completas' => $tandasCompletas, 'incompletas' => $libretasIncompletas->sortBy('primer_cheque_disponible')->values()]);
+                } else {
+                    $stockOrganizado->push(['cuenta' => $cuentasInfo[$cuentaId], 'series' => collect([['serie' => $serie ?: 'SIN/VALOR', 'completas' => $tandasCompletas, 'incompletas' => $libretasIncompletas->sortBy('primer_cheque_disponible')->values()]])]);
+                }
             }
         }
-
         return $stockOrganizado->sortBy('cuenta.numero_cuenta')->values();
     }
 

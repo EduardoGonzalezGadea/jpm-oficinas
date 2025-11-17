@@ -16,8 +16,8 @@
                 </button>
             </div>
         </div>
-        <div class="card-body">
-            <div class="row mb-3">
+        <div class="card-body p-1">
+            <div class="row mb-1">
                 <div class="col-md-6">
                     <div class="input-group">
                         <input type="text" wire:model.live.debounce.300ms="search" class="form-control" placeholder="Buscar por nombre...">
@@ -32,29 +32,31 @@
                 <table class="table table-striped table-hover">
                     <thead class="thead-dark">
                         <tr>
-                            <th>Nombre</th>
-                            <th class="text-center">Valor (UR)</th>
-                            <th class="text-center">Estado</th>
-                            <th class="text-center">Acciones</th>
+                            <th class="align-middle">Nombre</th>
+                            <th class="text-center align-middle">Valor (UR)</th>
+                            <th class="text-center align-middle">Estado</th>
+                            <th class="text-center align-middle">Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse($servicios as $servicio)
                             <tr>
-                                <td>{{ $servicio->nombre }}</td>
-                                <td class="text-center">{{ $servicio->valor_ur ?? 'S.V.E.' }}</td>
-                                <td class="text-center">
+                                <td class="align-middle">{{ $servicio->nombre }}</td>
+                                <td class="text-center align-middle">{{ $servicio->valor_ur ?? 'S.V.E.' }}</td>
+                                <td class="text-center align-middle">
                                     <button wire:click="toggleStatus({{ $servicio->id }})" class="btn btn-sm {{ $servicio->activo ? 'btn-success' : 'btn-danger' }}">
                                         {{ $servicio->activo ? 'Activo' : 'Inactivo' }}
                                     </button>
                                 </td>
-                                <td class="text-center">
-                                    <button wire:click="edit({{ $servicio->id }})" class="btn btn-sm btn-warning" title="Editar">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                    <button wire:click="confirmDelete({{ $servicio->id }})" class="btn btn-sm btn-danger" title="Eliminar">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
+                                <td class="text-center align-middle">
+                                    <div class="btn-group" role="group">
+                                        <button wire:click="edit({{ $servicio->id }})" class="btn btn-sm btn-warning" title="Editar">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button wire:click="confirmDelete({{ $servicio->id }})" class="btn btn-sm btn-danger" title="Eliminar">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                         @empty
