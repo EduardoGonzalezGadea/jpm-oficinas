@@ -3,12 +3,13 @@
 namespace App\Http\Livewire\Tesoreria\Valores\Servicio;
 
 use App\Models\Tesoreria\Servicio;
+use App\Traits\ConvertirMayusculas;
 use Livewire\Component;
 use Livewire\WithPagination;
 
 class Index extends Component
 {
-    use WithPagination;
+    use WithPagination, ConvertirMayusculas;
 
     protected $paginationTheme = 'bootstrap';
 
@@ -25,11 +26,27 @@ class Index extends Component
         'activo' => 'boolean',
     ];
 
+    public function updatingSearch()
+    {
+        $this->resetPage();
+    }
+
+    public function clearSearch()
+    {
+        $this->search = '';
+        $this->resetPage();
+    }
+
     public function render()
     {
-        $servicios = Servicio::where('nombre', 'like', '%' . $this->search . '%')
-            ->orderBy('nombre')
-            ->paginate(10);
+        $searchTerm = trim($this->search);
+        $query = Servicio::query();
+
+        if (!empty($searchTerm)) {
+            $query->where('nombre', 'like', '%' . $searchTerm . '%');
+        }
+
+        $servicios = $query->orderBy('nombre')->paginate(10);
 
         return view('livewire.tesoreria.valores.servicio.index', compact('servicios'))
             ->extends('layouts.app')
@@ -70,10 +87,13 @@ class Index extends Component
         $this->rules['nombre'] = 'required|string|max:255|unique:tes_servicios,nombre,' . $this->servicioId;
         $this->validate();
 
+        // Convertir nombre a mayúsculas
+        $nombre = $this->toUpper($this->nombre);
+
         Servicio::updateOrCreate(
             ['id' => $this->servicioId],
             [
-                'nombre' => $this->nombre,
+                'nombre' => $nombre,
                 'valor_ur' => $this->valor_ur,
                 'activo' => $this->activo,
             ]

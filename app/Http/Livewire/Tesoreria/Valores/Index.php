@@ -5,13 +5,14 @@ namespace App\Http\Livewire\Tesoreria\Valores;
 use App\Models\Tesoreria\LibretaValor;
 use App\Models\Tesoreria\TipoLibreta;
 use App\Services\Tesoreria\ValoresService;
+use App\Traits\ConvertirMayusculas;
 use Illuminate\Support\Facades\Cache;
 use Livewire\Component;
 use Livewire\WithPagination;
 
 class Index extends Component
 {
-    use WithPagination;
+    use WithPagination, ConvertirMayusculas;
 
     protected $paginationTheme = 'bootstrap';
 
@@ -26,7 +27,7 @@ class Index extends Component
     public $campoEnfoque = 'servicio_entrega_id'; // Campo que debe tener el foco
 
     public $search = '';
-    public $estado = 'en_stock';
+    public $estado = '';
 
     protected function rules()
     {
@@ -63,6 +64,13 @@ class Index extends Component
 
     public function updatingEstado()
     {
+        $this->resetPage();
+    }
+
+    public function clearFilters()
+    {
+        $this->search = '';
+        $this->estado = '';
         $this->resetPage();
     }
 
@@ -103,6 +111,9 @@ class Index extends Component
     public function registrarEntrega(ValoresService $valoresService)
     {
         $validatedData = $this->validate($this->rulesEntrega());
+
+        // Convertir campos de texto a mayúsculas
+        $validatedData = $this->convertirCamposAMayusculas(['numero_recibo_entrega', 'observaciones_entrega'], $validatedData);
 
         try {
             $valoresService->registrarEntrega($this->libretaSeleccionada, $validatedData);
@@ -215,6 +226,9 @@ class Index extends Component
     public function save(ValoresService $valoresService)
     {
         $validatedData = $this->validate();
+
+        // Convertir campos de texto a mayúsculas
+        $validatedData = $this->convertirCamposAMayusculas(['serie'], $validatedData);
 
         try {
             $valoresService->crearLibretas($validatedData);

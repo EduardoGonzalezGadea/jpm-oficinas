@@ -18,8 +18,15 @@
         </div>
         <div class="card-body p-1">
             <div class="row mb-1">
-                <div class="col-md-6">
-                    <input type="text" wire:model.live.debounce.300ms="search" class="form-control" placeholder="Buscar por nombre...">
+                <div class="col">
+                    <div class="input-group">
+                        <input type="text" wire:model.live.debounce.300ms="search" class="form-control" placeholder="Buscar por nombre...">
+                        <div class="input-group-append">
+                            <button type="button" wire:click="clearSearch" class="btn btn-outline-danger" title="Limpiar búsqueda">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
 

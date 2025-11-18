@@ -4,6 +4,11 @@
             <h4 class="card-title">
                 <i class="fas fa-chart-bar mr-2"></i>Reportes de Libretas de Valores
             </h4>
+            <div>
+                <a href="{{ route('tesoreria.valores.index') }}" class="btn btn-outline-primary">
+                    <i class="fas fa-arrow-left mr-1"></i>Libretas de Valores
+                </a>
+            </div>
         </div>
         <div class="card-body">
             <!-- Navegación de pestañas para tipos de reporte -->
@@ -60,29 +65,56 @@
                             <thead class="thead-dark">
                                 <tr>
                                     <th>Tipo</th>
+                                    <th class="text-center">Fecha Recepción</th>
                                     <th>Serie</th>
                                     <th class="text-center">Numeración</th>
-                                    <th class="text-center">Próximo Recibo</th>
-                                    <th class="text-center">Fecha Recepción</th>
+                                    <th class="text-center">Recibos</th>
+                                    <th class="text-center">Libretas</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @forelse($libretas as $libreta)
                                     <tr>
                                         <td>{{ $libreta->tipoLibreta->nombre }}</td>
+                                        <td class="text-center">
+                                            @if(isset($libreta->agrupada) && $libreta->agrupada)
+                                                {{ $libreta->fecha_recepcion_inicial }}
+                                            @else
+                                                {{ $libreta->fecha_recepcion->format('d/m/Y') }}
+                                            @endif
+                                        </td>
                                         <td>{{ $libreta->serie ?? '-' }}</td>
                                         <td class="text-center">{{ $libreta->numero_inicial }} al {{ $libreta->numero_final }}</td>
-                                        <td class="text-center">{{ $libreta->proximo_recibo_disponible }}</td>
-                                        <td class="text-center">{{ $libreta->fecha_recepcion->format('d/m/Y') }}</td>
+                                        <td class="text-center">{{ $libreta->total_recibos }}</td>
+                                        <td class="text-center">
+                                            @if(isset($libreta->agrupada) && $libreta->agrupada)
+                                                <span class="badge badge-warning" title="Libretas agrupadas consecutivamente">
+                                                    <i class="fas fa-link mr-1"></i>
+                                                    {{ $libreta->cantidad_libretas }} libretas
+                                                </span>
+                                            @else
+                                                <span class="badge badge-secondary">Individual</span>
+                                            @endif
+                                        </td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="5" class="text-center">No hay libretas completas disponibles.</td>
+                                        <td colspan="6" class="text-center">No hay libretas completas disponibles.</td>
                                     </tr>
                                 @endforelse
                             </tbody>
+
+                            <!-- Fila de totales -->
+                            <tfoot>
+                                <tr>
+                                    <th colspan="4" class="text-right font-weight-bold">TOTALES:</th>
+                                    <th class="text-center font-weight-bold">{{ $totalesCompletas['total_recibos'] }}</th>
+                                    <th class="text-center font-weight-bold">{{ $totalesCompletas['total_libretas'] }}</th>
+                                </tr>
+                            </tfoot>
                         </table>
                     </div>
+
                     <div class="mt-3 d-flex justify-content-center">
                         {{ $libretas->links() }}
                     </div>

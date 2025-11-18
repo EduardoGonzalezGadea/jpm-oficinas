@@ -160,7 +160,7 @@
     @if ($showRecuperarModal)
         <div class="modal fade show" id="modalRecuperar" tabindex="-1" role="dialog" style="display: block;"
             aria-modal="true">
-            <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-dialog modal-xl" role="document">
                 <div class="modal-content">
                     <div class="modal-header bg-primary text-white">
                         <h5 class="modal-title">Recuperar Saldos Pendientes</h5>

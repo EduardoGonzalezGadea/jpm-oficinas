@@ -28,7 +28,9 @@
                     <div class="input-group">
                         <input type="text" wire:model.debounce.300ms="search" class="form-control" placeholder="Buscar por tipo, serie o número...">
                         <div class="input-group-append">
-                            <span class="input-group-text"><i class="fas fa-search"></i></span>
+                            <button type="button" wire:click="clearFilters" class="btn btn-outline-danger" title="Limpiar filtros">
+                                <i class="fas fa-times"></i>
+                            </button>
                         </div>
                     </div>
                 </div>

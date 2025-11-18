@@ -4,12 +4,14 @@ namespace App\Http\Livewire\Tesoreria\Valores\TipoLibreta;
 
 use App\Models\Tesoreria\Servicio;
 use App\Models\Tesoreria\TipoLibreta;
+use App\Traits\ConvertirMayusculas;
+use Illuminate\Support\Facades\Cache;
 use Livewire\Component;
 use Livewire\WithPagination;
 
 class Index extends Component
 {
-    use WithPagination;
+    use WithPagination, ConvertirMayusculas;
 
     protected $paginationTheme = 'bootstrap';
 
@@ -28,6 +30,17 @@ class Index extends Component
         'stock_minimo_recibos' => 'required|integer|min:0',
         'serviciosSeleccionados' => 'array'
     ];
+
+    public function updatingSearch()
+    {
+        $this->resetPage();
+    }
+
+    public function clearSearch()
+    {
+        $this->search = '';
+        $this->resetPage();
+    }
 
     public function mount()
     {
@@ -68,16 +81,22 @@ class Index extends Component
         $this->rules['nombre'] = 'required|string|max:255|unique:tes_tipos_libretas,nombre,' . $this->tipoLibretaId;
         $this->validate();
 
+        // Convertir nombre a mayúsculas
+        $nombre = $this->toUpper($this->nombre);
+
         $tipoLibreta = TipoLibreta::updateOrCreate(
             ['id' => $this->tipoLibretaId],
             [
-                'nombre' => $this->nombre,
+                'nombre' => $nombre,
                 'cantidad_recibos' => $this->cantidad_recibos,
                 'stock_minimo_recibos' => $this->stock_minimo_recibos,
             ]
         );
 
         $tipoLibreta->servicios()->sync($this->serviciosSeleccionados);
+
+        // Invalidar caché de tipos de libretas para que se reflejen los cambios
+        Cache::forget('tipos_libreta_all');
 
         $this->dispatchBrowserEvent('swal', [
             'title' => 'Éxito',
@@ -109,6 +128,10 @@ class Index extends Component
     public function destroy()
     {
         TipoLibreta::find($this->tipoLibretaIdToDelete)->delete();
+
+        // Invalidar caché de tipos de libretas para que se reflejen los cambios
+        Cache::forget('tipos_libreta_all');
+
         $this->showDeleteModal = false;
 
         $this->dispatchBrowserEvent('swal', [
