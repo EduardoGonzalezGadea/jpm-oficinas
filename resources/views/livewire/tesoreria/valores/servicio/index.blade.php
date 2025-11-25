@@ -1,14 +1,14 @@
 <div>
     <div class="card">
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <h4 class="card-title">
+        <div class="card-header bg-info text-white card-header-gradient py-2 px-3 d-flex justify-content-between align-items-center">
+            <h4 class="card-title mb-0">
                 <i class="fas fa-cogs mr-2"></i>Servicios para Valores
             </h4>
             <div>
-                <a href="{{ route('tesoreria.valores.index') }}" class="btn btn-success mr-2">
-                    <i class="fas fa-barcode mr-1"></i> Libretas de Valores
+                <a href="{{ route('tesoreria.valores.index') }}" class="btn btn-secondary mr-2">
+                    <i class="fas fa-arrow-left mr-1"></i>Regresar a Valores
                 </a>
-                <a href="{{ route('tesoreria.valores.tipos-libreta') }}" class="btn btn-success mr-2">
+                <a href="{{ route('tesoreria.valores.tipos-libreta') }}" class="btn btn-secondary mr-2">
                     <i class="fas fa-book mr-1"></i> Tipos
                 </a>
                 <button wire:click="create()" class="btn btn-primary">
@@ -31,11 +31,11 @@
             </div>
 
             <div class="table-responsive">
-                <table class="table table-striped table-hover">
+                <table class="table table-striped table-hover table-sm">
                     <thead class="thead-dark">
                         <tr>
                             <th class="align-middle">Nombre</th>
-                            <th class="text-center align-middle">Valor (UR)</th>
+                            <th class="text-center align-middle">Valor UI</th>
                             <th class="text-center align-middle">Estado</th>
                             <th class="text-center align-middle">Acciones</th>
                         </tr>
@@ -44,18 +44,18 @@
                         @forelse($servicios as $servicio)
                             <tr>
                                 <td class="align-middle">{{ $servicio->nombre }}</td>
-                                <td class="text-center align-middle">{{ $servicio->valor_ur ?? 'S.V.E.' }}</td>
+                                <td class="text-center align-middle">{{ $servicio->valor_ui ? number_format($servicio->valor_ui, 2, ',', '.') . ' U.I.' : 'S.V.E.' }}</td>
                                 <td class="text-center align-middle">
-                                    <button wire:click="toggleStatus({{ $servicio->id }})" class="btn btn-sm {{ $servicio->activo ? 'btn-success' : 'btn-danger' }}">
+                                    <button wire:click="toggleStatus({{ $servicio->id }})" class="btn btn-sm {{ $servicio->activo ? 'btn-success' : 'btn-danger' }} py-0">
                                         {{ $servicio->activo ? 'Activo' : 'Inactivo' }}
                                     </button>
                                 </td>
                                 <td class="text-center align-middle">
                                     <div class="btn-group" role="group">
-                                        <button wire:click="edit({{ $servicio->id }})" class="btn btn-sm btn-warning" title="Editar">
+                                        <button wire:click="edit({{ $servicio->id }})" class="btn btn-sm btn-warning py-0" title="Editar">
                                             <i class="fas fa-edit"></i>
                                         </button>
-                                        <button wire:click="confirmDelete({{ $servicio->id }})" class="btn btn-sm btn-danger" title="Eliminar">
+                                        <button wire:click="confirmDelete({{ $servicio->id }})" class="btn btn-sm btn-danger py-0" title="Eliminar">
                                             <i class="fas fa-trash"></i>
                                         </button>
                                     </div>
@@ -93,9 +93,9 @@
                         @error('nombre') <span class="invalid-feedback">{{ $message }}</span> @enderror
                     </div>
                     <div class="form-group">
-                        <label for="valor_ur">Valor en UR (opcional)</label>
-                        <input type="number" step="0.01" wire:model.defer="valor_ur" id="valor_ur" class="form-control @error('valor_ur') is-invalid @enderror" placeholder="Dejar en blanco si no tiene valor">
-                        @error('valor_ur') <span class="invalid-feedback">{{ $message }}</span> @enderror
+                        <label for="valor_ui">Valor UI</label>
+                        <input type="number" step="0.01" wire:model.defer="valor_ui" id="valor_ui" class="form-control @error('valor_ui') is-invalid @enderror">
+                        @error('valor_ui') <span class="invalid-feedback">{{ $message }}</span> @enderror
                     </div>
                     <div class="form-group">
                         <div class="custom-control custom-switch">

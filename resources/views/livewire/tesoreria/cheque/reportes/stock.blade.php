@@ -35,7 +35,7 @@
                                                             <td class="align-middle py-1">{{ $libreta['tanda'] }}</td>
                                                             <td class="align-middle py-1">{{ $libreta['numero_inicial'] }}</td>
                                                             <td class="align-middle py-1">{{ $libreta['numero_final'] }}</td>
-                                                            <td class="align-middle py-1"><span class="badge badge-success">{{ $libreta['total_cheques'] }}</span></td>
+                                                            <td class="align-middle py-1"><span class="font-weight-bold">{{ $libreta['total_cheques'] }}</span></td>
                                                         </tr>
                                                     @endforeach
                                                 </tbody>
@@ -66,9 +66,9 @@
                                                             <td class="align-middle py-1">{{ $libreta['numero_inicial_libreta'] }} - {{ $libreta['numero_final_libreta'] }}</td>
                                                             <td class="align-middle py-1">{{ $libreta['primer_cheque_disponible'] }}</td>
                                                             <td class="align-middle py-1">{{ $libreta['ultimo_cheque_disponible'] }}</td>
-                                                            <td class="align-middle py-1"><span class="badge badge-danger">{{ $libreta['cheques_usados'] }}</span></td>
-                                                            <td class="align-middle py-1"><span class="badge badge-warning">{{ $libreta['cheques_anulados'] }}</span></td>
-                                                            <td class="align-middle py-1"><span class="badge badge-info">{{ $libreta['cheques_disponibles'] }}</span></td>
+                                                            <td class="align-middle py-1"><span class="font-weight-bold">{{ $libreta['cheques_usados'] }}</span></td>
+                                                            <td class="align-middle py-1"><span class="font-weight-bold">{{ $libreta['cheques_anulados'] }}</span></td>
+                                                            <td class="align-middle py-1"><span class="font-weight-bold">{{ $libreta['cheques_disponibles'] }}</span></td>
                                                         </tr>
                                                     @endforeach
                                                 </tbody>
@@ -95,19 +95,19 @@
                     <div class="row text-center">
                         <div class="col-4">
                             <div class="border p-2 rounded h-100">
-                                <h5 class="text-success">{{ $stockCheques->sum(function($s) { return $s['series']->sum(function($serie) { return $serie['completas']->sum('total_cheques'); }); }) }}</h5>
+                                <h5 class="font-weight-bold">{{ $stockCheques->sum(function($s) { return $s['series']->sum(function($serie) { return $serie['completas']->sum('total_cheques'); }); }) }}</h5>
                                 <p class="mb-0 small">Cheques en libretas completas</p>
                             </div>
                         </div>
                         <div class="col-4">
                             <div class="border p-2 rounded h-100">
-                                <h5 class="text-info">{{ $stockCheques->sum(function($s) { return $s['series']->sum(function($serie) { return $serie['incompletas']->sum('cheques_disponibles'); }); }) }}</h5>
+                                <h5 class="font-weight-bold">{{ $stockCheques->sum(function($s) { return $s['series']->sum(function($serie) { return $serie['incompletas']->sum('cheques_disponibles'); }); }) }}</h5>
                                 <p class="mb-0 small">Cheques disponibles en libretas incompletas</p>
                             </div>
                         </div>
                         <div class="col-4">
                             <div class="border p-2 rounded h-100">
-                                <h5 class="text-primary">{{ $stockCheques->sum(function($s) { return $s['series']->sum(function($serie) { return $serie['completas']->sum('total_cheques'); }); }) + $stockCheques->sum(function($s) { return $s['series']->sum(function($serie) { return $serie['incompletas']->sum('cheques_disponibles'); }); }) }}</h5>
+                                <h5 class="font-weight-bold">{{ $stockCheques->sum(function($s) { return $s['series']->sum(function($serie) { return $serie['completas']->sum('total_cheques'); }); }) + $stockCheques->sum(function($s) { return $s['series']->sum(function($serie) { return $serie['incompletas']->sum('cheques_disponibles'); }); }) }}</h5>
                                 <p class="mb-0 small">Total de cheques disponibles</p>
                             </div>
                         </div>

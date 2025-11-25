@@ -18,12 +18,19 @@ class Index extends Component
     public $showDeleteModal = false;
     public $servicioId;
     public $servicioIdToDelete;
-    public $nombre, $valor_ur, $activo;
+    public $nombre, $valor_ui, $activo = true;
 
     protected $rules = [
-        'nombre' => 'required|string|max:255|unique:tes_servicios,nombre',
-        'valor_ur' => 'nullable|numeric|min:0',
+        'nombre' => 'required|min:3',
+        'valor_ui' => 'nullable|numeric|min:0',
         'activo' => 'boolean',
+    ];
+
+    protected $messages = [
+        'nombre.required' => 'El nombre es obligatorio.',
+        'nombre.min' => 'El nombre debe tener al menos 3 caracteres.',
+        'valor_ui.numeric' => 'El valor en UI debe ser un número.',
+        'valor_ui.min' => 'El valor en UI no puede ser negativo.',
     ];
 
     public function updatingSearch()
@@ -77,7 +84,7 @@ class Index extends Component
         $servicio = Servicio::findOrFail($id);
         $this->servicioId = $id;
         $this->nombre = $servicio->nombre;
-        $this->valor_ur = $servicio->valor_ur;
+        $this->valor_ui = $servicio->valor_ui;
         $this->activo = $servicio->activo;
         $this->showModal = true;
     }
@@ -90,11 +97,14 @@ class Index extends Component
         // Convertir nombre a mayúsculas
         $nombre = $this->toUpper($this->nombre);
 
+        // Convertir cadena vacía a NULL para valor_ui
+        $valorUi = $this->valor_ui === '' ? null : $this->valor_ui;
+
         Servicio::updateOrCreate(
             ['id' => $this->servicioId],
             [
                 'nombre' => $nombre,
-                'valor_ur' => $this->valor_ur,
+                'valor_ui' => $valorUi,
                 'activo' => $this->activo,
             ]
         );
@@ -142,7 +152,7 @@ class Index extends Component
     {
         $this->servicioId = null;
         $this->nombre = '';
-        $this->valor_ur = null;
+        $this->valor_ui = '';
         $this->activo = true;
     }
 }

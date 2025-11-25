@@ -2,11 +2,16 @@
     @section('title', 'Certificados de Residencia')
 
     <div class="card">
-        <div class="card-header bg-dark text-white">
-            <h3 class="card-title">Gestión de Certificados de Residencia</h3>
+        <div class="card-header bg-info text-white card-header-gradient p-2">
+            <div class="d-flex justify-content-between align-items-center">
+                <h3 class="card-title px-1 m-0">Gestión de Certificados de Residencia</h3>
+                <button class="btn btn-primary" wire:click="$emit('showCreateModal')">
+                    <i class="fas fa-plus"></i> Ingresar Nuevo
+                </button>
+            </div>
         </div>
-        <div class="card-body px-2">
-            <div class="row mb-3 d-print-none">
+        <div class="card-body px-2 pt-1">
+            <div class="row mb-1 d-print-none">
                 <div class="col-md-4">
                     <div class="input-group">
                         <input type="text" wire:model.debounce.300ms="search" class="form-control" placeholder="Buscar por titular o documento...">
@@ -32,11 +37,6 @@
                 </div>
                 <div class="col-md-2 pt-2">
                     <small class="text-muted">{{ $totalRegistros }} registros</small>
-                </div>
-                <div class="col-md-2 text-right">
-                    <button class="btn btn-success" wire:click="$emit('showCreateModal')">
-                        <i class="fas fa-plus"></i> Nuevo
-                    </button>
                 </div>
             </div>
 

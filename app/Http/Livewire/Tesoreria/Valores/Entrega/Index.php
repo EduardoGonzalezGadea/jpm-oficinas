@@ -29,7 +29,7 @@ class Index extends Component
         return [
             'libreta_valor_id' => 'required|exists:tes_libretas_valores,id',
             'servicio_id' => 'required|exists:tes_servicios,id',
-            'numero_recibo_entrega' => 'required|string|max:255|unique:tes_entregas_libretas_valores,numero_recibo_entrega',
+            'numero_recibo_entrega' => 'required|string|max:255',
             'fecha_entrega' => 'required|date|before_or_equal:today',
             'observaciones' => 'nullable|string|max:1000',
         ];

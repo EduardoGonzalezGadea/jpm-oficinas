@@ -15,7 +15,7 @@ class Arrendamiento extends Component
 {
     use WithPagination, ConvertirMayusculas;
 
-    protected $listeners = ['resetForm', 'destroy' => 'destroy', 'refreshComponent' => '$refresh', 'planillaCreated' => '$refresh', 'planillaDeleted' => '$refresh'];
+    protected $listeners = ['resetForm', 'destroy' => 'destroy', 'refreshComponent' => '$refresh', 'planillaCreated' => 'refreshData', 'planillaDeleted' => 'refreshData'];
 
     protected $paginationTheme = 'bootstrap';
 
@@ -36,6 +36,11 @@ class Arrendamiento extends Component
         $this->mes = Carbon::now()->month;
         $this->year = Carbon::now()->year;
         $this->medio_de_pago = 'Transferencia';
+    }
+
+    public function refreshData()
+    {
+        Cache::flush();
     }
 
     public function render()

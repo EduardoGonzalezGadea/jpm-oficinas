@@ -21,6 +21,8 @@ class Index extends Component
     public $mesActual;
     public $anioActual;
     public $fechaHasta;
+    public $searchPendiente = '';
+    public $searchPago = '';
 
     public $tablaCajaChica;
     public $tablaPendientesDetalle;
@@ -103,6 +105,7 @@ class Index extends Component
         'fondoActualizado' => 'flushCacheAndReload',
         'pendienteCreado' => 'flushCacheAndReload',
         'pagoCreado' => 'flushCacheAndReload',
+        'movimientoActualizado' => 'flushCacheAndReload',
         'mostrarAlerta' => 'mostrarAlertaSweet',
     ];
 
@@ -216,15 +219,37 @@ class Index extends Component
         $this->cargarDatos();
     }
 
-    public function irAEditar($id)
+    public function updatedSearchPendiente()
+    {
+        $this->cargarDatos();
+    }
+
+    public function limpiarBuscador()
+    {
+        $this->searchPendiente = '';
+        $this->updatedSearchPendiente();
+    }
+
+    public function updatedSearchPago()
+    {
+        $this->cargarDatos();
+    }
+
+    public function limpiarBuscadorPagos()
+    {
+        $this->searchPago = '';
+        $this->updatedSearchPago();
+    }
+
+    public function irAEditar($id, $abrirModal = false)
     {
         session(['caja_chica_mes' => $this->mesActual, 'caja_chica_anio' => $this->anioActual]);
-        return redirect()->route('tesoreria.caja-chica.pendientes.editar', $id);
+        return redirect()->route('tesoreria.caja-chica.pendientes.editar', ['id' => $id, 'openModal' => $abrirModal]);
     }
 
     public function cargarDatos()
     {
-        $cacheKey = 'caja_chica_report_' . $this->mesActual . '_' . $this->anioActual . '_' . $this->fechaHasta;
+        $cacheKey = 'caja_chica_report_' . $this->mesActual . '_' . $this->anioActual . '_' . $this->fechaHasta . '_' . $this->searchPendiente . '_' . $this->searchPago;
 
         $data = Cache::remember($cacheKey, now()->addHours(1), function () {
             $this->cargarTablaCajaChica();
@@ -277,7 +302,13 @@ class Index extends Component
 
             $pendientesActual = Pendiente::where('relCajaChica', $this->cajaChicaSeleccionada->idCajaChica)
                 ->where('fechaPendientes', '<=', $fechaHastaStr)
+                ->when($this->searchPendiente, function ($query) {
+                    $query->whereHas('dependencia', function ($q) {
+                        $q->where('dependencia', 'like', '%' . $this->searchPendiente . '%');
+                    });
+                })
                 ->with('dependencia')
+                ->withCount('movimientos')
                 ->selectRaw(
                     'tes_cch_pendientes.*,
                     (SELECT SUM(rendido) FROM tes_cch_movimientos WHERE tes_cch_movimientos.relPendiente = tes_cch_pendientes.idPendientes AND fechaMovimientos <= ? AND deleted_at IS NULL) as tot_rendido,
@@ -315,7 +346,13 @@ class Index extends Component
             if ($cajaChicaAnterior) {
                 $pendientesAnterior = Pendiente::where('relCajaChica', $cajaChicaAnterior->idCajaChica)
                     ->where('fechaPendientes', '<=', $fechaHastaStr)
+                    ->when($this->searchPendiente, function ($query) {
+                        $query->whereHas('dependencia', function ($q) {
+                            $q->where('dependencia', 'like', '%' . $this->searchPendiente . '%');
+                        });
+                    })
                     ->with('dependencia')
+                    ->withCount('movimientos')
                     ->selectRaw(
                         'tes_cch_pendientes.*,
                         (SELECT SUM(rendido) FROM tes_cch_movimientos WHERE tes_cch_movimientos.relPendiente = tes_cch_pendientes.idPendientes AND fechaMovimientos <= ? AND deleted_at IS NULL) as tot_rendido,
@@ -362,6 +399,9 @@ class Index extends Component
 
             $pagosActual = Pago::where('relCajaChica_Pagos', $this->cajaChicaSeleccionada->idCajaChica)
                 ->where('fechaEgresoPagos', '<=', $fechaHastaStr)
+                ->when($this->searchPago, function ($query) {
+                    $query->where('conceptoPagos', 'like', '%' . $this->searchPago . '%');
+                })
                 ->with('acreedor')
                 ->selectRaw(
                     'tes_cch_pagos.*,
@@ -389,6 +429,9 @@ class Index extends Component
             if ($cajaChicaAnterior) {
                 $pagosAnterior = Pago::where('relCajaChica_Pagos', $cajaChicaAnterior->idCajaChica)
                     ->where('fechaEgresoPagos', '<=', $fechaHastaStr)
+                    ->when($this->searchPago, function ($query) {
+                        $query->where('conceptoPagos', 'like', '%' . $this->searchPago . '%');
+                    })
                     ->with('acreedor')
                     ->selectRaw(
                         'tes_cch_pagos.*,
@@ -427,12 +470,37 @@ class Index extends Component
 
             $this->tablaTotales['Monto Caja Chica'] = $montoCajaChica;
 
-            // Calcular totales de pendientes usando tablaPendientesDetalle
-            $totalMontoPendientes = $this->tablaPendientesDetalle->sum('montoPendientes');
-            $totalRendido = $this->tablaPendientesDetalle->sum('tot_rendido');
-            $totalReintegrado = $this->tablaPendientesDetalle->sum('tot_reintegrado');
-            $totalRecuperado = $this->tablaPendientesDetalle->sum('tot_recuperado');
-            $stExtras = $this->tablaPendientesDetalle->sum('extra');
+            // Calcular totales de pendientes SIN aplicar filtro de búsqueda
+            $fechaHastaStr = Carbon::createFromFormat('Y-m-d', $this->fechaHasta)->endOfDay()->toDateTimeString();
+            
+            $pendientesParaTotales = Pendiente::where('relCajaChica', $this->cajaChicaSeleccionada->idCajaChica)
+                ->where('fechaPendientes', '<=', $fechaHastaStr)
+                ->with('dependencia')
+                ->selectRaw(
+                    'tes_cch_pendientes.*,
+                    (SELECT SUM(rendido) FROM tes_cch_movimientos WHERE tes_cch_movimientos.relPendiente = tes_cch_pendientes.idPendientes AND fechaMovimientos <= ? AND deleted_at IS NULL) as tot_rendido,
+                    (SELECT SUM(reintegrado) FROM tes_cch_movimientos WHERE tes_cch_movimientos.relPendiente = tes_cch_pendientes.idPendientes AND fechaMovimientos <= ? AND deleted_at IS NULL) as tot_reintegrado,
+                    (SELECT SUM(recuperado) FROM tes_cch_movimientos WHERE tes_cch_movimientos.relPendiente = tes_cch_pendientes.idPendientes AND fechaMovimientos <= ? AND deleted_at IS NULL) as tot_recuperado',
+                    [$fechaHastaStr, $fechaHastaStr, $fechaHastaStr]
+                )
+                ->get()
+                ->map(function ($pendiente) {
+                    $pendiente->tot_rendido = $pendiente->tot_rendido ?? 0;
+                    $pendiente->tot_reintegrado = $pendiente->tot_reintegrado ?? 0;
+                    $pendiente->tot_recuperado = $pendiente->tot_recuperado ?? 0;
+
+                    $totalGastado = $pendiente->tot_rendido + $pendiente->tot_reintegrado;
+                    $diferencia = $totalGastado > 0 ? $totalGastado - $pendiente->montoPendientes : 0;
+                    $pendiente->extra = $diferencia > 0 ? $diferencia : 0;
+
+                    return $pendiente;
+                });
+
+            $totalMontoPendientes = $pendientesParaTotales->sum('montoPendientes');
+            $totalRendido = $pendientesParaTotales->sum('tot_rendido');
+            $totalReintegrado = $pendientesParaTotales->sum('tot_reintegrado');
+            $totalRecuperado = $pendientesParaTotales->sum('tot_recuperado');
+            $stExtras = $pendientesParaTotales->sum('extra');
 
             $totalGastado = $totalRendido + $totalReintegrado;
             $stPendientes = $totalMontoPendientes - $totalGastado;

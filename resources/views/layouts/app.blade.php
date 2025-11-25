@@ -138,7 +138,7 @@
         @include('layouts.nav')
     @endauth
 
-    <main class="@auth container-fluid mt-2 p-2 @else container-fluid @endauth">
+    <main class="@auth container-fluid mt-1 p-2 @else container-fluid @endauth">
         @yield('content')
     </main>
 

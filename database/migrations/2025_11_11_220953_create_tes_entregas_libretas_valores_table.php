@@ -32,9 +32,6 @@ return new class extends Migration
             $table->foreign('created_by')->references('id')->on('users')->onDelete('set null');
             $table->foreign('updated_by')->references('id')->on('users')->onDelete('set null');
             $table->foreign('deleted_by')->references('id')->on('users')->onDelete('set null');
-
-            // Unique constraint for numero_recibo_entrega
-            $table->unique('numero_recibo_entrega');
         });
     }
 

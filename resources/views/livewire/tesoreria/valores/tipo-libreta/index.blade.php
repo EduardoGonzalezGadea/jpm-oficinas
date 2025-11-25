@@ -1,14 +1,14 @@
 <div>
     <div class="card">
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <h4 class="card-title">
+        <div class="card-header bg-info text-white card-header-gradient py-2 px-3 d-flex justify-content-between align-items-center">
+            <h4 class="card-title mb-0">
                 <i class="fas fa-book mr-2"></i>Gestión de Tipos de Libreta
             </h4>
             <div>
-                <a href="{{ route('tesoreria.valores.index') }}" class="btn btn-success mr-2">
-                    <i class="fas fa-barcode mr-1"></i> Libretas de Valores
+                <a href="{{ route('tesoreria.valores.index') }}" class="btn btn-secondary mr-2">
+                    <i class="fas fa-arrow-left mr-1"></i>Regresar a Valores
                 </a>
-                <a href="{{ route('tesoreria.valores.servicios') }}" class="btn btn-success mr-2">
+                <a href="{{ route('tesoreria.valores.servicios') }}" class="btn btn-secondary mr-2">
                     <i class="fas fa-cogs mr-1"></i> Servicios
                 </a>
                 <button wire:click="create()" class="btn btn-primary">
@@ -31,7 +31,7 @@
             </div>
 
             <div class="table-responsive">
-                <table class="table table-striped table-hover">
+                <table class="table table-striped table-hover table-sm">
                     <thead class="thead-dark">
                         <tr>
                             <th class="align-middle">Nombre</th>
@@ -54,10 +54,10 @@
                                 </td>
                                 <td class="text-center align-middle">
                                     <div class="btn-group" role="group">
-                                        <button wire:click="edit({{ $tipo->id }})" class="btn btn-sm btn-warning" title="Editar">
+                                        <button wire:click="edit({{ $tipo->id }})" class="btn btn-sm btn-warning py-0" title="Editar">
                                             <i class="fas fa-edit"></i>
                                         </button>
-                                        <button wire:click="confirmDelete({{ $tipo->id }})" class="btn btn-sm btn-danger" title="Eliminar">
+                                        <button wire:click="confirmDelete({{ $tipo->id }})" class="btn btn-sm btn-danger py-0" title="Eliminar">
                                             <i class="fas fa-trash"></i>
                                         </button>
                                     </div>

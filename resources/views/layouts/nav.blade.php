@@ -48,7 +48,7 @@
                             </a>
                             <div class="dropdown-menu">
                                 <a class="dropdown-item" href="{{ route('tesoreria.valores.index') }}">
-                                    <i class="fas fa-tasks mr-2"></i>Gestión de Libretas
+                                    <i class="fas fa-tasks mr-2"></i>Gestión de Valores
                                 </a>
                                 <div class="dropdown-divider"></div>
                                 <div class="dropdown-submenu submenu-left">

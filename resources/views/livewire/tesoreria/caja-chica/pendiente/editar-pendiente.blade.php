@@ -132,5 +132,5 @@
     <hr>
 
     {{-- El componente hijo recibe los datos actualizados automáticamente --}}
-    <livewire:tesoreria.caja-chica.pendiente.movimientos-pendiente :movimientos="$pendiente->movimientos" :id="$pendiente->idPendientes" />
+    <livewire:tesoreria.caja-chica.pendiente.movimientos-pendiente :movimientos="$pendiente->movimientos" :id="$pendiente->idPendientes" :abrirModalInicialmente="$abrirModalInicialmente" />
 </div>

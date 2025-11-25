@@ -35,6 +35,61 @@
             </div>
         </div>
 
+        <!-- Alertas -->
+        @if($alertasStock->isNotEmpty() || $alertasCheques->isNotEmpty() || $pendientesAnteriores->isNotEmpty() || $pagosAnteriores->isNotEmpty())
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card border-left-warning shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                        <i class="fas fa-exclamation-triangle mr-1"></i> Alertas y Pendientes
+                                    </div>
+                                    
+                                    <!-- Alertas de Stock -->
+                                    @foreach($alertasStock as $alerta)
+                                        <div class="alert alert-{{ $alerta['tipo'] }} mb-2 d-flex justify-content-between align-items-center" role="alert">
+                                            <div>{!! $alerta['mensaje'] !!}</div>
+                                            <a href="{{ route('tesoreria.valores.index') }}" class="alert-link ml-3 text-nowrap"><i class="fas fa-arrow-right"></i> Ir a Valores</a>
+                                        </div>
+                                    @endforeach
+
+                                    <!-- Alertas de Stock (Cheques) -->
+                                    @foreach($alertasCheques as $alerta)
+                                        <div class="alert alert-{{ $alerta['tipo'] }} mb-2 d-flex justify-content-between align-items-center" role="alert">
+                                            <div>{!! $alerta['mensaje'] !!}</div>
+                                            <a href="{{ route('tesoreria.cheques.index') }}" class="alert-link ml-3 text-nowrap"><i class="fas fa-arrow-right"></i> Ir a Cheques</a>
+                                        </div>
+                                    @endforeach
+
+                                    <!-- Pendientes Caja Chica Mes Anterior -->
+                                    @foreach($pendientesAnteriores as $pendiente)
+                                        <div class="alert alert-warning mb-2 d-flex justify-content-between align-items-center" role="alert">
+                                            <div>
+                                                <strong>Caja Chica (Pendiente):</strong> El pendiente "{{ $pendiente->pendiente }}" ({{ $pendiente->dependencia->dependencia ?? 'S/D' }}) del mes anterior aún tiene saldo pendiente.
+                                            </div>
+                                            <a href="{{ route('tesoreria.caja-chica.index') }}" class="alert-link ml-3 text-nowrap"><i class="fas fa-arrow-right"></i> Ir a Caja Chica</a>
+                                        </div>
+                                    @endforeach
+
+                                    <!-- Pagos Caja Chica Mes Anterior -->
+                                    @foreach($pagosAnteriores as $pago)
+                                        <div class="alert alert-warning mb-2 d-flex justify-content-between align-items-center" role="alert">
+                                            <div>
+                                                <strong>Caja Chica (Pago):</strong> El pago del {{ $pago->fechaEgresoPagos->format('d/m/Y') }} ({{ $pago->acreedor->nombre ?? 'S/D' }}) aún tiene saldo pendiente.
+                                            </div>
+                                            <a href="{{ route('tesoreria.caja-chica.index') }}" class="alert-link ml-3 text-nowrap"><i class="fas fa-arrow-right"></i> Ir a Caja Chica</a>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endif
+
         <!-- Accesos Rápidos -->
         <div class="row">
             <div class="col-12">

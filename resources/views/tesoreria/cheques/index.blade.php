@@ -7,10 +7,10 @@
     <div class="row">
         <div class="col-12">
             <div class="card">
-                <div class="card-header py-1">
-                    <h3 class="card-title h5 mb-0">
+                <div class="card-header bg-info text-white card-header-gradient py-2">
+                    <h4 class="card-title mb-0">
                         <i class="fas fa-money-check mr-2"></i>Gestión de Cheques
-                    </h3>
+                    </h4>
                 </div>
                 <div class="card-body p-1 pt-0">
                     <div class="nav nav-pills mb-2" id="cheque-menu" role="tablist">

@@ -69,7 +69,7 @@
                         <select class="form-control form-control-sm" wire:model="filterTipo">
                             <option value="">Todos los Tipos</option>
                             <option value="pesos">Pesos</option>
-                            <option value="UR">UR</option>
+                            <option value="UI">UI</option>
                             <option value="SVE">Sin Valor</option>
                         </select>
                     </div>

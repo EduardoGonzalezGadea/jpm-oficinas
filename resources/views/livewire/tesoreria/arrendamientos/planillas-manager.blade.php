@@ -1,13 +1,13 @@
 <div class="d-print-none">
     <div class="card mt-4">
-        <div class="card-header d-flex justify-content-between align-items-center">
+        <div class="card-header bg-info text-white card-header-gradient d-flex justify-content-between align-items-center">
             <h3 class="mb-0">Gestión de Planillas</h3>
-            <button type="button" class="btn btn-success" wire:click="createPlanilla"
+            <button type="button" class="btn btn-primary" wire:click="createPlanilla"
                     @if($arrendamientosDisponiblesCount == 0) disabled @endif>
                 Crear Nueva Planilla ({{ $arrendamientosDisponiblesCount }} arrendamientos disponibles)
             </button>
         </div>
-        <div class="card-body">
+        <div class="card-body p-2">
             @if ($planillas->isEmpty())
                 <p class="text-center">No hay planillas creadas aún.</p>
             @else

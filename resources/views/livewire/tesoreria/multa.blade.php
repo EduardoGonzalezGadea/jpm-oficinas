@@ -1,13 +1,13 @@
 <div>
 
     <div class="card">
-        <div class="card-header">
+        <div class="card-header bg-info text-white card-header-gradient py-2 px-3">
             <div class="row">
                 <div class="col-md-8 d-flex align-items-center">
-                    <h4 class="mb-0 d-inline-block">
+                    <h4 class="mb-0 d-inline-block mr-3">
                         Listado de Artículos de Multas de Tránsito
                     </h4>
-                    <span id="ur-value-container" class="text-muted ml-2 font-weight-bold"></span>
+                    <span id="ur-value-container" class="text-white ml-2 font-weight-bold"></span>
                 </div>
                 <div class="col-md-4 text-right">
                     <button wire:click="create()" class="btn btn-primary d-print-none">

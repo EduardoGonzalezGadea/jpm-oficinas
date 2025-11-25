@@ -4,10 +4,10 @@
             white-space: nowrap;
         }
     </style>
-    <div class="row">
-        <div class="col-md-12">
+    <div class="container-fluid p-0 m-0">
+        <div>
             <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
+                <div class="card-header bg-info text-white card-header-gradient py-2 px-3 d-flex justify-content-between align-items-center">
                     <h3 class="mb-0">Arrendamientos</h3>
                     <div class="btn-group d-print-none">
                         <a href="{{ route('tesoreria.arrendamientos.imprimir-todo', ['year' => $year, 'mes' => $mes]) }}" target="_blank" class="btn btn-info">
@@ -22,7 +22,7 @@
                         </button>
                     </div>
                 </div>
-                <div class="card-body">
+                <div class="card-body p-2">
                     <!-- Selector de Fecha/Mes/Año -->
                     <div class="form-row mb-3">
                         <div class="col-md-5">

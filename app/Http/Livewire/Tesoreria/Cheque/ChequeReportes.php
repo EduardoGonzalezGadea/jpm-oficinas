@@ -26,6 +26,10 @@ class ChequeReportes extends Component
     public $filtroEnPlanilla = '';
     public $filtroBanco = '';
     public $filtroCuentaBancaria = '';
+    
+    // Historial de reportes de stock
+    public $historialStock = [];
+    public $mostrarHistorial = false;
 
     public $bancos = [];
     public $cuentasBancarias = [];
@@ -58,6 +62,67 @@ class ChequeReportes extends Component
         $this->printMode = request()->query('print', false);
         if ($this->printMode) {
             $this->showReport = true;
+        }
+        $this->cargarHistorial();
+    }
+
+    public function toggleHistorial()
+    {
+        $this->mostrarHistorial = !$this->mostrarHistorial;
+        if ($this->mostrarHistorial) {
+            $this->cargarHistorial();
+        }
+    }
+    
+    public function cargarHistorial()
+    {
+        $path = public_path('.docs/stock-cheques');
+        
+        if (!\Illuminate\Support\Facades\File::exists($path)) {
+            $this->historialStock = [];
+            return;
+        }
+        
+        $files = \Illuminate\Support\Facades\File::files($path);
+        
+        // Ordenar por fecha de modificación descendente
+        usort($files, function($a, $b) {
+            return $b->getMTime() - $a->getMTime();
+        });
+        
+        $this->historialStock = collect($files)->map(function($file) {
+            return [
+                'filename' => $file->getFilename(),
+                'date' => $file->getMTime(),
+                'size' => round($file->getSize() / 1024, 2)
+            ];
+        })->values()->all();
+    }
+
+    public function eliminarReporte($filename)
+    {
+        $path = public_path('.docs/stock-cheques/' . $filename);
+        
+        if (\Illuminate\Support\Facades\File::exists($path)) {
+            \Illuminate\Support\Facades\File::delete($path);
+            $this->cargarHistorial();
+            $this->dispatchBrowserEvent('swal', [
+                'icon' => 'success',
+                'title' => 'Eliminado',
+                'text' => 'El reporte ha sido eliminado correctamente.',
+                'toast' => true,
+                'position' => 'top-end',
+                'timer' => 3000
+            ]);
+        } else {
+            $this->dispatchBrowserEvent('swal', [
+                'icon' => 'error',
+                'title' => 'Error',
+                'text' => 'El archivo no existe.',
+                'toast' => true,
+                'position' => 'top-end',
+                'timer' => 3000
+            ]);
         }
     }
 
@@ -341,7 +406,7 @@ class ChequeReportes extends Component
         }
     }
 
-    protected $listeners = ['getPrintableHtml'];
+    protected $listeners = ['getPrintableHtml', 'stockGenerado' => 'cargarHistorial'];
 
     public function getPrintableHtml()
     {

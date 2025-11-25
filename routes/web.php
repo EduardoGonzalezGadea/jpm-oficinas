@@ -289,6 +289,14 @@ Route::middleware(['web', 'jwt.verify'])->group(function () {
 
         // Rutas para Gestión de Valores
         require __DIR__.'/valores.php';
+
+        // Rutas para Reportes de Stock de Valores (PDF)
+        Route::post('/valores/reportes/upload-stock', [App\Http\Controllers\Tesoreria\StockReporteController::class, 'upload'])->name('valores.reportes.upload-stock');
+        Route::get('/valores/reportes/download-stock/{filename}', [App\Http\Controllers\Tesoreria\StockReporteController::class, 'download'])->name('valores.reportes.download-stock');
+
+        // Rutas para Reportes de Stock de Cheques (PDF)
+        Route::post('/cheques/reportes/upload-stock', [App\Http\Controllers\Tesoreria\StockChequesController::class, 'upload'])->name('cheques.reportes.upload-stock');
+        Route::get('/cheques/reportes/download-stock/{filename}', [App\Http\Controllers\Tesoreria\StockChequesController::class, 'download'])->name('cheques.reportes.download-stock');
     });
 
     // ------------------------------------------------------------------------

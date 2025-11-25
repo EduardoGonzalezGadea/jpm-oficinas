@@ -6,7 +6,7 @@
     <div class="container-fluid p-0">
         <div class="row mb-4">
             <div class="col-12">
-                <div class="card bg-info text-white">
+                <div class="card bg-primary text-white">
                     <div class="card-body">
                         <div class="row align-items-center">
                             <div class="col-md-8">

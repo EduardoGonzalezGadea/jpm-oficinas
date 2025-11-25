@@ -214,6 +214,13 @@
                                         <i class="fas fa-print mr-1"></i>Imprimir
                                     </button>
                                 </div>
+                                @if($reporteTipo === 'stock')
+                                    <div class="col-md-4 mt-2">
+                                        <button onclick="generatePDF()" class="btn btn-danger btn-block" @if(!$showReport) disabled @endif>
+                                            <i class="fas fa-file-pdf mr-1"></i>Descargar PDF
+                                        </button>
+                                    </div>
+                                @endif
                                 @if($reporteTipo === 'listado_general')
                                 <div class="col-md-4 mt-2">
                                     <button wire:click="limpiarFiltros" class="btn btn-secondary btn-block">
@@ -222,6 +229,8 @@
                                 </div>
                                 @endif
                             </div>
+
+
 
                             @if($reporteTipo === 'listado_general')
                                 <!-- Filtros de fecha para listado general -->
@@ -317,4 +326,239 @@
             </div>
         @endif
     </div>
+
+    @if($reporteTipo === 'stock')
+        <!-- Historial de Reportes (Acordeón) -->
+        <div class="accordion mt-4 d-print-none" id="accordionHistorial" wire:poll.visible.10s="cargarHistorial">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h2 class="mb-0 flex-grow-1">
+                        <button class="btn btn-link btn-block text-left" type="button" wire:click="toggleHistorial">
+                            <i class="fas fa-history mr-2"></i>Historial de Reportes Guardados
+                            @if($mostrarHistorial)
+                                <i class="fas fa-chevron-up float-right"></i>
+                            @else
+                                <i class="fas fa-chevron-down float-right"></i>
+                            @endif
+                        </button>
+                    </h2>
+                </div>
+
+                <div id="collapseHistorial" class="collapse {{ $mostrarHistorial ? 'show' : '' }}">
+                    <div class="card-body">
+                        @if(count($historialStock) > 0)
+                            <div class="list-group">
+                                @foreach($historialStock as $index => $archivo)
+                                    <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" wire:key="historial-{{ $index }}">
+                                        <a href="{{ route('tesoreria.cheques.reportes.download-stock', $archivo['filename']) }}" target="_blank" class="text-dark text-decoration-none flex-grow-1">
+                                            <i class="fas fa-file-pdf text-danger mr-2"></i>
+                                            {{ \Carbon\Carbon::parse($archivo['date'])->format('d/m/Y H:i:s') }}
+                                            <small class="text-muted ml-2">({{ $archivo['filename'] }})</small>
+                                            <span class="badge badge-primary badge-pill ml-2">{{ $archivo['size'] }} KB</span>
+                                        </a>
+                                        <button class="btn btn-sm btn-outline-danger ml-2" onclick="confirmarEliminacionReporte('{{ $archivo['filename'] }}')">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </button>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @else
+                            <p class="text-muted text-center mb-0">No hay reportes guardados.</p>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script>
+        function printReport() {
+            window.print();
+        }
+
+        function generatePDF() {
+            // Seleccionar el contenedor del reporte
+            const element = document.querySelector('.reporte-contenido');
+            if (!element) {
+                console.error('Elemento .reporte-contenido no encontrado');
+                return;
+            }
+
+            // Mostrar indicador de carga
+            Swal.fire({
+                title: 'Generando PDF...',
+                text: 'Por favor espere mientras se prepara el documento.',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            // Crear un contenedor temporal para incluir el encabezado que no está en .reporte-contenido
+            setTimeout(() => {
+            const container = document.createElement('div');
+            container.innerHTML = `
+                <div class="print-header" style="text-align: center; margin-bottom: 20px;">
+                    <h2 style="margin: 0; font-size: 18pt;">JEFATURA DE POLICÍA DE MONTEVIDEO</h2>
+                    <h3 style="margin: 5px 0; font-size: 16pt;">DIRECCIÓN DE TESORERÍA</h3>
+                    <h4 style="margin-top: 15px; font-size: 14pt;"><strong>STOCK DE CHEQUES AL {{ now()->format('d/m/Y') }}</strong></h4>
+                </div>
+            `;
+            // Clonar el contenido para no afectar la vista actual
+            container.appendChild(element.cloneNode(true));
+
+            // Ajustar estilos para el PDF en el clon
+            const tables = container.querySelectorAll('table');
+            tables.forEach(table => {
+                table.style.width = '100%';
+                table.style.borderCollapse = 'collapse';
+                table.style.marginBottom = '10px';
+                table.style.fontSize = '10pt';
+            });
+            
+            const cells = container.querySelectorAll('th, td');
+            cells.forEach(cell => {
+                cell.style.border = '1px solid black';
+                cell.style.padding = '4px';
+            });
+
+            // Configuración optimizada para html2pdf (basada en Valores pero landscape)
+            const opt = {
+                margin:       10,
+                filename:     'stock_cheques_{{ now()->format("Y-m-d_H-i-s") }}.pdf',
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { 
+                    scale: 2, 
+                    useCORS: true, 
+                    logging: true,
+                    scrollY: 0,
+                    windowWidth: document.documentElement.offsetWidth
+                },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' },
+                pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
+            };
+
+            // Generar PDF
+            html2pdf().set(opt).from(container).toPdf().get('pdf').then(function(pdf) {
+                // Descargar localmente
+                pdf.save(opt.filename);
+                
+                // Obtener blob para subir
+                const blob = pdf.output('blob');
+                uploadPdf(blob);
+
+            }).catch(err => {
+                console.error(err);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Hubo un error al generar el PDF.'
+                });
+            });
+            }, 100);
+        }
+
+        function uploadPdf(blob) {
+            const formData = new FormData();
+            formData.append('pdf', blob, 'reporte.pdf');
+
+            // No mostramos otro Swal de carga aquí porque ya viene del generatePDF
+            // Solo actualizamos el estado si fuera necesario, pero fetch es rápido.
+
+            fetch('{{ route("tesoreria.cheques.reportes.upload-stock") }}', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Emitir evento a Livewire para actualizar la lista
+                    Livewire.emit('stockGenerado');
+
+                    // Mostrar éxito como Toast (menos intrusivo)
+                    const Toast = Swal.mixin({
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 3000,
+                        timerProgressBar: true,
+                        didOpen: (toast) => {
+                            toast.addEventListener('mouseenter', Swal.stopTimer)
+                            toast.addEventListener('mouseleave', Swal.resumeTimer)
+                        }
+                    });
+                    
+                    Toast.fire({
+                        icon: 'success',
+                        title: 'Reporte guardado en el historial'
+                    });
+                } else {
+                    throw new Error('Error en la respuesta del servidor');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'No se pudo guardar el reporte en el historial.'
+                });
+            });
+        }
+
+        // Listener para eventos SweetAlert desde Livewire
+        window.addEventListener('swal', event => {
+            const data = event.detail;
+            
+            if (data.toast) {
+                // Mostrar como toast
+                const Toast = Swal.mixin({
+                    toast: true,
+                    position: data.position || 'top-end',
+                    showConfirmButton: data.showConfirmButton !== undefined ? data.showConfirmButton : false,
+                    timer: data.timer || 3000,
+                    timerProgressBar: true,
+                    didOpen: (toast) => {
+                        toast.addEventListener('mouseenter', Swal.stopTimer)
+                        toast.addEventListener('mouseleave', Swal.resumeTimer)
+                    }
+                });
+                
+                Toast.fire({
+                    icon: data.icon,
+                    title: data.title,
+                    text: data.text
+                });
+            } else {
+                // Mostrar como alerta normal
+                Swal.fire({
+                    icon: data.icon,
+                    title: data.title,
+                    text: data.text,
+                    confirmButtonText: data.confirmButtonText || 'OK'
+                });
+            }
+        });
+
+        function confirmarEliminacionReporte(filename) {
+            Swal.fire({
+                title: '¿Estás seguro?',
+                text: "No podrás revertir esta acción. El archivo será eliminado permanentemente.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    @this.eliminarReporte(filename);
+                }
+            })
+        }
+    </script>
 </div>

@@ -222,7 +222,7 @@
                                 <select class="form-control @error('tipo_monto') is-invalid @enderror"
                                     wire:model="tipo_monto">
                                     <option value="pesos">Pesos</option>
-                                    <option value="UR">Unidad Reajustable</option>
+                                    <option value="UI">Unidad Indexada</option>
                                     <option value="porcentaje">Porcentaje</option>
                                 </select>
                                 @error('tipo_monto')

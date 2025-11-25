@@ -27,7 +27,7 @@ class Index extends Component
     public $campoEnfoque = 'servicio_entrega_id'; // Campo que debe tener el foco
 
     public $search = '';
-    public $estado = '';
+    public $estado = 'en_stock';
 
     protected function rules()
     {
@@ -44,7 +44,7 @@ class Index extends Component
     {
         return [
             'servicio_entrega_id' => 'required|exists:tes_servicios,id',
-            'numero_recibo_entrega' => 'required|string|max:255|unique:tes_entregas_libretas_valores,numero_recibo_entrega',
+            'numero_recibo_entrega' => 'required|string|max:255',
             'fecha_entrega' => 'required|date|before_or_equal:today',
             'observaciones_entrega' => 'nullable|string|max:1000',
         ];
@@ -70,7 +70,7 @@ class Index extends Component
     public function clearFilters()
     {
         $this->search = '';
-        $this->estado = '';
+        $this->estado = 'en_stock';
         $this->resetPage();
     }
 
@@ -183,10 +183,23 @@ class Index extends Component
 
         // Aplicar filtro de estado
         if (!empty($this->estado)) {
-            $query->where('estado', $this->estado);
+            if ($this->estado === 'agotada') {
+                $query->where(function($q) {
+                    $q->whereIn('estado', ['agotada', 'finalizada'])
+                      ->orWhere('proximo_recibo_disponible', 0);
+                });
+            } else {
+                $query->where('estado', $this->estado);
+            }
         }
 
-        $libretas = $query->orderBy('fecha_recepcion', 'desc')->paginate(10);
+        $libretas = $query->join('tes_tipos_libretas', 'tes_libretas_valores.tipo_libreta_id', '=', 'tes_tipos_libretas.id')
+            ->select('tes_libretas_valores.*')
+            ->orderBy('tes_tipos_libretas.nombre', 'asc')
+            ->orderBy('tes_libretas_valores.fecha_recepcion', 'asc')
+            ->orderBy('tes_libretas_valores.serie', 'asc')
+            ->orderBy('tes_libretas_valores.numero_inicial', 'asc')
+            ->paginate(10);
 
         $tiposLibreta = Cache::remember('tipos_libreta_all', now()->addDay(), function () {
             return TipoLibreta::orderBy('nombre')->get();

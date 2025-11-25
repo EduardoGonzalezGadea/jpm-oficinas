@@ -16,7 +16,7 @@ class Eventuales extends Component
 {
     use WithPagination, ConvertirMayusculas;
 
-    protected $listeners = ['resetForm', 'destroy' => 'destroy', 'refreshComponent' => '$refresh', 'planillaCreated' => '$refresh', 'planillaDeleted' => '$refresh'];
+    protected $listeners = ['resetForm', 'destroy' => 'destroy', 'refreshComponent' => '$refresh', 'planillaCreated' => 'refreshData', 'planillaDeleted' => 'refreshData'];
 
     protected $paginationTheme = 'bootstrap';
 
@@ -39,6 +39,11 @@ class Eventuales extends Component
         $this->year = Carbon::now()->year;
         $this->fecha = Carbon::now()->format('Y-m-d');
         $this->medio_de_pago = 'Transferencia';
+    }
+
+    public function refreshData()
+    {
+        Cache::flush();
     }
 
     public function render()

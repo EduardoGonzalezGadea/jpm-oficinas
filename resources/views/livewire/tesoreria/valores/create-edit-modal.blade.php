@@ -29,7 +29,7 @@
                                 <label>Tipo de Valor <span class="text-danger">*</span></label>
                                 <select class="form-control @error('tipo_valor') is-invalid @enderror" wire:model="tipo_valor">
                                     <option value="pesos">Pesos</option>
-                                    <option value="UR">Unidad Reajustable</option>
+                                    <option value="UI">Unidad Indexada</option>
                                     <option value="SVE">Sin Valor Escrito</option>
                                 </select>
                                 @error('tipo_valor') <div class="invalid-feedback">{{ $message }}</div> @enderror

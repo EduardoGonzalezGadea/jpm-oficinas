@@ -15,6 +15,15 @@
 .btn {
     background-image: linear-gradient(to bottom, rgba(255, 255, 255, 0.371), rgba(255, 255, 255, 0.086) 49%, rgba(0, 0, 0, 0.075) 51%, rgba(0,0,0,0.05));
     background-repeat: repeat-x;
+    border: 1px solid #343a40;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    border-radius: 5px !important;
+}
+
+.btn:hover,
+.btn:active,
+.btn.active {
+    border-color: #ffc107 !important;
 }
 
 /* The switch - the box around the slider */
@@ -131,4 +140,24 @@ input:checked + .slider:before {
 
 .btn-scroll-bottom-float:hover {
     background-color: #1e7e34;
+}
+
+/* Gradiente horizontal para encabezados de tarjetas */
+.card-header-gradient {
+    background-image: linear-gradient(90deg, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.3) 25%, rgba(0, 0, 0, 0.15) 50%, rgba(255, 255, 255, 0.2) 75%, rgba(255, 255, 255, 0.8) 100%);
+}
+
+/* Efecto hover opcional para interacción */
+.card-header-gradient:hover {
+    background-position: right center;
+}
+
+/* Variante para texto blanco en encabezados */
+.text-white.card-header-gradient {
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* Efecto de transición suave para mejor UX */
+.card-header {
+    transition: all 0.3s ease;
 }

@@ -1,8 +1,8 @@
 <div class="d-print-none">
     <div class="card mt-4">
-        <div class="card-header d-flex justify-content-between align-items-center">
+        <div class="card-header bg-info text-white card-header-gradient py-2 px-3 d-flex justify-content-between align-items-center">
             <h3 class="mb-0">Gestión de Planillas</h3>
-            <button type="button" class="btn btn-success" wire:click="createPlanilla"
+            <button type="button" class="btn btn-primary" wire:click="createPlanilla"
                     @if($eventualesDisponiblesCount == 0) disabled @endif>
                 Crear Nueva Planilla ({{ $eventualesDisponiblesCount }} eventuales disponibles)
             </button>

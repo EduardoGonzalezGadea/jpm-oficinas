@@ -1,6 +1,6 @@
 <div>
     <div class="card">
-        <div class="card-header d-flex justify-content-between align-items-center">
+        <div class="card-header bg-info text-white card-header-gradient py-2 px-3 d-flex justify-content-between align-items-center">
             <h3 class="mb-0">Listado de Porte de Armas</h3>
             <div class="btn-group d-print-none">
                 <button wire:click="create" class="btn btn-primary">

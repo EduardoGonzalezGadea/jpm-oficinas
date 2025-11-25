@@ -39,6 +39,47 @@
                         <input type="text" wire:model.defer="titular_nro_documento" class="form-control" id="edit_titular_nro_documento">
                         @error('titular_nro_documento') <span class="text-danger">{{ $message }}</span> @enderror
                     </div>
+
+                    @if ($estado == 'Entregado' || $fecha_entregado)
+                        <hr>
+                        <h5>Datos de Entrega</h5>
+
+                        <div class="form-group">
+                            <label for="edit_fecha_entregado">Fecha de Entrega</label>
+                            <input type="date" wire:model.defer="fecha_entregado" class="form-control" id="edit_fecha_entregado">
+                            @error('fecha_entregado') <span class="text-danger">{{ $message }}</span> @enderror
+                        </div>
+
+                        <div class="form-group">
+                            <label for="edit_retira_nombre">Nombre de quien retira</label>
+                            <input type="text" wire:model.defer="retira_nombre" class="form-control" id="edit_retira_nombre">
+                            @error('retira_nombre') <span class="text-danger">{{ $message }}</span> @enderror
+                        </div>
+
+                        <div class="form-group">
+                            <label for="edit_retira_apellido">Apellido de quien retira</label>
+                            <input type="text" wire:model.defer="retira_apellido" class="form-control" id="edit_retira_apellido">
+                            @error('retira_apellido') <span class="text-danger">{{ $message }}</span> @enderror
+                        </div>
+
+                        <div class="form-group">
+                            <label for="edit_retira_tipo_documento">Tipo de Documento</label>
+                            <select wire:model.defer="retira_tipo_documento" class="form-control" id="edit_retira_tipo_documento">
+                                <option value="">Seleccione...</option>
+                                <option value="Cédula">Cédula</option>
+                                <option value="Cédula Extranjera">Cédula Extranjera</option>
+                                <option value="Pasaporte">Pasaporte</option>
+                                <option value="Otro">Otro</option>
+                            </select>
+                            @error('retira_tipo_documento') <span class="text-danger">{{ $message }}</span> @enderror
+                        </div>
+
+                        <div class="form-group">
+                            <label for="edit_retira_nro_documento">Nro. de Documento</label>
+                            <input type="text" wire:model.defer="retira_nro_documento" class="form-control" id="edit_retira_nro_documento">
+                            @error('retira_nro_documento') <span class="text-danger">{{ $message }}</span> @enderror
+                        </div>
+                    @endif
                 </form>
             </div>
             <div class="modal-footer">

@@ -46,8 +46,8 @@ class Index extends Component
 
     public function refreshData()
     {
-        $this->loadYears();
-        // The component will automatically re-render after this.
+        // Al llamar a este método desde un evento, Livewire vuelve a renderizar el componente.
+        // Esto vuelve a ejecutar el método render(), que obtiene los datos actualizados.
     }
 
     public function loadYears()

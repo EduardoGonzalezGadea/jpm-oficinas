@@ -10,7 +10,7 @@ use DOMXPath;
 class UtilidadController extends Controller
 {
     /**
-     * Obtiene el valor de la Unidad Reajustable (UR) desde el sitio del BPS.
+     * Obtiene el valor de la Unidad Indexada (UI) desde el sitio del BPS.
      * Almacena el valor en caché durante 4 horas para evitar múltiples solicitudes.
      */
     public function getValorUr()
@@ -54,8 +54,8 @@ class UtilidadController extends Controller
                 @$dom->loadHTML($html);
                 $xpath = new DOMXPath($dom);
 
-                // Buscar la fila que contiene "Unidad Reajustable (UR)" y obtener el valor de la tercera columna
-                $query = "//table//tr[td[1][contains(., 'Unidad Reajustable (UR)')]]/td[3]";
+                // Buscar la fila que contiene "Unidad Indexada (UI)" y obtener el valor de la tercera columna
+                $query = "//table//tr[td[1][contains(., 'Unidad Indexada (UI)')]]/td[3]";
                 $nodos = $xpath->query($query);
 
                 \Log::info('Nodos encontrados: ' . $nodos->length);

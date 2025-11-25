@@ -7,7 +7,7 @@
     <div class="row">
         <div class="col-md-12">
             <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
+                <div class="card-header bg-info text-white card-header-gradient py-2 px-3 d-flex justify-content-between align-items-center">
                     <h3 class="mb-0">Eventuales</h3>
                     <div class="btn-group d-print-none">
                         <a href="{{ route('tesoreria.eventuales.instituciones') }}" class="btn btn-secondary">

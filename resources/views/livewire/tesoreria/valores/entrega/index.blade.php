@@ -1,12 +1,12 @@
 <div>
     <div class="card">
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <h4 class="card-title">
+        <div class="card-header bg-info text-white card-header-gradient py-2 px-3 d-flex justify-content-between align-items-center">
+            <h4 class="card-title mb-0">
                 <i class="fas fa-handshake mr-2"></i>Entregas de Libretas de Valores
             </h4>
             <div>
-                <a href="{{ route('tesoreria.valores.index') }}" class="btn btn-success mr-2">
-                    <i class="fas fa-barcode mr-1"></i> Libretas de Valores
+                <a href="{{ route('tesoreria.valores.index') }}" class="btn btn-secondary mr-2">
+                    <i class="fas fa-arrow-left mr-1"></i>Regresar a Valores
                 </a>
                 <button wire:click="create()" class="btn btn-primary">
                     <i class="fas fa-plus mr-1"></i> Registrar Entrega
@@ -43,27 +43,27 @@
             </div>
 
             <div class="table-responsive">
-                <table class="table table-striped table-hover">
+                <table class="table table-striped table-hover table-sm">
                     <thead class="thead-dark">
                         <tr>
-                            <th>Recibo Entrega</th>
-                            <th>Tipo Libreta</th>
-                            <th>Numeración</th>
-                            <th>Servicio</th>
-                            <th class="text-center">Fecha Entrega</th>
-                            <th class="text-center">Acciones</th>
+                            <th class="align-middle">Recibo Entrega</th>
+                            <th class="align-middle">Tipo Libreta</th>
+                            <th class="align-middle">Numeración</th>
+                            <th class="align-middle">Servicio</th>
+                            <th class="text-center align-middle">Fecha Entrega</th>
+                            <th class="text-center align-middle">Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse($entregas as $entrega)
                             <tr>
-                                <td>{{ $entrega->numero_recibo_entrega }}</td>
-                                <td>{{ $entrega->libretaValor->tipoLibreta->nombre }}</td>
-                                <td>{{ $entrega->libretaValor->numero_inicial }} al {{ $entrega->libretaValor->numero_final }}</td>
-                                <td>{{ $entrega->servicio->nombre }}</td>
-                                <td class="text-center">{{ $entrega->fecha_entrega->format('d/m/Y') }}</td>
-                                <td class="text-center">
-                                    <button wire:click="confirmAnular({{ $entrega->id }})" class="btn btn-sm btn-danger" title="Anular Entrega">
+                                <td class="align-middle">{{ $entrega->numero_recibo_entrega }}</td>
+                                <td class="align-middle">{{ $entrega->libretaValor->tipoLibreta->nombre }}</td>
+                                <td class="align-middle">{{ $entrega->libretaValor->numero_inicial }} al {{ $entrega->libretaValor->numero_final }}</td>
+                                <td class="align-middle">{{ $entrega->servicio->nombre }}</td>
+                                <td class="text-center align-middle">{{ $entrega->fecha_entrega->format('d/m/Y') }}</td>
+                                <td class="text-center align-middle">
+                                    <button wire:click="confirmAnular({{ $entrega->id }})" class="btn btn-sm btn-danger py-0" title="Anular Entrega">
                                         <i class="fas fa-ban"></i>
                                     </button>
                                 </td>
@@ -84,7 +84,7 @@
 
     <!-- Modal Registrar Entrega -->
     @if($showModal)
-    <div class="modal fade show" style="display: block;" tabindex="-1" role="dialog">
+    <div class="modal fade show" id="modalRegistrarEntrega" style="display: block;" tabindex="-1" role="dialog">
         <div class="modal-dialog modal-lg modal-dialog-scrollable" role="document">
             <div class="modal-content">
                 <div class="modal-header">
@@ -96,7 +96,7 @@
                 <div class="modal-body">
                     <div class="form-group">
                         <label for="libreta_valor_id">Libreta a Entregar</label>
-                        <select wire:model.live="libreta_valor_id" id="libreta_valor_id" class="form-control @error('libreta_valor_id') is-invalid @enderror">
+                        <select wire:model.live="libreta_valor_id" id="libreta_valor_id" class="form-control @error('libreta_valor_id') is-invalid @enderror" autofocus>
                             <option value="">Seleccione una libreta...</option>
                             @foreach($libretasDisponibles as $libreta)
                                 <option value="{{ $libreta->id }}">
@@ -141,7 +141,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" wire:click="closeModal">Cancelar</button>
-                    <button type="button" class="btn btn-primary" wire:click="save()">Registrar Entrega</button>
+                    <button type="button" class="btn btn-primary" wire:click="save()" id="btn_guardar_entrega">Registrar Entrega</button>
                 </div>
             </div>
         </div>
@@ -174,3 +174,56 @@
     @endif
 </div>
 
+    @push('scripts')
+    <script>
+        document.addEventListener('livewire:load', function () {
+            const modalId = 'modalRegistrarEntrega';
+            const formElements = [
+                'libreta_valor_id',
+                'servicio_id',
+                'numero_recibo_entrega',
+                'fecha_entrega',
+                'observaciones',
+                'btn_guardar_entrega'
+            ];
+
+            // Autoenfoque robusto usando MutationObserver
+            const observer = new MutationObserver((mutations) => {
+                mutations.forEach((mutation) => {
+                    if (mutation.addedNodes.length) {
+                        const modal = document.getElementById(modalId);
+                        if (modal && document.contains(modal)) {
+                            const firstField = document.getElementById('libreta_valor_id');
+                            if (firstField) setTimeout(() => firstField.focus(), 100);
+                        }
+                    }
+                });
+            });
+
+            observer.observe(document.body, { childList: true, subtree: true });
+
+            // Navegación con Enter
+            document.addEventListener('keydown', function (e) {
+                if (e.key !== 'Enter') return;
+
+                const modal = document.getElementById(modalId);
+                if (modal && modal.contains(e.target)) {
+                    const currentId = e.target.id;
+                    const currentIndex = formElements.indexOf(currentId);
+
+                    if (currentIndex > -1) {
+                        if (currentIndex < formElements.length - 1) {
+                            e.preventDefault();
+                            const nextId = formElements[currentIndex + 1];
+                            const nextEl = document.getElementById(nextId);
+                            if (nextEl) {
+                                nextEl.focus();
+                                if (nextEl.tagName === 'INPUT') nextEl.select();
+                            }
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+    @endpush
