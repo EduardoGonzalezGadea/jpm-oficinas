@@ -26,7 +26,7 @@ class ChequeReportes extends Component
     public $filtroEnPlanilla = '';
     public $filtroBanco = '';
     public $filtroCuentaBancaria = '';
-    
+
     // Historial de reportes de stock
     public $historialStock = [];
     public $mostrarHistorial = false;
@@ -73,24 +73,24 @@ class ChequeReportes extends Component
             $this->cargarHistorial();
         }
     }
-    
+
     public function cargarHistorial()
     {
         $path = public_path('.docs/stock-cheques');
-        
+
         if (!\Illuminate\Support\Facades\File::exists($path)) {
             $this->historialStock = [];
             return;
         }
-        
+
         $files = \Illuminate\Support\Facades\File::files($path);
-        
+
         // Ordenar por fecha de modificación descendente
-        usort($files, function($a, $b) {
+        usort($files, function ($a, $b) {
             return $b->getMTime() - $a->getMTime();
         });
-        
-        $this->historialStock = collect($files)->map(function($file) {
+
+        $this->historialStock = collect($files)->map(function ($file) {
             return [
                 'filename' => $file->getFilename(),
                 'date' => $file->getMTime(),
@@ -102,7 +102,7 @@ class ChequeReportes extends Component
     public function eliminarReporte($filename)
     {
         $path = public_path('.docs/stock-cheques/' . $filename);
-        
+
         if (\Illuminate\Support\Facades\File::exists($path)) {
             \Illuminate\Support\Facades\File::delete($path);
             $this->cargarHistorial();
@@ -139,9 +139,18 @@ class ChequeReportes extends Component
 
     public function updating($property)
     {
-        if (in_array($property, ['filtroEstado', 'filtroFechaIngresoDesde', 'filtroFechaIngresoHasta',
-                                'filtroFechaEmisionDesde', 'filtroFechaEmisionHasta',
-                                'filtroFechaAnulacionDesde', 'filtroFechaAnulacionHasta', 'filtroEnPlanilla', 'filtroBanco', 'filtroCuentaBancaria'])) {
+        if (in_array($property, [
+            'filtroEstado',
+            'filtroFechaIngresoDesde',
+            'filtroFechaIngresoHasta',
+            'filtroFechaEmisionDesde',
+            'filtroFechaEmisionHasta',
+            'filtroFechaAnulacionDesde',
+            'filtroFechaAnulacionHasta',
+            'filtroEnPlanilla',
+            'filtroBanco',
+            'filtroCuentaBancaria'
+        ])) {
             $this->resetPage();
         }
     }
@@ -171,6 +180,18 @@ class ChequeReportes extends Component
         $this->filtroBanco = '';
         $this->filtroCuentaBancaria = '';
         $this->cuentasBancarias = collect();
+        $this->resetPage();
+    }
+
+    public function activarImpresion()
+    {
+        $this->printMode = true;
+        $this->dispatchBrowserEvent('printNow');
+    }
+
+    public function cancelarImpresion()
+    {
+        $this->printMode = false;
         $this->resetPage();
     }
 
@@ -238,7 +259,7 @@ class ChequeReportes extends Component
                             return (int)$cheque->numero_cheque < (int)$primerChequeDisponibleNum;
                         })
                         ->count();
-                    
+
                     // 'Anulados' son todos los cheques anulados en la libreta.
                     $chequesAnulados = $chequesEnLibreta->where('estado', 'anulado')->count();
 

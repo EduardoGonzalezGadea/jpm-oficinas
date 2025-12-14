@@ -47,9 +47,9 @@
                             <div class="card h-100 border-info">
                                 <div class="card-body">
                                     <i class="fas fa-car text-info mb-3" style="font-size: 2rem;"></i>
-                                    <h5 class="card-title">Multas de Tránsito</h5>
+                                    <h5 class="card-title">Artículos de Multas de Tránsito</h5>
                                     <p class="card-text text-muted">
-                                        Gestión integral del sistema de multas.
+                                        Listado de artículos de multas de tránsito.
                                     </p>
                                 </div>
                             </div>

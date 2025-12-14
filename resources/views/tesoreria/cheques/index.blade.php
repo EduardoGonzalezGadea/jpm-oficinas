@@ -7,7 +7,7 @@
     <div class="row no-gutters">
         <div class="col-12">
             <div class="card">
-                <div class="card-header bg-info text-white card-header-gradient py-2 d-flex justify-content-between align-items-center">
+                <div class="card-header bg-info text-white card-header-gradient py-2 d-flex justify-content-between align-items-center d-print-none">
                     <h4 class="card-title mb-0">
                         <strong><i class="fas fa-money-check mr-2"></i>Gestión de Cheques</strong>
                     </h4>
@@ -18,7 +18,7 @@
                     </div>
                 </div>
                 <div class="card-body p-1 pt-2">
-                    <div class="nav nav-pills" id="cheque-menu" role="tablist">
+                    <div class="nav nav-pills d-print-none" id="cheque-menu" role="tablist">
                         <a href="#emitir" class="nav-link py-1 px-2" data-toggle="pill" role="tab" data-tab="emitir">
                             <i class="fas fa-paper-plane mr-1"></i>Cheques
                         </a>
@@ -29,7 +29,7 @@
                             <i class="fas fa-chart-bar mr-1"></i>Reportes
                         </a>
                     </div>
-                    <hr class="mt-0 mb-3">
+                    <hr class="mt-0 mb-3 d-print-none">
                     <div class="tab-content">
                         <div class="tab-pane fade" id="emitir">
                             @livewire('tesoreria.cheque.cheque-emitir')

@@ -10,37 +10,42 @@
         </div>
         <div class="card-body p-2">
             @if (session()->has('message'))
-                <div class="alert alert-success alert-dismissible fade show" role="alert">
-                    {{ session('message') }}
-                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                {{ session('message') }}
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
             @endif
 
             <div class="form-row mb-2">
                 <div class="col-md-12">
                     <div class="input-group">
                         <input type="text" class="form-control form-control-sm" placeholder="Buscar..." wire:model="search">
+                        <div class="input-group-append">
+                            <button class="btn btn-sm btn-outline-danger" type="button" wire:click="$set('search', '')" title="Limpiar filtro">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
 
             <table class="table table-bordered table-sm">
-            <thead>
-                <tr>
-                    <th>Fecha</th>
-                    <th>Titular</th>
-                    <th>Cédula</th>
-                    <th>Orden Cobro</th>
-                    <th>N° Trámite</th>
-                    <th>Monto</th>
-                    <th>Recibo</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse($registros as $registro)
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Titular</th>
+                        <th>Cédula</th>
+                        <th>Orden Cobro</th>
+                        <th>N° Trámite</th>
+                        <th>Monto</th>
+                        <th>Recibo</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($registros as $registro)
                     <tr>
                         <td class="align-middle">{{ $registro->fecha->format('d/m/Y') }}</td>
                         <td class="align-middle">{{ $registro->titular }}</td>
@@ -50,10 +55,10 @@
                         <td class="align-middle text-nowrap">$ {{ number_format($registro->monto, 2, ',', '.') }}</td>
                         <td class="align-middle">{{ $registro->recibo }}</td>
                         <td class="align-middle text-nowrap">
-                            <a href="{{ route('tesoreria.armas.porte.imprimir', $registro->id) }}" 
-                               target="_blank" 
-                               class="btn btn-sm btn-success" 
-                               title="Imprimir Recibo">
+                            <a href="{{ route('tesoreria.armas.porte.imprimir', $registro->id) }}"
+                                target="_blank"
+                                class="btn btn-sm btn-success"
+                                title="Imprimir Recibo">
                                 <i class="fas fa-print"></i>
                             </a>
                             <button wire:click="showDetails({{ $registro->id }})" class="btn btn-sm btn-secondary" title="Ver Detalle">
@@ -67,13 +72,13 @@
                             </button>
                         </td>
                     </tr>
-                @empty
+                    @empty
                     <tr>
                         <td colspan="8" class="text-center">No hay registros disponibles</td>
                     </tr>
-                @endforelse
-            </tbody>
-        </table>
+                    @endforelse
+                </tbody>
+            </table>
 
             <div class="d-flex justify-content-center">
                 {{ $registros->links() }}
@@ -83,8 +88,8 @@
 
     <!-- Modal de Crear/Editar -->
     <div class="modal fade @if($showModal) show @endif"
-         style="@if($showModal) display: block; @endif"
-         tabindex="-1" role="dialog">
+        style="@if($showModal) display: block; @endif"
+        tabindex="-1" role="dialog">
         <div class="modal-dialog modal-lg modal-dialog-scrollable" role="document">
             <div class="modal-content">
                 <div class="modal-header">
@@ -102,9 +107,9 @@
                                 <div class="form-group">
                                     <label>Fecha <span class="text-danger">*</span></label>
                                     <input type="date" class="form-control @error('fecha') is-invalid @enderror"
-                                           wire:model="fecha" id="fecha">
+                                        wire:model="fecha" id="fecha">
                                     @error('fecha')
-                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
                             </div>
@@ -112,9 +117,9 @@
                                 <div class="form-group">
                                     <label>Monto <span class="text-danger">*</span></label>
                                     <input type="number" step="0.01" class="form-control @error('monto') is-invalid @enderror"
-                                           wire:model="monto" id="monto">
+                                        wire:model="monto" id="monto">
                                     @error('monto')
-                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
                             </div>
@@ -125,9 +130,9 @@
                                 <div class="form-group">
                                     <label>Titular <span class="text-danger">*</span></label>
                                     <input type="text" class="form-control @error('titular') is-invalid @enderror"
-                                           wire:model="titular" id="titular">
+                                        wire:model="titular" id="titular">
                                     @error('titular')
-                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
                             </div>
@@ -135,9 +140,9 @@
                                 <div class="form-group">
                                     <label>Cédula <span class="text-danger">*</span></label>
                                     <input type="text" class="form-control @error('cedula') is-invalid @enderror"
-                                           wire:model="cedula" id="cedula">
+                                        wire:model="cedula" id="cedula">
                                     @error('cedula')
-                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
                             </div>
@@ -148,9 +153,9 @@
                                 <div class="form-group">
                                     <label>Orden de Cobro</label>
                                     <input type="text" class="form-control @error('orden_cobro') is-invalid @enderror"
-                                           wire:model="orden_cobro" id="orden_cobro">
+                                        wire:model="orden_cobro" id="orden_cobro">
                                     @error('orden_cobro')
-                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
                             </div>
@@ -158,9 +163,9 @@
                                 <div class="form-group">
                                     <label>Número de Trámite</label>
                                     <input type="text" class="form-control @error('numero_tramite') is-invalid @enderror"
-                                           wire:model="numero_tramite" id="numero_tramite">
+                                        wire:model="numero_tramite" id="numero_tramite">
                                     @error('numero_tramite')
-                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
                             </div>
@@ -171,9 +176,9 @@
                                 <div class="form-group">
                                     <label>Ingreso Contabilidad</label>
                                     <input type="text" class="form-control @error('ingreso_contabilidad') is-invalid @enderror"
-                                           wire:model="ingreso_contabilidad" id="ingreso_contabilidad">
+                                        wire:model="ingreso_contabilidad" id="ingreso_contabilidad">
                                     @error('ingreso_contabilidad')
-                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
                             </div>
@@ -181,9 +186,9 @@
                                 <div class="form-group">
                                     <label>Recibo</label>
                                     <input type="text" class="form-control @error('recibo') is-invalid @enderror"
-                                           wire:model="recibo" id="recibo">
+                                        wire:model="recibo" id="recibo">
                                     @error('recibo')
-                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
                             </div>
@@ -194,9 +199,9 @@
                                 <div class="form-group">
                                     <label>Teléfono</label>
                                     <input type="text" class="form-control @error('telefono') is-invalid @enderror"
-                                           wire:model="telefono" id="telefono">
+                                        wire:model="telefono" id="telefono">
                                     @error('telefono')
-                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
                             </div>
@@ -213,8 +218,8 @@
 
     <!-- Modal de Confirmación de Eliminación -->
     <div class="modal fade @if($showDeleteModal) show @endif"
-         style="@if($showDeleteModal) display: block; @endif"
-         tabindex="-1" role="dialog">
+        style="@if($showDeleteModal) display: block; @endif"
+        tabindex="-1" role="dialog">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
@@ -235,7 +240,7 @@
     </div>
 
     @if($showModal || $showDeleteModal || $showDetailModal)
-        <div class="modal-backdrop fade show"></div>
+    <div class="modal-backdrop fade show"></div>
     @endif
 
     <!-- Modal de Detalle -->
@@ -250,17 +255,17 @@
                 </div>
                 <div class="modal-body">
                     @if($selectedRegistro)
-                        <div class="row">
-                            <div class="col-md-6 mb-2"><strong>Fecha:</strong> {{ $selectedRegistro->fecha->format('d/m/Y') }}</div>
-                            <div class="col-md-6 mb-2"><strong>Monto:</strong> $ {{ number_format($selectedRegistro->monto, 2, ',', '.') }}</div>
-                            <div class="col-md-6 mb-2"><strong>Titular:</strong> {{ $selectedRegistro->titular }}</div>
-                            <div class="col-md-6 mb-2"><strong>Cédula:</strong> {{ $selectedRegistro->cedula }}</div>
-                            <div class="col-md-6 mb-2"><strong>Teléfono:</strong> {{ $selectedRegistro->telefono }}</div>
-                            <div class="col-md-6 mb-2"><strong>Orden de Cobro:</strong> {{ $selectedRegistro->orden_cobro }}</div>
-                            <div class="col-md-6 mb-2"><strong>Número de Trámite:</strong> {{ $selectedRegistro->numero_tramite }}</div>
-                            <div class="col-md-6 mb-2"><strong>Ingreso Contabilidad:</strong> {{ $selectedRegistro->ingreso_contabilidad }}</div>
-                            <div class="col-md-6 mb-2"><strong>Recibo:</strong> {{ $selectedRegistro->recibo }}</div>
-                        </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-2"><strong>Fecha:</strong> {{ $selectedRegistro->fecha->format('d/m/Y') }}</div>
+                        <div class="col-md-6 mb-2"><strong>Monto:</strong> $ {{ number_format($selectedRegistro->monto, 2, ',', '.') }}</div>
+                        <div class="col-md-6 mb-2"><strong>Titular:</strong> {{ $selectedRegistro->titular }}</div>
+                        <div class="col-md-6 mb-2"><strong>Cédula:</strong> {{ $selectedRegistro->cedula }}</div>
+                        <div class="col-md-6 mb-2"><strong>Teléfono:</strong> {{ $selectedRegistro->telefono }}</div>
+                        <div class="col-md-6 mb-2"><strong>Orden de Cobro:</strong> {{ $selectedRegistro->orden_cobro }}</div>
+                        <div class="col-md-6 mb-2"><strong>Número de Trámite:</strong> {{ $selectedRegistro->numero_tramite }}</div>
+                        <div class="col-md-6 mb-2"><strong>Ingreso Contabilidad:</strong> {{ $selectedRegistro->ingreso_contabilidad }}</div>
+                        <div class="col-md-6 mb-2"><strong>Recibo:</strong> {{ $selectedRegistro->recibo }}</div>
+                    </div>
                     @endif
                 </div>
                 <div class="modal-footer">
@@ -272,7 +277,7 @@
 
     @push('scripts')
     <script>
-        document.addEventListener('livewire:load', function () {
+        document.addEventListener('livewire:load', function() {
             // Manejo del Enter para navegar entre campos
             document.addEventListener('keydown', function(e) {
                 if (e.key === 'Enter' && e.target.tagName === 'INPUT') {

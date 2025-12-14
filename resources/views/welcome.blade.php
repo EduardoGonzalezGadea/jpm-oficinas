@@ -566,19 +566,16 @@
                                 </div>
                                 <div class="card-body p-4">
                                     <p class="small mb-2"><i class="fas fa-check-circle text-success mr-1"></i>
+                                        Registro, consulta y control de datos
+                                    </p>
+                                    <p class="small mb-2"><i class="fas fa-check-circle text-success mr-1"></i>
+                                        Creación de planillas y reportes
+                                    </p>
+                                    <p class="small mb-2"><i class="fas fa-check-circle text-success mr-1"></i>
+                                        Adaptación a las necesidades
+                                    </p>
+                                    <p class="small mb-2"><i class="fas fa-check-circle text-success mr-1"></i>
                                         Autorización y gestión de Usuarios
-                                    </p>
-                                    <p class="small mb-2"><i class="fas fa-check-circle text-success mr-1"></i>
-                                        Acceso público a consultas
-                                    </p>
-                                    <p class="small mb-2"><i class="fas fa-check-circle text-success mr-1"></i>
-                                        Diferentes estilos de visualización
-                                    </p>
-                                    <p class="small mb-2"><i class="fas fa-check-circle text-success mr-1"></i>
-                                        Varios módulos de diversas funcionalidades
-                                    </p>
-                                    <p class="small mb-0"><i class="fas fa-check-circle text-success mr-1"></i>
-                                        Información general del sistema
                                     </p>
                                 </div>
                             </div>

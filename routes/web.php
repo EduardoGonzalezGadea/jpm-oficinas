@@ -62,7 +62,7 @@ Route::post('/login', [AuthController::class, 'login']);
 
 
 // Ruta para obtener el valor de la UR de forma asíncrona
-Route::get('/valor-ur', [UtilidadController::class, 'getValorUr'])->name('utilidad.valor-ur');
+Route::get('/valor-ur', [UtilidadController::class, 'getValorUr'])->name('utilidad.valor_ur');
 
 // Ruta para obtener la hora actual de Uruguay (sincronizada con Internet)
 Route::get('/hora-uruguay', [UtilidadController::class, 'getHoraUruguay'])->name('utilidad.hora-uruguay');
@@ -282,7 +282,7 @@ Route::middleware(['web', 'jwt.verify'])->group(function () {
 
         // Rutas de Gestión de Prendas
         Route::get('/prendas', \App\Http\Livewire\Tesoreria\Prendas\Index::class)->name('prendas.index');
-        
+
         // Rutas de Planillas de Prendas
         Route::prefix('prendas/planillas')->name('prendas.planillas.')->group(function () {
             Route::get('/', \App\Http\Livewire\Tesoreria\Prendas\Planillas\Index::class)->name('index');
@@ -295,7 +295,7 @@ Route::middleware(['web', 'jwt.verify'])->group(function () {
 
         // Rutas de Gestión de Depósito de Vehículos
         Route::get('/deposito-vehiculos', [App\Http\Controllers\Tesoreria\DepositoVehiculosController::class, 'index'])->name('deposito-vehiculos.index');
-        
+
         // Rutas de Planillas de Depósito de Vehículos
         Route::prefix('deposito-vehiculos/planillas')->name('deposito-vehiculos.planillas.')->group(function () {
             Route::get('/', [App\Http\Controllers\Tesoreria\DepositoVehiculosController::class, 'planillasIndex'])->name('index');
@@ -319,7 +319,7 @@ Route::middleware(['web', 'jwt.verify'])->group(function () {
         })->name('configuracion.tes-denominaciones-monedas.index');
 
         // Rutas para Gestión de Valores
-        require __DIR__.'/valores.php';
+        require __DIR__ . '/valores.php';
 
         // Rutas para Reportes de Stock de Valores (PDF)
         Route::post('/valores/reportes/upload-stock', [App\Http\Controllers\Tesoreria\StockReporteController::class, 'upload'])->name('valores.reportes.upload-stock');
@@ -361,8 +361,6 @@ Route::middleware(['web', 'jwt.verify'])->group(function () {
         Route::get('/tesoreria/caja-chica/imprimir/pago/{id}', [ImpresionController::class, 'imprimirPago'])
             ->name('tesoreria.caja-chica.imprimir.pago');
     });
-
-
 });
 
 // ============================================================================

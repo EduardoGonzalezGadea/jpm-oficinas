@@ -53,6 +53,11 @@
                                     <input type="text" wire:model="search" id="search"
                                         class="form-control form-control-sm"
                                         placeholder="Buscar por ingreso, monto, O/C o recibo...">
+                                    <div class="input-group-append">
+                                        <button class="btn btn-sm btn-outline-danger" type="button" wire:click="$set('search', '')" title="Limpiar filtro">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -71,80 +76,84 @@
                                     <th class="text-center align-middle">Medio de Pago</th>
                                     <th class="text-center align-middle"></th>
                                     @canany(['gestionar_tesoreria', 'supervisar_tesoreria'])
-                                        <th class="text-center align-middle d-print-none">Confirmado</th>
+                                    <th class="text-center align-middle d-print-none">Confirmado</th>
                                     @endcanany
                                     <th class="text-center align-middle d-print-none">Acciones</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @forelse ($arrendamientos as $arrendamiento)
-                                    <tr>
-                                        <td class="text-center align-middle">
-                                            {{ $arrendamiento->fecha->format('d/m/Y') }}</td>
-                                        <td class="text-right align-middle{{ is_null($arrendamiento->ingreso) || $arrendamiento->ingreso == 0 ? ' table-warning' : '' }}">
-                                            {{ is_numeric($arrendamiento->ingreso) ? number_format($arrendamiento->ingreso, 0, ',', '.') : $arrendamiento->ingreso }}</td>
-                                        <td class="text-left align-middle">{{ $arrendamiento->nombre }}</td>
-                                        <td class="text-right align-middle"><span
-                                                class="text-nowrap-custom">{{ $arrendamiento->monto_formateado }}</span>
-                                        </td>
-                                        <td class="text-right align-middle">
-                                            {{ is_numeric($arrendamiento->orden_cobro) ? number_format($arrendamiento->orden_cobro, 0, ',', '.') : $arrendamiento->orden_cobro }}</td>
-                                        <td class="text-right align-middle">
-                                            {{ is_numeric($arrendamiento->recibo) ? number_format($arrendamiento->recibo, 0, ',', '.') : $arrendamiento->recibo }}</td>
-                                        <td class="text-center align-middle">{{ $arrendamiento->medio_de_pago }}</td>
-                                        <td class="text-center align-middle">
-                                            @if($arrendamiento->planilla_id)
-                                                <i class="fas fa-check-circle text-success" title="En planilla"></i>
-                                            @else
-                                                <i class="fas fa-times-circle text-danger" title="No en planilla"></i>
-                                            @endif
-                                        </td>
-                                        @canany(['gestionar_tesoreria', 'supervisar_tesoreria'])
-                                            <td
-                                                class="text-center{{ !$arrendamiento->confirmado ? ' table-warning' : '' }} align-middle d-print-none">
-                                                <div class="custom-control custom-switch" style="transform: scale(0.8);">
-                                                    <input type="checkbox" class="custom-control-input"
-                                                        id="confirmado-{{ $arrendamiento->id }}"
-                                                        wire:click.prevent="toggleConfirmado({{ $arrendamiento->id }})"
-                                                        {{ $arrendamiento->confirmado ? 'checked' : '' }}>
-                                                    <label class="custom-control-label"
-                                                        for="confirmado-{{ $arrendamiento->id }}"></label>
-                                                </div>
-                                            </td>
-                                        @endcanany
-                                        <td class="text-center align-middle d-print-none">
-                                            <button wire:click="showDetails({{ $arrendamiento->id }})"
-                                                class="btn btn-sm btn-info" data-toggle="modal"
-                                                data-target="#detailsModal" title="Detalles"><i
-                                                    class="fas fa-eye"></i></button>
-                                            <button wire:click="editIngreso({{ $arrendamiento->id }})" class="btn btn-sm btn-success" title="Ingreso"><i class="fas fa-file-invoice-dollar"></i></button>
-                                            <button wire:click="edit({{ $arrendamiento->id }})"
-                                                class="btn btn-sm btn-primary" title="Editar"><i
-                                                    class="fas fa-edit"></i></button>
-                                            <button
-                                                onclick="event.preventDefault(); window.dispatchEvent(new CustomEvent('swal:confirm', { detail: { title: '¿Estás seguro?', text: '¡No podrás revertir esto!', method: 'destroy', id: {{ $arrendamiento->id }}, confirmButtonText: 'Sí, elimínalo' } }))"
-                                                class="btn btn-sm btn-danger" title="Eliminar"><i
-                                                    class="fas fa-trash-alt"></i></button>
-                                        </td>
-                                    </tr>
+                                <tr>
+                                    <td class="text-center align-middle">
+                                        {{ $arrendamiento->fecha->format('d/m/Y') }}
+                                    </td>
+                                    <td class="text-right align-middle{{ is_null($arrendamiento->ingreso) || $arrendamiento->ingreso == 0 ? ' table-warning' : '' }}">
+                                        {{ is_numeric($arrendamiento->ingreso) ? number_format($arrendamiento->ingreso, 0, ',', '.') : $arrendamiento->ingreso }}
+                                    </td>
+                                    <td class="text-left align-middle">{{ $arrendamiento->nombre }}</td>
+                                    <td class="text-right align-middle"><span
+                                            class="text-nowrap-custom">{{ $arrendamiento->monto_formateado }}</span>
+                                    </td>
+                                    <td class="text-right align-middle">
+                                        {{ is_numeric($arrendamiento->orden_cobro) ? number_format($arrendamiento->orden_cobro, 0, ',', '.') : $arrendamiento->orden_cobro }}
+                                    </td>
+                                    <td class="text-right align-middle">
+                                        {{ is_numeric($arrendamiento->recibo) ? number_format($arrendamiento->recibo, 0, ',', '.') : $arrendamiento->recibo }}
+                                    </td>
+                                    <td class="text-center align-middle">{{ $arrendamiento->medio_de_pago }}</td>
+                                    <td class="text-center align-middle">
+                                        @if($arrendamiento->planilla_id)
+                                        <i class="fas fa-check-circle text-success" title="En planilla"></i>
+                                        @else
+                                        <i class="fas fa-times-circle text-danger" title="No en planilla"></i>
+                                        @endif
+                                    </td>
+                                    @canany(['gestionar_tesoreria', 'supervisar_tesoreria'])
+                                    <td
+                                        class="text-center{{ !$arrendamiento->confirmado ? ' table-warning' : '' }} align-middle d-print-none">
+                                        <div class="custom-control custom-switch" style="transform: scale(0.8);">
+                                            <input type="checkbox" class="custom-control-input"
+                                                id="confirmado-{{ $arrendamiento->id }}"
+                                                wire:click.prevent="toggleConfirmado({{ $arrendamiento->id }})"
+                                                {{ $arrendamiento->confirmado ? 'checked' : '' }}>
+                                            <label class="custom-control-label"
+                                                for="confirmado-{{ $arrendamiento->id }}"></label>
+                                        </div>
+                                    </td>
+                                    @endcanany
+                                    <td class="text-center align-middle d-print-none">
+                                        <button wire:click="showDetails({{ $arrendamiento->id }})"
+                                            class="btn btn-sm btn-info" data-toggle="modal"
+                                            data-target="#detailsModal" title="Detalles"><i
+                                                class="fas fa-eye"></i></button>
+                                        <button wire:click="editIngreso({{ $arrendamiento->id }})" class="btn btn-sm btn-success" title="Ingreso"><i class="fas fa-file-invoice-dollar"></i></button>
+                                        <button wire:click="edit({{ $arrendamiento->id }})"
+                                            class="btn btn-sm btn-primary" title="Editar"><i
+                                                class="fas fa-edit"></i></button>
+                                        <button
+                                            onclick="event.preventDefault(); window.dispatchEvent(new CustomEvent('swal:confirm', { detail: { title: '¿Estás seguro?', text: '¡No podrás revertir esto!', method: 'destroy', id: {{ $arrendamiento->id }}, confirmButtonText: 'Sí, elimínalo' } }))"
+                                            class="btn btn-sm btn-danger" title="Eliminar"><i
+                                                class="fas fa-trash-alt"></i></button>
+                                    </td>
+                                </tr>
                                 @empty
-                                    <tr>
-                                        <td colspan="@canany(['gestionar_tesoreria', 'supervisar_tesoreria']) 10 @else 9 @endcanany"
-                                            class="text-center">No hay registros para el mes y año seleccionados.</td>
-                                    </tr>
+                                <tr>
+                                    <td colspan="@canany(['gestionar_tesoreria', 'supervisar_tesoreria']) 10 @else 9 @endcanany"
+                                        class="text-center">No hay registros para el mes y año seleccionados.</td>
+                                </tr>
                                 @endforelse
                             </tbody>
                             <tfoot>
                                 @foreach ($subtotales as $subtotal)
-                                    <tr>
-                                        <td colspan="3" class="text-right align-middle"><strong>Total
-                                                {{ $subtotal->medio_de_pago }}:</strong></td>
-                                        <td class="text-right align-middle"><strong><span class="text-nowrap-custom">$
-                                                    {{ number_format($subtotal->total, 2, ',', '.') }}</span></strong>
-                                        </td>
-                                        <td colspan="@canany(['gestionar_tesoreria', 'supervisar_tesoreria']) 7 @else 6 @endcanany"
-                                            class="align-middle"></td>
-                                    </tr>
+                                <tr>
+                                    <td colspan="3" class="text-right align-middle"><strong>Total
+                                            {{ $subtotal->medio_de_pago }}:</strong></td>
+                                    <td class="text-right align-middle"><strong><span class="text-nowrap-custom">$
+                                                {{ number_format($subtotal->total, 2, ',', '.') }}</span></strong>
+                                    </td>
+                                    <td colspan="@canany(['gestionar_tesoreria', 'supervisar_tesoreria']) 7 @else 6 @endcanany"
+                                        class="align-middle"></td>
+                                </tr>
                                 @endforeach
                                 <tr>
                                     <td colspan="3" class="text-right align-middle"><strong>Total General:</strong>
@@ -160,7 +169,7 @@
                     </div>
                     <div class="d-flex justify-content-center">
                         @if($arrendamientos instanceof \Illuminate\Pagination\LengthAwarePaginator)
-                            {{ $arrendamientos->links() }}
+                        {{ $arrendamientos->links() }}
                         @endif
                     </div>
                 </div>
@@ -199,7 +208,7 @@
                             <input type="text" wire:model.defer="ingreso" id="ingreso_input"
                                 class="form-control form-control-sm">
                             @error('ingreso')
-                                <span class="text-danger">{{ $message }}</span>
+                            <span class="text-danger">{{ $message }}</span>
                             @enderror
                         </div>
                     </form>
@@ -234,7 +243,7 @@
                                     <input type="date" wire:model="fecha" id="fecha"
                                         class="form-control form-control-sm">
                                     @error('fecha')
-                                        <span class="text-danger">{{ $message }}</span>
+                                    <span class="text-danger">{{ $message }}</span>
                                     @enderror
                                 </div>
                             </div>
@@ -244,7 +253,7 @@
                                     <input type="text" wire:model.defer="ingreso" id="ingreso"
                                         class="form-control form-control-sm">
                                     @error('ingreso')
-                                        <span class="text-danger">{{ $message }}</span>
+                                    <span class="text-danger">{{ $message }}</span>
                                     @enderror
                                 </div>
                             </div>
@@ -254,7 +263,7 @@
                             <input type="text" wire:model.defer="nombre" id="nombre"
                                 class="form-control form-control-sm">
                             @error('nombre')
-                                <span class="text-danger">{{ $message }}</span>
+                            <span class="text-danger">{{ $message }}</span>
                             @enderror
                         </div>
                         <div class="row">
@@ -264,7 +273,7 @@
                                     <input type="text" wire:model.defer="cedula" id="cedula"
                                         class="form-control form-control-sm">
                                     @error('cedula')
-                                        <span class="text-danger">{{ $message }}</span>
+                                    <span class="text-danger">{{ $message }}</span>
                                     @enderror
                                 </div>
                             </div>
@@ -274,7 +283,7 @@
                                     <input type="text" wire:model.defer="telefono" id="telefono"
                                         class="form-control form-control-sm">
                                     @error('telefono')
-                                        <span class="text-danger">{{ $message }}</span>
+                                    <span class="text-danger">{{ $message }}</span>
                                     @enderror
                                 </div>
                             </div>
@@ -283,15 +292,15 @@
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label for="medio_de_pago">Medio de Pago</label>
-                                     <select wire:model.defer="medio_de_pago" id="medio_de_pago"
-                                         class="form-control form-control-sm">
-                                         <option value="">Seleccione...</option>
-                                         @foreach($mediosDePago as $medio)
-                                             <option value="{{ $medio->nombre }}">{{ $medio->nombre }}</option>
-                                         @endforeach
-                                     </select>
+                                    <select wire:model.defer="medio_de_pago" id="medio_de_pago"
+                                        class="form-control form-control-sm">
+                                        <option value="">Seleccione...</option>
+                                        @foreach($mediosDePago as $medio)
+                                        <option value="{{ $medio->nombre }}">{{ $medio->nombre }}</option>
+                                        @endforeach
+                                    </select>
                                     @error('medio_de_pago')
-                                        <span class="text-danger">{{ $message }}</span>
+                                    <span class="text-danger">{{ $message }}</span>
                                     @enderror
                                 </div>
                             </div>
@@ -301,7 +310,7 @@
                                     <input type="number" step="0.01" wire:model.defer="monto" id="monto"
                                         class="form-control form-control-sm">
                                     @error('monto')
-                                        <span class="text-danger">{{ $message }}</span>
+                                    <span class="text-danger">{{ $message }}</span>
                                     @enderror
                                 </div>
                             </div>
@@ -310,7 +319,7 @@
                             <label for="detalle">Detalle</label>
                             <textarea wire:model.defer="detalle" id="detalle" class="form-control form-control-sm"></textarea>
                             @error('detalle')
-                                <span class="text-danger">{{ $message }}</span>
+                            <span class="text-danger">{{ $message }}</span>
                             @enderror
                         </div>
                         <div class="row">
@@ -320,7 +329,7 @@
                                     <input type="text" wire:model.defer="orden_cobro" id="orden_cobro"
                                         class="form-control form-control-sm">
                                     @error('orden_cobro')
-                                        <span class="text-danger">{{ $message }}</span>
+                                    <span class="text-danger">{{ $message }}</span>
                                     @enderror
                                 </div>
                             </div>
@@ -330,7 +339,7 @@
                                     <input type="text" wire:model.defer="recibo" id="recibo"
                                         class="form-control form-control-sm">
                                     @error('recibo')
-                                        <span class="text-danger">{{ $message }}</span>
+                                    <span class="text-danger">{{ $message }}</span>
                                     @enderror
                                 </div>
                             </div>
@@ -360,20 +369,20 @@
                 </div>
                 <div class="modal-body">
                     @if ($selectedArrendamiento)
-                        <p class="mb-0"><strong>Fecha:</strong> {{ $selectedArrendamiento->fecha->format('d/m/Y') }}
-                        </p>
-                        <p class="mb-0"><strong>Ingreso:</strong> {{ $selectedArrendamiento->ingreso }}</p>
-                        <p class="mb-0"><strong>Nombre:</strong> {{ $selectedArrendamiento->nombre }}</p>
-                        <p class="mb-0"><strong>Cédula:</strong> {{ $selectedArrendamiento->cedula }}</p>
-                        <p class="mb-0"><strong>Teléfono:</strong> {{ $selectedArrendamiento->telefono }}</p>
-                        <p class="mb-0"><strong>Medio de Pago:</strong> {{ $selectedArrendamiento->medio_de_pago }}
-                        </p>
-                        <p class="mb-0"><strong>Monto:</strong> <span
-                                class="text-nowrap-custom">{{ $selectedArrendamiento->monto_formateado }}</span></p>
-                        <p class="mb-0"><strong>Detalle:</strong> {{ $selectedArrendamiento->detalle }}</p>
-                        <p class="mb-0"><strong>Orden de Cobro:</strong> {{ $selectedArrendamiento->orden_cobro }}
-                        </p>
-                        <p class="mb-0"><strong>Recibo:</strong> {{ $selectedArrendamiento->recibo }}</p>
+                    <p class="mb-0"><strong>Fecha:</strong> {{ $selectedArrendamiento->fecha->format('d/m/Y') }}
+                    </p>
+                    <p class="mb-0"><strong>Ingreso:</strong> {{ $selectedArrendamiento->ingreso }}</p>
+                    <p class="mb-0"><strong>Nombre:</strong> {{ $selectedArrendamiento->nombre }}</p>
+                    <p class="mb-0"><strong>Cédula:</strong> {{ $selectedArrendamiento->cedula }}</p>
+                    <p class="mb-0"><strong>Teléfono:</strong> {{ $selectedArrendamiento->telefono }}</p>
+                    <p class="mb-0"><strong>Medio de Pago:</strong> {{ $selectedArrendamiento->medio_de_pago }}
+                    </p>
+                    <p class="mb-0"><strong>Monto:</strong> <span
+                            class="text-nowrap-custom">{{ $selectedArrendamiento->monto_formateado }}</span></p>
+                    <p class="mb-0"><strong>Detalle:</strong> {{ $selectedArrendamiento->detalle }}</p>
+                    <p class="mb-0"><strong>Orden de Cobro:</strong> {{ $selectedArrendamiento->orden_cobro }}
+                    </p>
+                    <p class="mb-0"><strong>Recibo:</strong> {{ $selectedArrendamiento->recibo }}</p>
                     @endif
                 </div>
                 <div class="modal-footer">
@@ -387,117 +396,117 @@
     <livewire:tesoreria.arrendamientos.planillas-manager :mes="$mes" :year="$year" :key="$mes . $year" />
 
     @push('scripts')
-        <script>
-            window.addEventListener('swal:confirm', event => {
-                Swal.fire({
-                    title: event.detail.title,
-                    text: event.detail.text,
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#3085d6',
-                    cancelButtonColor: '#d33',
-                    confirmButtonText: event.detail.confirmButtonText,
-                    cancelButtonText: 'Cancelar',
-                    focusConfirm: true
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        @this.call(event.detail.method, event.detail.id);
-                    }
-                });
-            });
-
-            window.addEventListener('revertCheckbox', event => {
-                const checkbox = document.getElementById('confirmado-' + event.detail.id);
-                if (checkbox) {
-                    checkbox.checked = event.detail.checked;
+    <script>
+        window.addEventListener('swal:confirm', event => {
+            Swal.fire({
+                title: event.detail.title,
+                text: event.detail.text,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: event.detail.confirmButtonText,
+                cancelButtonText: 'Cancelar',
+                focusConfirm: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    @this.call(event.detail.method, event.detail.id);
                 }
             });
+        });
 
-            window.addEventListener('close-modal', event => {
-                $('#arrendamientoModal').modal('hide');
+        window.addEventListener('revertCheckbox', event => {
+            const checkbox = document.getElementById('confirmado-' + event.detail.id);
+            if (checkbox) {
+                checkbox.checked = event.detail.checked;
+            }
+        });
+
+        window.addEventListener('close-modal', event => {
+            $('#arrendamientoModal').modal('hide');
+        });
+
+        window.addEventListener('alert', event => {
+            // alert(event.detail.message);
+            const type = event.detail.type;
+            const message = event.detail.message;
+            Swal.fire({
+                icon: type,
+                title: message,
+                showConfirmButton: false,
+                timer: 1500
+            });
+        });
+
+        // Manejar redirección cuando el JWT expire
+        window.addEventListener('redirect-to-login', event => {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Sesión Expirada',
+                text: event.detail.message,
+                showConfirmButton: true,
+                confirmButtonText: 'Ir al Login',
+                allowOutsideClick: false,
+                allowEscapeKey: false
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Limpiar tokens locales si existieran
+                    try {
+                        localStorage.removeItem('jwt_token');
+                        sessionStorage.removeItem('jwt_token');
+                    } catch (e) {}
+
+                    // Redirigir al login
+                    window.location.href = '{{ route("login") }}';
+                }
+            });
+        });
+
+        window.livewire.on('arrendamientoStore', () => {
+            $('#arrendamientoModal').modal('hide');
+        });
+
+        window.livewire.on('arrendamientoUpdate', () => {
+            $('#arrendamientoModal').modal('hide');
+            $('#ingresoModal').modal('hide');
+        });
+
+        $(document).ready(function() {
+            $('#arrendamientoModal').on('hidden.bs.modal', function() {
+                window.livewire.emit('resetForm');
             });
 
-            window.addEventListener('alert', event => {
-                // alert(event.detail.message);
-                const type = event.detail.type;
-                const message = event.detail.message;
-                Swal.fire({
-                    icon: type,
-                    title: message,
-                    showConfirmButton: false,
-                    timer: 1500
-                });
+            $('#ingresoModal').on('hidden.bs.modal', function() {
+                window.livewire.emit('resetForm');
             });
 
-            // Manejar redirección cuando el JWT expire
-            window.addEventListener('redirect-to-login', event => {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Sesión Expirada',
-                    text: event.detail.message,
-                    showConfirmButton: true,
-                    confirmButtonText: 'Ir al Login',
-                    allowOutsideClick: false,
-                    allowEscapeKey: false
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        // Limpiar tokens locales si existieran
-                        try {
-                            localStorage.removeItem('jwt_token');
-                            sessionStorage.removeItem('jwt_token');
-                        } catch (e) {}
+            $('#arrendamientoModal').on('shown.bs.modal', function() {
+                $('#ingreso').focus();
 
-                        // Redirigir al login
-                        window.location.href = '{{ route("login") }}';
+                const form = $(this).find('form');
+                const inputs = form.find('input:not([type="hidden"]), textarea, select');
+
+                inputs.off('keydown').on('keydown', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+
+                        const currentIndex = inputs.index(this);
+                        const nextIndex = currentIndex + 1;
+
+                        if (nextIndex < inputs.length) {
+                            $(inputs[nextIndex]).focus();
+                        } else {
+                            form.closest('.modal-content').find('.btn-primary').focus();
+                        }
                     }
                 });
             });
 
-            window.livewire.on('arrendamientoStore', () => {
-                $('#arrendamientoModal').modal('hide');
+            $('#ingresoModal').on('shown.bs.modal', function() {
+                $('#ingreso_input').focus();
             });
-
-            window.livewire.on('arrendamientoUpdate', () => {
-                $('#arrendamientoModal').modal('hide');
-                $('#ingresoModal').modal('hide');
-            });
-
-            $(document).ready(function() {
-                $('#arrendamientoModal').on('hidden.bs.modal', function() {
-                    window.livewire.emit('resetForm');
-                });
-
-                $('#ingresoModal').on('hidden.bs.modal', function() {
-                    window.livewire.emit('resetForm');
-                });
-
-                $('#arrendamientoModal').on('shown.bs.modal', function() {
-                    $('#ingreso').focus();
-
-                    const form = $(this).find('form');
-                    const inputs = form.find('input:not([type="hidden"]), textarea, select');
-
-                    inputs.off('keydown').on('keydown', function(e) {
-                        if (e.key === 'Enter') {
-                            e.preventDefault();
-
-                            const currentIndex = inputs.index(this);
-                            const nextIndex = currentIndex + 1;
-
-                            if (nextIndex < inputs.length) {
-                                $(inputs[nextIndex]).focus();
-                            } else {
-                                form.closest('.modal-content').find('.btn-primary').focus();
-                            }
-                        }
-                    });
-                });
-
-                $('#ingresoModal').on('shown.bs.modal', function() {
-                    $('#ingreso_input').focus();
-                });
-            });
-        </script>
+        });
+    </script>
     @endpush
 
 </div>

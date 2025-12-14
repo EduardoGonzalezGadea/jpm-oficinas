@@ -21,7 +21,7 @@
             <div class="row mb-3 align-items-center">
                 <div class="col-md-5">
                     <input wire:model.debounce.500ms="search" type="text" class="form-control d-print-none"
-                           placeholder="Buscar por artículo.apartado o por descripción...">
+                        placeholder="Buscar por artículo.apartado o por descripción...">
                 </div>
                 <div class="col d-print-none">
                     <em class="text-muted">* Unificado = a partir de Octubre/2024</em>
@@ -44,7 +44,7 @@
                                 <button class="btn btn-link text-white p-0 text-nowrap" wire:click="sortBy('articulo')">
                                     Art.
                                     @if ($sortField === 'articulo')
-                                        <i class="fas fa-sort-{{ $sortDirection === 'asc' ? 'up' : 'down' }}"></i>
+                                    <i class="fas fa-sort-{{ $sortDirection === 'asc' ? 'up' : 'down' }}"></i>
                                     @endif
                                 </button>
                             </th>
@@ -52,7 +52,7 @@
                                 <button class="btn btn-link text-white p-0 text-nowrap" wire:click="sortBy('apartado')">
                                     Apartado
                                     @if ($sortField === 'apartado')
-                                        <i class="fas fa-sort-{{ $sortDirection === 'asc' ? 'up' : 'down' }}"></i>
+                                    <i class="fas fa-sort-{{ $sortDirection === 'asc' ? 'up' : 'down' }}"></i>
                                     @endif
                                 </button>
                             </th>
@@ -60,7 +60,7 @@
                                 <button class="btn btn-link text-white p-0 text-nowrap" wire:click="sortBy('descripcion')">
                                     Descripción
                                     @if ($sortField === 'descripcion')
-                                        <i class="fas fa-sort-{{ $sortDirection === 'asc' ? 'up' : 'down' }}"></i>
+                                    <i class="fas fa-sort-{{ $sortDirection === 'asc' ? 'up' : 'down' }}"></i>
                                     @endif
                                 </button>
                             </th>
@@ -68,7 +68,7 @@
                                 <button class="btn btn-link text-white p-0 text-nowrap" wire:click="sortBy('importe_original')">
                                     Original
                                     @if ($sortField === 'importe_original')
-                                        <i class="fas fa-sort-{{ $sortDirection === 'asc' ? 'up' : 'down' }}"></i>
+                                    <i class="fas fa-sort-{{ $sortDirection === 'asc' ? 'up' : 'down' }}"></i>
                                     @endif
                                 </button>
                             </th>
@@ -76,7 +76,7 @@
                                 <button class="btn btn-link text-white p-0 text-nowrap" wire:click="sortBy('importe_unificado')">
                                     Unificado
                                     @if ($sortField === 'importe_unificado')
-                                        <i class="fas fa-sort-{{ $sortDirection === 'asc' ? 'up' : 'down' }}"></i>
+                                    <i class="fas fa-sort-{{ $sortDirection === 'asc' ? 'up' : 'down' }}"></i>
                                     @endif
                                 </button>
                             </th>
@@ -84,31 +84,31 @@
                     </thead>
                     <tbody>
                         @forelse ($multas as $multa)
-                            <tr>
-                                <td class="align-middle"><strong>{{ $multa->articulo }}</strong></td>
-                                <td class="align-middle">{{ $multa->apartado }}</td>
-                                <td class="align-middle">
-                                    {{ $multa->descripcion }}
-                                    @if ($multa->decreto)
-                                        <small class="text-muted d-block">{{ $multa->decreto }}</small>
-                                    @endif
-                                </td>
-                                <td class="text-right align-middle">{!! $multa->importe_original_formateado !!}</td>
-                                <td class="text-right align-middle">{!! $multa->importe_unificado_formateado !!}</td>
-                            </tr>
+                        <tr>
+                            <td class="align-middle"><strong>{{ $multa->articulo }}</strong></td>
+                            <td class="align-middle">{{ $multa->apartado }}</td>
+                            <td class="align-middle">
+                                {{ $multa->descripcion }}
+                                @if ($multa->decreto)
+                                <small class="text-muted d-block">{{ $multa->decreto }}</small>
+                                @endif
+                            </td>
+                            <td class="text-right align-middle">{!! $multa->importe_original_formateado !!}</td>
+                            <td class="text-right align-middle">{!! $multa->importe_unificado_formateado !!}</td>
+                        </tr>
                         @empty
-                            <tr>
-                                <td colspan="5" class="text-center">No se encontraron multas</td>
-                            </tr>
+                        <tr>
+                            <td colspan="5" class="text-center">No se encontraron multas</td>
+                        </tr>
                         @endforelse
                     </tbody>
                 </table>
             </div>
 
             @if ($multas instanceof \Illuminate\Pagination\LengthAwarePaginator && $multas->hasPages())
-                <div class="d-flex justify-content-center mt-3 d-print-none">
-                    {{ $multas->links() }}
-                </div>
+            <div class="d-flex justify-content-center mt-3 d-print-none">
+                {{ $multas->links() }}
+            </div>
             @endif
         </div>
     </div>
@@ -121,7 +121,7 @@
         if (urContainer) {
             urContainer.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Cargando UR...';
 
-            fetch('{{ route('utilidad.valor-ur') }}')
+            fetch("{{ route('utilidad.valor_ur') }}")
                 .then(response => {
                     if (!response.ok) {
                         throw new Error('Error en la respuesta de la red');
@@ -142,12 +142,12 @@
         }
     }
 
-    document.addEventListener('DOMContentLoaded', function () {
+    document.addEventListener('DOMContentLoaded', function() {
         loadURValuePublic();
     });
 
     // Recargar el valor UR cuando se actualiza el componente Livewire
-    Livewire.on('updated', function () {
+    Livewire.on('updated', function() {
         setTimeout(function() {
             loadURValuePublic();
         }, 100);

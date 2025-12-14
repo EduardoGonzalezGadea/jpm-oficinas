@@ -97,7 +97,7 @@
                                     <i class="fas fa-list fa-2x"></i>
                                 </div>
                                 <div>
-                                    <div class="font-weight-bold text-body small">Multas Tránsito</div>
+                                    <div class="font-weight-bold text-body small">Art. Multas Tránsito</div>
                                 </div>
                             </div>
                         </div>

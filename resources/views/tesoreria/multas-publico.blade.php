@@ -3,7 +3,7 @@
 @section('title', 'Tesorería | Oficinas - Multas de Tránsito')
 
 @section('content')
-    <div class="container-fluid p-0">
+    <!-- <div class="container-fluid p-0">
         <div class="row mb-4">
             <div class="col-12">
                 <div class="card bg-primary text-white">
@@ -26,7 +26,7 @@
                     </div>
                 </div>
             </div>
-        </div>
+        </div> -->
 
         <div>
             <livewire:tesoreria.multa-publico />

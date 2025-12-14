@@ -68,11 +68,16 @@ class Multa extends Component
 
 
 
-    public function updatingSearch()
+    public function updatedSearch($value)
     {
         $this->resetPage();
-        $this->multasCargadas = false; // Reset flag para recargar datos
         Cache::flush();
+
+        if (empty($value)) {
+            $this->multasCargadas = true;
+        } else {
+            $this->multasCargadas = false;
+        }
     }
 
     public function updatingPerPage()
@@ -235,6 +240,4 @@ class Multa extends Component
     {
         $this->multasCargadas = true;
     }
-
-
 }

@@ -20,7 +20,7 @@
 
                         {{-- Link Infracciones de Tránsito --}}
                         <a class="dropdown-item" href="{{ route('tesoreria.multas-transito') }}">
-                            <i class="fas fa-list"></i> Multas de Tránsito
+                            <i class="fas fa-list"></i> Artículos de Multas de Tránsito
                         </a>
                         {{-- Separador --}}
                         <div class="dropdown-divider"></div>
