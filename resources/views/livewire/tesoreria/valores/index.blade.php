@@ -2,7 +2,7 @@
     <div class="card">
         <div class="card-header bg-info text-white card-header-gradient py-2 px-3 d-flex justify-content-between align-items-center">
             <h4 class="card-title mb-0">
-                <i class="fas fa-barcode mr-2"></i>Gestión de Valores
+                <strong><i class="fas fa-barcode mr-2"></i>Gestión de Valores</strong>
             </h4>
             <div>
                 <a href="{{ route('tesoreria.valores.entregas') }}" class="btn btn-success mr-1">
@@ -28,6 +28,12 @@
                     <div class="input-group">
                         <input type="text" wire:model.debounce.300ms="search" class="form-control" placeholder="Buscar por tipo, serie o número...">
                         <div class="input-group-append">
+                            <select wire:model="selectedTipo" class="custom-select" style="border-radius: 0;">
+                                <option value="">Todos los tipos</option>
+                                @foreach($tiposLibreta as $tipo)
+                                    <option value="{{ $tipo->id }}">{{ $tipo->nombre }}</option>
+                                @endforeach
+                            </select>
                             <button type="button" wire:click="clearFilters" class="btn btn-outline-danger" title="Limpiar filtros">
                                 <i class="fas fa-times"></i>
                             </button>

@@ -28,6 +28,7 @@ class Index extends Component
 
     public $search = '';
     public $estado = 'en_stock';
+    public $selectedTipo = '';
 
     protected function rules()
     {
@@ -67,10 +68,16 @@ class Index extends Component
         $this->resetPage();
     }
 
+    public function updatingSelectedTipo()
+    {
+        $this->resetPage();
+    }
+
     public function clearFilters()
     {
         $this->search = '';
         $this->estado = 'en_stock';
+        $this->selectedTipo = '';
         $this->resetPage();
     }
 
@@ -191,6 +198,11 @@ class Index extends Component
             } else {
                 $query->where('estado', $this->estado);
             }
+        }
+
+        // Aplicar filtro de tipo
+        if (!empty($this->selectedTipo)) {
+            $query->where('tipo_libreta_id', $this->selectedTipo);
         }
 
         $libretas = $query->join('tes_tipos_libretas', 'tes_libretas_valores.tipo_libreta_id', '=', 'tes_tipos_libretas.id')

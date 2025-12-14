@@ -14,6 +14,8 @@ use App\Http\Controllers\Tesoreria\CajaChica\CajaChicaController;
 use App\Http\Controllers\Tesoreria\CajaChica\PendienteController;
 use App\Http\Controllers\BackupController;
 use App\Http\Controllers\Tesoreria\ArmasController;
+use App\Http\Controllers\Tesoreria\Armas\ImpresionController as ArmasImpresionController;
+
 use App\Http\Controllers\ThemeController;
 use App\Http\Livewire\Tesoreria\Arrendamientos\PrintArrendamientos;
 use App\Http\Livewire\Tesoreria\Arrendamientos\PrintArrendamientosFull;
@@ -61,6 +63,9 @@ Route::post('/login', [AuthController::class, 'login']);
 
 // Ruta para obtener el valor de la UR de forma asíncrona
 Route::get('/valor-ur', [UtilidadController::class, 'getValorUr'])->name('utilidad.valor-ur');
+
+// Ruta para obtener la hora actual de Uruguay (sincronizada con Internet)
+Route::get('/hora-uruguay', [UtilidadController::class, 'getHoraUruguay'])->name('utilidad.hora-uruguay');
 
 
 // ============================================================================
@@ -267,10 +272,36 @@ Route::middleware(['web', 'jwt.verify'])->group(function () {
         Route::prefix('armas')->name('armas.')->group(function () {
             Route::get('/porte', [ArmasController::class, 'porte'])->name('porte');
             Route::get('/tenencia', [ArmasController::class, 'tenencia'])->name('tenencia');
+            Route::get('/tenencia/imprimir/{id}', [ArmasImpresionController::class, 'imprimirTenencia'])->name('tenencia.imprimir');
+            Route::get('/porte/imprimir/{id}', [ArmasImpresionController::class, 'imprimirPorte'])->name('porte.imprimir');
         });
+
 
         // Rutas de Certificados de Residencia
         Route::get('/certificados-residencia', \App\Http\Livewire\Tesoreria\CertificadosResidencia\Index::class)->name('certificados-residencia.index');
+
+        // Rutas de Gestión de Prendas
+        Route::get('/prendas', \App\Http\Livewire\Tesoreria\Prendas\Index::class)->name('prendas.index');
+        
+        // Rutas de Planillas de Prendas
+        Route::prefix('prendas/planillas')->name('prendas.planillas.')->group(function () {
+            Route::get('/', \App\Http\Livewire\Tesoreria\Prendas\Planillas\Index::class)->name('index');
+            Route::get('/{id}', \App\Http\Livewire\Tesoreria\Prendas\Planillas\Show::class)->name('show');
+            Route::get('/{id}/imprimir', function ($id) {
+                $planilla = App\Models\Tesoreria\PrendaPlanilla::findOrFail($id);
+                return view('tesoreria.prendas.planillas-print', compact('planilla'));
+            })->name('print');
+        });
+
+        // Rutas de Gestión de Depósito de Vehículos
+        Route::get('/deposito-vehiculos', [App\Http\Controllers\Tesoreria\DepositoVehiculosController::class, 'index'])->name('deposito-vehiculos.index');
+        
+        // Rutas de Planillas de Depósito de Vehículos
+        Route::prefix('deposito-vehiculos/planillas')->name('deposito-vehiculos.planillas.')->group(function () {
+            Route::get('/', [App\Http\Controllers\Tesoreria\DepositoVehiculosController::class, 'planillasIndex'])->name('index');
+            Route::get('/{id}', [App\Http\Controllers\Tesoreria\DepositoVehiculosController::class, 'planillaShow'])->name('show');
+            Route::get('/{id}/imprimir', [App\Http\Controllers\Tesoreria\DepositoVehiculosController::class, 'planillaPrint'])->name('print');
+        });
 
         // Rutas de Configuración - Medios de Pago
         Route::get('/configuracion/medios-de-pago', function () {

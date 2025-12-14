@@ -28,6 +28,21 @@
             <i class="fas fa-box"></i> Caja Chica
         </a>
 
+        <!-- Prendas -->
+        <div class="dropdown-submenu">
+            <a class="dropdown-item dropdown-toggle" href="#" data-toggle="dropdown">
+                <i class="fas fa-file-invoice-dollar"></i> Prendas
+            </a>
+            <div class="dropdown-menu">
+                <a class="dropdown-item" href="{{ route('tesoreria.prendas.index') }}">
+                    <i class="fas fa-list"></i> Gestión de Prendas
+                </a>
+                <a class="dropdown-item" href="{{ route('tesoreria.prendas.planillas.index') }}">
+                    <i class="fas fa-list-alt"></i> Planillas
+                </a>
+            </div>
+        </div>
+
         <!-- Valores -->
         <div class="dropdown-divider"></div>
         <a class="dropdown-item" href="{{ route('tesoreria.valores.index') }}">

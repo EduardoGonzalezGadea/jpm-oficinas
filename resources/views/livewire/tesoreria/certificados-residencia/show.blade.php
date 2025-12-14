@@ -34,7 +34,14 @@
                                 <h5>Datos de Quien Retira</h5>
                                 <p><strong>Nombre:</strong> {{ $certificado->retira_nombre }} {{ $certificado->retira_apellido }}</p>
                                 <p><strong>Documento:</strong> {{ $certificado->retira_tipo_documento }} - {{ $certificado->retira_nro_documento }}</p>
-                                <p><strong>Teléfono:</strong> {{ $certificado->retira_telefono ?? 'N/A' }}</p>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Teléfono:</strong> {{ $certificado->retira_telefono ?? 'SIN DATO' }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Número de Recibo:</strong> {{ $certificado->numero_recibo ?? 'SIN DATO' }}</p>
                             </div>
                         </div>
                     @elseif($certificado->estado == 'Devuelto')

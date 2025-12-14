@@ -1,4 +1,6 @@
 <IfModule mod_rewrite.c>
+    php_value session.gc_maxlifetime 7200
+
     <IfModule mod_negotiation.c>
         Options -MultiViews -Indexes
     </IfModule>

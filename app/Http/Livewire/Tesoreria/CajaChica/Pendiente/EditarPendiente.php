@@ -41,11 +41,8 @@ class EditarPendiente extends Component
     /**
      * El método Mount no necesita cambios.
      */
-    public $abrirModalInicialmente = false;
-
     public function mount($id)
     {
-        $this->abrirModalInicialmente = request()->query('openModal') == true;
         $pendiente = Pendiente::findOrFail($id);
 
         $this->idPendiente = $pendiente->idPendientes;

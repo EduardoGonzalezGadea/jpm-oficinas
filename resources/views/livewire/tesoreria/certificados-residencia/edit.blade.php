@@ -79,6 +79,12 @@
                             <input type="text" wire:model.defer="retira_nro_documento" class="form-control" id="edit_retira_nro_documento">
                             @error('retira_nro_documento') <span class="text-danger">{{ $message }}</span> @enderror
                         </div>
+
+                        <div class="form-group">
+                            <label for="edit_numero_recibo">Número de Recibo</label>
+                            <input type="text" wire:model.defer="numero_recibo" class="form-control" id="edit_numero_recibo">
+                            @error('numero_recibo') <span class="text-danger">{{ $message }}</span> @enderror
+                        </div>
                     @endif
                 </form>
             </div>

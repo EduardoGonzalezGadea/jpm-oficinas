@@ -17,49 +17,50 @@
         </div>
     @endif
 
-    <!-- Encabezado con Controles -->
-    <div class="bg-info text-white card-header-gradient py-2 px-3 mb-3 rounded d-flex justify-content-between align-items-center">
-        <h4 class="mb-0">
-            <strong>Gestión de Caja Chica</strong>
-        </h4>
-        <div class="d-flex align-items-center d-print-none">
-            <!-- Selector de Mes y Año -->
-            <div class="input-group input-group-sm mr-2" style="width: auto;">
-                <div class="input-group-prepend">
-                    <span class="input-group-text font-weight-bold text-dark">Mes y Año</span>
+    <!-- Cabecera de Caja Chica -->
+    <div class="card mb-3">
+        <div class="card-header bg-info text-white card-header-gradient py-2 px-3 d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+                <i class="fas fa-coins mr-2"></i>
+                Caja Chica
+            </h5>
+            <div class="d-flex align-items-center">
+                <!-- Selectores de Mes y Año -->
+                <div class="form-inline mr-3">
+                    <select id="mesSelector" class="form-control form-control-sm mr-2" wire:model.live="mesActual">
+                        <option value="enero">Enero</option>
+                        <option value="febrero">Febrero</option>
+                        <option value="marzo">Marzo</option>
+                        <option value="abril">Abril</option>
+                        <option value="mayo">Mayo</option>
+                        <option value="junio">Junio</option>
+                        <option value="julio">Julio</option>
+                        <option value="agosto">Agosto</option>
+                        <option value="septiembre">Septiembre</option>
+                        <option value="octubre">Octubre</option>
+                        <option value="noviembre">Noviembre</option>
+                        <option value="diciembre">Diciembre</option>
+                    </select>
+                    <input type="number" id="anioSelector" class="form-control form-control-sm" style="width: 90px;" wire:model.live="anioActual">
                 </div>
-                <select id="mesSelector" class="form-control" wire:model.live="mesActual" style="width: 110px;">
-                    <option value="enero">Enero</option>
-                    <option value="febrero">Febrero</option>
-                    <option value="marzo">Marzo</option>
-                    <option value="abril">Abril</option>
-                    <option value="mayo">Mayo</option>
-                    <option value="junio">Junio</option>
-                    <option value="julio">Julio</option>
-                    <option value="agosto">Agosto</option>
-                    <option value="septiembre">Septiembre</option>
-                    <option value="octubre">Octubre</option>
-                    <option value="noviembre">Noviembre</option>
-                    <option value="diciembre">Diciembre</option>
-                </select>
-                <input type="number" id="anioSelector" class="form-control" wire:model.live="anioActual" style="width: 70px;">
-            </div>
-
-            <!-- Botones de Acción -->
-            <div class="btn-group btn-group-sm" role="group">
-                <button class="btn btn-warning font-weight-bold" wire:click="mostrarModalNuevoFondo">
-                    <i class="fas fa-comment-dollar mr-1"></i>Fondo Permanente
-                </button>
-                <button class="btn btn-danger font-weight-bold" wire:click="openRecuperarModal">
-                    <i class="fas fa-money-check mr-1"></i>Recuperar todo
-                </button>
+                <!-- Botones -->
+                <div class="btn-group" role="group">
+                    <button class="btn btn-warning btn-sm" wire:click="mostrarModalNuevoFondo">
+                        <i class="fas fa-comment-dollar"></i>
+                        Fondo Permanente
+                    </button>
+                    <button class="btn btn-danger btn-sm" wire:click="openRecuperarModal">
+                        <i class="fas fa-money-check"></i>
+                        Recuperar todo
+                    </button>
+                </div>
             </div>
         </div>
     </div>
 
     <!-- Tabla Caja Chica (Fondo Permanente) -->
-    <h4 class="mt-2">Fondo Permanente</h4>
-    <table class="table table-striped table-bordered mb-0" id="tablaCajaChica">
+    <h4 class="mt-1 mb-0">Fondo Permanente</h4>
+    <table class="table table-striped table-bordered" id="tablaCajaChica">
         <thead class="thead-dark">
             <tr>
                 <th class="text-center">Mes</th>
@@ -162,7 +163,7 @@
     @if ($showRecuperarModal)
         <div class="modal fade show" id="modalRecuperar" tabindex="-1" role="dialog" style="display: block;"
             aria-modal="true">
-            <div class="modal-dialog modal-xl" role="document">
+            <div class="modal-dialog modal-lg" role="document">
                 <div class="modal-content">
                     <div class="modal-header bg-primary text-white">
                         <h5 class="modal-title">Recuperar Saldos Pendientes</h5>
@@ -251,7 +252,7 @@
     @endif
 
     <!-- Tabla Totales -->
-    <div class="d-flex justify-content-between align-items-center mt-2">
+    <div class="d-flex justify-content-between align-items-center mt-1 mb-0">
         <h4 class="mb-0">Totales</h4>
         <div class="form-inline d-print-none">
             <label for="fechaHastaInput" class="mr-2">Fecha Hasta:</label>
@@ -320,27 +321,36 @@
     </div>
 
     <!-- Tabla Pendientes Detalle -->
-    <div class="d-flex align-items-center mt-4 mb-1">
-        <h4 class="mb-0 mr-3">Pendientes</h4>
-        <div class="flex-fill mr-1">
-            <div class="input-group">
-                <input type="text" class="form-control" placeholder="Buscar por dependencia..." wire:model.debounce.500ms="searchPendiente">
-                <div class="input-group-append">
-                    <button class="btn btn-outline-secondary" type="button" wire:click="$set('searchPendiente', '')" title="Limpiar filtro">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
+    <div class="d-flex align-items-center mt-4 d-print-none">
+        <h4 class="mb-0 mr-3 flex-shrink-0">Pendientes</h4>
+        <div class="input-group flex-grow-1 mr-3">
+            <input type="text" 
+                wire:model.live.debounce.300ms="searchPendientes" 
+                class="form-control" 
+                placeholder="Buscar por número, dependencia o monto...">
+            <div class="input-group-append">
+                <button class="btn btn-outline-danger" 
+                        wire:click="limpiarFiltroPendientes" 
+                        type="button"
+                        title="Limpiar filtro">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
         </div>
-        <div class="d-print-none">
-            <button class="btn btn-primary mr-1" wire:click="openModalDependencias">
-                <i class="fas fa-building"></i> Dependencias
+        <div class="btn-group flex-shrink-0">
+            <button class="btn btn-primary" wire:click="openModalDependencias">
+                <i class="fas fa-building"></i>
+                Dependencias
             </button>
             <button class="btn btn-info" wire:click="prepararModalNuevoPendiente">
-                <i class="fas fa-money-bill"></i> Nuevo Pendiente
+                <i class="fas fa-money-bill"></i>
+                Nuevo Pendiente
             </button>
         </div>
     </div>
+
+    <!-- Título solo para impresión -->
+    <h4 class="mt-4 d-none d-print-block">Pendientes</h4>
 
     <table class="table table-striped table-bordered" id="tablaPendientesDetalle">
         <thead class="thead-light">
@@ -404,12 +414,6 @@
                                 class="btn btn-sm btn-dark mr-1" title="Editar Pendiente">
                                 <i class="fas fa-pencil-alt"></i>
                             </button>
-                            @if($item->movimientos_count == 0)
-                                <button type="button" wire:click="irAEditar({{ $item->idPendientes }}, true)"
-                                    class="btn btn-sm btn-success mr-1" title="Nuevo Movimiento">
-                                    <i class="fas fa-plus-circle"></i>
-                                </button>
-                            @endif
                             @if (($item->tot_recuperado ?? 0) < ($item->tot_rendido ?? 0) && ($item->tot_rendido ?? 0) > 0)
                                 <button type="button" class="btn btn-sm btn-info mr-1"
                                     title="Recuperar Dinero Rendido"
@@ -437,27 +441,36 @@
     </table>
 
     <!-- Tabla Pagos -->
-    <div class="d-flex align-items-center mt-4 mb-1">
-        <h4 class="mb-0 mr-3">Pagos Directos</h4>
-        <div class="flex-fill mr-1">
-            <div class="input-group">
-                <input type="text" class="form-control" placeholder="Buscar por concepto..." wire:model.debounce.500ms="searchPago">
-                <div class="input-group-append">
-                    <button class="btn btn-outline-secondary" type="button" wire:click="$set('searchPago', '')" title="Limpiar filtro">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
+    <div class="d-flex align-items-center mt-4 d-print-none">
+        <h4 class="mb-0 mr-3 flex-shrink-0">Pagos Directos</h4>
+        <div class="input-group flex-grow-1 mr-3">
+            <input type="text" 
+                wire:model.live.debounce.300ms="searchPagos" 
+                class="form-control" 
+                placeholder="Buscar por egreso, acreedor, concepto o monto...">
+            <div class="input-group-append">
+                <button class="btn btn-outline-danger" 
+                        wire:click="limpiarFiltroPagos" 
+                        type="button"
+                        title="Limpiar filtro">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
         </div>
-        <div class="d-print-none">
-            <button class="btn btn-primary mr-1" wire:click="openModalAcreedores">
-                <i class="fas fa-users"></i> Acreedores
+        <div class="btn-group flex-shrink-0">
+            <button class="btn btn-primary" wire:click="openModalAcreedores">
+                <i class="fas fa-users"></i>
+                Acreedores
             </button>
             <button class="btn btn-warning" wire:click="prepararModalNuevoPago">
-                <i class="far fa-handshake"></i> Nuevo Pago
+                <i class="far fa-handshake"></i>
+                Nuevo Pago
             </button>
         </div>
     </div>
+
+    <!-- Título solo para impresión -->
+    <h4 class="mt-4 d-none d-print-block">Pagos Directos</h4>
 
     <table class="table table-striped table-bordered" id="tablaPagos">
         <thead class="thead-light">

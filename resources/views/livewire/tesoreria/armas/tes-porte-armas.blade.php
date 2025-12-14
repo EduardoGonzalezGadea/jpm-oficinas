@@ -1,7 +1,7 @@
 <div>
     <div class="card">
         <div class="card-header bg-info text-white card-header-gradient py-2 px-3 d-flex justify-content-between align-items-center">
-            <h3 class="mb-0">Listado de Porte de Armas</h3>
+            <h4 class="mb-0"><strong><i class="fas fa-id-badge mr-2"></i>Listado de Porte de Armas</strong></h4>
             <div class="btn-group d-print-none">
                 <button wire:click="create" class="btn btn-primary">
                     <i class="fas fa-plus"></i> Nuevo Registro
@@ -50,6 +50,12 @@
                         <td class="align-middle text-nowrap">$ {{ number_format($registro->monto, 2, ',', '.') }}</td>
                         <td class="align-middle">{{ $registro->recibo }}</td>
                         <td class="align-middle text-nowrap">
+                            <a href="{{ route('tesoreria.armas.porte.imprimir', $registro->id) }}" 
+                               target="_blank" 
+                               class="btn btn-sm btn-success" 
+                               title="Imprimir Recibo">
+                                <i class="fas fa-print"></i>
+                            </a>
                             <button wire:click="showDetails({{ $registro->id }})" class="btn btn-sm btn-secondary" title="Ver Detalle">
                                 <i class="fas fa-eye"></i>
                             </button>

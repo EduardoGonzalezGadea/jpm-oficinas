@@ -524,7 +524,7 @@
                         <img src="{{ asset('images/icons/jpm.png') }}" alt="JPM Logo" class="img-fluid">
                         <div class="logo-text">
                             <h1>Tesorería | Oficinas</h1>
-                            <p class="lead mb-1">Sistema de Gestión de la Dirección de Tesorería</p>
+                            <p class="lead mb-1">Sistema de Apoyo de la Dirección de Tesorería</p>
                         </div>
                     </div>
 
@@ -535,7 +535,7 @@
                                     <h5 class="mb-0"><i class="fas fa-sign-in-alt mr-2"></i>Acceso al Sistema</h5>
                                 </div>
                                 <div class="card-body p-4">
-                                    <p class="mb-3">Bienvenido al sistema de gestión de la Dirección de Tesorería
+                                    <p class="mb-3">Bienvenido al sistema de apoyo de la Dirección de Tesorería
                                         de la Jefatura de Policía de Montevideo.</p>
                                     <div class="text-center">
                                         <a href="{{ route('login') }}" class="btn btn-primary btn-lg">

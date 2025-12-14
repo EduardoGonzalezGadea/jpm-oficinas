@@ -34,6 +34,9 @@ class TesPorteArmas extends Component
 
     public $selectedRegistro = null;
     public $search = '';
+    public $anio;
+
+    protected $queryString = ['anio'];
     public function showDetails($id)
     {
         $this->showModal = false;
@@ -72,12 +75,15 @@ class TesPorteArmas extends Component
     public function mount()
     {
         $this->fecha = date('Y-m-d');
+        if (empty($this->anio)) {
+            $this->anio = date('Y');
+        }
     }
 
     public function render()
     {
         $page = $this->page ?: 1;
-        $cacheKey = 'tes_porte_armas_search_' . $this->search . '_page_' . $page;
+        $cacheKey = 'tes_porte_armas_desc_anio_' . $this->anio . '_search_' . $this->search . '_page_' . $page;
 
         $registros = Cache::remember($cacheKey, now()->addDay(), function () {
             return TesPorteArmasModel::where(function($query) {
@@ -86,7 +92,8 @@ class TesPorteArmas extends Component
                       ->orWhere('orden_cobro', 'like', '%' . $this->search . '%')
                       ->orWhere('numero_tramite', 'like', '%' . $this->search . '%');
             })
-            ->orderBy('fecha', 'asc')
+            ->whereYear('fecha', $this->anio)
+            ->orderBy('fecha', 'desc')
             ->orderBy('recibo', 'asc')
             ->paginate(10);
         });

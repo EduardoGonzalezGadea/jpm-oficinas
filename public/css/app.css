@@ -158,3 +158,27 @@ input:checked + .slider:before {
     transition: all 0.3s ease;
 }
 
+/* Estilos personalizados para SweetAlert2 - Compatibilidad con navegadores antiguos */
+
+/* Override hover para botones de confirmación (Aceptar) */
+div:where(.swal2-container) button:where(.swal2-styled):where(.swal2-confirm):hover {
+    background-color: #5a4cce !important; /* Morado más oscuro compatible */
+}
+
+/* Override hover para botones de deny (Eliminar) */
+div:where(.swal2-container) button:where(.swal2-styled):where(.swal2-deny):hover {
+    background-color: #c62f37 !important; /* Rojo más oscuro compatible */
+}
+
+/* Override hover para botones de cancel (Cancelar) */
+div:where(.swal2-container) button:where(.swal2-styled):where(.swal2-cancel):hover {
+    background-color: #5d6470 !important; /* Gris más oscuro compatible */
+}
+
+/* Asegurar que los botones permanezcan visibles y sin transformaciones problemáticas */
+div:where(.swal2-container) button:where(.swal2-styled) {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+}
+

@@ -109,9 +109,9 @@
         <div class="col-12">
 
         </div>
-        <div class="card-body">
+        <div class="card-body p-2">
             <!-- Navegación de pestañas Bootstrap nativo -->
-            <ul class="nav nav-tabs" id="reportesTabs" role="tablist">
+            <ul class="nav nav-pills" id="reportesTabs" role="tablist">
                 <li class="nav-item">
                     <a class="nav-link {{ $reporteTipo === 'stock' ? 'active' : '' }}" 
                        id="stock-tab" 
@@ -139,7 +139,13 @@
                         <i class="fas fa-handshake mr-1"></i>Libretas en Uso
                     </a>
                 </li>
+                <li class="nav-item ml-auto d-print-none">
+                    <a href="{{ route('tesoreria.valores.index') }}" class="nav-link">
+                        <i class="fas fa-arrow-left mr-1"></i>Regresar a Valores
+                    </a>
+                </li>
             </ul>
+            <hr class="my-0">
 
             <!-- Contenido de las pestañas -->
             <div class="tab-content mt-3" id="reportesTabContent">
@@ -154,9 +160,6 @@
                             <button onclick="window.print()" class="btn btn-primary">
                                 <i class="fas fa-print mr-1"></i>Imprimir
                             </button>
-                            <a href="{{ route('tesoreria.valores.index') }}" class="btn btn-secondary ml-2">
-                                <i class="fas fa-arrow-left mr-1"></i>Regresar a Valores
-                            </a>
                         </div>
                     </div>
 

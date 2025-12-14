@@ -50,6 +50,14 @@ class Index extends Component
         // Esto vuelve a ejecutar el método render(), que obtiene los datos actualizados.
     }
 
+    public function clearFilters()
+    {
+        $this->search = '';
+        $this->year = date('Y');
+        $this->estado = 'Recibido';
+        $this->resetPage();
+    }
+
     public function loadYears()
     {
         $this->years = CertificadoResidencia::selectRaw('YEAR(fecha_recibido) as year')

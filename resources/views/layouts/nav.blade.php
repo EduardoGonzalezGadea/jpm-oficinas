@@ -24,48 +24,6 @@
                         </a>
                         {{-- Separador --}}
                         <div class="dropdown-divider"></div>
-                        {{-- Link Caja Chica --}}
-                        <a class="dropdown-item" href="{{ route('tesoreria.caja-chica.index') }}" wire:navigate>
-                            <i class="fas fa-coins mr-2"></i>Caja Chica
-                        </a>
-                        {{-- Link Cheques --}}
-                        <a class="dropdown-item" href="{{ route('tesoreria.cheques.index') }}" wire:navigate>
-                            <i class="fas fa-money-check mr-2"></i>Cheques
-                        </a>
-                        {{-- Link Arrendamientos --}}
-                        <a class="dropdown-item" href="{{ route('tesoreria.arrendamientos.index') }}">
-                            <i class="fas fa-file-signature mr-2"></i> Arrendamientos
-                        </a>
-                        <a class="dropdown-item" href="{{ route('tesoreria.eventuales.index') }}">
-                            <i class="fas fa-hand-holding-usd mr-2"></i> Eventuales
-                        </a>
-                        <a class="dropdown-item" href="{{ route('tesoreria.certificados-residencia.index') }}" wire:navigate>
-                            <i class="fas fa-file-alt mr-2"></i> Certificados de Residencia
-                        </a>
-                        <div class="dropdown-submenu submenu-right">
-                            <a class="dropdown-item dropdown-toggle" href="#" role="button">
-                                <i class="fas fa-barcode mr-2"></i>Valores
-                            </a>
-                            <div class="dropdown-menu">
-                                <a class="dropdown-item" href="{{ route('tesoreria.valores.index') }}">
-                                    <i class="fas fa-tasks mr-2"></i>Gestión de Valores
-                                </a>
-                                <div class="dropdown-divider"></div>
-                                <div class="dropdown-submenu submenu-left">
-                                    <a class="dropdown-item dropdown-toggle" href="#">
-                                        <i class="fas fa-cog mr-2"></i>Configuración
-                                    </a>
-                                    <div class="dropdown-menu">
-                                        <a class="dropdown-item" href="{{ route('tesoreria.valores.servicios') }}">
-                                            <i class="fas fa-cogs mr-2"></i>Servicios
-                                        </a>
-                                        <a class="dropdown-item" href="{{ route('tesoreria.valores.tipos-libreta') }}">
-                                            <i class="fas fa-book mr-2"></i>Tipos de Libreta
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
                         {{-- Link Armas --}}
                         <div class="dropdown-submenu submenu-right">
                             <a class="dropdown-item dropdown-toggle" href="#" role="button">
@@ -76,10 +34,37 @@
                                     <i class="fas fa-id-badge mr-2"></i>Porte de Armas
                                 </a>
                                 <a class="dropdown-item" href="{{ route('tesoreria.armas.tenencia') }}" wire:navigate>
-                                    <i class="fas fa-home mr-2"></i>Tenencia de Armas
+                                    <i class="fas fa-address-card mr-2"></i>Tenencia de Armas
                                 </a>
                             </div>
                         </div>
+                        {{-- Link Arrendamientos --}}
+                        <a class="dropdown-item" href="{{ route('tesoreria.arrendamientos.index') }}">
+                            <i class="fas fa-file-signature mr-2"></i> Arrendamientos
+                        </a>
+                        {{-- Link Caja Chica --}}
+                        <a class="dropdown-item" href="{{ route('tesoreria.caja-chica.index') }}" wire:navigate>
+                            <i class="fas fa-coins mr-2"></i>Caja Chica
+                        </a>
+                        <a class="dropdown-item" href="{{ route('tesoreria.certificados-residencia.index') }}" wire:navigate>
+                            <i class="fas fa-file-alt mr-2"></i> Certificados de Residencia
+                        </a>
+                        <a class="dropdown-item" href="{{ route('tesoreria.deposito-vehiculos.index') }}" wire:navigate>
+                            <i class="fas fa-car mr-2"></i> Depósito de Vehículos
+                        </a>
+                        {{-- Link Cheques --}}
+                        <a class="dropdown-item" href="{{ route('tesoreria.cheques.index') }}" wire:navigate>
+                            <i class="fas fa-money-check mr-2"></i>Cheques
+                        </a>
+                        <a class="dropdown-item" href="{{ route('tesoreria.eventuales.index') }}">
+                            <i class="fas fa-hand-holding-usd mr-2"></i> Eventuales
+                        </a>
+                        <a class="dropdown-item" href="{{ route('tesoreria.prendas.index') }}" wire:navigate>
+                            <i class="fas fa-file-invoice-dollar mr-2"></i> Prendas
+                        </a>
+                        <a class="dropdown-item" href="{{ route('tesoreria.valores.index') }}">
+                            <i class="fas fa-barcode mr-2"></i> Valores
+                        </a>
                     </div>
                 </li>
             @endcan

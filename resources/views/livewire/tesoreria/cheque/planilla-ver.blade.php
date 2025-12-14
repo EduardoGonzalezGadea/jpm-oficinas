@@ -9,7 +9,11 @@
         </div>
         <div class="col-8 text-right">
             <h4 class="font-weight-bold mb-1">PLANILLA DE CHEQUES N°
-                {{ substr($planilla->numero_planilla, strrpos($planilla->numero_planilla, '-') + 1) }}/{{ $planilla->created_at->format('Y') }}
+                @if(strpos($planilla->numero_planilla, '-') !== false)
+                    {{ substr($planilla->numero_planilla, strrpos($planilla->numero_planilla, '-') + 1) }}/{{ $planilla->created_at->format('Y') }}
+                @else
+                    {{ $planilla->numero_planilla }}/{{ $planilla->created_at->format('Y') }}
+                @endif
             </h4>
             <strong>Montevideo, {{ $planilla->created_at->locale('es')->isoFormat('D [de] MMMM [de] YYYY') }}</strong>
         </div>

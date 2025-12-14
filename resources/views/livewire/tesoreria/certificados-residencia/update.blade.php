@@ -46,6 +46,11 @@
                             <input type="text" wire:model.defer="retira_telefono" class="form-control" id="retira_telefono">
                             @error('retira_telefono') <span class="text-danger">{{ $message }}</span> @enderror
                         </div>
+                        <div class="form-group">
+                            <label for="numero_recibo">Número de Recibo</label>
+                            <input type="text" wire:model.defer="numero_recibo" class="form-control" id="numero_recibo">
+                            @error('numero_recibo') <span class="text-danger">{{ $message }}</span> @enderror
+                        </div>
                     </form>
                 </div>
                 <div class="modal-footer">

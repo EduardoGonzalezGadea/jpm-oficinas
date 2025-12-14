@@ -18,12 +18,12 @@
     @endif
 
     <div class="card border-0">
-        <div class="card-body p-2">
+        <div class="card-body px-1 py-0 m-0">
             <!-- Layout responsive: columnas en pantallas medianas y superiores -->
             <div class="row">
                 <!-- Columna Izquierda: Cheques Disponibles -->
                 <div class="col-lg-6">
-                    <h5 class="mb-3">
+                    <h5 class="mb-1">
                         <i class="fas fa-money-check mr-2"></i>Cheques Disponibles
                     </h5>
 
@@ -85,7 +85,7 @@
 
                 <!-- Columna Derecha: Cheques Emitidos -->
                 <div class="col-lg-6">
-                    <h5 class="mb-3">
+                    <h5 class="mb-1">
                         <i class="fas fa-check-circle mr-2"></i>Cheques Emitidos (sin planilla)
                     </h5>
 
@@ -148,12 +148,12 @@
                                     <div class="col-md-8">
                                         <div class="row text-center">
                                             <div class="col-6 px-1">
-                                                <small class="text-muted d-block" style="font-size: 0.75rem;">Total Emitidos</small>
+                                                <small class="d-block" style="font-size: 0.75rem;">Total Emitidos</small>
                                                 <div class="h6 mb-0 text-primary font-weight-bold">${{ number_format($this->totalEmitidos, 0, ',', '.') }}</div>
                                             </div>
                                             <div class="col-6 px-1">
-                                                <small class="text-muted d-block" style="font-size: 0.75rem;">Seleccionados</small>
-                                                <div class="h6 mb-0 text-success font-weight-bold">${{ number_format($this->totalSeleccionados, 0, ',', '.') }}</div>
+                                                <small class="d-block" style="font-size: 0.75rem;">Seleccionados</small>
+                                                <div class="h6 mb-0 text-primary font-weight-bold">${{ number_format($this->totalSeleccionados, 0, ',', '.') }}</div>
                                             </div>
                                         </div>
                                     </div>

@@ -49,7 +49,7 @@ class Eventuales extends Component
     public function render()
     {
         $page = $this->page ?: 1;
-        $cacheKey = 'eventuales_' . $this->year . '_' . $this->mes . '_search_' . $this->search . '_page_' . $page;
+        $cacheKey = 'eventuales_desc_' . $this->year . '_' . $this->mes . '_search_' . $this->search . '_page_' . $page;
 
         $data = Cache::remember($cacheKey, now()->addDay(), function () {
             $query = Model::whereYear('fecha', $this->year)
@@ -58,7 +58,7 @@ class Eventuales extends Component
 
             $generalTotal = (float) $query->sum('monto');
 
-            $eventuales = $query->orderBy('fecha', 'asc')->orderBy('recibo', 'asc')->paginate(10);
+            $eventuales = $query->orderBy('fecha', 'desc')->orderBy('recibo', 'asc')->paginate(10);
 
             $subtotales = Model::whereYear('fecha', $this->year)
                 ->whereMonth('fecha', $this->mes)

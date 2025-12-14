@@ -7,7 +7,6 @@ use App\Models\Tesoreria\Pendiente;
 use App\Models\Tesoreria\Movimiento;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Cache;
 
 class MovimientosPendiente extends Component
 {
@@ -55,17 +54,11 @@ class MovimientosPendiente extends Component
         'recuperado.min' => 'El monto recuperado no puede ser negativo.',
     ];
 
-    public $abrirModalInicialmente = false;
-
-    public function mount($id, $abrirModalInicialmente = false)
+    public function mount($id)
     {
         $this->pendiente = Pendiente::findOrFail($id);
         $this->cargarMovimientos();
         $this->fechaMovimientos = Carbon::now()->format('Y-m-d');
-
-        if ($abrirModalInicialmente) {
-            $this->abrirModalCrear();
-        }
     }
 
     public function render()
@@ -134,13 +127,6 @@ class MovimientosPendiente extends Component
 
         } else {
             $this->validate(); // Usar reglas por defecto
-            
-            // Validación adicional: al menos uno de los campos debe tener valor mayor a cero
-            if (($this->rendido ?? 0) <= 0 && ($this->reintegrado ?? 0) <= 0 && ($this->recuperado ?? 0) <= 0) {
-                $this->addError('rendido', 'Al menos uno de los campos (Rendido, Reintegrado o Recuperado) debe tener un valor mayor a cero.');
-                $this->loading = false;
-                return;
-            }
         }
 
         // Totales existentes (excluyendo el movimiento actual si se está editando)
@@ -198,7 +184,6 @@ class MovimientosPendiente extends Component
             $movimiento->save();
 
             DB::commit();
-            Cache::flush();
             $this->cargarMovimientos();
             $this->pendiente->refresh();
             $this->emit('movimientoActualizado');
@@ -231,7 +216,6 @@ class MovimientosPendiente extends Component
             $movimiento->delete();
 
             DB::commit();
-            Cache::flush();
             $this->cargarMovimientos();
             $this->pendiente->refresh();
             $this->emit('movimientoActualizado');

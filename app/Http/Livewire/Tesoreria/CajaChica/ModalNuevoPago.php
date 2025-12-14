@@ -6,7 +6,6 @@ namespace App\Http\Livewire\Tesoreria\CajaChica;
 use Livewire\Component;
 use App\Models\Tesoreria\Pago;
 use App\Models\Tesoreria\Acreedor;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 class ModalNuevoPago extends Component
@@ -73,9 +72,7 @@ class ModalNuevoPago extends Component
 
     public function cargarAcreedores()
     {
-        $this->acreedores = Cache::remember('caja_chica_acreedores_all', now()->addDay(), function () {
-            return Acreedor::orderBy('acreedor', 'ASC')->get();
-        });
+        $this->acreedores = Acreedor::orderBy('acreedor', 'ASC')->get();
     }
 
     public function guardar()
@@ -94,9 +91,7 @@ class ModalNuevoPago extends Component
                 // Los campos fechaIngresoPagos, ingresoPagos, recuperadoPagos se dejan null por defecto
             ]);
 
-            Cache::flush();
             DB::commit();
-
             session()->flash('message', 'Pago Directo creado correctamente.');
             $this->dispatchBrowserEvent('hide-modal', ['id' => 'modalNuevoPago']);
             $this->emitTo('tesoreria.caja-chica.index', 'pagoCreado');

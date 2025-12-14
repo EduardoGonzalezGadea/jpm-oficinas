@@ -9,7 +9,6 @@ use App\Models\Tesoreria\Movimiento;
 use App\Models\Tesoreria\Pago;
 use App\Models\Tesoreria\Dependencia;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Cache;
 use Carbon\Carbon;
 
 
@@ -21,13 +20,13 @@ class Index extends Component
     public $mesActual;
     public $anioActual;
     public $fechaHasta;
-    public $searchPendiente = '';
-    public $searchPago = '';
 
     public $tablaCajaChica;
     public $tablaPendientesDetalle;
     public $tablaPagos;
     public $tablaTotales = [];
+    public $searchPendientes = '';
+    public $searchPagos = '';
 
     public $cajaChicaSeleccionada = null;
     public $dependencias;
@@ -101,19 +100,12 @@ class Index extends Component
 
     protected $listeners = [
         'cargarDependencias',
-        'fondoCreado' => 'flushCacheAndReload',
-        'fondoActualizado' => 'flushCacheAndReload',
-        'pendienteCreado' => 'flushCacheAndReload',
-        'pagoCreado' => 'flushCacheAndReload',
-        'movimientoActualizado' => 'flushCacheAndReload',
+        'fondoCreado' => 'cargarDatos',
+        'fondoActualizado' => 'cargarDatos',
+        'pendienteCreado' => 'cargarDatos',
+        'pagoCreado' => 'cargarDatos',
         'mostrarAlerta' => 'mostrarAlertaSweet',
     ];
-
-    public function flushCacheAndReload()
-    {
-        Cache::flush();
-        $this->cargarDatos();
-    }
 
     protected function rules()
     {
@@ -219,61 +211,39 @@ class Index extends Component
         $this->cargarDatos();
     }
 
-    public function updatedSearchPendiente()
+    public function updatedSearchPendientes()
     {
-        $this->cargarDatos();
+        $this->cargarTablaPendientesDetalle();
     }
 
-    public function limpiarBuscador()
+    public function limpiarFiltroPendientes()
     {
-        $this->searchPendiente = '';
-        $this->updatedSearchPendiente();
+        $this->searchPendientes = '';
+        $this->cargarTablaPendientesDetalle();
     }
 
-    public function updatedSearchPago()
+    public function updatedSearchPagos()
     {
-        $this->cargarDatos();
+        $this->cargarTablaPagos();
     }
 
-    public function limpiarBuscadorPagos()
+    public function limpiarFiltroPagos()
     {
-        $this->searchPago = '';
-        $this->updatedSearchPago();
+        $this->searchPagos = '';
+        $this->cargarTablaPagos();
     }
 
-    public function irAEditar($id, $abrirModal = false)
+    public function irAEditar($id)
     {
         session(['caja_chica_mes' => $this->mesActual, 'caja_chica_anio' => $this->anioActual]);
-        return redirect()->route('tesoreria.caja-chica.pendientes.editar', ['id' => $id, 'openModal' => $abrirModal]);
+        return redirect()->route('tesoreria.caja-chica.pendientes.editar', $id);
     }
 
     public function cargarDatos()
     {
-        $cacheKey = 'caja_chica_report_' . $this->mesActual . '_' . $this->anioActual . '_' . $this->fechaHasta . '_' . $this->searchPendiente . '_' . $this->searchPago;
-
-        $data = Cache::remember($cacheKey, now()->addHours(1), function () {
-            $this->cargarTablaCajaChica();
-            $this->cargarTablaPendientesDetalle();
-            $this->cargarTablaPagos();
-            return [
-                'tablaCajaChica' => $this->tablaCajaChica,
-                'tablaPendientesDetalle' => $this->tablaPendientesDetalle,
-                'tablaPagos' => $this->tablaPagos,
-                'cajaChicaSeleccionada' => $this->cajaChicaSeleccionada,
-            ];
-        });
-
-        $this->tablaCajaChica = $data['tablaCajaChica'];
-        $this->tablaPendientesDetalle = $data['tablaPendientesDetalle'];
-        $this->tablaPagos = $data['tablaPagos'];
-        $this->cajaChicaSeleccionada = $data['cajaChicaSeleccionada'];
-
-        if ($this->cajaChicaSeleccionada) {
-            $this->nuevoPendiente['relCajaChica'] = $this->cajaChicaSeleccionada->idCajaChica;
-        } else {
-            $this->nuevoPendiente['relCajaChica'] = null;
-        }
-
+        $this->cargarTablaCajaChica();
+        $this->cargarTablaPendientesDetalle();
+        $this->cargarTablaPagos();
         $this->cargarTablaTotales();
     }
 
@@ -302,13 +272,7 @@ class Index extends Component
 
             $pendientesActual = Pendiente::where('relCajaChica', $this->cajaChicaSeleccionada->idCajaChica)
                 ->where('fechaPendientes', '<=', $fechaHastaStr)
-                ->when($this->searchPendiente, function ($query) {
-                    $query->whereHas('dependencia', function ($q) {
-                        $q->where('dependencia', 'like', '%' . $this->searchPendiente . '%');
-                    });
-                })
                 ->with('dependencia')
-                ->withCount('movimientos')
                 ->selectRaw(
                     'tes_cch_pendientes.*,
                     (SELECT SUM(rendido) FROM tes_cch_movimientos WHERE tes_cch_movimientos.relPendiente = tes_cch_pendientes.idPendientes AND fechaMovimientos <= ? AND deleted_at IS NULL) as tot_rendido,
@@ -346,13 +310,7 @@ class Index extends Component
             if ($cajaChicaAnterior) {
                 $pendientesAnterior = Pendiente::where('relCajaChica', $cajaChicaAnterior->idCajaChica)
                     ->where('fechaPendientes', '<=', $fechaHastaStr)
-                    ->when($this->searchPendiente, function ($query) {
-                        $query->whereHas('dependencia', function ($q) {
-                            $q->where('dependencia', 'like', '%' . $this->searchPendiente . '%');
-                        });
-                    })
                     ->with('dependencia')
-                    ->withCount('movimientos')
                     ->selectRaw(
                         'tes_cch_pendientes.*,
                         (SELECT SUM(rendido) FROM tes_cch_movimientos WHERE tes_cch_movimientos.relPendiente = tes_cch_pendientes.idPendientes AND fechaMovimientos <= ? AND deleted_at IS NULL) as tot_rendido,
@@ -380,7 +338,23 @@ class Index extends Component
                 });
             }
 
-            $this->tablaPendientesDetalle = $pendientesActual->concat($pendientesAnterior)->sortBy('pendiente')->values();
+            $allPendientes = $pendientesActual->concat($pendientesAnterior)->sortBy('pendiente')->values();
+
+            // Aplicar filtro de búsqueda si existe
+            if (!empty($this->searchPendientes)) {
+                $search = mb_strtolower($this->searchPendientes, 'UTF-8');
+                $allPendientes = $allPendientes->filter(function ($pendiente) use ($search) {
+                    $numero = mb_strtolower((string)$pendiente->pendiente, 'UTF-8');
+                    $dependencia = mb_strtolower($pendiente->dependencia->dependencia ?? '', 'UTF-8');
+                    $monto = number_format($pendiente->montoPendientes, 2, ',', '.');
+                    
+                    return str_contains($numero, $search) || 
+                           str_contains($dependencia, $search) || 
+                           str_contains($monto, $search);
+                })->values();
+            }
+
+            $this->tablaPendientesDetalle = $allPendientes;
         } catch (\Exception $e) {
             $this->dispatchBrowserEvent('swal:toast-error', ['text' => 'Error al cargar pendientes: ' . $e->getMessage()]);
             $this->tablaPendientesDetalle = collect();
@@ -399,9 +373,6 @@ class Index extends Component
 
             $pagosActual = Pago::where('relCajaChica_Pagos', $this->cajaChicaSeleccionada->idCajaChica)
                 ->where('fechaEgresoPagos', '<=', $fechaHastaStr)
-                ->when($this->searchPago, function ($query) {
-                    $query->where('conceptoPagos', 'like', '%' . $this->searchPago . '%');
-                })
                 ->with('acreedor')
                 ->selectRaw(
                     'tes_cch_pagos.*,
@@ -429,9 +400,6 @@ class Index extends Component
             if ($cajaChicaAnterior) {
                 $pagosAnterior = Pago::where('relCajaChica_Pagos', $cajaChicaAnterior->idCajaChica)
                     ->where('fechaEgresoPagos', '<=', $fechaHastaStr)
-                    ->when($this->searchPago, function ($query) {
-                        $query->where('conceptoPagos', 'like', '%' . $this->searchPago . '%');
-                    })
                     ->with('acreedor')
                     ->selectRaw(
                         'tes_cch_pagos.*,
@@ -450,7 +418,25 @@ class Index extends Component
                     });
             }
 
-            $this->tablaPagos = $pagosActual->concat($pagosAnterior)->sortBy('fechaEgresoPagos')->values();
+            $allPagos = $pagosActual->concat($pagosAnterior)->sortBy('fechaEgresoPagos')->values();
+
+            // Aplicar filtro de búsqueda si existe
+            if (!empty($this->searchPagos)) {
+                $search = mb_strtolower($this->searchPagos, 'UTF-8');
+                $allPagos = $allPagos->filter(function ($pago) use ($search) {
+                    $egreso = mb_strtolower((string)($pago->egresoPagos ?? ''), 'UTF-8');
+                    $acreedor = mb_strtolower($pago->acreedor->acreedor ?? '', 'UTF-8');
+                    $concepto = mb_strtolower($pago->conceptoPagos ?? '', 'UTF-8');
+                    $monto = number_format($pago->montoPagos, 2, ',', '.');
+                    
+                    return str_contains($egreso, $search) || 
+                           str_contains($acreedor, $search) || 
+                           str_contains($concepto, $search) ||
+                           str_contains($monto, $search);
+                })->values();
+            }
+
+            $this->tablaPagos = $allPagos;
         } catch (\Exception $e) {
             $this->dispatchBrowserEvent('swal:toast-error', ['text' => 'Error al cargar pagos: ' . $e->getMessage()]);
             $this->tablaPagos = collect();
@@ -470,37 +456,12 @@ class Index extends Component
 
             $this->tablaTotales['Monto Caja Chica'] = $montoCajaChica;
 
-            // Calcular totales de pendientes SIN aplicar filtro de búsqueda
-            $fechaHastaStr = Carbon::createFromFormat('Y-m-d', $this->fechaHasta)->endOfDay()->toDateTimeString();
-            
-            $pendientesParaTotales = Pendiente::where('relCajaChica', $this->cajaChicaSeleccionada->idCajaChica)
-                ->where('fechaPendientes', '<=', $fechaHastaStr)
-                ->with('dependencia')
-                ->selectRaw(
-                    'tes_cch_pendientes.*,
-                    (SELECT SUM(rendido) FROM tes_cch_movimientos WHERE tes_cch_movimientos.relPendiente = tes_cch_pendientes.idPendientes AND fechaMovimientos <= ? AND deleted_at IS NULL) as tot_rendido,
-                    (SELECT SUM(reintegrado) FROM tes_cch_movimientos WHERE tes_cch_movimientos.relPendiente = tes_cch_pendientes.idPendientes AND fechaMovimientos <= ? AND deleted_at IS NULL) as tot_reintegrado,
-                    (SELECT SUM(recuperado) FROM tes_cch_movimientos WHERE tes_cch_movimientos.relPendiente = tes_cch_pendientes.idPendientes AND fechaMovimientos <= ? AND deleted_at IS NULL) as tot_recuperado',
-                    [$fechaHastaStr, $fechaHastaStr, $fechaHastaStr]
-                )
-                ->get()
-                ->map(function ($pendiente) {
-                    $pendiente->tot_rendido = $pendiente->tot_rendido ?? 0;
-                    $pendiente->tot_reintegrado = $pendiente->tot_reintegrado ?? 0;
-                    $pendiente->tot_recuperado = $pendiente->tot_recuperado ?? 0;
-
-                    $totalGastado = $pendiente->tot_rendido + $pendiente->tot_reintegrado;
-                    $diferencia = $totalGastado > 0 ? $totalGastado - $pendiente->montoPendientes : 0;
-                    $pendiente->extra = $diferencia > 0 ? $diferencia : 0;
-
-                    return $pendiente;
-                });
-
-            $totalMontoPendientes = $pendientesParaTotales->sum('montoPendientes');
-            $totalRendido = $pendientesParaTotales->sum('tot_rendido');
-            $totalReintegrado = $pendientesParaTotales->sum('tot_reintegrado');
-            $totalRecuperado = $pendientesParaTotales->sum('tot_recuperado');
-            $stExtras = $pendientesParaTotales->sum('extra');
+            // Calcular totales de pendientes usando tablaPendientesDetalle
+            $totalMontoPendientes = $this->tablaPendientesDetalle->sum('montoPendientes');
+            $totalRendido = $this->tablaPendientesDetalle->sum('tot_rendido');
+            $totalReintegrado = $this->tablaPendientesDetalle->sum('tot_reintegrado');
+            $totalRecuperado = $this->tablaPendientesDetalle->sum('tot_recuperado');
+            $stExtras = $this->tablaPendientesDetalle->sum('extra');
 
             $totalGastado = $totalRendido + $totalReintegrado;
             $stPendientes = $totalMontoPendientes - $totalGastado;
@@ -741,7 +702,8 @@ class Index extends Component
             'itemsSeleccionados.min' => 'Debe seleccionar al menos un ítem.',
         ]);
 
-        DB::transaction(function () {
+        DB::beginTransaction();
+        try {
             $fechaRecuperacion = $this->recuperacion['fecha'];
             $nroIngreso = $this->recuperacion['numero_ingreso'];
 
@@ -776,12 +738,15 @@ class Index extends Component
                     }
                 }
             }
-            Cache::flush();
-        });
 
-        $this->closeRecuperarModal();
-        $this->cargarDatos();
-        $this->dispatchBrowserEvent('swal:success', ['text' => 'Recuperación guardada exitosamente.']);
+            DB::commit();
+            $this->closeRecuperarModal();
+            $this->cargarDatos();
+            $this->dispatchBrowserEvent('swal:success', ['text' => 'Recuperación guardada exitosamente.']);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            $this->dispatchBrowserEvent('swal:toast-error', ['text' => 'Error al guardar la recuperación: ' . $e->getMessage()]);
+        }
     }
 
     public function closeRecuperarModal()
@@ -845,11 +810,13 @@ class Index extends Component
             'recuperarRendidoData.monto_recuperado.max' => 'El monto recuperado no puede exceder 99,999,999.99.',
         ]);
 
-        DB::transaction(function () {
+        DB::beginTransaction();
+        try {
             $pendiente = Pendiente::find($this->recuperarRendidoData['relPendiente']);
 
             if (!$pendiente) {
                 $this->dispatchBrowserEvent('swal:toast-error', ['text' => 'Pendiente no encontrado para la validación.']);
+                DB::rollBack();
                 return;
             }
 
@@ -866,6 +833,7 @@ class Index extends Component
 
             if ($this->recuperarRendidoData['monto_recuperado'] > $montoRecuperableActual) {
                 $this->dispatchBrowserEvent('swal:toast-error', ['text' => 'El monto a recuperar ( ' . number_format($this->recuperarRendidoData['monto_recuperado'], 2, ',', '.') . ' ) no puede ser mayor que el saldo rendido actual del pendiente ( ' . number_format($montoRecuperableActual, 2, ',', '.') . ' ).']);
+                DB::rollBack();
                 return;
             }
 
@@ -878,12 +846,15 @@ class Index extends Component
                 'recuperado' => $this->recuperarRendidoData['monto_recuperado'],
                 'saldo' => 0, // El saldo se recalcula en el modelo o vista
             ]);
-            Cache::flush();
-        });
 
-        $this->cargarDatos();
-        $this->dispatchBrowserEvent('swal:success', ['text' => 'Dinero rendido recuperado exitosamente.']);
-        $this->closeRecuperarRendidoModal();
+            DB::commit();
+            $this->cargarDatos();
+            $this->dispatchBrowserEvent('swal:success', ['text' => 'Dinero rendido recuperado exitosamente.']);
+            $this->closeRecuperarRendidoModal();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            $this->dispatchBrowserEvent('swal:toast-error', ['text' => 'Error al guardar la recuperación del dinero rendido: ' . $e->getMessage()]);
+        }
     }
 
     public function closeRecuperarRendidoModal()
@@ -953,11 +924,13 @@ class Index extends Component
             'recuperarPagoData.monto_recuperado.max' => 'El monto recuperado no puede exceder 99,999,999.99.',
         ]);
 
-        DB::transaction(function () {
+        DB::beginTransaction();
+        try {
             $pago = Pago::find($this->recuperarPagoData['relPago']);
 
             if (!$pago) {
                 $this->dispatchBrowserEvent('swal:toast-error', ['text' => 'Pago no encontrado para la validación.']);
+                DB::rollBack();
                 return;
             }
 
@@ -966,6 +939,7 @@ class Index extends Component
 
             if ($this->recuperarPagoData['monto_recuperado'] > $saldoDisponible) {
                 $this->dispatchBrowserEvent('swal:toast-error', ['text' => 'El monto a recuperar (' . number_format($this->recuperarPagoData['monto_recuperado'], 2, ',', '.') . ') no puede ser mayor que el saldo disponible del pago (' . number_format($saldoDisponible, 2, ',', '.') . ').']);
+                DB::rollBack();
                 return;
             }
 
@@ -976,12 +950,15 @@ class Index extends Component
                 'ingresoPagos' => $this->recuperarPagoData['numero_ingreso'],
                 'ingresoPagosBSE' => $this->recuperarPagoData['numero_ingreso_bse'],
             ]);
-            Cache::flush();
-        });
 
-        $this->cargarDatos();
-        $this->dispatchBrowserEvent('swal:success', ['text' => 'Pago directo recuperado exitosamente.']);
-        $this->closeRecuperarPagoModal();
+            DB::commit();
+            $this->cargarDatos();
+            $this->dispatchBrowserEvent('swal:success', ['text' => 'Pago directo recuperado exitosamente.']);
+            $this->closeRecuperarPagoModal();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            $this->dispatchBrowserEvent('swal:toast-error', ['text' => 'Error al guardar la recuperación del pago directo: ' . $e->getMessage()]);
+        }
     }
 
     // --- Métodos para Modal de Acreedores ---
@@ -1015,48 +992,39 @@ class Index extends Component
     {
         $this->validate();
 
-        DB::transaction(function () {
+        try {
             $fondo = CajaChica::findOrFail($this->editandoFondo['id']);
             $montoAnterior = $fondo->montoCajaChica;
             $montoNuevo = floatval($this->editandoFondo['monto']);
 
             if (abs($montoAnterior - $montoNuevo) < 0.01) {
-                return; // No hay cambios, no hacer nada
+                $this->cerrarModalEditFondo();
+                $this->dispatchBrowserEvent('swal:success', ['text' => 'No se realizaron cambios en el monto del fondo.']);
+                return;
             }
 
             $fondo->montoCajaChica = $montoNuevo;
             $fondo->save();
 
-            Cache::flush();
-        });
-
-        // Mover la lógica de UI fuera de la transacción
-        $fondo = CajaChica::find($this->editandoFondo['id']);
-        $montoAnterior = floatval($this->editandoFondo['montoOriginal']);
-        $montoNuevo = $fondo->montoCajaChica;
-
-        if (abs($montoAnterior - $montoNuevo) < 0.01) {
+            $this->cargarDatos();
             $this->cerrarModalEditFondo();
-            $this->dispatchBrowserEvent('swal:success', ['text' => 'No se realizaron cambios en el monto del fondo.']);
-            return;
+
+            $mensaje = sprintf(
+                'Fondo actualizado exitosamente. Monto anterior: $%s, Monto nuevo: $%s',
+                number_format($montoAnterior, 2, ',', '.'),
+                number_format($montoNuevo, 2, ',', '.')
+            );
+
+            $this->dispatchBrowserEvent('swal:success', ['text' => $mensaje]);
+
+            $this->dispatchBrowserEvent('fondo-actualizado', [
+                'message' => 'Fondo actualizado exitosamente',
+                'montoAnterior' => $montoAnterior,
+                'montoNuevo' => $montoNuevo
+            ]);
+        } catch (\Exception $e) {
+            $this->dispatchBrowserEvent('swal:toast-error', ['text' => 'Error al actualizar el fondo: ' . $e->getMessage()]);
         }
-
-        $this->cargarDatos();
-        $this->cerrarModalEditFondo();
-
-        $mensaje = sprintf(
-            'Fondo actualizado exitosamente. Monto anterior: $%s, Monto nuevo: $%s',
-            number_format($montoAnterior, 2, ',', '.'),
-            number_format($montoNuevo, 2, ',', '.')
-        );
-
-        $this->dispatchBrowserEvent('swal:success', ['text' => $mensaje]);
-
-        $this->dispatchBrowserEvent('fondo-actualizado', [
-            'message' => 'Fondo actualizado exitosamente',
-            'montoAnterior' => $montoAnterior,
-            'montoNuevo' => $montoNuevo
-        ]);
     }
 
     public function cerrarModalEditFondo()

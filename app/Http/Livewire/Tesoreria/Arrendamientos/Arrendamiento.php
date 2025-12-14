@@ -46,13 +46,13 @@ class Arrendamiento extends Component
     public function render()
     {
         $page = $this->page ?: 1;
-        $cacheKey = 'arrendamientos_' . $this->year . '_' . $this->mes . '_search_' . $this->search . '_page_' . $page;
+        $cacheKey = 'arrendamientos_desc_' . $this->year . '_' . $this->mes . '_search_' . $this->search . '_page_' . $page;
 
         $data = Cache::remember($cacheKey, now()->addDay(), function () {
             $arrendamientos = Model::whereYear('fecha', $this->year)
                 ->whereMonth('fecha', $this->mes)
                 ->search($this->search)
-                ->orderBy('fecha', 'asc')
+                ->orderBy('fecha', 'desc')
                 ->orderBy('recibo', 'asc')
                 ->paginate(10);
 

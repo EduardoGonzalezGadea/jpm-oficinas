@@ -8,7 +8,7 @@
         <div>
             <div class="card">
                 <div class="card-header bg-info text-white card-header-gradient py-2 px-3 d-flex justify-content-between align-items-center">
-                    <h3 class="mb-0">Arrendamientos</h3>
+                    <h4 class="mb-0"><strong><i class="fas fa-file-signature mr-2"></i>Arrendamientos</strong></h4>
                     <div class="btn-group d-print-none">
                         <a href="{{ route('tesoreria.arrendamientos.imprimir-todo', ['year' => $year, 'mes' => $mes]) }}" target="_blank" class="btn btn-info">
                             <i class="fas fa-print"></i> Detalles

@@ -82,7 +82,7 @@
     <div class="d-print-none">
         <div class="card">
             <div class="card-header">
-                <h4 class="card-title">
+                <h4 class="card-title p-0 m-0">
                     <i class="fas fa-chart-bar mr-2"></i>Reportes de Cheques
                 </h4>
             </div>

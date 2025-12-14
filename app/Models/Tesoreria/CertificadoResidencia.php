@@ -29,6 +29,7 @@ class CertificadoResidencia extends Model
         'retira_tipo_documento',
         'retira_nro_documento',
         'retira_telefono',
+        'numero_recibo',
         'fecha_devuelto',
         'devolucion_user_id',
         'estado',

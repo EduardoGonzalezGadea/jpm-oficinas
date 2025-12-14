@@ -8,7 +8,7 @@
         <div class="col-md-12">
             <div class="card">
                 <div class="card-header bg-info text-white card-header-gradient py-2 px-3 d-flex justify-content-between align-items-center">
-                    <h3 class="mb-0">Eventuales</h3>
+                    <h4 class="mb-0"><strong><i class="fas fa-hand-holding-usd mr-2"></i>Eventuales</strong></h4>
                     <div class="btn-group d-print-none">
                         <a href="{{ route('tesoreria.eventuales.instituciones') }}" class="btn btn-secondary">
                             <i class="fas fa-building"></i> Instituciones

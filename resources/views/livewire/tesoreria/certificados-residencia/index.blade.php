@@ -4,7 +4,7 @@
     <div class="card">
         <div class="card-header bg-info text-white card-header-gradient p-2">
             <div class="d-flex justify-content-between align-items-center">
-                <h3 class="card-title px-1 m-0">Gestión de Certificados de Residencia</h3>
+                <h4 class="card-title px-1 m-0"><strong><i class="fas fa-file-alt mr-2"></i>Gestión de Certificados de Residencia</strong></h4>
                 <button class="btn btn-primary" wire:click="$emit('showCreateModal')">
                     <i class="fas fa-plus"></i> Ingresar Nuevo
                 </button>
@@ -14,10 +14,10 @@
             <div class="row mb-1 d-print-none">
                 <div class="col-md-4">
                     <div class="input-group">
-                        <input type="text" wire:model.debounce.300ms="search" class="form-control" placeholder="Buscar por titular o documento...">
-                        <div class="input-group-append">
+                        <div class="input-group-prepend">
                             <span class="input-group-text"><i class="fas fa-search"></i></span>
                         </div>
+                        <input type="text" wire:model.debounce.300ms="search" class="form-control" placeholder="Buscar por titular o documento...">
                     </div>
                 </div>
                 <div class="col-md-2">
@@ -27,29 +27,36 @@
                         @endforeach
                     </select>
                 </div>
-                <div class="col-md-2">
-                    <select wire:model="estado" class="form-control">
-                        <option value="">Todos los estados</option>
-                        <option value="Recibido">Recibido</option>
-                        <option value="Entregado">Entregado</option>
-                        <option value="Devuelto">Devuelto</option>
-                    </select>
+                <div class="col-md-3">
+                    <div class="input-group">
+                        <select wire:model="estado" class="form-control">
+                            <option value="">Todos los estados</option>
+                            <option value="Recibido">Recibido</option>
+                            <option value="Entregado">Entregado</option>
+                            <option value="Devuelto">Devuelto</option>
+                        </select>
+                        <div class="input-group-append">
+                            <button wire:click="clearFilters" class="btn btn-outline-danger" title="Limpiar filtros">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
                 </div>
-                <div class="col-md-2 pt-2">
-                    <small class="text-muted">{{ $totalRegistros }} registros</small>
+                <div class="col-md-3 d-flex align-items-center">
+                    <small>{{ $totalRegistros }} registros</small>
                 </div>
             </div>
 
             <div class="table-responsive">
-                <table class="table table-bordered table-striped table-hover">
+                <table class="table table-sm table-bordered table-striped table-hover">
                     <thead class="thead-dark align-middle">
                         <tr>
-                            <th class="align-middle">Fecha Recibido</th>
+                            <th class="align-middle">Recibido</th>
                             <th class="align-middle">Titular</th>
                             <th class="align-middle">Documento</th>
                             <th class="align-middle">Estado</th>
-                            <th class="align-middle">Recibido por</th>
                             <th class="align-middle">Entr./Dev.</th>
+                            <th class="align-middle">Recibo</th>
                             <th class="align-middle d-print-none">Acciones</th></th>
                         </tr>
                     </thead>
@@ -68,7 +75,6 @@
                                         <span class="badge badge-danger">{{ $certificado->estado }}</span>
                                     @endif
                                 </td>
-                                <td class="align-middle">{{ $certificado->receptor->nombre }} {{ $certificado->receptor->apellido }}</td>
                                 <td class="align-middle">
                                     @if($certificado->fecha_entregado)
                                         {{ \Carbon\Carbon::parse($certificado->fecha_entregado)->format('d/m/Y') }}
@@ -76,6 +82,7 @@
                                         {{ \Carbon\Carbon::parse($certificado->fecha_devuelto)->format('d/m/Y') }}
                                     @endif
                                 </td>
+                                <td class="align-middle">{{ $certificado->numero_recibo ?? '' }}</td>
                                 <td class="align-middle text-center d-print-none">
                                     <div class="btn-group" role="group" aria-label="Acciones">
                                         @if($certificado->estado == 'Recibido')

@@ -5,9 +5,9 @@
             <div class="row">
                 <div class="col-md-8 d-flex align-items-center">
                     <h4 class="mb-0 d-inline-block mr-3">
-                        Listado de Artículos de Multas de Tránsito
+                        <strong>Listado de Artículos de Multas de Tránsito</strong>
                     </h4>
-                    <span id="ur-value-container" class="text-white ml-2 font-weight-bold"></span>
+                    <span id="ur-value-container" wire:ignore class="text-white ml-2 font-weight-bold"></span>
                 </div>
                 <div class="col-md-4 text-right">
                     <button wire:click="create()" class="btn btn-primary d-print-none">
@@ -54,44 +54,44 @@
                         <thead class="thead-dark">
                             <tr>
                                 <th class="text-center align-middle">
-                                    <button class="btn btn-link text-white p-0 text-nowrap" wire:click="sortBy('articulo')">
+                                    <span role="button" class="text-white text-nowrap" wire:click="sortBy('articulo')">
                                         Art.
                                         @if ($sortField === 'articulo')
                                             <i class="fas fa-sort-{{ $sortDirection === 'asc' ? 'up' : 'down' }}"></i>
                                         @endif
-                                    </button>
+                                    </span>
                                 </th>
                                 <th class="text-center align-middle">
-                                    <button class="btn btn-link text-white p-0 text-nowrap" wire:click="sortBy('apartado')">
+                                    <span role="button" class="text-white text-nowrap" wire:click="sortBy('apartado')">
                                         Apartado
                                         @if ($sortField === 'apartado')
                                             <i class="fas fa-sort-{{ $sortDirection === 'asc' ? 'up' : 'down' }}"></i>
                                         @endif
-                                    </button>
+                                    </span>
                                 </th>
                                 <th class="text-center align-middle">
-                                    <button class="btn btn-link text-white p-0 text-nowrap" wire:click="sortBy('descripcion')">
+                                    <span role="button" class="text-white text-nowrap" wire:click="sortBy('descripcion')">
                                         Descripción
                                         @if ($sortField === 'descripcion')
                                             <i class="fas fa-sort-{{ $sortDirection === 'asc' ? 'up' : 'down' }}"></i>
                                         @endif
-                                    </button>
+                                    </span>
                                 </th>
                                 <th class="text-center align-middle">
-                                    <button class="btn btn-link text-white p-0 text-nowrap" wire:click="sortBy('importe_original')">
+                                    <span role="button" class="text-white text-nowrap" wire:click="sortBy('importe_original')">
                                         Original
                                         @if ($sortField === 'importe_original')
                                             <i class="fas fa-sort-{{ $sortDirection === 'asc' ? 'up' : 'down' }}"></i>
                                         @endif
-                                    </button>
+                                    </span>
                                 </th>
                                 <th class="text-center align-middle">
-                                    <button class="btn btn-link text-white p-0 text-nowrap" wire:click="sortBy('importe_unificado')">
+                                    <span role="button" class="text-white text-nowrap" wire:click="sortBy('importe_unificado')">
                                         Unificado
                                         @if ($sortField === 'importe_unificado')
                                             <i class="fas fa-sort-{{ $sortDirection === 'asc' ? 'up' : 'down' }}"></i>
                                         @endif
-                                    </button>
+                                    </span>
                                 </th>
                                 <th width="150" class="text-center align-middle d-print-none">Acciones</th>
                             </tr>
@@ -260,11 +260,6 @@
         loadURValue();
     });
 
-    // Recargar el valor UR cuando se actualiza el componente Livewire
-    Livewire.on('updated', function () {
-        setTimeout(function() {
-            loadURValue();
-        }, 100);
-    });
+
 </script>
 @endpush
