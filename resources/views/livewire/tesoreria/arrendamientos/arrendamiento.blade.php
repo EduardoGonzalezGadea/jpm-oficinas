@@ -131,7 +131,7 @@
                                             class="btn btn-sm btn-primary" title="Editar"><i
                                                 class="fas fa-edit"></i></button>
                                         <button
-                                            onclick="event.preventDefault(); window.dispatchEvent(new CustomEvent('swal:confirm', { detail: { title: '¿Estás seguro?', text: '¡No podrás revertir esto!', method: 'destroy', id: {{ $arrendamiento->id }}, confirmButtonText: 'Sí, elimínalo' } }))"
+                                            x-on:click="$dispatch('swal:confirm', { title: '¿Estás seguro?', text: '¡No podrás revertir esto!', method: 'destroy', id: {{ $arrendamiento->id }}, confirmButtonText: 'Sí, elimínalo' })"
                                             class="btn btn-sm btn-danger" title="Eliminar"><i
                                                 class="fas fa-trash-alt"></i></button>
                                     </td>
@@ -398,19 +398,21 @@
     @push('scripts')
     <script>
         window.addEventListener('swal:confirm', event => {
+            // Livewire $dispatch envía datos en event.detail como array
+            const detail = Array.isArray(event.detail) ? event.detail[0] : event.detail;
             Swal.fire({
-                title: event.detail.title,
-                text: event.detail.text,
+                title: detail.title,
+                text: detail.text,
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#3085d6',
                 cancelButtonColor: '#d33',
-                confirmButtonText: event.detail.confirmButtonText,
+                confirmButtonText: detail.confirmButtonText,
                 cancelButtonText: 'Cancelar',
                 focusConfirm: true
             }).then((result) => {
                 if (result.isConfirmed) {
-                    @this.call(event.detail.method, event.detail.id);
+                    $wire.call(detail.method, detail.id);
                 }
             });
         });

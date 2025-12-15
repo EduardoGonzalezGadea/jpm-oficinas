@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Hash; // Importar Hash para restablecer contrase�
 class UsersTable extends Component
 {
     use WithPagination;
+    use Traits\LivewireAlerts;
 
     protected $paginationTheme = 'bootstrap';
 
@@ -85,19 +86,19 @@ class UsersTable extends Component
         $user = User::find($userId);
 
         if (!$user) {
-            session()->flash('error', 'Usuario no encontrado.');
+            $this->alertError('Usuario no encontrado.');
             return;
         }
 
         if ($user->id === 1) { // No permitir restablecer contraseña del usuario con ID 1
-            session()->flash('error', 'No se puede restablecer la contraseña del usuario principal.');
+            $this->alertError('No se puede restablecer la contraseña del usuario principal.');
             return;
         }
 
         $user->password = Hash::make('123456'); // Contraseña predeterminada
         $user->save();
 
-        session()->flash('success', 'Contraseña restablecida exitosamente a 123456.');
+        $this->alertSuccess('Contraseña restablecida exitosamente a 123456.');
         $this->emit('userUpdated'); // Emitir evento para refrescar la tabla y mostrar mensaje
     }
 
@@ -111,19 +112,19 @@ class UsersTable extends Component
         $user = User::find($userId);
 
         if (!$user) {
-            session()->flash('error', 'Usuario no encontrado.');
+            $this->alertError('Usuario no encontrado.');
             return;
         }
 
         if ($user->id === 1) { // No permitir cambiar estado del usuario con ID 1
-            session()->flash('error', 'No se puede cambiar el estado del usuario principal.');
+            $this->alertError('No se puede cambiar el estado del usuario principal.');
             return;
         }
 
         $user->activo = !$user->activo;
         $user->save();
 
-        session()->flash('success', 'Estado del usuario cambiado exitosamente.');
+        $this->alertSuccess('Estado del usuario cambiado exitosamente.');
         $this->emit('userUpdated'); // Emitir evento para refrescar la tabla y mostrar mensaje
     }
 
@@ -144,12 +145,12 @@ class UsersTable extends Component
         // Asegurarse de que el usuario autenticado no se intente eliminar a sí mismo
         // y que el usuario con ID 1 (ej. administrador principal) no pueda ser eliminado.
         if ($this->currentAuthId === $user->id || $user->id === 1) {
-            session()->flash('error', 'No tienes permiso para eliminar este usuario.');
+            $this->alertError('No tienes permiso para eliminar este usuario.');
             return;
         }
 
         $user->delete();
-        session()->flash('success', 'Usuario eliminado exitosamente.');
+        $this->alertSuccess('Usuario eliminado exitosamente.');
         $this->emit('userUpdated'); // Emitir evento para refrescar la tabla y mostrar mensaje
     }
 

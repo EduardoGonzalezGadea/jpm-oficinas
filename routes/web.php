@@ -72,12 +72,22 @@ Route::get('/hora-uruguay', [UtilidadController::class, 'getHoraUruguay'])->name
 // RUTAS PROTEGIDAS POR JWT
 // ============================================================================
 
-Route::middleware(['web', 'jwt.verify'])->group(function () {
+Route::middleware(['web', 'jwt.verify', 'two-factor'])->group(function () {
 
     // ------------------------------------------------------------------------
     // AUTENTICACIÓN Y SESIÓN
     // ------------------------------------------------------------------------
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
+    // Rutas de Desafío 2FA (Protegidas por auth pero exentas del middleware 2FA por lógica interna)
+    Route::get('/two-factor-challenge', [App\Http\Controllers\TwoFactorController::class, 'showChallenge'])->name('two-factor.login');
+    Route::post('/two-factor-challenge', [App\Http\Controllers\TwoFactorController::class, 'verifyChallenge'])->name('two-factor.verify');
+
+    // Rutas de Gestión 2FA
+    Route::get('/two-factor-authentication', [App\Http\Controllers\TwoFactorController::class, 'index'])->name('two-factor.index');
+    Route::post('/two-factor-authentication/enable', [App\Http\Controllers\TwoFactorController::class, 'enable'])->name('two-factor.enable');
+    Route::delete('/two-factor-authentication/disable', [App\Http\Controllers\TwoFactorController::class, 'disable'])->name('two-factor.disable');
+    Route::post('/two-factor-authentication/regenerate', [App\Http\Controllers\TwoFactorController::class, 'regenerateRecoveryCodes'])->name('two-factor.regenerate');
 
     // ------------------------------------------------------------------------
     // PANEL PRINCIPAL
@@ -108,6 +118,8 @@ Route::middleware(['web', 'jwt.verify'])->group(function () {
         Route::get('/mi-perfil', [UsuarioController::class, 'miPerfil'])->name('miPerfil');
         Route::put('/actualizar-perfil', [UsuarioController::class, 'actualizarPerfil'])->name('actualizarPerfil');
         Route::put('/cambiar-contrasena', [UsuarioController::class, 'cambiarContrasena'])->name('cambiarContraseña');
+
+        // Rutas 2FA - MOVIDAS ARRIBA
 
         // Rutas AJAX y datos
         Route::get('/data/roles/{usuario?}', [UsuarioController::class, 'getRolesData'])->name('roles.data');

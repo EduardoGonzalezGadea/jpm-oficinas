@@ -141,7 +141,12 @@
                                             class="btn btn-sm btn-primary" title="Editar"><i
                                                 class="fas fa-edit"></i></button>
                                         <button
-                                            onclick="event.preventDefault(); window.dispatchEvent(new CustomEvent('swal:confirm', { detail: { title: '¿Estás seguro?', text: '¡No podrás revertir esto!', method: 'destroy', id: {{ $eventual->id }}, confirmButtonText: 'Sí, elimínalo' } }))"
+                                            data-swal-confirm="true"
+                                            data-swal-title="¿Estás seguro?"
+                                            data-swal-text="¡No podrás revertir esto!"
+                                            data-swal-method="destroy"
+                                            data-swal-id="{{ $eventual->id }}"
+                                            data-swal-confirm-btn="Sí, elimínalo"
                                             class="btn btn-sm btn-danger" title="Eliminar"><i
                                                 class="fas fa-trash-alt"></i></button>
                                     </td>
@@ -355,23 +360,7 @@
 
     @push('scripts')
     <script>
-        window.addEventListener('swal:confirm', event => {
-            Swal.fire({
-                title: event.detail.title,
-                text: event.detail.text,
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
-                confirmButtonText: event.detail.confirmButtonText,
-                cancelButtonText: 'Cancelar',
-                focusConfirm: true
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    @this.call(event.detail.method, event.detail.id);
-                }
-            });
-        });
+        // Listener swal:confirm eliminado (ya gestionado globalmente en app.blade.php)
 
         window.addEventListener('revertCheckbox', event => {
             const checkbox = document.getElementById('confirmado-' + event.detail.id);

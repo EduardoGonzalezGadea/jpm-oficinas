@@ -77,5 +77,8 @@ class Kernel extends HttpKernel
 
         // Middleware personalizado para verificar rol de administrador
         'admin.only' => \App\Http\Middleware\CheckAdminRole::class,
+
+        // Middleware de autenticación de dos factores
+        'two-factor' => \App\Http\Middleware\TwoFactorMiddleware::class,
     ];
 }

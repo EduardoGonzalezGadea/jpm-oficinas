@@ -60,11 +60,15 @@
         }
 
         @-webkit-keyframes spinner-border {
-            to { -webkit-transform: rotate(360deg); }
+            to {
+                -webkit-transform: rotate(360deg);
+            }
         }
 
         @keyframes spinner-border {
-            to { transform: rotate(360deg); }
+            to {
+                transform: rotate(360deg);
+            }
         }
 
         [x-cloak] {
@@ -135,7 +139,7 @@
 
 <body>
     @auth
-        @include('layouts.nav')
+    @include('layouts.nav')
     @endauth
 
     <main class="@auth container-fluid mt-1 p-2 @else container-fluid @endauth">
@@ -144,19 +148,19 @@
 
     <!-- Botón flotante para ir al panel principal -->
     @auth
-        <a href="{{ route('panel') }}" class="btn-float-base btn-home-float" title="Ir al Panel Principal">
-            <i class="fas fa-home"></i>
-        </a>
+    <a href="{{ route('panel') }}" class="btn-float-base btn-home-float" title="Ir al Panel Principal">
+        <i class="fas fa-home"></i>
+    </a>
 
-        <!-- Botón flotante para scroll hacia arriba -->
-        <button class="btn-float-base btn-scroll-top-float" title="Volver arriba" onclick="scrollToTop()">
-            <i class="fas fa-arrow-up"></i>
-        </button>
+    <!-- Botón flotante para scroll hacia arriba -->
+    <button class="btn-float-base btn-scroll-top-float" title="Volver arriba" onclick="scrollToTop()">
+        <i class="fas fa-arrow-up"></i>
+    </button>
 
-        <!-- Botón flotante para scroll hacia abajo -->
-        <button class="btn-float-base btn-scroll-bottom-float" title="Ir al final" onclick="scrollToBottom()">
-            <i class="fas fa-arrow-down"></i>
-        </button>
+    <!-- Botón flotante para scroll hacia abajo -->
+    <button class="btn-float-base btn-scroll-bottom-float" title="Ir al final" onclick="scrollToBottom()">
+        <i class="fas fa-arrow-down"></i>
+    </button>
     @endauth
 
     <!-- Bootstrap 4 JS -->
@@ -187,13 +191,20 @@
     <script>
         // Función para desplazamiento suave (ya que los botones flotantes las necesitan)
         function scrollToTop() {
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-        function scrollToBottom() {
-            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
         }
 
-        document.addEventListener('DOMContentLoaded', function () {
+        function scrollToBottom() {
+            window.scrollTo({
+                top: document.body.scrollHeight,
+                behavior: 'smooth'
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
             const loader = document.getElementById('loader');
 
             // La visibilidad del loader ahora se controla directamente con wire:loading.attr="hidden" y wire:target
@@ -253,8 +264,8 @@
 
                 // Check for any wire:submit* attributes (including wire:submit.prevent, etc.)
                 const hasWireSubmit = Array.from(e.target.attributes).some(attr => attr.name.startsWith('wire:submit')) ||
-                                     e.target.querySelector('[wire\\:submit]') !== null ||
-                                     e.target.querySelector('[wire\\:submit\\:prevent]') !== null;
+                    e.target.querySelector('[wire\\:submit]') !== null ||
+                    e.target.querySelector('[wire\\:submit\\:prevent]') !== null;
 
                 if (!hasDataNoLoader && !hasWireSubmit) {
                     showLoaderManual();
@@ -275,9 +286,9 @@
 
                 // Condiciones para mostrar el loader en otros enlaces
                 const isNavigable = target.href &&
-                                  !target.href.endsWith('#') &&
-                                  target.target !== '_blank' &&
-                                  !target.hasAttribute('data-no-loader');
+                    !target.href.endsWith('#') &&
+                    target.target !== '_blank' &&
+                    !target.hasAttribute('data-no-loader');
 
                 if (isNavigable) {
                     showLoaderManual();
@@ -295,7 +306,17 @@
 
             // --- Listeners de SweetAlert y Modales (conservados del script original) ---
             window.addEventListener('swal:success', event => {
-                const Toast = Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 4000, timerProgressBar: true, didOpen: (toast) => { toast.addEventListener('mouseenter', Swal.stopTimer); toast.addEventListener('mouseleave', Swal.resumeTimer); } });
+                const Toast = Swal.mixin({
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 4000,
+                    timerProgressBar: true,
+                    didOpen: (toast) => {
+                        toast.addEventListener('mouseenter', Swal.stopTimer);
+                        toast.addEventListener('mouseleave', Swal.resumeTimer);
+                    }
+                });
 
                 // Handle both object format (title + text) and simple string format
                 if (typeof event.detail === 'object') {
@@ -325,34 +346,77 @@
                         toast.addEventListener('mouseleave', Swal.resumeTimer);
                     }
                 });
-                Toast.fire({ icon: 'success', title: event.detail.message });
+                Toast.fire({
+                    icon: 'success',
+                    title: event.detail.message
+                });
             });
 
             window.addEventListener('swal:error', event => {
-                Swal.fire({ icon: 'error', title: event.detail.title, text: event.detail.text, confirmButtonText: 'Cerrar' });
+                Swal.fire({
+                    icon: 'error',
+                    title: event.detail.title,
+                    text: event.detail.text,
+                    confirmButtonText: 'Cerrar'
+                });
             });
 
             window.addEventListener('swal:alert', event => {
-                Swal.fire({ icon: event.detail.type, title: event.detail.title, text: event.detail.text, confirmButtonText: 'Cerrar' }).then(() => { if (event.detail.modalToClose) { $('#' + event.detail.modalToClose).modal('hide'); } });
+                Swal.fire({
+                    icon: event.detail.type,
+                    title: event.detail.title,
+                    text: event.detail.text,
+                    confirmButtonText: 'Cerrar'
+                }).then(() => {
+                    if (event.detail.modalToClose) {
+                        $('#' + event.detail.modalToClose).modal('hide');
+                    }
+                });
             });
 
             window.addEventListener('swal:toast-error', event => {
-                const Toast = Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, timerProgressBar: true, didOpen: (toast) => { toast.addEventListener('mouseenter', Swal.stopTimer); toast.addEventListener('mouseleave', Swal.resumeTimer); } });
-                Toast.fire({ icon: 'error', title: event.detail.text });
+                const Toast = Swal.mixin({
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 3000,
+                    timerProgressBar: true,
+                    didOpen: (toast) => {
+                        toast.addEventListener('mouseenter', Swal.stopTimer);
+                        toast.addEventListener('mouseleave', Swal.resumeTimer);
+                    }
+                });
+                Toast.fire({
+                    icon: 'error',
+                    title: event.detail.text
+                });
             });
 
             window.addEventListener('show-modal', event => {
                 const modalId = event.detail.id;
-                if (modalId) { $('#' + modalId).modal('show'); }
+                if (modalId) {
+                    $('#' + modalId).modal('show');
+                }
             });
 
             window.addEventListener('hide-modal', event => {
                 const modalId = event.detail.id;
-                if (modalId) { $('#' + modalId).modal('hide'); }
+                if (modalId) {
+                    $('#' + modalId).modal('hide');
+                }
             });
 
             window.addEventListener('swal:confirm', event => {
-                Swal.fire({ title: event.detail.title, text: event.detail.text, icon: 'warning', showCancelButton: true, confirmButtonColor: '#3085d6', cancelButtonColor: '#d33', confirmButtonText: event.detail.confirmButtonText || 'Sí, acepto!', cancelButtonText: event.detail.cancelButtonText || 'Cancelar' }).then((result) => {
+                Swal.fire({
+                    title: event.detail.title,
+                    text: event.detail.text,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: event.detail.confirmButtonText || 'Sí, acepto!',
+                    cancelButtonText: event.detail.cancelButtonText || 'Cancelar'
+                }).then((result) => {
                     if (result.isConfirmed) {
                         if (event.detail.componentId) {
                             Livewire.find(event.detail.componentId).call(event.detail.method, event.detail.id);
@@ -364,7 +428,21 @@
             });
 
             window.addEventListener('swal:confirm-with-input', event => {
-                Swal.fire({ title: event.detail.title, text: event.detail.text, icon: 'warning', input: event.detail.input || 'text', inputLabel: event.detail.inputLabel, inputPlaceholder: event.detail.inputPlaceholder, inputValidator: event.detail.inputValidator ? new Function('return ' + event.detail.inputValidator)() : null, inputAttributes: event.detail.inputAttributes || {}, showCancelButton: true, confirmButtonColor: '#3085d6', cancelButtonColor: '#d33', confirmButtonText: event.detail.confirmButtonText || 'Sí, aceptar', cancelButtonText: event.detail.cancelButtonText || 'Cancelar' }).then((result) => {
+                Swal.fire({
+                    title: event.detail.title,
+                    text: event.detail.text,
+                    icon: 'warning',
+                    input: event.detail.input || 'text',
+                    inputLabel: event.detail.inputLabel,
+                    inputPlaceholder: event.detail.inputPlaceholder,
+                    inputValidator: event.detail.inputValidator ? new Function('return ' + event.detail.inputValidator)() : null,
+                    inputAttributes: event.detail.inputAttributes || {},
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: event.detail.confirmButtonText || 'Sí, aceptar',
+                    cancelButtonText: event.detail.cancelButtonText || 'Cancelar'
+                }).then((result) => {
                     if (result.isConfirmed) {
                         if (event.detail.componentId) {
                             Livewire.find(event.detail.componentId).call(event.detail.method, result.value);
@@ -391,13 +469,15 @@
                         // Como es AJAX, lo disparamos manualmente.
                         showLoaderManual(); // Usar la función manual para este caso específico
                         $.ajax({
-                            url: '{{ route('system.backups.create') }}',
+                            url: "{{ route('system.backups.create') }}",
                             method: 'GET',
                             headers: {
                                 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                             },
                             success: function(data) {
-                                if (loader) { loader.style.display = 'none'; } // Ocultar manualmente
+                                if (loader) {
+                                    loader.style.display = 'none';
+                                } // Ocultar manualmente
                                 Swal.fire({
                                     icon: 'success',
                                     title: 'Respaldo creado',
@@ -410,7 +490,9 @@
                                 });
                             },
                             error: function(xhr) {
-                                if (loader) { loader.style.display = 'none'; } // Ocultar manualmente
+                                if (loader) {
+                                    loader.style.display = 'none';
+                                } // Ocultar manualmente
                                 Swal.fire({
                                     icon: 'error',
                                     title: 'Error',
@@ -421,6 +503,32 @@
                         });
                     }
                 });
+            });
+        });
+
+        // Listener global para data-swal-confirm
+        document.addEventListener('click', function(e) {
+            const trigger = e.target.closest('[data-swal-confirm]');
+            if (!trigger) return;
+
+            e.preventDefault();
+            const data = trigger.dataset;
+
+            Swal.fire({
+                title: data.swalTitle || '¿Estás seguro?',
+                text: data.swalText || '¡No podrás revertir esto!',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: data.swalConfirmBtn || 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Soporte para emitir a Livewire global o a un componente específico si se pudiera identificar
+                    // Por defecto: Livewire.emit global
+                    window.livewire.emit(data.swalMethod, data.swalId);
+                }
             });
         });
     </script>

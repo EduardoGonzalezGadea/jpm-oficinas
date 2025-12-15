@@ -56,53 +56,42 @@
 </div>
 
 <!-- Modal para Crear/Editar Pago -->
-<div class="modal fade" id="modalPago" tabindex="-1" role="dialog" aria-labelledby="modalPagoLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="modalPagoLabel">Nuevo Pago</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <form id="formPago">
-                <div class="modal-body">
-                    <input type="hidden" id="pagoId">
-                    <div class="form-group">
-                        <label for="fecha">Fecha</label>
-                        <input type="date" class="form-control" id="fecha" name="fecha" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="concepto_id">Concepto</label>
-                        <select class="form-control" id="concepto_id" name="concepto_id" required>
-                            <!-- Los conceptos se cargarán dinámicamente -->
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="monto">Monto</label>
-                        <input type="number" class="form-control" id="monto" name="monto" step="0.01" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="medio_pago">Medio de Pago</label>
-                        <input type="text" class="form-control" id="medio_pago" name="medio_pago" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="numero_comprobante">Nº Comprobante</label>
-                        <input type="text" class="form-control" id="numero_comprobante" name="numero_comprobante">
-                    </div>
-                    <div class="form-group">
-                        <label for="descripcion">Descripción</label>
-                        <textarea class="form-control" id="descripcion" name="descripcion" rows="3"></textarea>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Guardar</button>
-                </div>
-            </form>
+<!-- Modal para Crear/Editar Pago -->
+<x-modal id="modalPago" title="Nuevo Pago">
+    <form id="formPago">
+        <input type="hidden" id="pagoId">
+        <div class="form-group">
+            <label for="fecha">Fecha</label>
+            <input type="date" class="form-control" id="fecha" name="fecha" required>
         </div>
-    </div>
-</div>
+        <div class="form-group">
+            <label for="concepto_id">Concepto</label>
+            <select class="form-control" id="concepto_id" name="concepto_id" required>
+                <!-- Los conceptos se cargarán dinámicamente -->
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="monto">Monto</label>
+            <input type="number" class="form-control" id="monto" name="monto" step="0.01" required>
+        </div>
+        <div class="form-group">
+            <label for="medio_pago">Medio de Pago</label>
+            <input type="text" class="form-control" id="medio_pago" name="medio_pago" required>
+        </div>
+        <div class="form-group">
+            <label for="numero_comprobante">Nº Comprobante</label>
+            <input type="text" class="form-control" id="numero_comprobante" name="numero_comprobante">
+        </div>
+        <div class="form-group">
+            <label for="descripcion">Descripción</label>
+            <textarea class="form-control" id="descripcion" name="descripcion" rows="3"></textarea>
+        </div>
+    </form>
+    <x-slot name="footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+        <button type="submit" class="btn btn-primary" form="formPago">Guardar</button>
+    </x-slot>
+</x-modal>
 
 @push('scripts')
 <script>
