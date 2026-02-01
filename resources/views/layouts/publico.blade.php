@@ -16,18 +16,26 @@
     <!-- Script para cargar el tema dinámico y evitar parpadeos -->
     <script>
         (function() {
-            // Define el tema por defecto. El asset() de Laravel generará la ruta correcta.
-            const defaultThemePath = "{{ asset('libs/bootswatch@4.6.2/dist/cosmo/bootstrap.min.css') }}";
+            @auth
+            // Obtener el tema guardado en el perfil del usuario
+            const userThemePath = "{{ auth()->user()->theme_path }}";
+            const userThemeName = "{{ auth()->user()->theme }}";
 
-            // Obtener el tema guardado en LocalStorage
-            let themePath = localStorage.getItem("bootswatch-theme") || defaultThemePath;
+            // Sincronizar con LocalStorage para coherencia con el resto de la App
+            localStorage.setItem("bootswatch-theme", userThemePath);
+            localStorage.setItem("bootswatch-theme-name", userThemeName);
 
             // Crear y agregar el elemento link
             const themeLink = document.createElement('link');
             themeLink.id = 'bootswatch-theme';
             themeLink.rel = 'stylesheet';
-            themeLink.href = themePath;
+            themeLink.href = userThemePath;
             document.head.appendChild(themeLink);
+            @else
+            // Para invitados, no cargamos ningún tema de Bootswatch, dejando el Bootstrap base.
+            localStorage.removeItem("bootswatch-theme");
+            localStorage.removeItem("bootswatch-theme-name");
+            @endauth
         })();
     </script>
 

@@ -5,17 +5,31 @@ namespace App\Models\Tesoreria;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Traits\ConvertirMayusculas;
+use App\Traits\LogsActivityTrait;
 
 class Cheque extends Model
 {
-    use SoftDeletes, ConvertirMayusculas;
+    use SoftDeletes, ConvertirMayusculas, LogsActivityTrait;
 
     protected $table = 'tes_cheques';
     protected $fillable = [
-        'cuenta_bancaria_id', 'serie', 'numero_cheque', 'fecha_emision', 'beneficiario',
-        'monto', 'concepto', 'estado', 'planilla_id', 'fecha_anulacion',
-        'motivo_anulacion', 'fecha_planilla_anulada', 'planilla_anulada_por',
-        'emitido_por', 'anulado_por', 'created_by', 'updated_by'
+        'cuenta_bancaria_id',
+        'serie',
+        'numero_cheque',
+        'fecha_emision',
+        'beneficiario',
+        'monto',
+        'concepto',
+        'estado',
+        'planilla_id',
+        'fecha_anulacion',
+        'motivo_anulacion',
+        'fecha_planilla_anulada',
+        'planilla_anulada_por',
+        'emitido_por',
+        'anulado_por',
+        'created_by',
+        'updated_by'
     ];
 
     protected $dates = ['fecha_emision', 'fecha_anulacion', 'fecha_planilla_anulada'];

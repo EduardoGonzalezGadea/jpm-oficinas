@@ -28,10 +28,14 @@ class ArmasController extends Controller
             ->reverse()
             ->values();
 
-        // Si no hay años, devolver al menos el año actual
-        if ($anios->isEmpty()) {
-            $anios = collect([date('Y')]);
+        // Agregar siempre el año actual si no está presente
+        $anioActual = (int) date('Y');
+        if (!$anios->contains($anioActual)) {
+            $anios->push($anioActual);
         }
+
+        // Reordenar descendentemente después de agregar el año actual
+        $anios = $anios->sort()->reverse()->values();
 
         return $anios;
     }
@@ -52,5 +56,11 @@ class ArmasController extends Controller
     {
         $aniosDisponibles = $this->getAniosDisponibles();
         return view('tesoreria.armas.tenencia', compact('aniosDisponibles'));
+    }
+
+    public function cargarCfe()
+    {
+        $aniosDisponibles = $this->getAniosDisponibles();
+        return view('tesoreria.armas.cargar-cfe', compact('aniosDisponibles'));
     }
 }

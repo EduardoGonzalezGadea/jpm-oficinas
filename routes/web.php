@@ -67,6 +67,9 @@ Route::get('/valor-ur', [UtilidadController::class, 'getValorUr'])->name('utilid
 // Ruta para obtener la hora actual de Uruguay (sincronizada con Internet)
 Route::get('/hora-uruguay', [UtilidadController::class, 'getHoraUruguay'])->name('utilidad.hora-uruguay');
 
+// Ruta para actualizar valores SOA (Art. 184)
+Route::get('/utilidad/actualizar-soa-art-184', [UtilidadController::class, 'actualizarValoresSoa'])->name('utilidad.actualizar-soa');
+
 
 // ============================================================================
 // RUTAS PROTEGIDAS POR JWT
@@ -103,6 +106,13 @@ Route::middleware(['web', 'jwt.verify', 'two-factor'])->group(function () {
         Route::post('/restore', [BackupController::class, 'restore'])->name('restore');
         Route::get('/download/{file}', [BackupController::class, 'download'])->name('download')->where('file', '.*');
         Route::delete('/', [BackupController::class, 'delete'])->name('delete');
+    });
+
+    // ------------------------------------------------------------------------
+    // HISTORIAL DE AUDITORÍA
+    // ------------------------------------------------------------------------
+    Route::middleware(['role:administrador|gerente_tesoreria|supervisor_tesoreria'])->group(function () {
+        Route::get('/sistema/auditoria', \App\Http\Livewire\Sistema\Auditoria\Index::class)->name('sistema.auditoria.index');
     });
 
     // ------------------------------------------------------------------------
@@ -248,6 +258,19 @@ Route::middleware(['web', 'jwt.verify', 'two-factor'])->group(function () {
         Route::get('/multas-transito', function () {
             return view('tesoreria.multas');
         })->name('multas-transito');
+        Route::get('/multas-transito/exportar-pdf', \App\Http\Livewire\Tesoreria\PrintMultasArticulos::class)->name('multas-transito.exportar-pdf');
+
+        // Rutas de Multas Cobradas
+        Route::prefix('multas-cobradas')->name('multas-cobradas.')->middleware(['can:operador_tesoreria'])->group(function () {
+            Route::get('/', function () {
+                return view('tesoreria.multas-cobradas.index');
+            })->name('index');
+            Route::get('/cargar-cfe', function () {
+                return view('tesoreria.multas-cobradas.cargar-cfe');
+            })->name('cargar-cfe');
+            Route::get('/imprimir-detalles/{fechaDesde}/{fechaHasta}', \App\Http\Livewire\Tesoreria\MultasCobradas\PrintMultasCobradasFull::class)->name('imprimir-detalles');
+            Route::get('/imprimir-resumen/{fechaDesde}/{fechaHasta}', \App\Http\Livewire\Tesoreria\MultasCobradas\PrintMultasCobradasResumen::class)->name('imprimir-resumen');
+        });
 
         // Rutas de Eventuales
         Route::prefix('eventuales')->name('eventuales.')->group(function () {
@@ -267,6 +290,8 @@ Route::middleware(['web', 'jwt.verify', 'two-factor'])->group(function () {
             // Rutas de Impresión de Eventuales
             Route::get('/imprimir/{year}/{mes}', PrintEventuales::class)->name('imprimir');
             Route::get('/imprimir-detalles/{year}/{mes}', PrintEventualesFull::class)->name('imprimir-detalles');
+
+            Route::get('/cargar-efactura', [App\Http\Controllers\Tesoreria\EventualesController::class, 'cargarEfactura'])->name('cargar-efactura');
         });
 
         // Rutas de Arrendamientos
@@ -284,8 +309,23 @@ Route::middleware(['web', 'jwt.verify', 'two-factor'])->group(function () {
         Route::prefix('armas')->name('armas.')->group(function () {
             Route::get('/porte', [ArmasController::class, 'porte'])->name('porte');
             Route::get('/tenencia', [ArmasController::class, 'tenencia'])->name('tenencia');
+            Route::get('/cargar-cfe', [ArmasController::class, 'cargarCfe'])->name('cargar-cfe');
             Route::get('/tenencia/imprimir/{id}', [ArmasImpresionController::class, 'imprimirTenencia'])->name('tenencia.imprimir');
             Route::get('/porte/imprimir/{id}', [ArmasImpresionController::class, 'imprimirPorte'])->name('porte.imprimir');
+
+            // Planillas Porte
+            Route::prefix('porte/planillas')->name('porte.planillas.')->group(function () {
+                Route::get('/', \App\Http\Livewire\Tesoreria\Armas\Planillas\TesPorteArmasPlanillasIndex::class)->name('index');
+                Route::get('/{id}', \App\Http\Livewire\Tesoreria\Armas\Planillas\TesPorteArmasPlanillasShow::class)->name('show');
+                Route::get('/{id}/imprimir', [ArmasImpresionController::class, 'imprimirPlanillaPorte'])->name('imprimir');
+            });
+
+            // Planillas Tenencia
+            Route::prefix('tenencia/planillas')->name('tenencia.planillas.')->group(function () {
+                Route::get('/', \App\Http\Livewire\Tesoreria\Armas\Planillas\TesTenenciaArmasPlanillasIndex::class)->name('index');
+                Route::get('/{id}', \App\Http\Livewire\Tesoreria\Armas\Planillas\TesTenenciaArmasPlanillasShow::class)->name('show');
+                Route::get('/{id}/imprimir', [ArmasImpresionController::class, 'imprimirPlanillaTenencia'])->name('imprimir');
+            });
         });
 
 

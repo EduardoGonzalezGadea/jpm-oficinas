@@ -1,8 +1,16 @@
-<div>
+<div wire:init="checkEditId">
     <div class="card">
         <div class="card-header bg-info text-white card-header-gradient py-2 px-3 d-flex justify-content-between align-items-center">
             <h4 class="mb-0"><strong><i class="fas fa-address-card mr-2"></i>Listado de Tenencia de Armas</strong></h4>
             <div class="btn-group d-print-none">
+                <a href="{{ route('tesoreria.armas.tenencia.planillas.index') }}" class="btn btn-success border mr-2">
+                    <i class="fas fa-list"></i> Planillas
+                </a>
+                @if(count($selectedRegistros) > 0)
+                <button wire:click="createPlanilla" class="btn btn-warning mr-2">
+                    <i class="fas fa-file-invoice"></i> Generar Planilla ({{ count($selectedRegistros) }})
+                </button>
+                @endif
                 <button wire:click="create" class="btn btn-primary">
                     <i class="fas fa-plus"></i> Nuevo Registro
                 </button>
@@ -23,7 +31,7 @@
                     <div class="input-group">
                         <input type="text" class="form-control form-control-sm" placeholder="Buscar..." wire:model="search">
                         <div class="input-group-append">
-                            <button class="btn btn-sm btn-outline-danger" type="button" wire:click="$set('search', '')" title="Limpiar filtro">
+                            <button class="btn btn-sm btn-outline-danger" type="button" wire:click="clearSearch" title="Limpiar filtro">
                                 <i class="fas fa-times"></i>
                             </button>
                         </div>
@@ -34,26 +42,49 @@
             <table class="table table-bordered table-sm">
                 <thead>
                     <tr>
-                        <th>Fecha</th>
-                        <th>Titular</th>
-                        <th>Cédula</th>
-                        <th>Orden Cobro</th>
-                        <th>N° Trámite</th>
-                        <th>Monto</th>
-                        <th>Recibo</th>
-                        <th>Acciones</th>
+                        <th class="text-center align-middle">
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox" class="custom-control-input" id="selectAll" wire:model="selectAll">
+                                <label class="custom-control-label" for="selectAll"></label>
+                            </div>
+                        </th>
+                        <th class="text-center align-middle">Fecha</th>
+                        <th class="text-center align-middle">Titular</th>
+                        <th class="text-center align-middle">Cédula</th>
+                        <th class="text-center align-middle">Orden Cobro</th>
+                        <th class="text-center align-middle">N° Trámite</th>
+                        <th class="text-center align-middle">Monto</th>
+                        <th class="text-center align-middle">Recibo</th>
+                        <th class="text-center align-middle">Planilla</th>
+                        <th class="text-center align-middle">Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($registros as $registro)
                     <tr>
+                        <td class="align-middle text-center">
+                            @if(!$registro->planilla_id)
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox" class="custom-control-input" id="check_{{ $registro->id }}"
+                                    wire:model="selectedRegistros" value="{{ $registro->id }}">
+                                <label class="custom-control-label" for="check_{{ $registro->id }}"></label>
+                            </div>
+                            @endif
+                        </td>
                         <td class="align-middle">{{ $registro->fecha->format('d/m/Y') }}</td>
                         <td class="align-middle">{{ $registro->titular }}</td>
                         <td class="align-middle">{{ $registro->cedula }}</td>
-                        <td class="align-middle">{{ $registro->orden_cobro }}</td>
-                        <td class="align-middle">{{ $registro->numero_tramite }}</td>
-                        <td class="align-middle text-nowrap">$ {{ number_format($registro->monto, 2, ',', '.') }}</td>
-                        <td class="align-middle">{{ $registro->recibo }}</td>
+                        <td class="align-middle text-right">{{ $registro->orden_cobro }}</td>
+                        <td class="align-middle text-right">{{ $registro->numero_tramite }}</td>
+                        <td class="align-middle text-right text-nowrap">$ {{ number_format($registro->monto, 2, ',', '.') }}</td>
+                        <td class="align-middle text-right">{{ $registro->recibo }}</td>
+                        <td class="align-middle">
+                            @if($registro->planilla)
+                            <span class="badge badge-info">{{ $registro->planilla->numero }}</span>
+                            @else
+                            <span class="badge badge-secondary">Pendiente</span>
+                            @endif
+                        </td>
                         <td class="align-middle text-nowrap">
                             <a href="{{ route('tesoreria.armas.tenencia.imprimir', $registro->id) }}"
                                 target="_blank"
@@ -74,7 +105,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="8" class="text-center">No hay registros disponibles</td>
+                        <td colspan="10" class="text-center">No hay registros disponibles</td>
                     </tr>
                     @endforelse
                 </tbody>

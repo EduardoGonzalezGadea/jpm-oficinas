@@ -3,7 +3,7 @@
 @section('title', 'Gestión de Cheques')
 
 @section('content')
-<div class="container-fluid py-1 px-0" style="overflow-x: hidden;">
+<div class="container-fluid py-0 px-0" style="overflow-x: hidden;">
     <div class="row no-gutters">
         <div class="col-12">
             <div class="card">

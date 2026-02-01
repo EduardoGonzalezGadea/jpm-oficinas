@@ -2,6 +2,7 @@
 
 namespace App\Exceptions;
 
+use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Throwable;
 
@@ -34,8 +35,13 @@ class Handler extends ExceptionHandler
      */
     public function register()
     {
-        $this->reportable(function (Throwable $e) {
-            //
+        $this->renderable(function (AuthenticationException $e, $request) {
+            if ($request->expectsJson() || $request->is('livewire/*')) {
+                return response()->json([
+                    'message' => 'Tu sesión ha expirado. Por favor, inicia sesión nuevamente.',
+                    'redirect' => route('login')
+                ], 401);
+            }
         });
     }
 }

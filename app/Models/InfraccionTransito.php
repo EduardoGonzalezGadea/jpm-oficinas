@@ -5,10 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Traits\LogsActivityTrait;
 
 class InfraccionTransito extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, LogsActivityTrait;
 
     protected $table = 'infracciones_transito';
 
@@ -31,7 +32,7 @@ class InfraccionTransito extends Model
 
     protected $dates = ['deleted_at']; // <-- Especificar la columna deleted_at
     public $timestamps = true; // <-- Habilitar timestamps
-    
+
     /**
      * Scope para infracciones activas
      */

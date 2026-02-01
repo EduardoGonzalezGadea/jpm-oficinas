@@ -13,7 +13,7 @@
                 @endif
                 registros
             </span>
-            <select wire:model.live="perPage" class="form-control form-control-sm d-print-none" style="width: auto;">
+            <select wire:model="perPage" class="form-control form-control-sm d-print-none" style="width: auto;">
                 <option value="10">10 por página</option>
                 <option value="25">25 por página</option>
                 <option value="50">50 por página</option>

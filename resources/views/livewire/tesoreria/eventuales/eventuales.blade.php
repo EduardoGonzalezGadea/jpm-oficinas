@@ -1,4 +1,4 @@
-<div>
+<div wire:init="checkEditId">
     <style>
         .text-nowrap-custom {
             white-space: nowrap;
@@ -19,6 +19,9 @@
                         <a href="{{ route('tesoreria.eventuales.imprimir', ['year' => $year, 'mes' => $mes]) }}" target="_blank" class="btn btn-success">
                             <i class="fas fa-print"></i> Imprimir
                         </a>
+                        <a href="{{ route('tesoreria.eventuales.cargar-efactura') }}" class="btn btn-warning">
+                            <i class="fas fa-file-invoice-dollar"></i> Cargar eFactura
+                        </a>
                         <button type="button" class="btn btn-primary" wire:click.prevent="create">
                             Crear Eventual
                         </button>
@@ -31,7 +34,7 @@
                         <div class="d-flex flex-wrap justify-content-around">
                             @foreach ($totalesPorInstitucion as $total)
                             <div class="p-2 text-center flex-fill">
-                                <strong>{{ $total->institucion }}</strong><br>
+                                <strong>{{ $total->institucion ?: 'SIN DATO' }}</strong><br>
                                 $ {{ number_format((float) $total->total_monto, 2, ',', '.') }}
                             </div>
                             @endforeach
@@ -45,7 +48,7 @@
                                 <div class="input-group-prepend">
                                     <span class="input-group-text">Mes y Año</span>
                                 </div>
-                                <select id="mesSelector" class="form-control" wire:model.live="mes">
+                                <select id="mesSelector" class="form-control" wire:model="mes">
                                     <option value="1">Enero</option>
                                     <option value="2">Febrero</option>
                                     <option value="3">Marzo</option>
@@ -59,7 +62,7 @@
                                     <option value="11">Noviembre</option>
                                     <option value="12">Diciembre</option>
                                 </select>
-                                <input type="number" id="anioSelector" class="form-control" wire:model.live="year">
+                                <input type="number" id="anioSelector" class="form-control" wire:model="year">
                             </div>
                         </div>
                         <div class="col-md-7 align-self-end d-print-none">
@@ -104,7 +107,7 @@
                                     <td class="text-right align-middle">
                                         {{ is_numeric($eventual->ingreso) ? number_format($eventual->ingreso, 0, ',', '.') : $eventual->ingreso }}
                                     </td>
-                                    <td class="text-center align-middle">{{ $eventual->institucion }}</td>
+                                    <td class="text-center align-middle">{{ $eventual->institucion ?: 'SIN DATO' }}</td>
                                     <td class="text-right align-middle"><span
                                             class="text-nowrap-custom">{{ $eventual->monto_formateado }}</span></td>
                                     <td class="text-right align-middle">
@@ -236,7 +239,7 @@
                                         class="form-control form-control-sm">
                                         <option value="">Seleccione...</option>
                                         @foreach($instituciones as $inst)
-                                        <option value="{{ $inst->nombre }}">{{ $inst->nombre }}</option>
+                                        <option value="{{ mb_strtoupper($inst->nombre, 'UTF-8') }}">{{ $inst->nombre }}</option>
                                         @endforeach
                                     </select>
                                     @error('institucion')
@@ -263,7 +266,7 @@
                                         class="form-control form-control-sm">
                                         <option value="">Seleccione...</option>
                                         @foreach($mediosDePago as $medio)
-                                        <option value="{{ $medio->nombre }}">{{ $medio->nombre }}</option>
+                                        <option value="{{ mb_strtoupper($medio->nombre, 'UTF-8') }}">{{ $medio->nombre }}</option>
                                         @endforeach
                                     </select>
                                     @error('medio_de_pago')

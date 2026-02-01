@@ -129,7 +129,7 @@
                                         <h6 class="mb-0">
                                             <i class="fas fa-users-cog"></i> Roles que tienen este permiso
                                             <span
-                                                class="badge bg-secondary ms-2">{{ $rolesWithPermission->count() }}</span>
+                                                class="badge bg-secondary ml-2">{{ $rolesWithPermission->count() }}</span>
                                         </h6>
                                     </div>
                                     <div class="card-body">
@@ -152,7 +152,7 @@
                                                                     <div class="mt-2">
                                                                         @foreach ($role->users->take(3) as $user)
                                                                             <span
-                                                                                class="badge bg-light text-dark me-1">{{ $user->name }}</span>
+                                                                                class="badge bg-light text-dark mr-1">{{ $user->name }}</span>
                                                                         @endforeach
                                                                         @if ($role->users->count() > 3)
                                                                             <span
@@ -186,7 +186,7 @@
                                             <h6 class="mb-0">
                                                 <i class="fas fa-user-check"></i> Usuarios con permiso directo
                                                 <span
-                                                    class="badge bg-warning text-dark ms-2">{{ $usersWithDirectPermission->count() }}</span>
+                                                    class="badge bg-warning text-dark ml-2">{{ $usersWithDirectPermission->count() }}</span>
                                             </h6>
                                         </div>
                                         <div class="card-body">
@@ -214,7 +214,7 @@
                                             <h6 class="mb-0">
                                                 <i class="fas fa-users"></i> Todos los usuarios con este permiso
                                                 <span
-                                                    class="badge bg-success ms-2">{{ $usersWithRolePermission->count() }}</span>
+                                                    class="badge bg-success ml-2">{{ $usersWithRolePermission->count() }}</span>
                                             </h6>
                                         </div>
                                         <div class="card-body">

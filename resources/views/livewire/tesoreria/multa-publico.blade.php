@@ -1,34 +1,70 @@
-<div>
+<div x-data="{ 
+    valorUr: '', 
+    mesUr: '', 
+    loading: true,
+    async fetchUr() {
+        try {
+            const response = await fetch('{{ route('utilidad.valor_ur') }}');
+            const data = await response.json();
+            this.valorUr = data.valorUr;
+            this.mesUr = data.mesUr;
+        } catch (error) {
+            console.error('Error fetching UR:', error);
+        } finally {
+            this.loading = false;
+        }
+    }
+}" x-init="fetchUr()">
     <div class="card">
         <div class="card-header bg-info text-white card-header-gradient py-2 px-3">
-            <div class="row">
-                <div class="col-md-8 d-flex align-items-center">
-                    <h4 class="mb-0 d-inline-block mr-3">
-                        Artículos de Multas de Tránsito
+            <div class="d-flex justify-content-between align-items-center flex-wrap">
+                <div class="text-nowrap">
+                    <h4 class="mb-0">
+                        <strong>Artículos de Multas de Tránsito</strong>
                     </h4>
-                    <span id="ur-value-container-public" class="text-white ml-2 font-weight-bold"></span>
                 </div>
-                <div class="col-md-4 text-right">
-                    <small class="text-muted">
+                <div class="text-center flex-grow-1 mx-2">
+                    <span id="ur-value-container-public" class="text-white font-weight-bold" style="font-size: 1.1rem;">
+                        <template x-if="!loading && valorUr">
+                            <span>
+                                (UR = <span x-text="valorUr"></span> <template x-if="mesUr"><span> - <span x-text="mesUr"></span></span></template>)
+                            </span>
+                        </template>
+                        <template x-if="loading">
+                            <span>
+                                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Cargando UR...
+                            </span>
+                        </template>
+                    </span>
+                </div>
+                <div class="text-right">
+                    <small class="text-white font-weight-bold">
                         <i class="fas fa-info-circle mr-1"></i>
-                        Vista pública - Solo lectura
+                        Vista pública
                     </small>
                 </div>
             </div>
         </div>
 
-        <div class="card-body">
-            <div class="row mb-3 align-items-center">
+        <div class="card-body p-2">
+            <!-- Controles de búsqueda y filtros -->
+            <div class="row mb-2 align-items-center">
                 <div class="col-md-5">
-                    <input wire:model.debounce.500ms="search" type="text" class="form-control d-print-none"
-                        placeholder="Buscar por artículo.apartado o por descripción...">
+                    <div class="input-group input-group-sm">
+                        <input wire:model.debounce.500ms="search" type="text" class="form-control"
+                            placeholder="Buscar por artículo.apartado o por descripción...">
+                        <div class="input-group-append">
+                            <button class="btn btn-outline-danger" type="button" wire:click="$set('search', '')" title="Limpiar filtro">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
                 </div>
-                <div class="col d-print-none">
-                    <em class="text-muted">* Unificado = a partir de Octubre/2024</em>
+                <div class="col">
+                    <em class="text-info font-weight-bold small">* Unificado = a partir de Octubre/2024</em>
                 </div>
-                <div class="col-auto d-print-none">
-                    <select wire:model="perPage" class="form-control">
-                        <option value="25">25</option>
+                <div class="col-auto">
+                    <select wire:model="perPage" class="form-control form-control-sm">
                         <option value="50">50</option>
                         <option value="100">100</option>
                         <option value="-1">Todos</option>
@@ -37,10 +73,10 @@
             </div>
 
             <div class="table-responsive">
-                <table class="table table-striped table-hover">
+                <table class="table table-sm table-striped table-hover mb-2">
                     <thead class="thead-dark">
                         <tr>
-                            <th class="align-middle">
+                            <th class="align-middle py-1 px-2">
                                 <button class="btn btn-link text-white p-0 text-nowrap" wire:click="sortBy('articulo')">
                                     Art.
                                     @if ($sortField === 'articulo')
@@ -48,7 +84,7 @@
                                     @endif
                                 </button>
                             </th>
-                            <th class="align-middle">
+                            <th class="align-middle py-1 px-2">
                                 <button class="btn btn-link text-white p-0 text-nowrap" wire:click="sortBy('apartado')">
                                     Apartado
                                     @if ($sortField === 'apartado')
@@ -56,7 +92,7 @@
                                     @endif
                                 </button>
                             </th>
-                            <th class="align-middle">
+                            <th class="align-middle py-1 px-2">
                                 <button class="btn btn-link text-white p-0 text-nowrap" wire:click="sortBy('descripcion')">
                                     Descripción
                                     @if ($sortField === 'descripcion')
@@ -64,7 +100,7 @@
                                     @endif
                                 </button>
                             </th>
-                            <th class="align-middle">
+                            <th class="align-middle py-1 px-2">
                                 <button class="btn btn-link text-white p-0 text-nowrap" wire:click="sortBy('importe_original')">
                                     Original
                                     @if ($sortField === 'importe_original')
@@ -72,7 +108,7 @@
                                     @endif
                                 </button>
                             </th>
-                            <th class="align-middle">
+                            <th class="align-middle py-1 px-2">
                                 <button class="btn btn-link text-white p-0 text-nowrap" wire:click="sortBy('importe_unificado')">
                                     Unificado
                                     @if ($sortField === 'importe_unificado')
@@ -85,20 +121,20 @@
                     <tbody>
                         @forelse ($multas as $multa)
                         <tr>
-                            <td class="align-middle"><strong>{{ $multa->articulo }}</strong></td>
-                            <td class="align-middle">{{ $multa->apartado }}</td>
-                            <td class="align-middle">
+                            <td class="align-middle text-center py-1 px-2 small"><strong>{{ $multa->articulo }}</strong></td>
+                            <td class="align-middle text-center py-1 px-2 small">{{ $multa->apartado }}</td>
+                            <td class="align-middle py-1 px-2 small">
                                 {{ $multa->descripcion }}
                                 @if ($multa->decreto)
-                                <small class="text-muted d-block">{{ $multa->decreto }}</small>
+                                <small class="text-muted d-block" style="font-size: 0.75rem;">{{ $multa->decreto }}</small>
                                 @endif
                             </td>
-                            <td class="text-right align-middle">{!! $multa->importe_original_formateado !!}</td>
-                            <td class="text-right align-middle">{!! $multa->importe_unificado_formateado !!}</td>
+                            <td class="text-right align-middle py-1 px-2 small">{!! $multa->importe_original_formateado !!}</td>
+                            <td class="text-right align-middle py-1 px-2 small">{!! $multa->importe_unificado_formateado !!}</td>
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="5" class="text-center">No se encontraron multas</td>
+                            <td colspan="5" class="text-center py-3">No se encontraron multas</td>
                         </tr>
                         @endforelse
                     </tbody>
@@ -116,41 +152,6 @@
 
 @push('scripts')
 <script>
-    function loadURValuePublic() {
-        const urContainer = document.getElementById('ur-value-container-public');
-        if (urContainer) {
-            urContainer.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Cargando UR...';
-
-            fetch("{{ route('utilidad.valor_ur') }}")
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Error en la respuesta de la red');
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    if (data.valorUr) {
-                        urContainer.textContent = '(UR = ' + data.valorUr + ')';
-                    } else {
-                        urContainer.textContent = '(UR no disponible)';
-                    }
-                })
-                .catch(error => {
-                    console.error('Error al obtener el valor de la UR:', error);
-                    urContainer.textContent = '(Error al cargar UR)';
-                });
-        }
-    }
-
-    document.addEventListener('DOMContentLoaded', function() {
-        loadURValuePublic();
-    });
-
-    // Recargar el valor UR cuando se actualiza el componente Livewire
-    Livewire.on('updated', function() {
-        setTimeout(function() {
-            loadURValuePublic();
-        }, 100);
-    });
+    // Carga desacoplada
 </script>
 @endpush

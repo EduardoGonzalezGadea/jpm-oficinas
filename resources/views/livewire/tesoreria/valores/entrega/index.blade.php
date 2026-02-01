@@ -96,7 +96,7 @@
                 <div class="modal-body">
                     <div class="form-group">
                         <label for="libreta_valor_id">Libreta a Entregar</label>
-                        <select wire:model.live="libreta_valor_id" id="libreta_valor_id" class="form-control @error('libreta_valor_id') is-invalid @enderror" autofocus>
+                        <select wire:model="libreta_valor_id" id="libreta_valor_id" class="form-control @error('libreta_valor_id') is-invalid @enderror" autofocus>
                             <option value="">Seleccione una libreta...</option>
                             @foreach($libretasDisponibles as $libreta)
                                 <option value="{{ $libreta->id }}">

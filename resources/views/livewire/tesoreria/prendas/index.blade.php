@@ -6,7 +6,7 @@
                 <a href="{{ route('tesoreria.prendas.planillas.index') }}" class="btn btn-success mr-2">
                     <i class="fas fa-list-alt"></i> Planillas
                 </a>
-                <button wire:click="createPlanilla" class="btn btn-warning mr-2" @if(count($selectedPrendas) == 0) disabled @endif>
+                <button wire:click="createPlanilla" class="btn btn-warning mr-2" @if(count($selectedPrendas)==0) disabled @endif>
                     <i class="fas fa-plus-circle"></i> Crear Planilla @if(count($selectedPrendas) > 0) ({{ count($selectedPrendas) }}) @endif
                 </button>
                 <button wire:click="$emit('showCreateModal')" class="btn btn-primary">
@@ -25,7 +25,7 @@
                         <div class="input-group-append">
                             <select wire:model="selectedYear" class="custom-select" style="border-radius: 0;">
                                 @foreach($years as $year)
-                                    <option value="{{ $year }}">{{ $year }}</option>
+                                <option value="{{ $year }}">{{ $year }}</option>
                                 @endforeach
                             </select>
                             <button wire:click="clearSearch" class="btn btn-outline-danger" title="Limpiar filtro">
@@ -44,7 +44,7 @@
                                 <input type="checkbox" wire:model="selectAll" style="transform: scale(1.2); cursor: pointer;">
                             </th>
                             <th class="align-middle">Fecha</th>
-                            <th class="align-middle">Serie/N°</th>
+                            <th class="align-middle">Recibo</th>
                             <th class="align-middle">Orden Cobro</th>
                             <th class="align-middle">Titular</th>
                             <th class="align-middle">Cédula</ th>
@@ -55,37 +55,39 @@
                     </thead>
                     <tbody class="align-middle">
                         @forelse($prendas as $prenda)
-                            <tr>
-                                <td class="align-middle text-center">
-                                    @if(is_null($prenda->planilla_id))
-                                        <input type="checkbox" wire:model="selectedPrendas" value="{{ $prenda->id }}" style="transform: scale(1.2); cursor: pointer;">
-                                    @else
-                                        <i class="fas fa-check text-success" title="En planilla"></i>
-                                    @endif
-                                </td>
-                                <td class="align-middle">{{ \Carbon\Carbon::parse($prenda->recibo_fecha)->format('d/m/Y') }}</td>
-                                <td class="align-middle">{{ $prenda->recibo_serie }} {{ $prenda->recibo_numero }}</td>
-                                <td class="align-middle">{{ $prenda->orden_cobro }}</td>
-                                <td class="align-middle">{{ $prenda->titular_nombre }}</td>
-                                <td class="align-middle">{{ $prenda->titular_cedula }}</td>
-                                <td class="align-middle text-right">${{ number_format($prenda->monto, 2) }}</td>
-                                <td class="align-middle">{{ $prenda->medioPago->nombre ?? '-' }}</td>
-                                <td class="align-middle text-center d-print-none">
-                                    <button wire:click="$emit('showDetailModal', {{ $prenda->id }})" class="btn btn-sm btn-primary" title="Ver detalles">
+                        <tr>
+                            <td class="align-middle text-center">
+                                @if(is_null($prenda->planilla_id))
+                                <input type="checkbox" wire:model="selectedPrendas" value="{{ $prenda->id }}" style="transform: scale(1.2); cursor: pointer;">
+                                @else
+                                <i class="fas fa-check text-success" title="En planilla"></i>
+                                @endif
+                            </td>
+                            <td class="align-middle">{{ \Carbon\Carbon::parse($prenda->recibo_fecha)->format('d/m/Y') }}</td>
+                            <td class="align-middle">{{ $prenda->recibo_serie }} {{ $prenda->recibo_numero }}</td>
+                            <td class="align-middle">{{ $prenda->orden_cobro }}</td>
+                            <td class="align-middle">{{ $prenda->titular_nombre }}</td>
+                            <td class="align-middle">{{ $prenda->titular_cedula }}</td>
+                            <td class="align-middle text-right">${{ $prenda->monto_formateado }}</td>
+                            <td class="align-middle">{{ $prenda->medioPago->nombre ?? '-' }}</td>
+                            <td class="align-middle text-center py-1 px-2 d-print-none" style="white-space: nowrap;">
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <button wire:click="$emit('showDetailModal', {{ $prenda->id }})" class="btn btn-primary" title="Ver detalles">
                                         <i class="fas fa-eye"></i>
                                     </button>
-                                    <button wire:click="$emit('showEditModal', {{ $prenda->id }})" class="btn btn-sm btn-info" title="Editar">
+                                    <button wire:click="$emit('showEditModal', {{ $prenda->id }})" class="btn btn-info" title="Editar">
                                         <i class="fas fa-edit"></i>
                                     </button>
-                                    <button wire:click="confirmDelete({{ $prenda->id }})" class="btn btn-sm btn-danger" title="Eliminar">
+                                    <button wire:click="confirmDelete({{ $prenda->id }})" class="btn btn-danger" title="Eliminar">
                                         <i class="fas fa-trash"></i>
                                     </button>
-                                </td>
-                            </tr>
+                                </div>
+                            </td>
+                        </tr>
                         @empty
-                            <tr>
-                                <td colspan="9" class="text-center">No hay registros disponibles</td>
-                            </tr>
+                        <tr>
+                            <td colspan="9" class="text-center">No hay registros disponibles</td>
+                        </tr>
                         @endforelse
                     </tbody>
                 </table>

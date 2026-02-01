@@ -5,21 +5,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="user-authenticated" content="false">
 
     <title>Iniciar Sesión - Tesorería | Oficinas</title>
-
-    <!-- Lógica para el tema dinámico -->
-    <script src="{{ asset('js/theme-change.js') }}"></script>
-
     <!-- Bootstrap 4 CSS -->
     <link href="{{ asset('libs/bootstrap-4.6.2-dist/css/bootstrap.min.css') }}" rel="stylesheet">
-    <!-- Hoja de estilos del tema dinámico -->
-    @php
-        $themePath = request()->cookie('theme_path', 'libs/bootswatch@4.6.2/dist/cosmo/bootstrap.min.css');
-    @endphp
-    @if ($themePath)
-        <link id="bootswatch-theme" rel="stylesheet" href="{{ asset($themePath) }}">
-    @endif
+
     <!-- Font Awesome -->
     <link href="{{ asset('libs/fontawesome-free-5.15.4-web/css/all.min.css') }}" rel="stylesheet">
 
@@ -64,12 +55,15 @@
         .form-control {
             border-radius: 8px;
             padding: 0.6rem;
-            border: 1px solid #ddd;
+            background-color: transparent;
+            color: inherit;
         }
 
         .form-control:focus {
             box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
             border-color: #007bff;
+            background-color: transparent;
+            color: inherit;
         }
 
         .btn-primary {
@@ -96,10 +90,12 @@
         .btn-outline-light.rounded-circle {
             transition: transform .1s ease, box-shadow .2s ease, background-color .2s ease;
         }
+
         .btn-outline-light.rounded-circle:hover {
             transform: translateY(-1px);
             background-color: rgba(255, 255, 255, 0.15);
         }
+
         .btn-outline-light.rounded-circle:focus {
             box-shadow: 0 0 0 0.2rem rgba(255, 255, 255, .5);
         }
@@ -107,22 +103,33 @@
         /* Botón Inicio flotante en esquina superior derecha */
         .home-fab {
             position: fixed;
-            top: 20px; /* fallback */
-            right: 20px; /* fallback */
+            top: 20px;
+            /* fallback */
+            right: 20px;
+            /* fallback */
             top: calc(env(safe-area-inset-top, 0px) + 20px);
             right: calc(env(safe-area-inset-right, 0px) + 20px);
-            z-index: 1050; /* sobre la tarjeta */
+            z-index: 1050;
+            /* sobre la tarjeta */
         }
 
         .input-group-text {
-            background-color: #f8f9fa;
+            background-color: rgba(127, 127, 127, 0.1);
+            border: 1px solid rgba(127, 127, 127, 0.2);
             border-right: none;
             border-radius: 8px 0 0 8px;
+            color: inherit;
         }
 
         .input-group .form-control {
             border-left: none;
             border-radius: 0 8px 8px 0;
+            border: 1px solid rgba(127, 127, 127, 0.2);
+        }
+
+        label {
+            font-weight: 600;
+            color: inherit;
         }
 
         .form-group {
@@ -133,19 +140,24 @@
             .card-header {
                 padding: 1rem;
             }
+
             .card-body {
                 padding: 1rem;
             }
+
             .login-icon {
                 font-size: 2rem;
                 margin-bottom: 0.25rem;
             }
+
             .form-group {
                 margin-bottom: 0.5rem;
             }
+
             .form-control {
                 padding: 0.5rem;
             }
+
             .text-center.mt-4 {
                 margin-top: 0.5rem !important;
             }
@@ -155,8 +167,8 @@
 
 <body>
     <a href="{{ route('home') }}" class="home-fab btn btn-outline-light btn-sm rounded-circle d-inline-flex align-items-center justify-content-center"
-       style="width:2.75rem;height:2.75rem"
-       data-toggle="tooltip" data-placement="left" title="Ir al inicio" aria-label="Ir al inicio">
+        style="width:2.75rem;height:2.75rem"
+        data-toggle="tooltip" data-placement="left" title="Ir al inicio" aria-label="Ir al inicio">
         <i class="fas fa-home"></i>
     </a>
     <div class="container">
@@ -181,31 +193,31 @@
 
                     <div class="card-body">
                         @if ($errors->any())
-                            <div class="alert alert-danger">
-                                <ul class="mb-0">
-                                    @foreach ($errors->all() as $error)
-                                        <li>{{ $error }}</li>
-                                    @endforeach
-                                </ul>
-                            </div>
+                        <div class="alert alert-danger">
+                            <ul class="mb-0">
+                                @foreach ($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
                         @endif
 
                         @if (session('success'))
-                            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                                {{ session('success') }}
-                                <button type="button" class="close" data-dismiss="alert">
-                                    <span aria-hidden="true">&times;</span>
-                                </button>
-                            </div>
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            {{ session('success') }}
+                            <button type="button" class="close" data-dismiss="alert">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
                         @endif
 
                         @if (session('error'))
-                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                                {{ session('error') }}
-                                <button type="button" class="close" data-dismiss="alert">
-                                    <span aria-hidden="true">&times;</span>
-                                </button>
-                            </div>
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            {{ session('error') }}
+                            <button type="button" class="close" data-dismiss="alert">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
                         @endif
 
 
@@ -238,7 +250,10 @@
                                         id="password" name="password" placeholder="Ingresa tu contraseña" required
                                         autocomplete="current-password">
                                     <div class="input-group-append">
-                                        <button class="btn btn-light border" type="button" id="togglePassword" aria-label="Mostrar contraseña" data-toggle="tooltip" data-placement="left" title="Mostrar/Ocultar">
+                                        <button class="btn btn-outline-secondary"
+                                            style="border-left: none; border-radius: 0 8px 8px 0; border: 1px solid rgba(127, 127, 127, 0.2);"
+                                            type="button" id="togglePassword" aria-label="Mostrar contraseña"
+                                            data-toggle="tooltip" data-placement="left" title="Mostrar/Ocultar">
                                             <i class="fas fa-eye"></i>
                                         </button>
                                     </div>
@@ -272,10 +287,10 @@
 
     <script>
         // Inicializar tooltips y toggle de contraseña
-        $(function () {
+        $(function() {
             $('[data-toggle="tooltip"]').tooltip();
 
-            $('#togglePassword').on('click', function () {
+            $('#togglePassword').on('click', function() {
                 var $input = $('#password');
                 var $icon = $(this).find('i');
                 if ($input.attr('type') === 'password') {

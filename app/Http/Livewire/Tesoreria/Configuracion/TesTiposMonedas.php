@@ -26,18 +26,9 @@ class TesTiposMonedas extends Component
 
     public function render()
     {
-        // Verificar autenticación antes de procesar cualquier lógica
-        if (!auth()->check()) {
-            $this->dispatchBrowserEvent('redirect-to-login', [
-                'message' => 'La sesión ha expirado. Por favor, inicie sesión de nuevo.'
-            ]);
-            return view('livewire.tesoreria.configuracion.tes-tipos-monedas', [
-                'tiposMonedas' => collect(),
-            ]);
-        }
-
+        $version = Cache::get('tipos_monedas_version', 1);
         $page = $this->page ?: 1;
-        $cacheKey = 'tipos_monedas_search_' . $this->search . '_page_' . $page;
+        $cacheKey = 'tipos_monedas_v' . $version . '_search_' . $this->search . '_page_' . $page;
 
         $tiposMonedas = Cache::remember($cacheKey, now()->addDay(), function () {
             return Model::search($this->search)
@@ -70,7 +61,7 @@ class TesTiposMonedas extends Component
             'activo' => $this->activo,
         ]);
 
-        Cache::flush();
+        $this->clearCache();
         $this->resetInput();
         $this->emit('tipoMonedaStore');
         $this->dispatchBrowserEvent('alert', ['type' => 'success', 'message' => 'Tipo de moneda creado con éxito!', 'toast' => true]);
@@ -103,7 +94,7 @@ class TesTiposMonedas extends Component
                 'descripcion' => $this->descripcion,
                 'activo' => $this->activo,
             ]);
-            Cache::flush();
+            $this->clearCache();
             $this->resetInput();
             $this->emit('tipoMonedaUpdate');
             $this->dispatchBrowserEvent('alert', ['type' => 'success', 'message' => 'Tipo de moneda actualizado con éxito!', 'toast' => true]);
@@ -115,7 +106,7 @@ class TesTiposMonedas extends Component
         $tipoMoneda = Model::findOrFail($id);
 
         $tipoMoneda->delete();
-        Cache::flush();
+        $this->clearCache();
         $this->dispatchBrowserEvent('alert', ['type' => 'success', 'message' => 'Tipo de moneda eliminado con éxito!', 'toast' => true]);
     }
 
@@ -145,6 +136,11 @@ class TesTiposMonedas extends Component
     public function updatingSearch()
     {
         $this->resetPage();
-        Cache::flush();
+        $this->clearCache();
+    }
+    private function clearCache()
+    {
+        $version = Cache::get('tipos_monedas_version', 1);
+        Cache::put('tipos_monedas_version', $version + 1, now()->addYear());
     }
 }

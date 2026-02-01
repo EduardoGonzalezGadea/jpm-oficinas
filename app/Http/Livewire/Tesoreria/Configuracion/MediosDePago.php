@@ -26,15 +26,7 @@ class MediosDePago extends Component
 
     public function render()
     {
-        // Verificar autenticación antes de procesar cualquier lógica
-        if (!auth()->check()) {
-            $this->dispatchBrowserEvent('redirect-to-login', [
-                'message' => 'La sesión ha expirado. Por favor, inicie sesión de nuevo.'
-            ]);
-            return view('livewire.tesoreria.configuracion.medios-de-pago', [
-                'mediosDePago' => collect(),
-            ]);
-        }
+
 
         $mediosDePago = Model::search($this->search)
             ->ordenado()
@@ -64,6 +56,8 @@ class MediosDePago extends Component
             'descripcion' => $this->descripcion,
             'activo' => $this->activo,
         ]);
+
+        \Illuminate\Support\Facades\Cache::forget('medios_de_pago_activos');
 
         $this->resetInput();
         $this->emit('medioDePagoStore');
@@ -97,6 +91,7 @@ class MediosDePago extends Component
                 'descripcion' => $this->descripcion,
                 'activo' => $this->activo,
             ]);
+            \Illuminate\Support\Facades\Cache::forget('medios_de_pago_activos');
             $this->resetInput();
             $this->emit('medioDePagoUpdate');
             $this->dispatchBrowserEvent('alert', ['type' => 'success', 'message' => 'Medio de pago actualizado con éxito!', 'toast' => true]);
@@ -109,7 +104,7 @@ class MediosDePago extends Component
 
         // Verificar si el medio de pago está siendo usado
         $enUso = DB::table('tes_arrendamientos')->where('medio_de_pago', $medioDePago->nombre)->exists() ||
-                 DB::table('tes_eventuales')->where('medio_de_pago', $medioDePago->nombre)->exists();
+            DB::table('tes_eventuales')->where('medio_de_pago', $medioDePago->nombre)->exists();
 
         if ($enUso) {
             $this->dispatchBrowserEvent('alert', [
@@ -120,6 +115,7 @@ class MediosDePago extends Component
         }
 
         $medioDePago->delete();
+        \Illuminate\Support\Facades\Cache::forget('medios_de_pago_activos');
         $this->dispatchBrowserEvent('alert', ['type' => 'success', 'message' => 'Medio de pago eliminado con éxito!', 'toast' => true]);
     }
 

@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Tesoreria\Armas;
 use App\Http\Controllers\Controller;
 use App\Models\Tesoreria\TesTenenciaArmas;
 use App\Models\Tesoreria\TesPorteArmas;
+use App\Models\Tesoreria\TesPorteArmasPlanilla;
+use App\Models\Tesoreria\TesTenenciaArmasPlanilla;
 
 class ImpresionController extends Controller
 {
@@ -40,6 +42,30 @@ class ImpresionController extends Controller
         return view('tesoreria.armas.imprimir.porte-recibo', compact('porte', 'montoEnLetras'));
     }
 
+    /**
+     * Muestra la vista imprimible para una planilla de Porte de Armas.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function imprimirPlanillaPorte($id)
+    {
+        $planilla = TesPorteArmasPlanilla::with(['porteArmas', 'createdBy'])->findOrFail($id);
+        return view('tesoreria.armas.imprimir.porte-planilla', compact('planilla'));
+    }
+
+    /**
+     * Muestra la vista imprimible para una planilla de Tenencia de Armas.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function imprimirPlanillaTenencia($id)
+    {
+        $planilla = TesTenenciaArmasPlanilla::with(['tenenciaArmas', 'createdBy'])->findOrFail($id);
+        return view('tesoreria.armas.imprimir.tenencia-planilla', compact('planilla'));
+    }
+
     // --- Función para convertir números a letras ---
     private function numeroALetras($num)
     {
@@ -70,7 +96,7 @@ class ImpresionController extends Controller
     }
 
     private function convertirGrupo($n)
-    { 
+    {
         // Listas de palabras
         $unidades = ['', 'UNO', 'DOS', 'TRES', 'CUATRO', 'CINCO', 'SEIS', 'SIETE', 'OCHO', 'NUEVE'];
         $especiales = ['DIEZ', 'ONCE', 'DOCE', 'TRECE', 'CATORCE', 'QUINCE', 'DIECISEIS', 'DIECISIETE', 'DIECIOCHO', 'DIECINUEVE'];

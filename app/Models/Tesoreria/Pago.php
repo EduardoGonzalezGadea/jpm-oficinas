@@ -4,11 +4,12 @@ namespace App\Models\Tesoreria;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes; // <-- Importado
+use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Traits\LogsActivityTrait;
 
 class Pago extends Model
 {
-    use HasFactory, SoftDeletes; // <-- Agregado SoftDeletes
+    use HasFactory, SoftDeletes, LogsActivityTrait;
 
     protected $table = 'tes_cch_pagos';
     protected $primaryKey = 'idPagos';

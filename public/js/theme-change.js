@@ -7,6 +7,30 @@
     if (window.themeScriptLoaded) return;
     window.themeScriptLoaded = true;
 
+    // Obtener la URL base de la aplicación (para manejar subcarpetas)
+    const getBaseUrl = () => {
+        // Primero, intentar usar el elemento base si existe
+        const baseElement = document.querySelector('base');
+        if (baseElement) {
+            return baseElement.href.replace(/\/$/, '');
+        }
+
+        // Si estamos en /oficinas/public/*, la ruta base es /oficinas/public
+        const pathname = window.location.pathname;
+        const matches = pathname.match(/^(.+?)\/(login|dashboard|\/|$)/);
+        if (matches) {
+            let basePath = matches[1];
+            if (basePath === '') basePath = '/oficinas/public';
+            return window.location.origin + basePath;
+        }
+
+        // Como último recurso, devolver origen + /oficinas/public
+        return window.location.origin + '/oficinas/public';
+    };
+
+    const baseUrl = getBaseUrl();
+    console.log('Base URL para fetch:', baseUrl);
+
     // Funciones helper para manejo de cookies
     const setCookie = (name, value, days = 365) => {
         const expires = new Date();
@@ -29,9 +53,8 @@
 
     const setupTheme = () => {
         const themeStylesheet = document.getElementById("bootswatch-theme");
-        const defaultThemePath =
-            "{{ assets('libs/bootstrap-4.6.2-dist/css/bootstrap.min.css') }}";
-        const defaultThemeName = "bootstrap-default";
+        const defaultThemePath = "/libs/bootswatch@4.6.2/dist/cosmo/bootstrap.min.css";
+        const defaultThemeName = "cosmo";
 
         // Cargar el tema guardado al iniciar (LocalStorage primero, luego cookies como respaldo)
         let savedThemePath = localStorage.getItem("bootswatch-theme");
@@ -91,17 +114,42 @@
 
                 applyThemeChange(themeName, themePath);
 
+                // IMPORTANTE: Solo notificar al backend si el usuario está logueado
+                // En la página de login no hay botones con esta clase, pero por seguridad lo validamos
+                if (document.querySelector('meta[name="user-authenticated"]')?.content === 'false') {
+                    return;
+                }
+
                 // Notificar al backend
-                fetch("/tema/cambiar", {
+                fetch(baseUrl + "/tema/cambiar", {
                     method: "POST",
+                    credentials: "include", // IMPORTANTE: Enviar cookies para mantener la sesión
                     headers: {
                         "Content-Type": "application/json",
+                        "Accept": "application/json",
                         "X-CSRF-TOKEN": document
                             .querySelector('meta[name="csrf-token"]')
                             .getAttribute("content"),
                     },
                     body: JSON.stringify({ theme: themeName }),
-                });
+                })
+                    .then(response => {
+                        if (response.status === 419) {
+                            // Si la sesión expiró justo ahora, recargamos para limpiar todo
+                            window.location.reload();
+                            return;
+                        }
+                        if (!response.ok) {
+                            console.error('Error al guardar el tema en el servidor');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log('Tema guardado exitosamente:', data);
+                    })
+                    .catch(error => {
+                        console.error('Error de red al intentar guardar el tema:', error);
+                    });
             });
         });
     };

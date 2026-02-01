@@ -13,7 +13,7 @@
                     </h4>
                     <div>
                         <!-- Botones de gestión -->
-                        <div class="btn-group me-2" role="group">
+                        <div class="btn-group mr-2" role="group">
                             <a href="{{ route('roles.index') }}" class="btn btn-info">
                                 <i class="fas fa-user-tag"></i> Gestionar Roles
                             </a>
@@ -169,7 +169,7 @@
                 document.getElementById('rolesCheckboxes').innerHTML = html;
             });
 
-        new bootstrap.Modal(document.getElementById('manageRolesModal')).show();
+        $('#manageRolesModal').modal('show');
     }
 
     function manageUserPermissions(userId, userName) {
@@ -196,13 +196,12 @@
                 document.getElementById('permissionsCheckboxes').innerHTML = html;
             });
 
-        new bootstrap.Modal(document.getElementById('managePermissionsModal')).show();
+        $('#managePermissionsModal').modal('show');
     }
 
     function deleteUser(id) {
-        const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
         document.getElementById('deleteForm').action = `/usuarios/${id}`;
-        modal.show();
+        $('#deleteModal').modal('show');
     }
 </script>
 @endsection

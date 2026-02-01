@@ -8,10 +8,11 @@ use Illuminate\Notifications\Notifiable;
 use PHPOpenSourceSaver\JWTAuth\Contracts\JWTSubject;
 use Spatie\Permission\Traits\HasRoles;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Traits\LogsActivityTrait;
 
 class User extends Authenticatable implements JWTSubject
 {
-    use HasFactory, Notifiable, HasRoles, SoftDeletes;
+    use HasFactory, Notifiable, HasRoles, SoftDeletes, LogsActivityTrait;
 
     protected $guard_name = 'api';
 
@@ -33,6 +34,7 @@ class User extends Authenticatable implements JWTSubject
         'two_factor_secret',
         'two_factor_recovery_codes',
         'two_factor_confirmed_at',
+        'theme',
     ];
 
     protected $hidden = [
@@ -102,5 +104,21 @@ class User extends Authenticatable implements JWTSubject
     public function scopeInactivos($query)
     {
         return $query->where('activo', false);
+    }
+
+    public function getThemePathAttribute()
+    {
+        $themes = [
+            'cerulean' => 'libs/bootswatch@4.6.2/dist/cerulean/bootstrap.min.css',
+            'cosmo'    => 'libs/bootswatch@4.6.2/dist/cosmo/bootstrap.min.css',
+            'litera'   => 'libs/bootswatch@4.6.2/dist/litera/bootstrap.min.css',
+            'cyborg'   => 'libs/bootswatch@4.6.2/dist/cyborg/bootstrap.min.css',
+            'darkly'   => 'libs/bootswatch@4.6.2/dist/darkly/bootstrap.min.css',
+            'material' => 'libs/bootswatch@4.6.2/dist/materia/bootstrap.min.css',
+            'default'  => 'libs/bootstrap-4.6.2-dist/css/bootstrap.min.css',
+        ];
+
+        $path = $themes[$this->theme] ?? $themes['cosmo'];
+        return asset($path);
     }
 }

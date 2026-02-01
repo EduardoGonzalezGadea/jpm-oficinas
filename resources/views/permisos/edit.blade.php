@@ -123,7 +123,7 @@
                                     </button>
                                 </div>
                                 <div class="col-md-6 text-end">
-                                    <a href="{{ route('permissions.show', $permission) }}" class="btn btn-info me-2">
+                                    <a href="{{ route('permissions.show', $permission) }}" class="btn btn-info mr-2">
                                         <i class="fas fa-eye"></i> Ver Detalle
                                     </a>
                                     <a href="{{ route('permissions.index') }}" class="btn btn-secondary">

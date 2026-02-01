@@ -35,8 +35,11 @@ class TesPorteArmas extends Component
     public $selectedRegistro = null;
     public $search = '';
     public $anio;
+    public $selectedRegistros = [];
+    public $selectAll = false;
 
-    protected $queryString = ['anio'];
+    public $edit_id;
+    protected $queryString = ['anio', 'edit_id' => ['except' => null]];
     public function showDetails($id)
     {
         $this->showModal = false;
@@ -72,12 +75,52 @@ class TesPorteArmas extends Component
         'cedula.required' => 'La cédula es obligatoria',
     ];
 
-    public function mount()
+    public function mount($anio = null)
     {
         $this->fecha = date('Y-m-d');
-        if (empty($this->anio)) {
-            $this->anio = date('Y');
+        $this->anio = $anio ?: date('Y');
+    }
+
+    public function checkEditId()
+    {
+        $id = $this->edit_id ?: session('edit_id');
+
+        if ($id) {
+            $this->edit($id);
+            // Limpiar el parámetro para que no se re-abra si se refresca la página
+            $this->edit_id = null;
         }
+    }
+
+    public function updatedAnio()
+    {
+        $this->resetPage();
+        Cache::flush();
+    }
+
+    public function updatedSelectAll($value)
+    {
+        $currentFilteredIds = TesPorteArmasModel::where(function ($query) {
+            $query->where('titular', 'like', '%' . $this->search . '%')
+                ->orWhere('cedula', 'like', '%' . $this->search . '%')
+                ->orWhere('orden_cobro', 'like', '%' . $this->search . '%')
+                ->orWhere('numero_tramite', 'like', '%' . $this->search . '%');
+        })
+            ->whereYear('fecha', $this->anio)
+            ->whereNull('planilla_id')
+            ->pluck('id')
+            ->map(fn($id) => (string)$id)
+            ->toArray();
+
+        if ($value) {
+            // Agregar los IDs filtrados a los ya seleccionados (sin duplicados)
+            $this->selectedRegistros = array_values(array_unique(array_merge($this->selectedRegistros, $currentFilteredIds)));
+        } else {
+            // Quitar de la selección solo los IDs que coinciden con el filtro actual
+            $this->selectedRegistros = array_values(array_diff($this->selectedRegistros, $currentFilteredIds));
+        }
+
+        $this->updateSelectAllState();
     }
 
     public function render()
@@ -86,19 +129,78 @@ class TesPorteArmas extends Component
         $cacheKey = 'tes_porte_armas_desc_anio_' . $this->anio . '_search_' . $this->search . '_page_' . $page;
 
         $registros = Cache::remember($cacheKey, now()->addDay(), function () {
-            return TesPorteArmasModel::where(function($query) {
+            return TesPorteArmasModel::where(function ($query) {
                 $query->where('titular', 'like', '%' . $this->search . '%')
-                      ->orWhere('cedula', 'like', '%' . $this->search . '%')
-                      ->orWhere('orden_cobro', 'like', '%' . $this->search . '%')
-                      ->orWhere('numero_tramite', 'like', '%' . $this->search . '%');
+                    ->orWhere('cedula', 'like', '%' . $this->search . '%')
+                    ->orWhere('orden_cobro', 'like', '%' . $this->search . '%')
+                    ->orWhere('numero_tramite', 'like', '%' . $this->search . '%');
             })
-            ->whereYear('fecha', $this->anio)
-            ->orderBy('fecha', 'desc')
-            ->orderBy('recibo', 'asc')
-            ->paginate(10);
+                ->whereYear('fecha', $this->anio)
+                ->with('planilla')
+                ->orderBy('fecha', 'desc')
+                ->orderBy('recibo', 'asc')
+                ->paginate(10);
         });
 
         return view('livewire.tesoreria.armas.tes-porte-armas', compact('registros'));
+    }
+
+    public function updatedSelectedRegistros()
+    {
+        $this->updateSelectAllState();
+    }
+
+    private function updateSelectAllState()
+    {
+        $currentFilteredIds = TesPorteArmasModel::where(function ($query) {
+            $query->where('titular', 'like', '%' . $this->search . '%')
+                ->orWhere('cedula', 'like', '%' . $this->search . '%')
+                ->orWhere('orden_cobro', 'like', '%' . $this->search . '%')
+                ->orWhere('numero_tramite', 'like', '%' . $this->search . '%');
+        })
+            ->whereYear('fecha', $this->anio)
+            ->whereNull('planilla_id')
+            ->pluck('id')
+            ->map(fn($id) => (string)$id)
+            ->toArray();
+
+        if (empty($currentFilteredIds)) {
+            $this->selectAll = false;
+        } else {
+            $allPresent = empty(array_diff($currentFilteredIds, $this->selectedRegistros));
+            $this->selectAll = $allPresent;
+        }
+    }
+
+    public function createPlanilla()
+    {
+        if (empty($this->selectedRegistros)) {
+            $this->emit('error', 'Debe seleccionar al menos un registro.');
+            return;
+        }
+
+        DB::transaction(function () {
+            $planilla = \App\Models\Tesoreria\TesPorteArmasPlanilla::create([
+                'fecha' => now(),
+            ]);
+
+            TesPorteArmasModel::whereIn('id', $this->selectedRegistros)
+                ->update(['planilla_id' => $planilla->id]);
+
+            $this->selectedRegistros = [];
+            $this->selectAll = false;
+            Cache::flush();
+
+            session()->flash('message', 'Planilla creada exitosamente. Número: ' . $planilla->numero);
+        });
+    }
+
+    public function clearSearch()
+    {
+        $this->search = '';
+        $this->resetPage();
+        Cache::flush();
+        $this->updateSelectAllState();
     }
 
     public function updatingSearch()
@@ -107,10 +209,20 @@ class TesPorteArmas extends Component
         Cache::flush();
     }
 
+    public function updatedSearch()
+    {
+        $this->updateSelectAllState();
+    }
+
     public function create()
     {
         $this->resetForm();
         $this->editMode = false;
+
+        // Autoincremento de recibo
+        $ultimoRegistro = TesPorteArmasModel::orderBy('id', 'desc')->first();
+        $this->recibo = ($ultimoRegistro && $ultimoRegistro->recibo) ? intval($ultimoRegistro->recibo) + 1 : '';
+
         $this->showModal = true;
         $this->emit('modalOpened');
     }

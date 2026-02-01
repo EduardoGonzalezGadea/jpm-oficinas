@@ -30,6 +30,8 @@ class Index extends Component
 
     public $cajaChicaSeleccionada = null;
     public $dependencias;
+    public $dependenciasSinPendientes = [];
+    public $dependenciasEspecialesSinPendientes = [];
     public $nuevoFondo = ['mes' => '', 'anio' => '', 'monto' => ''];
     public $nuevoPendiente = [
         'relCajaChica' => null,
@@ -105,6 +107,8 @@ class Index extends Component
         'pendienteCreado' => 'cargarDatos',
         'pagoCreado' => 'cargarDatos',
         'mostrarAlerta' => 'mostrarAlertaSweet',
+        'eliminarPendiente' => 'eliminarPendiente',
+        'eliminarPago' => 'eliminarPago',
     ];
 
     protected function rules()
@@ -158,6 +162,8 @@ class Index extends Component
         $this->tablaPagos = collect();
         $this->dependencias = collect();
         $this->itemsParaRecuperar = [];
+        $this->dependenciasSinPendientes = [];
+        $this->dependenciasEspecialesSinPendientes = [];
         $this->cargarDatos();
     }
 
@@ -245,6 +251,7 @@ class Index extends Component
         $this->cargarTablaPendientesDetalle();
         $this->cargarTablaPagos();
         $this->cargarTablaTotales();
+        $this->cargarDependenciasSinPendientes();
     }
 
     public function cargarTablaCajaChica()
@@ -277,8 +284,10 @@ class Index extends Component
                     'tes_cch_pendientes.*,
                     (SELECT SUM(rendido) FROM tes_cch_movimientos WHERE tes_cch_movimientos.relPendiente = tes_cch_pendientes.idPendientes AND fechaMovimientos <= ? AND deleted_at IS NULL) as tot_rendido,
                     (SELECT SUM(reintegrado) FROM tes_cch_movimientos WHERE tes_cch_movimientos.relPendiente = tes_cch_pendientes.idPendientes AND fechaMovimientos <= ? AND deleted_at IS NULL) as tot_reintegrado,
-                    (SELECT SUM(recuperado) FROM tes_cch_movimientos WHERE tes_cch_movimientos.relPendiente = tes_cch_pendientes.idPendientes AND fechaMovimientos <= ? AND deleted_at IS NULL) as tot_recuperado',
-                    [$fechaHastaStr, $fechaHastaStr, $fechaHastaStr]
+                    (SELECT SUM(recuperado) FROM tes_cch_movimientos WHERE tes_cch_movimientos.relPendiente = tes_cch_pendientes.idPendientes AND fechaMovimientos <= ? AND deleted_at IS NULL) as tot_recuperado,
+                    (SELECT COUNT(*) FROM tes_cch_movimientos WHERE tes_cch_movimientos.relPendiente = tes_cch_pendientes.idPendientes AND fechaMovimientos <= ? AND deleted_at IS NULL AND rendido > 0 AND (documentos IS NULL OR TRIM(documentos) = \'\')) as count_undoc,
+                    (SELECT COUNT(*) FROM tes_cch_movimientos WHERE tes_cch_movimientos.relPendiente = tes_cch_pendientes.idPendientes AND deleted_at IS NULL) as cant_movimientos',
+                    [$fechaHastaStr, $fechaHastaStr, $fechaHastaStr, $fechaHastaStr]
                 )
                 ->orderBy('pendiente', 'ASC')
                 ->get();
@@ -293,6 +302,15 @@ class Index extends Component
                 $pendiente->extra = $diferencia > 0 ? $diferencia : 0;
 
                 $pendiente->saldo = $pendiente->montoPendientes - ($pendiente->tot_reintegrado + $pendiente->tot_recuperado);
+
+                // Cálculo de rendido sin documentos según nueva lógica:
+                // Si tiene movimientos rendidos sin docs, sumar (Rendido - Recuperado) total del pendiente
+                if (($pendiente->count_undoc ?? 0) > 0) {
+                    $pendiente->rendido_sin_docs_calc = ($pendiente->tot_rendido - $pendiente->tot_recuperado);
+                } else {
+                    $pendiente->rendido_sin_docs_calc = 0;
+                }
+
                 $pendiente->es_mes_anterior = false; // Flag for current month
                 return $pendiente;
             });
@@ -315,8 +333,10 @@ class Index extends Component
                         'tes_cch_pendientes.*,
                         (SELECT SUM(rendido) FROM tes_cch_movimientos WHERE tes_cch_movimientos.relPendiente = tes_cch_pendientes.idPendientes AND fechaMovimientos <= ? AND deleted_at IS NULL) as tot_rendido,
                         (SELECT SUM(reintegrado) FROM tes_cch_movimientos WHERE tes_cch_movimientos.relPendiente = tes_cch_pendientes.idPendientes AND fechaMovimientos <= ? AND deleted_at IS NULL) as tot_reintegrado,
-                        (SELECT SUM(recuperado) FROM tes_cch_movimientos WHERE tes_cch_movimientos.relPendiente = tes_cch_pendientes.idPendientes AND fechaMovimientos <= ? AND deleted_at IS NULL) as tot_recuperado',
-                        [$fechaHastaStr, $fechaHastaStr, $fechaHastaStr]
+                        (SELECT SUM(recuperado) FROM tes_cch_movimientos WHERE tes_cch_movimientos.relPendiente = tes_cch_pendientes.idPendientes AND fechaMovimientos <= ? AND deleted_at IS NULL) as tot_recuperado,
+                        (SELECT COUNT(*) FROM tes_cch_movimientos WHERE tes_cch_movimientos.relPendiente = tes_cch_pendientes.idPendientes AND fechaMovimientos <= ? AND deleted_at IS NULL AND rendido > 0 AND (documentos IS NULL OR TRIM(documentos) = \'\')) as count_undoc,
+                        (SELECT COUNT(*) FROM tes_cch_movimientos WHERE tes_cch_movimientos.relPendiente = tes_cch_pendientes.idPendientes AND deleted_at IS NULL) as cant_movimientos',
+                        [$fechaHastaStr, $fechaHastaStr, $fechaHastaStr, $fechaHastaStr]
                     )
                     ->orderBy('pendiente', 'ASC')
                     ->get();
@@ -331,6 +351,14 @@ class Index extends Component
                     $pendiente->extra = $diferencia > 0 ? $diferencia : 0;
 
                     $pendiente->saldo = $pendiente->montoPendientes - ($pendiente->tot_reintegrado + $pendiente->tot_recuperado);
+
+                    // Cálculo de rendido sin documentos (Mes Anterior)
+                    if (($pendiente->count_undoc ?? 0) > 0) {
+                        $pendiente->rendido_sin_docs_calc = ($pendiente->tot_rendido - $pendiente->tot_recuperado);
+                    } else {
+                        $pendiente->rendido_sin_docs_calc = 0;
+                    }
+
                     $pendiente->es_mes_anterior = true; // Flag for previous month
                     return $pendiente;
                 })->filter(function ($pendiente) {
@@ -347,10 +375,10 @@ class Index extends Component
                     $numero = mb_strtolower((string)$pendiente->pendiente, 'UTF-8');
                     $dependencia = mb_strtolower($pendiente->dependencia->dependencia ?? '', 'UTF-8');
                     $monto = number_format($pendiente->montoPendientes, 2, ',', '.');
-                    
-                    return str_contains($numero, $search) || 
-                           str_contains($dependencia, $search) || 
-                           str_contains($monto, $search);
+
+                    return str_contains($numero, $search) ||
+                        str_contains($dependencia, $search) ||
+                        str_contains($monto, $search);
                 })->values();
             }
 
@@ -428,11 +456,11 @@ class Index extends Component
                     $acreedor = mb_strtolower($pago->acreedor->acreedor ?? '', 'UTF-8');
                     $concepto = mb_strtolower($pago->conceptoPagos ?? '', 'UTF-8');
                     $monto = number_format($pago->montoPagos, 2, ',', '.');
-                    
-                    return str_contains($egreso, $search) || 
-                           str_contains($acreedor, $search) || 
-                           str_contains($concepto, $search) ||
-                           str_contains($monto, $search);
+
+                    return str_contains($egreso, $search) ||
+                        str_contains($acreedor, $search) ||
+                        str_contains($concepto, $search) ||
+                        str_contains($monto, $search);
                 })->values();
             }
 
@@ -473,6 +501,10 @@ class Index extends Component
             $this->tablaTotales['Total Pendientes'] = $stPendientes;
             $this->tablaTotales['Total Rendidos'] = $stRendidos;
             $this->tablaTotales['Total Extras'] = $stExtras;
+
+            // Nuevo total solicitado: Suma de (Rendido - Recuperado) de pendientes con movimientos sin docs
+            $totalRendidoSinDocs = $this->tablaPendientesDetalle->sum('rendido_sin_docs_calc');
+            $this->tablaTotales['Total Rendido Sin Docs'] = $totalRendidoSinDocs;
 
             // Calcular totales de pagos usando tablaPagos
             $pagosConEgreso = $this->tablaPagos->filter(function ($p) {
@@ -547,7 +579,7 @@ class Index extends Component
             return [
                 'id' => 'pendiente_' . $p['idPendientes'],
                 'tipo' => 'Pendiente',
-                'detalle' => $detalleDependencia . ' (N° ' . $p['pendiente'] . ')',
+                'detalle' => $detalleDependencia,
                 'saldo' => ($p['tot_rendido'] ?? 0) - ($p['tot_recuperado'] ?? 0),
                 'origen_id' => $p['idPendientes'],
                 'origen_type' => Pendiente::class,
@@ -615,7 +647,7 @@ class Index extends Component
                 return [
                     'id' => 'pendiente_' . $p['idPendientes'],
                     'tipo' => 'Pendiente (Mes Ant.)',
-                    'detalle' => $detalleDependencia . ' (N° ' . $p['pendiente'] . ')',
+                    'detalle' => $detalleDependencia,
                     'saldo' => ($p['tot_rendido'] ?? 0) - ($p['tot_recuperado'] ?? 0),
                     'origen_id' => $p['idPendientes'],
                     'origen_type' => Pendiente::class,
@@ -1114,6 +1146,37 @@ class Index extends Component
     }
 
     // --- Funciones auxiliares ---
+    public function cargarDependenciasSinPendientes()
+    {
+        if (!$this->cajaChicaSeleccionada) {
+            $this->dependenciasSinPendientes = [];
+            $this->dependenciasEspecialesSinPendientes = [];
+            return;
+        }
+
+        // Obtener IDs de dependencias que ya tienen pendientes en el mes actual
+        $idsConPendiente = $this->tablaPendientesDetalle
+            ->where('es_mes_anterior', false)
+            ->pluck('relDependencia')
+            ->unique()
+            ->toArray();
+
+        // Obtener todas las dependencias que no están en esa lista y que no sean Tesorería
+        $todasFaltantes = Dependencia::whereNotIn('idDependencias', $idsConPendiente)
+            ->where('dependencia', '<>', 'Dirección de Tesorería')
+            ->orderBy('dependencia', 'ASC')
+            ->get();
+
+        // Separar normales de especiales
+        $this->dependenciasSinPendientes = $todasFaltantes->filter(function ($dep) {
+            return !str_contains(strtolower($dep->dependencia), '(especial)');
+        });
+
+        $this->dependenciasEspecialesSinPendientes = $todasFaltantes->filter(function ($dep) {
+            return str_contains(strtolower($dep->dependencia), '(especial)');
+        });
+    }
+
     private function getMesAnioAnterior()
     {
         $meses = [
@@ -1163,5 +1226,92 @@ class Index extends Component
     public function render()
     {
         return view('livewire.tesoreria.caja-chica.index');
+    }
+
+    public function confirmarEliminarPendiente($id)
+    {
+        $this->dispatchBrowserEvent('swal:confirm', [
+            'title' => '¿Está seguro?',
+            'text' => '¿Desea eliminar este pendiente? Esta acción no se puede deshacer.',
+            'method' => 'eliminarPendiente',
+            'id' => $id,
+        ]);
+    }
+
+    public function eliminarPendiente($id)
+    {
+        if (!auth()->user()->hasRole(['administrador', 'gerente_tesoreria', 'supervisor_tesoreria'])) {
+            $this->dispatchBrowserEvent('swal:toast-error', ['text' => 'No tiene permisos para eliminar pendientes.']);
+            return;
+        }
+
+        $pendiente = Pendiente::find($id);
+        if (!$pendiente) {
+            $this->dispatchBrowserEvent('swal:toast-error', ['text' => 'Pendiente no encontrado.']);
+            return;
+        }
+
+        if ($pendiente->movimientos()->count() > 0) {
+            $this->dispatchBrowserEvent('swal:toast-error', ['text' => 'No se puede eliminar el pendiente porque tiene movimientos asociados.']);
+            return;
+        }
+
+        DB::beginTransaction();
+        try {
+            // $pendiente->deleted_by = auth()->id(); // Columna no existe en BD
+            $pendiente->save(); // Guardar solo si hubo cambios previos, pero aquí es redundante si solo era para deleted_by.
+            // Mejor simplemente borramos:
+            $pendiente->delete();
+
+            DB::commit();
+            $this->cargarDatos();
+            $this->dispatchBrowserEvent('swal:success', ['text' => 'Pendiente eliminado correctamente.']);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            $this->dispatchBrowserEvent('swal:toast-error', ['text' => 'Error al eliminar el pendiente: ' . $e->getMessage()]);
+        }
+    }
+
+    public function confirmarEliminarPago($id)
+    {
+        $this->dispatchBrowserEvent('swal:confirm', [
+            'title' => '¿Está seguro?',
+            'text' => '¿Desea eliminar este pago directo? Esta acción no se puede deshacer.',
+            'method' => 'eliminarPago',
+            'id' => $id,
+        ]);
+    }
+
+    public function eliminarPago($id)
+    {
+        if (!auth()->user()->hasRole(['administrador', 'gerente_tesoreria', 'supervisor_tesoreria'])) {
+            $this->dispatchBrowserEvent('swal:toast-error', ['text' => 'No tiene permisos para eliminar pagos.']);
+            return;
+        }
+
+        $pago = Pago::find($id);
+        if (!$pago) {
+            $this->dispatchBrowserEvent('swal:toast-error', ['text' => 'Pago no encontrado.']);
+            return;
+        }
+
+        if (!empty($pago->ingresoPagos) || ($pago->recuperadoPagos > 0)) {
+            $this->dispatchBrowserEvent('swal:toast-error', ['text' => 'No se puede eliminar el pago porque tiene ingresos cargados o recuperos parciales.']);
+            return;
+        }
+
+        DB::beginTransaction();
+        try {
+            // $pago->deleted_by = auth()->id(); // Columna no existe en BD
+            // $pago->save();
+            $pago->delete();
+
+            DB::commit();
+            $this->cargarDatos();
+            $this->dispatchBrowserEvent('swal:success', ['text' => 'Pago eliminado correctamente.']);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            $this->dispatchBrowserEvent('swal:toast-error', ['text' => 'Error al eliminar el pago: ' . $e->getMessage()]);
+        }
     }
 }

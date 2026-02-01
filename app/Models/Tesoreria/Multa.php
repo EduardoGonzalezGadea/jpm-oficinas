@@ -5,10 +5,11 @@ namespace App\Models\Tesoreria;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Traits\LogsActivityTrait;
 
 class Multa extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, LogsActivityTrait;
 
     protected $table = 'tes_multas';
 
@@ -56,7 +57,8 @@ class Multa extends Model
      */
     public function getImporteOriginalFormateadoAttribute()
     {
-        return number_format($this->importe_original, 2, ',', '.') . '&nbsp;' . $this->moneda;
+        $valor = number_format($this->importe_original, 2, ',', '.');
+        return ($this->moneda === 'UYU') ? '$&nbsp;' . $valor : $valor . '&nbsp;' . $this->moneda;
     }
 
     /**
@@ -67,7 +69,8 @@ class Multa extends Model
         if (is_null($this->importe_unificado)) {
             return '';
         }
-        return number_format($this->importe_unificado, 2, ',', '.') . '&nbsp;' . $this->moneda;
+        $valor = number_format($this->importe_unificado, 2, ',', '.');
+        return ($this->moneda === 'UYU') ? '$&nbsp;' . $valor : $valor . '&nbsp;' . $this->moneda;
     }
     // -------------------------
 }

@@ -8,6 +8,7 @@ use Livewire\WithPagination;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class Multa extends Component
 {
@@ -32,7 +33,7 @@ class Multa extends Component
     public $search = '';
     public $sortField = 'articulo';
     public $sortDirection = 'asc';
-    public $perPage = 25;
+    public $perPage = 50;
     public $multasCargadas = false; // Flag para controlar carga progresiva
 
     protected $queryString = [
@@ -40,7 +41,7 @@ class Multa extends Component
         'sortField' => ['except' => 'articulo'],
         'sortDirection' => ['except' => 'asc'],
         'page' => ['except' => 1],
-        'perPage' => ['except' => 25],
+        'perPage' => ['except' => 50],
     ];
 
     protected $rules = [
@@ -105,6 +106,32 @@ class Multa extends Component
         Cache::flush();
     }
 
+    public function refreshList()
+    {
+        Cache::flush();
+        $this->resetPage();
+    }
+
+    public function actualizarSoa()
+    {
+        try {
+            $controller = new \App\Http\Controllers\UtilidadController();
+            $response = $controller->actualizarValoresSoa();
+            $data = $response->getData();
+
+            if (isset($data->success) && $data->success) {
+                $this->dispatchBrowserEvent('swal:success', ['text' => $data->message]);
+                Cache::flush();
+                $this->resetPage();
+            } else {
+                $mensaje = $data->error ?? 'Error desconocido al actualizar SOA.';
+                $this->dispatchBrowserEvent('swal:error', ['text' => $mensaje]);
+            }
+        } catch (\Exception $e) {
+            $this->dispatchBrowserEvent('swal:error', ['text' => 'Error: ' . $e->getMessage()]);
+        }
+    }
+
     public function create()
     {
         $this->resetInputFields();
@@ -135,7 +162,7 @@ class Multa extends Component
         DB::transaction(function () {
             try {
                 // Log the operation for debugging
-                \Log::info('Multa store operation started', [
+                Log::info('Multa store operation started', [
                     'multa_id' => $this->multa_id,
                     'articulo' => $this->articulo,
                     'is_edit' => $this->isEdit
@@ -154,10 +181,10 @@ class Multa extends Component
                     ]
                 );
 
-                \Log::info('Multa store operation completed', ['multa_id' => $multa->id]);
+                Log::info('Multa store operation completed', ['multa_id' => $multa->id]);
                 Cache::flush();
             } catch (\Exception $e) {
-                \Log::error('Multa store operation failed', [
+                Log::error('Multa store operation failed', [
                     'error' => $e->getMessage(),
                     'multa_id' => $this->multa_id,
                     'articulo' => $this->articulo

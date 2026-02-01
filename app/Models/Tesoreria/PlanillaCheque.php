@@ -4,15 +4,23 @@ namespace App\Models\Tesoreria;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Traits\LogsActivityTrait;
 
 class PlanillaCheque extends Model
 {
-    use SoftDeletes;
+    use SoftDeletes, LogsActivityTrait;
 
     protected $table = 'tes_planillas_cheques';
     protected $fillable = [
-        'numero_planilla', 'fecha_generacion', 'estado',
-        'motivo_anulacion', 'fecha_anulacion', 'generada_por', 'anulada_por', 'created_by', 'updated_by'
+        'numero_planilla',
+        'fecha_generacion',
+        'estado',
+        'motivo_anulacion',
+        'fecha_anulacion',
+        'generada_por',
+        'anulada_por',
+        'created_by',
+        'updated_by'
     ];
 
     protected $dates = ['fecha_generacion', 'fecha_anulacion'];

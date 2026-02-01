@@ -114,10 +114,21 @@
                                 <label for="code">{{ __('Ingrese el código de verificación generado por su aplicación:') }}</label>
                                 <input type="text" name="code" id="code" class="form-control col-md-4 mx-auto text-center" required autofocus autocomplete="off">
                             </div>
+                            <a href="{{ route('panel') }}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left mr-1"></i> {{ __('Volver') }}
+                            </a>
                             <button type="submit" class="btn btn-primary">
                                 {{ __('Confirmar y Habilitar') }}
                             </button>
                         </form>
+                    </div>
+                    @endif
+
+                    @if ($user->two_factor_confirmed_at)
+                    <div class="mt-4 border-top pt-3">
+                        <a href="{{ route('panel') }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left mr-1"></i> {{ __('Volver al Panel Principal') }}
+                        </a>
                     </div>
                     @endif
                 </div>

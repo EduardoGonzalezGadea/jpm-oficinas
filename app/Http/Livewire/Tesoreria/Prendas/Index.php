@@ -23,19 +23,25 @@ class Index extends Component
     public function mount()
     {
         // Obtener años disponibles de los recibos
-        $this->years = Prenda::selectRaw('YEAR(recibo_fecha) as year')
+        $years = Prenda::selectRaw('YEAR(recibo_fecha) as year')
             ->distinct()
             ->orderBy('year', 'desc')
             ->pluck('year')
             ->toArray();
 
-        // Si no hay años, usar el año actual
-        if (empty($this->years)) {
-            $this->years = [date('Y')];
+        // Agregar siempre el año actual si no está presente
+        $currentYear = (int) date('Y');
+        if (!in_array($currentYear, $years)) {
+            $years[] = $currentYear;
         }
 
-        // Seleccionar el año más reciente por defecto
-        $this->selectedYear = $this->years[0];
+        // Ordenar descendentemente
+        rsort($years);
+
+        $this->years = $years;
+
+        // Seleccionar el año actual por defecto
+        $this->selectedYear = $currentYear;
     }
 
     public function confirmDelete($id)

@@ -4,6 +4,7 @@ namespace App\Models\Tesoreria;
 
 use App\Models\User;
 use App\Traits\ConvertirMayusculas;
+use App\Traits\LogsActivityTrait;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -11,7 +12,7 @@ use Illuminate\Support\Facades\Auth;
 
 class CertificadoResidencia extends Model
 {
-    use HasFactory, ConvertirMayusculas, SoftDeletes;
+    use HasFactory, ConvertirMayusculas, SoftDeletes, LogsActivityTrait;
 
     protected $table = 'tes_certificados_residencia';
 

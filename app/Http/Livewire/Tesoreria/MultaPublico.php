@@ -20,14 +20,14 @@ class MultaPublico extends Component
     public $search = '';
     public $sortField = 'articulo';
     public $sortDirection = 'asc';
-    public $perPage = 25;
+    public $perPage = 50;
 
     protected $queryString = [
         'search' => ['except' => ''],
         'sortField' => ['except' => 'articulo'],
         'sortDirection' => ['except' => 'asc'],
         'page' => ['except' => 1],
-        'perPage' => ['except' => 25],
+        'perPage' => ['except' => 50],
     ];
 
     public function updatingSearch()

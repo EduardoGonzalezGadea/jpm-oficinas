@@ -11,4 +11,9 @@ class EventualesController extends Controller
     {
         return view('tesoreria.eventuales.index');
     }
+
+    public function cargarEfactura()
+    {
+        return view('tesoreria.eventuales.cargar-efactura');
+    }
 }

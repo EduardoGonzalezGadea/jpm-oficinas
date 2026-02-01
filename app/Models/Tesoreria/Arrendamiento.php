@@ -6,10 +6,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\Tesoreria\Planilla;
+use App\Traits\LogsActivityTrait;
 
 class Arrendamiento extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, LogsActivityTrait;
 
     protected $table = 'tes_arrendamientos';
 
@@ -50,6 +51,8 @@ class Arrendamiento extends Model
     {
         return $query->where(function ($query) use ($term) {
             $query->where('ingreso', 'like', '%' . $term . '%')
+                ->orWhere('nombre', 'like', '%' . $term . '%')
+                ->orWhere('cedula', 'like', '%' . $term . '%')
                 ->orWhere('monto', 'like', '%' . $term . '%')
                 ->orWhere('orden_cobro', 'like', '%' . $term . '%')
                 ->orWhere('recibo', 'like', '%' . $term . '%');
@@ -62,7 +65,7 @@ class Arrendamiento extends Model
     public function scopeConfirmedAndNotInPlanilla($query)
     {
         return $query->where('confirmado', true)
-                     ->whereNull('planilla_id');
+            ->whereNull('planilla_id');
     }
 
     /**

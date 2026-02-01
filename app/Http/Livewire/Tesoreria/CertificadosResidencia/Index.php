@@ -60,21 +60,38 @@ class Index extends Component
 
     public function loadYears()
     {
-        $this->years = CertificadoResidencia::selectRaw('YEAR(fecha_recibido) as year')
+        $years = CertificadoResidencia::selectRaw('YEAR(fecha_recibido) as year')
             ->distinct()
             ->orderBy('year', 'desc')
-            ->pluck('year');
+            ->pluck('year')
+            ->toArray();
+
+        // Agregar siempre el año actual si no está presente
+        $currentYear = (int) date('Y');
+        if (!in_array($currentYear, $years)) {
+            $years[] = $currentYear;
+        }
+
+        // Ordenar descendentemente
+        rsort($years);
+
+        $this->years = collect($years);
     }
 
     public function render()
     {
         $query = CertificadoResidencia::with('receptor')
-            ->whereYear('fecha_recibido', $this->year)
             ->where(function ($query) {
                 $query->where('titular_nombre', 'like', '%' . $this->search . '%')
                     ->orWhere('titular_apellido', 'like', '%' . $this->search . '%')
                     ->orWhere('titular_nro_documento', 'like', '%' . $this->search . '%');
             });
+
+        // Si el estado es "Recibido", NO filtrar por año
+        // Si el estado es diferente, SÍ filtrar por año
+        if ($this->estado !== 'Recibido') {
+            $query->whereYear('fecha_recibido', $this->year);
+        }
 
         if (!empty($this->estado)) {
             $query->where('estado', $this->estado);

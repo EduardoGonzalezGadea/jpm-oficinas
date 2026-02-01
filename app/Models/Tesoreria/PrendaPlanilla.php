@@ -7,10 +7,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Auth;
+use App\Traits\LogsActivityTrait;
 
 class PrendaPlanilla extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, LogsActivityTrait;
 
     protected $table = 'tes_prendas_planillas';
 
@@ -54,7 +55,7 @@ class PrendaPlanilla extends Model
     public static function generarNumero($fecha)
     {
         $fechaStr = \Carbon\Carbon::parse($fecha)->format('Y-m-d');
-        
+
         // Get the highest numero for this date
         $ultimaPlanilla = static::where('numero', 'like', $fechaStr . '-%')
             ->orderBy('numero', 'desc')
@@ -123,5 +124,14 @@ class PrendaPlanilla extends Model
 
         // Set planilla_id to null for all prendas in this planilla
         $this->prendas()->update(['planilla_id' => null]);
+    }
+    public function getTotalAttribute()
+    {
+        return $this->prendas->sum('monto');
+    }
+
+    public function getTotalFormateadoAttribute()
+    {
+        return number_format($this->total, 2, ',', '.');
     }
 }

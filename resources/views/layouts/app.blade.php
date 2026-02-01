@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="user-authenticated" content="{{ auth()->check() ? 'true' : 'false' }}">
 
     <link rel="icon" type="image/x-icon" href="{{ asset('images/icons/jpm.png') }}">
 
@@ -16,18 +17,27 @@
     <!-- Script para cargar el tema dinámico y evitar parpadeos -->
     <script>
         (function() {
-            // Define el tema por defecto. El asset() de Laravel generará la ruta correcta.
-            const defaultThemePath = "{{ asset('libs/bootswatch@4.6.2/dist/cosmo/bootstrap.min.css') }}";
+            @auth
+            // Obtener el tema guardado en el perfil del usuario
+            const userThemePath = "{{ auth()->user()->theme_path }}";
+            const userThemeName = "{{ auth()->user()->theme }}";
 
-            // Obtener el tema guardado en LocalStorage
-            let themePath = localStorage.getItem("bootswatch-theme") || defaultThemePath;
+            // Sincronizar con LocalStorage para coherencia con el resto de la App
+            localStorage.setItem("bootswatch-theme", userThemePath);
+            localStorage.setItem("bootswatch-theme-name", userThemeName);
 
             // Crear y agregar el elemento link
             const themeLink = document.createElement('link');
             themeLink.id = 'bootswatch-theme';
             themeLink.rel = 'stylesheet';
-            themeLink.href = themePath;
+            themeLink.href = userThemePath;
             document.head.appendChild(themeLink);
+            @else
+            // Para invitados, no cargamos ningún tema de Bootswatch, dejando el Bootstrap base.
+            // Opcionalmente limpiamos LocalStorage para evitar confusiones.
+            localStorage.removeItem("bootswatch-theme");
+            localStorage.removeItem("bootswatch-theme-name");
+            @endauth
         })();
     </script>
 
@@ -142,7 +152,7 @@
     @include('layouts.nav')
     @endauth
 
-    <main class="@auth container-fluid mt-1 p-2 @else container-fluid @endauth">
+    <main class="@auth container-fluid mt-0 p-1 @else container-fluid @endauth">
         @yield('content')
     </main>
 
@@ -226,26 +236,59 @@
                     }
                 });
 
-                Livewire.onError(statusCode => {
-                    // Ocultar el loader si hay un error de Livewire (en caso de que wire:loading no lo haga)
+                Livewire.onError((statusCode, response) => {
                     if (loader) {
                         loader.style.display = 'none';
                     }
-                    if (statusCode === 401 || statusCode === 419) {
+
+                    // 419 (Page Expired) o 401 (Unauthorized) indican que la sesión terminó
+                    if (statusCode === 419 || statusCode === 401) {
+                        // Verificar si la respuesta JSON contiene el mensaje de sesión expirada del Handler
+                        if (response && response.message && response.message.includes('sesión')) {
+                            Swal.fire({
+                                title: 'Sesión expirada',
+                                text: response.message,
+                                icon: 'warning',
+                                confirmButtonText: 'Ir al Login',
+                                allowOutsideClick: false,
+                                allowEscapeKey: false
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    window.location.href = response.redirect || '{{ route("login") }}';
+                                }
+                            });
+                        } else {
+                            Swal.fire({
+                                title: 'Sesión expirada',
+                                text: 'Tu sesión ha terminado por inactividad o tu token de seguridad ha caducado. Debes ingresar nuevamente.',
+                                icon: 'warning',
+                                confirmButtonText: 'Ir al Login',
+                                allowOutsideClick: false,
+                                allowEscapeKey: false
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    window.location.href = '{{ route("login") }}';
+                                }
+                            });
+                        }
+
+                        // Retornamos false para suprimir el mensaje de error por defecto de Livewire
+                        return false;
+                    }
+
+                    // Manejo opcional para errores internos del servidor (500)
+                    if (statusCode === 500) {
                         Swal.fire({
-                            title: 'Sesión expirada',
-                            text: 'Tu sesión ha expirado. Serás redirigido al ingreso.',
-                            icon: 'warning',
-                            confirmButtonText: 'Aceptar',
-                            allowOutsideClick: false,
-                            allowEscapeKey: false
-                        }).then((result) => {
-                            if (result.isConfirmed) {
-                                window.location.href = '{{ route("login") }}';
-                            }
+                            title: 'Error en el servidor',
+                            text: 'El servidor encontró un error inesperado al procesar la solicitud.',
+                            icon: 'error',
+                            confirmButtonText: 'Cerrar'
                         });
                         return false;
                     }
+
+                    // Para cualquier otro error no especificado, permitimos que Livewire use su logica por defecto o simplemente lo ignoramos si preferimos
+                    // return false;
                 });
             }
 

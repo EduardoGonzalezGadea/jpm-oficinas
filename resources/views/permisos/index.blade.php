@@ -12,10 +12,10 @@
                         <strong>Gestión de Permisos</strong>
                     </h4>
                     <div>
-                        <a href="{{ route('usuarios.index') }}" class="btn btn-secondary me-2">
+                        <a href="{{ route('usuarios.index') }}" class="btn btn-secondary mr-2">
                             <i class="fas fa-users"></i> Usuarios
                         </a>
-                        <a href="{{ route('roles.index') }}" class="btn btn-info me-2">
+                        <a href="{{ route('roles.index') }}" class="btn btn-info mr-2">
                             <i class="fas fa-user-tag"></i> Roles
                         </a>
                         <a href="{{ route('permissions.create') }}" class="btn btn-primary">
@@ -47,7 +47,7 @@
                     <div class="row mb-3">
                         <div class="col-md-6">
                             <form method="GET" action="{{ route('permissions.index') }}" class="d-flex">
-                                <input type="text" name="search" class="form-control me-2"
+                                <input type="text" name="search" class="form-control mr-2"
                                     placeholder="Buscar permisos..." value="{{ request('search') }}">
                                 <button type="submit" class="btn btn-outline-secondary">
                                     <i class="fas fa-search"></i>
@@ -98,7 +98,7 @@
                                         @if ($permission->roles->count() > 0)
                                         @foreach ($permission->roles as $role)
                                         <span
-                                            class="badge bg-secondary text-warning me-1">{{ $role->name }}</span>
+                                            class="badge bg-secondary text-warning mr-1">{{ $role->name }}</span>
                                         @endforeach
                                         @else
                                         <span class="text-muted">Sin roles</span>

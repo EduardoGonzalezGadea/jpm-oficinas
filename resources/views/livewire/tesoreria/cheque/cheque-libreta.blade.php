@@ -32,7 +32,7 @@
             <div class="col-md-3">
                 <div class="form-group">
                     <label for="inicio">Número Inicial</label>
-                    <input type="number" wire:model.live="inicio" class="form-control @error('inicio') is-invalid @enderror" placeholder="1, 26, 51..." wire:key="inicio-input">
+                    <input type="number" wire:model="inicio" class="form-control @error('inicio') is-invalid @enderror" placeholder="1, 26, 51..." wire:key="inicio-input">
                     @error('inicio')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
@@ -41,7 +41,7 @@
             <div class="col-md-3">
                 <div class="form-group">
                     <label for="cantidad_libretas">Cantidad de Libretas</label>
-                    <input type="number" wire:model.live="cantidad_libretas" class="form-control @error('cantidad_libretas') is-invalid @enderror" placeholder="1, 2, 3...">
+                    <input type="number" wire:model="cantidad_libretas" class="form-control @error('cantidad_libretas') is-invalid @enderror" placeholder="1, 2, 3...">
                     @error('cantidad_libretas')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror

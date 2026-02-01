@@ -206,7 +206,7 @@
                             <div class="col-md-4">
                                 <div class="form-group">
                                     <label for="reporteMes">Mes</label>
-                                    <select wire:model.live="reporteMes" class="form-control">
+                                    <select wire:model="reporteMes" class="form-control">
                                         <option value="">Seleccionar mes...</option>
                                         @for($i = 1; $i <= 12; $i++)
                                             <option value="{{ $i }}">{{ \Carbon\Carbon::create()->month($i)->locale('es')->monthName }}</option>
@@ -217,7 +217,7 @@
                             <div class="col-md-4">
                                 <div class="form-group">
                                     <label for="reporteAnio">Año</label>
-                                    <select wire:model.live="reporteAnio" class="form-control">
+                                    <select wire:model="reporteAnio" class="form-control">
                                         <option value="">Seleccionar año...</option>
                                         @for($year = date('Y'); $year >= date('Y') - 10; $year--)
                                         <option value="{{ $year }}">{{ $year }}</option>
@@ -232,7 +232,7 @@
                             <div class="col-md-3">
                                 <div class="form-group">
                                     <label for="filtroBanco">Banco</label>
-                                    <select wire:model.live="filtroBanco" class="form-control">
+                                    <select wire:model="filtroBanco" class="form-control">
                                         <option value="">Todos los bancos</option>
                                         @foreach($bancos as $banco)
                                         <option value="{{ $banco->id }}">{{ $banco->codigo }}</option>
@@ -243,7 +243,7 @@
                             <div class="col-md-3">
                                 <div class="form-group">
                                     <label for="filtroCuentaBancaria">Cuenta Bancaria</label>
-                                    <select wire:model.live="filtroCuentaBancaria" class="form-control" @if(!$filtroBanco) disabled @endif>
+                                    <select wire:model="filtroCuentaBancaria" class="form-control" @if(!$filtroBanco) disabled @endif>
                                         <option value="">Todas las cuentas</option>
                                         @foreach($cuentasBancarias as $cuenta)
                                         <option value="{{ $cuenta->id }}">{{ $cuenta->numero_cuenta }}</option>
@@ -254,7 +254,7 @@
                             <div class="col-md-3">
                                 <div class="form-group">
                                     <label for="filtroEstado">Estado</label>
-                                    <select wire:model.live="filtroEstado" class="form-control">
+                                    <select wire:model="filtroEstado" class="form-control">
                                         <option value="">Todos los estados</option>
                                         <option value="disponible">Disponible</option>
                                         <option value="emitido">Emitido</option>
@@ -266,7 +266,7 @@
                             <div class="col-md-3">
                                 <div class="form-group">
                                     <label for="filtroEnPlanilla">En Planilla</label>
-                                    <select wire:model.live="filtroEnPlanilla" class="form-control">
+                                    <select wire:model="filtroEnPlanilla" class="form-control">
                                         <option value="">Todos</option>
                                         <option value="si">Sí</option>
                                         <option value="no">No</option>
@@ -343,37 +343,37 @@
                                             <div class="col-md-4">
                                                 <div class="form-group mb-0">
                                                     <label for="filtroFechaIngresoDesde">F. Ingreso Desde</label>
-                                                    <input type="date" wire:model.live="filtroFechaIngresoDesde" class="form-control">
+                                                    <input type="date" wire:model="filtroFechaIngresoDesde" class="form-control">
                                                 </div>
                                             </div>
                                             <div class="col-md-4">
                                                 <div class="form-group mb-0">
                                                     <label for="filtroFechaIngresoHasta">F. Ingreso Hasta</label>
-                                                    <input type="date" wire:model.live="filtroFechaIngresoHasta" class="form-control">
+                                                    <input type="date" wire:model="filtroFechaIngresoHasta" class="form-control">
                                                 </div>
                                             </div>
                                             <div class="col-md-4">
                                                 <div class="form-group mb-0">
                                                     <label for="filtroFechaEmisionDesde">F. Emisión Desde</label>
-                                                    <input type="date" wire:model.live="filtroFechaEmisionDesde" class="form-control">
+                                                    <input type="date" wire:model="filtroFechaEmisionDesde" class="form-control">
                                                 </div>
                                             </div>
                                             <div class="col-md-4">
                                                 <div class="form-group mb-0">
                                                     <label for="filtroFechaEmisionHasta">F. Emisión Hasta</label>
-                                                    <input type="date" wire:model.live="filtroFechaEmisionHasta" class="form-control">
+                                                    <input type="date" wire:model="filtroFechaEmisionHasta" class="form-control">
                                                 </div>
                                             </div>
                                             <div class="col-md-4">
                                                 <div class="form-group mb-0">
                                                     <label for="filtroFechaAnulacionDesde">F. Anulación Desde</label>
-                                                    <input type="date" wire:model.live="filtroFechaAnulacionDesde" class="form-control">
+                                                    <input type="date" wire:model="filtroFechaAnulacionDesde" class="form-control">
                                                 </div>
                                             </div>
                                             <div class="col-md-4">
                                                 <div class="form-group mb-0">
                                                     <label for="filtroFechaAnulacionHasta">F. Anulación Hasta</label>
-                                                    <input type="date" wire:model.live="filtroFechaAnulacionHasta" class="form-control">
+                                                    <input type="date" wire:model="filtroFechaAnulacionHasta" class="form-control">
                                                 </div>
                                             </div>
                                         </div>

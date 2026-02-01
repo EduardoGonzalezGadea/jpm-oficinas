@@ -29,6 +29,34 @@ class Index extends Component
     public $search = '';
     public $estado = 'en_stock';
     public $selectedTipo = '';
+    public $year;
+    public $years = [];
+
+    public function mount()
+    {
+        $this->year = date('Y');
+        $this->loadYears();
+    }
+
+    public function loadYears()
+    {
+        $years = LibretaValor::selectRaw('YEAR(fecha_recepcion) as year')
+            ->distinct()
+            ->orderBy('year', 'desc')
+            ->pluck('year')
+            ->toArray();
+
+        // Agregar siempre el año actual si no está presente
+        $currentYear = (int) date('Y');
+        if (!in_array($currentYear, $years)) {
+            $years[] = $currentYear;
+        }
+
+        // Ordenar descendentemente
+        rsort($years);
+
+        $this->years = collect($years);
+    }
 
     protected function rules()
     {
@@ -73,11 +101,17 @@ class Index extends Component
         $this->resetPage();
     }
 
+    public function updatingYear()
+    {
+        $this->resetPage();
+    }
+
     public function clearFilters()
     {
         $this->search = '';
         $this->estado = 'en_stock';
         $this->selectedTipo = '';
+        $this->year = date('Y');
         $this->resetPage();
     }
 
@@ -133,7 +167,6 @@ class Index extends Component
 
             $this->showEntregaModal = false;
             $this->libretaSeleccionada = null;
-
         } catch (\Exception $e) {
             $this->addError('servicio_entrega_id', $e->getMessage());
         }
@@ -182,18 +215,18 @@ class Index extends Component
                 $q->whereHas('tipoLibreta', function ($subQuery) {
                     $subQuery->where('nombre', 'like', '%' . $this->search . '%');
                 })
-                ->orWhere('serie', 'like', '%' . $this->search . '%')
-                ->orWhere('numero_inicial', 'like', '%' . $this->search . '%')
-                ->orWhere('numero_final', 'like', '%' . $this->search . '%');
+                    ->orWhere('serie', 'like', '%' . $this->search . '%')
+                    ->orWhere('numero_inicial', 'like', '%' . $this->search . '%')
+                    ->orWhere('numero_final', 'like', '%' . $this->search . '%');
             });
         }
 
         // Aplicar filtro de estado
         if (!empty($this->estado)) {
             if ($this->estado === 'agotada') {
-                $query->where(function($q) {
+                $query->where(function ($q) {
                     $q->whereIn('estado', ['agotada', 'finalizada'])
-                      ->orWhere('proximo_recibo_disponible', 0);
+                        ->orWhere('proximo_recibo_disponible', 0);
                 });
             } else {
                 $query->where('estado', $this->estado);
@@ -203,6 +236,11 @@ class Index extends Component
         // Aplicar filtro de tipo
         if (!empty($this->selectedTipo)) {
             $query->where('tipo_libreta_id', $this->selectedTipo);
+        }
+
+        // Aplicar filtro de año (excepto si el estado es en_stock)
+        if ($this->estado !== 'en_stock') {
+            $query->whereYear('fecha_recepcion', $this->year);
         }
 
         $libretas = $query->join('tes_tipos_libretas', 'tes_libretas_valores.tipo_libreta_id', '=', 'tes_tipos_libretas.id')

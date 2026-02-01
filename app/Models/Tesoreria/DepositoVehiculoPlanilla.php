@@ -4,10 +4,11 @@ namespace App\Models\Tesoreria;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\LogsActivityTrait;
 
 class DepositoVehiculoPlanilla extends Model
 {
-    use HasFactory;
+    use HasFactory, LogsActivityTrait;
 
     protected $table = 'tes_deposito_vehiculo_planillas';
 
@@ -48,7 +49,7 @@ class DepositoVehiculoPlanilla extends Model
     {
         $year = date('Y');
         $lastPlanilla = static::whereYear('fecha', $year)->orderBy('id', 'desc')->first();
-        
+
         if ($lastPlanilla) {
             $parts = explode('/', $lastPlanilla->numero);
             $lastNumber = isset($parts[0]) ? (int)$parts[0] : 0;
@@ -56,7 +57,7 @@ class DepositoVehiculoPlanilla extends Model
         } else {
             $newNumber = 1;
         }
-        
+
         return sprintf('%04d/%s', $newNumber, $year);
     }
 

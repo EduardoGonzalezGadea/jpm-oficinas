@@ -10,7 +10,7 @@
             <div id="alert-container"></div>
 
             <h1 class="main-title">
-                <i class="fas fa-hdd me-3"></i>Pendrive Virtual
+                <i class="fas fa-hdd mr-3"></i>Pendrive Virtual
             </h1>
 
             <div class="row">
@@ -18,7 +18,7 @@
                     <!-- Upload Card -->
                     <div class="card upload-card mb-4">
                         <div class="card-header bg-primary text-white">
-                            <i class="fas fa-cloud-upload-alt me-2"></i>Subir Archivos
+                            <i class="fas fa-cloud-upload-alt mr-2"></i>Subir Archivos
                         </div>
                         <div class="card-body">
                             <form id="upload-form" action="{{ route('pendrive.upload') }}" method="POST" enctype="multipart/form-data">
@@ -28,7 +28,7 @@
                                     <div class="text">Arrastra y suelta tu archivo aquí</div>
                                     <div class="subtitle">o haz clic para seleccionar desde tu dispositivo</div>
                                     <small class="text-muted d-block mt-3">
-                                        <i class="fas fa-info-circle me-1"></i>Tamaño máximo permitido: 100MB
+                                        <i class="fas fa-info-circle mr-1"></i>Tamaño máximo permitido: 100MB
                                     </small>
                                 </div>
                                 <input type="file" name="file" id="file-input">
@@ -49,7 +49,7 @@
                     <!-- Files List Card -->
                     <div class="card files-card">
                         <div class="card-header bg-success text-white">
-                            <i class="fas fa-folder-open me-2"></i>Archivos Almacenados
+                            <i class="fas fa-folder-open mr-2"></i>Archivos Almacenados
                             <span class="badge badge-light ml-2" id="file-count">
                                 @if(isset($files) && count($files) > 0)
                                     {{ count($files) }} archivo{{ count($files) != 1 ? 's' : '' }}
@@ -65,15 +65,15 @@
                                         data-filename="{{ basename($file) }}">
                                         <div class="d-flex align-items-center flex-grow-1 mb-2 mb-md-0">
                                             <img src="{{ route('pendrive.thumbnail', ['filename' => basename($file)]) }}"
-                                                 alt="Miniatura" class="thumbnail me-3"
+                                                 alt="Miniatura" class="thumbnail mr-3"
                                                  onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjYwIiBoZWlnaHQ9IjYwIiBmaWxsPSIjZTVlN2ViIi8+CjxyZWN0IHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgZmlsbD0iI2ZmZiIvPgo8cmVjdCB4PSI1MCIgeT0iMzAiIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCIgZmlsbD0iI2ZmZiIvPgo8cmVjdCB4PSI0MCIgeT0iMzAiIHdpZHRoPSIxMCIgaGVpZ2h0PSIxMCIgZmlsbD0iI2ZmZiIvPgo8L3N2Zz4K';">
                                             <div>
                                                 <div class="filename">{{ basename($file) }}</div>
                                                 <div class="file-info">
-                                                    <i class="fas fa-calendar-alt me-1"></i>
+                                                    <i class="fas fa-calendar-alt mr-1"></i>
                                                     {{ date('d/m/Y H:i', filemtime($file)) }}
                                                     <span class="mx-2">•</span>
-                                                    <i class="fas fa-weight-hanging me-1"></i>
+                                                    <i class="fas fa-weight-hanging mr-1"></i>
                                                     {{ formatBytes(filesize($file)) }}
                                                 </div>
                                             </div>
@@ -82,11 +82,11 @@
                                             <a href="{{ route('pendrive.download', ['filename' => basename($file)]) }}"
                                                class="btn btn-download btn-sm" title="Descargar archivo"
                                                onclick="showDownloadToast('{{ basename($file) }}'); return false;">
-                                                <i class="fas fa-download me-1"></i>Descargar
+                                                <i class="fas fa-download mr-1"></i>Descargar
                                             </a>
                                             <button type="button" class="btn btn-delete btn-sm delete-btn"
                                                     data-filename="{{ basename($file) }}" title="Eliminar archivo">
-                                                <i class="fas fa-trash-alt me-1"></i>Eliminar
+                                                <i class="fas fa-trash-alt mr-1"></i>Eliminar
                                             </button>
                                         </div>
                                     </li>
@@ -318,25 +318,25 @@
                     <div class="d-flex align-items-center flex-grow-1 mb-2 mb-md-0">
                         <img src="${thumbnailUrl}"
                              alt="Miniatura"
-                             class="thumbnail me-3"
+                             class="thumbnail mr-3"
                              onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjYwIiBoZWlnaHQ9IjYwIiBmaWxsPSIjZTVlN2ViIi8+CjxyZWN0IHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgZmlsbD0iI2ZmZiIvPgo8cmVjdCB4PSI1MCIgeT0iMzAiIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCIgZmlsbD0iI2ZmZiIvPgo8cmVjdCB4PSI0MCIgeT0iMzAiIHdpZHRoPSIxMCIgaGVpZ2h0PSIxMCIgZmlsbD0iI2ZmZiIvPgo8L3N2Zz4K';">
                         <div>
                             <div class="filename">${filename}</div>
                             <div class="file-info">
-                                <i class="fas fa-calendar-alt me-1"></i>
+                                <i class="fas fa-calendar-alt mr-1"></i>
                                 ${new Date().toLocaleDateString('es-ES')} ${new Date().toLocaleTimeString('es-ES')}
                                 <span class="mx-2">•</span>
-                                <i class="fas fa-weight-hanging me-1"></i>
+                                <i class="fas fa-weight-hanging mr-1"></i>
                                 Reciente
                             </div>
                         </div>
                     </div>
                     <div class="action-buttons">
                         <a href="${downloadUrl}" class="btn btn-download btn-sm" title="Descargar archivo">
-                            <i class="fas fa-download me-1"></i>Descargar
+                            <i class="fas fa-download mr-1"></i>Descargar
                         </a>
                         <button type="button" class="btn btn-delete btn-sm delete-btn" data-filename="${filename}" title="Eliminar archivo">
-                            <i class="fas fa-trash-alt me-1"></i>Eliminar
+                            <i class="fas fa-trash-alt mr-1"></i>Eliminar
                         </button>
                     </div>
                 `;

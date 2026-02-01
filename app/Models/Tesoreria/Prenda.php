@@ -4,6 +4,7 @@ namespace App\Models\Tesoreria;
 
 use App\Models\User;
 use App\Traits\ConvertirMayusculas;
+use App\Traits\LogsActivityTrait;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -11,7 +12,7 @@ use Illuminate\Support\Facades\Auth;
 
 class Prenda extends Model
 {
-    use HasFactory, SoftDeletes, ConvertirMayusculas;
+    use HasFactory, SoftDeletes, ConvertirMayusculas, LogsActivityTrait;
 
     protected $table = 'tes_prendas';
 
@@ -106,5 +107,9 @@ class Prenda extends Model
     public function deletedBy()
     {
         return $this->belongsTo(User::class, 'deleted_by');
+    }
+    public function getMontoFormateadoAttribute()
+    {
+        return number_format($this->monto, 2, ',', '.');
     }
 }

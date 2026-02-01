@@ -124,7 +124,6 @@ class MovimientosPendiente extends Component
             // Asegurarse de que rendido y reintegrado sean 0 en modo recuperación
             $this->rendido = 0;
             $this->reintegrado = 0;
-
         } else {
             $this->validate(); // Usar reglas por defecto
         }
@@ -218,7 +217,7 @@ class MovimientosPendiente extends Component
             DB::commit();
             $this->cargarMovimientos();
             $this->pendiente->refresh();
-            $this->emit('movimientoActualizado');
+            $this->emitUp('movimientoActualizado');
 
             $mensaje = 'Movimiento eliminado exitosamente.';
 
@@ -349,13 +348,10 @@ class MovimientosPendiente extends Component
         $totalReintegrado = $this->movimientos->sum('reintegrado');
         $totalRecuperado = $this->movimientos->sum('recuperado');
 
-        $saldo = 0;
-        $totalRendidoReintegrado = $totalRendido + $totalReintegrado;
-
-        if ($totalRendidoReintegrado > $montoPendiente) {
+        if ($totalRendido > 0) {
             $saldo = $totalRendido - $totalRecuperado;
         } else {
-            $saldo = $montoPendiente - ($totalReintegrado + $totalRecuperado);
+            $saldo = $montoPendiente;
         }
 
         return [

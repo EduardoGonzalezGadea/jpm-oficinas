@@ -30,7 +30,7 @@
                     <div class="row mb-3">
                         <div class="col-12">
                             <div class="input-group input-group-sm">
-                                <input type="text" wire:model.live.debounce.300ms="search" class="form-control form-control-sm" placeholder="Buscar por número de cheque o banco...">
+                                <input type="text" wire:model.debounce.300ms="search" class="form-control form-control-sm" placeholder="Buscar por número de cheque o banco...">
                                 <div class="input-group-append">
                                     <button class="btn btn-primary" type="button" wire:click="clearSearch">
                                         <i class="fas fa-times"></i>
@@ -96,11 +96,11 @@
                                 <tr>
                                     {{-- <th class="text-nowrap py-2 text-center thead-dark align-middle">
                                             <input type="checkbox"
-                                                   wire:model.live="selectAll"
+                                                   wire:model="selectAll"
                                                    class="form-check-input">
                                         </th> --}}
                                     <th class="text-nowrap py-1 align-middle">
-                                        <input type="checkbox" wire:model.live="selectAll">
+                                        <input type="checkbox" wire:model="selectAll">
                                     </th>
                                     <th class="text-nowrap py-1">Banco</th>
                                     <th class="text-nowrap py-1">Cuenta</th>
@@ -117,7 +117,7 @@
                                 <tr style="font-size: 0.875rem;">
                                     <td class="text-nowrap py-1 text-center">
                                         <input type="checkbox"
-                                            wire:model.live="selectedCheques"
+                                            wire:model="selectedCheques"
                                             value="{{ $cheque->id }}">
                                     </td>
                                     <td class="text-nowrap py-1">{{ $cheque->cuentaBancaria->banco->codigo }}</td>
@@ -230,7 +230,7 @@
                         </div>
                         <div class="form-group mb-2">
                             <label for="beneficiario" class="mb-1 small">Beneficiario *</label>
-                            <input type="text" wire:model.live.debounce.300ms="beneficiario" class="form-control form-control-sm @error('beneficiario') is-invalid @enderror" id="beneficiario" placeholder="Nombre del beneficiario" autocomplete="off">
+                            <input type="text" wire:model.debounce.300ms="beneficiario" class="form-control form-control-sm @error('beneficiario') is-invalid @enderror" id="beneficiario" placeholder="Nombre del beneficiario" autocomplete="off">
                             @if(!empty($beneficiariosSugerencias))
                             <div class="list-group position-absolute w-100" style="z-index: 1000; max-height: 200px; overflow-y: auto;">
                                 @foreach($beneficiariosSugerencias as $sugerencia)
@@ -246,7 +246,7 @@
                         </div>
                         <div class="form-group mb-2">
                             <label for="concepto" class="mb-1 small">Concepto *</label>
-                            <textarea wire:model.live.debounce.300ms="concepto" class="form-control form-control-sm @error('concepto') is-invalid @enderror" id="concepto" rows="2" placeholder="Concepto del cheque"></textarea>
+                            <textarea wire:model.debounce.300ms="concepto" class="form-control form-control-sm @error('concepto') is-invalid @enderror" id="concepto" rows="2" placeholder="Concepto del cheque"></textarea>
                             @if(!empty($conceptosSugerencias))
                             <div class="list-group position-absolute w-100" style="z-index: 1000; max-height: 200px; overflow-y: auto;">
                                 @foreach($conceptosSugerencias as $sugerencia)
@@ -323,7 +323,7 @@
                         </div>
                         <div class="form-group mb-2">
                             <label for="edit_beneficiario" class="mb-1 small">Beneficiario *</label>
-                            <input type="text" wire:model.live.debounce.300ms="edit_beneficiario" class="form-control form-control-sm @error('edit_beneficiario') is-invalid @enderror" id="edit_beneficiario" placeholder="Nombre del beneficiario" autocomplete="off">
+                            <input type="text" wire:model.debounce.300ms="edit_beneficiario" class="form-control form-control-sm @error('edit_beneficiario') is-invalid @enderror" id="edit_beneficiario" placeholder="Nombre del beneficiario" autocomplete="off">
                             @if(!empty($beneficiariosSugerencias))
                             <div class="list-group position-absolute w-100" style="z-index: 1000; max-height: 200px; overflow-y: auto;">
                                 @foreach($beneficiariosSugerencias as $sugerencia)
@@ -339,7 +339,7 @@
                         </div>
                         <div class="form-group mb-2">
                             <label for="edit_concepto" class="mb-1 small">Concepto *</label>
-                            <textarea wire:model.live.debounce.300ms="edit_concepto" class="form-control form-control-sm @error('edit_concepto') is-invalid @enderror" id="edit_concepto" rows="2" placeholder="Concepto del cheque"></textarea>
+                            <textarea wire:model.debounce.300ms="edit_concepto" class="form-control form-control-sm @error('edit_concepto') is-invalid @enderror" id="edit_concepto" rows="2" placeholder="Concepto del cheque"></textarea>
                             @if(!empty($conceptosSugerencias))
                             <div class="list-group position-absolute w-100" style="z-index: 1000; max-height: 200px; overflow-y: auto;">
                                 @foreach($conceptosSugerencias as $sugerencia)

@@ -5,10 +5,11 @@ namespace App\Models\Tesoreria;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Traits\LogsActivityTrait;
 
 class Pendiente extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, LogsActivityTrait;
 
     protected $table = 'tes_cch_pendientes';
     protected $primaryKey = 'idPendientes';
@@ -45,5 +46,17 @@ class Pendiente extends Model
     public function movimientos()
     {
         return $this->hasMany(Movimiento::class, 'relPendiente', 'idPendientes');
+    }
+
+    public function getSaldoAttribute()
+    {
+        $rendido = $this->movimientos->sum('rendido');
+        $recuperado = $this->movimientos->sum('recuperado');
+
+        if ($rendido > 0) {
+            return $rendido - $recuperado;
+        }
+
+        return $this->montoPendientes;
     }
 }

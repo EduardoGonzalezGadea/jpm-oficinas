@@ -13,11 +13,11 @@
         </div>
         <div class="card-body">
             @if($planilla->isAnulada())
-                <div class="alert alert-danger mb-4">
-                    <strong><i class="fas fa-ban"></i> PLANILLA ANULADA</strong><br>
-                    Fecha de anulación: {{ $planilla->anulada_fecha->format('d/m/Y H:i') }}<br>
-                    Anulada por: {{ $planilla->anuladaPor->nombre ?? 'N/D' }} {{ $planilla->anuladaPor->apellido ?? '' }}
-                </div>
+            <div class="alert alert-danger mb-4">
+                <strong><i class="fas fa-ban"></i> PLANILLA ANULADA</strong><br>
+                Fecha de anulación: {{ $planilla->anulada_fecha->format('d/m/Y H:i') }}<br>
+                Anulada por: {{ $planilla->anuladaPor->nombre ?? 'N/D' }} {{ $planilla->anuladaPor->apellido ?? '' }}
+            </div>
             @endif
 
             <!-- Header similar to print view -->
@@ -51,24 +51,24 @@
                     <tbody>
                         @php $total = 0; @endphp
                         @foreach($planilla->prendas as $index => $prenda)
-                            <tr>
-                                <td>{{ $index + 1 }}</td>
-                                <td>{{ $prenda->recibo_fecha->format('d/m/Y') }}</td>
-                                <td>{{ $prenda->recibo_serie }} {{ $prenda->recibo_numero }}</td>
-                                <td>{{ $prenda->orden_cobro }}</td>
-                                <td>{{ $prenda->titular_nombre }}</td>
-                                <td>{{ $prenda->titular_cedula }}</td>
-                                <td>{{ $prenda->concepto }}</td>
-                                <td>{{ $prenda->medioPago->nombre ?? '-' }}</td>
-                                <td class="text-right">${{ number_format($prenda->monto, 2, ',', '.') }}</td>
-                            </tr>
-                            @php $total += $prenda->monto; @endphp
+                        <tr>
+                            <td>{{ $index + 1 }}</td>
+                            <td>{{ $prenda->recibo_fecha->format('d/m/Y') }}</td>
+                            <td>{{ $prenda->recibo_serie }} {{ $prenda->recibo_numero }}</td>
+                            <td>{{ $prenda->orden_cobro }}</td>
+                            <td>{{ $prenda->titular_nombre }}</td>
+                            <td>{{ $prenda->titular_cedula }}</td>
+                            <td>{{ $prenda->concepto }}</td>
+                            <td>{{ $prenda->medioPago->nombre ?? '-' }}</td>
+                            <td class="text-right">${{ $prenda->monto_formateado }}</td>
+                        </tr>
+                        @php $total += $prenda->monto; @endphp
                         @endforeach
                     </tbody>
                     <tfoot>
                         <tr class="bg-light">
                             <td colspan="8" class="text-right font-weight-bold">Total Planilla:</td>
-                            <td class="text-right font-weight-bold">${{ number_format($total, 2, ',', '.') }}</td>
+                            <td class="text-right font-weight-bold">${{ $planilla->total_formateado }}</td>
                         </tr>
                     </tfoot>
                 </table>

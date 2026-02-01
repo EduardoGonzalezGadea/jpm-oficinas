@@ -585,7 +585,7 @@
                     <div class="footer mt-2">
                         <p class="small mb-1"><i class="fas fa-code mr-1"></i> Desarrollado por el Cabo (P.A.) Eduardo
                             González Gadea - Dirección de Tesorería</p>
-                        <p class="small mb-0">República Oriental del Uruguay | Ministerio del Interior | Jefatura de Policía de Montevideo | Año 2025</p>
+                        <p class="small mb-0">República Oriental del Uruguay | Ministerio del Interior | Jefatura de Policía de Montevideo | Años 2025/2026</p>
                     </div>
                 </div>
             </div>

@@ -30,7 +30,7 @@
                                 <div class="input-group-prepend">
                                     <span class="input-group-text">Mes y Año</span>
                                 </div>
-                                <select id="mesSelector" class="form-control" wire:model.live="mes">
+                                <select id="mesSelector" class="form-control" wire:model="mes">
                                     <option value="1">Enero</option>
                                     <option value="2">Febrero</option>
                                     <option value="3">Marzo</option>
@@ -44,7 +44,7 @@
                                     <option value="11">Noviembre</option>
                                     <option value="12">Diciembre</option>
                                 </select>
-                                <input type="number" id="anioSelector" class="form-control" wire:model.live="year">
+                                <input type="number" id="anioSelector" class="form-control" wire:model="year">
                             </div>
                         </div>
                         <div class="col-md-7 align-self-end d-print-none">
@@ -52,7 +52,7 @@
                                 <div class="input-group">
                                     <input type="text" wire:model="search" id="search"
                                         class="form-control form-control-sm"
-                                        placeholder="Buscar por ingreso, monto, O/C o recibo...">
+                                        placeholder="Buscar por nombre, ingreso, monto, O/C o recibo...">
                                     <div class="input-group-append">
                                         <button class="btn btn-sm btn-outline-danger" type="button" wire:click="$set('search', '')" title="Limpiar filtro">
                                             <i class="fas fa-times"></i>
@@ -122,18 +122,26 @@
                                     </td>
                                     @endcanany
                                     <td class="text-center align-middle d-print-none">
-                                        <button wire:click="showDetails({{ $arrendamiento->id }})"
-                                            class="btn btn-sm btn-info" data-toggle="modal"
-                                            data-target="#detailsModal" title="Detalles"><i
-                                                class="fas fa-eye"></i></button>
-                                        <button wire:click="editIngreso({{ $arrendamiento->id }})" class="btn btn-sm btn-success" title="Ingreso"><i class="fas fa-file-invoice-dollar"></i></button>
-                                        <button wire:click="edit({{ $arrendamiento->id }})"
-                                            class="btn btn-sm btn-primary" title="Editar"><i
-                                                class="fas fa-edit"></i></button>
-                                        <button
-                                            x-on:click="$dispatch('swal:confirm', { title: '¿Estás seguro?', text: '¡No podrás revertir esto!', method: 'destroy', id: {{ $arrendamiento->id }}, confirmButtonText: 'Sí, elimínalo' })"
-                                            class="btn btn-sm btn-danger" title="Eliminar"><i
-                                                class="fas fa-trash-alt"></i></button>
+                                        <div class="btn-group" role="group">
+                                            <button wire:click="showDetails({{ $arrendamiento->id }})"
+                                                class="btn btn-sm btn-outline-info" data-toggle="modal"
+                                                data-target="#detailsModal" title="Detalles">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            <button wire:click="editIngreso({{ $arrendamiento->id }})"
+                                                class="btn btn-sm btn-outline-success" title="Ingreso">
+                                                <i class="fas fa-file-invoice-dollar"></i>
+                                            </button>
+                                            <button wire:click="edit({{ $arrendamiento->id }})"
+                                                class="btn btn-sm btn-outline-primary" title="Editar">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button
+                                                x-on:click="$dispatch('swal:confirm', { title: '¿Estás seguro?', text: '¡No podrás revertir esto!', method: 'destroy', id: {{ $arrendamiento->id }}, confirmButtonText: 'Sí, elimínalo' })"
+                                                class="btn btn-sm btn-outline-danger" title="Eliminar">
+                                                <i class="fas fa-trash-alt"></i>
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                                 @empty

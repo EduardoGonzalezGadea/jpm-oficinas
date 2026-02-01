@@ -2,14 +2,14 @@
 
 namespace App\Http\Livewire\Tesoreria\Arrendamientos;
 
-    use App\Models\Tesoreria\Arrendamiento as Model;
-    use App\Models\Tesoreria\MedioDePago;
-    use Livewire\Component;
-    use Livewire\WithPagination;
-    use Carbon\Carbon;
-    use Illuminate\Support\Facades\Cache;
-    use Illuminate\Support\Facades\DB;
-    use App\Traits\ConvertirMayusculas;
+use App\Models\Tesoreria\Arrendamiento as Model;
+use App\Models\Tesoreria\MedioDePago;
+use Livewire\Component;
+use Livewire\WithPagination;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
+use App\Traits\ConvertirMayusculas;
 
 class Arrendamiento extends Component
 {
@@ -35,18 +35,25 @@ class Arrendamiento extends Component
 
         $this->mes = Carbon::now()->month;
         $this->year = Carbon::now()->year;
-        $this->medio_de_pago = 'Transferencia';
+        $this->medio_de_pago = $this->getDefaultMedioDePago();
     }
 
     public function refreshData()
     {
-        Cache::flush();
+        $this->clearCache();
+    }
+
+    private function clearCache()
+    {
+        $version = Cache::get('arrendamientos_version', 1);
+        Cache::put('arrendamientos_version', $version + 1, now()->addYear());
     }
 
     public function render()
     {
         $page = $this->page ?: 1;
-        $cacheKey = 'arrendamientos_desc_' . $this->year . '_' . $this->mes . '_search_' . $this->search . '_page_' . $page;
+        $version = Cache::get('arrendamientos_version', 1);
+        $cacheKey = 'arrendamientos_v' . $version . '_' . $this->year . '_' . $this->mes . '_search_' . $this->search . '_page_' . $page;
 
         $data = Cache::remember($cacheKey, now()->addDay(), function () {
             $arrendamientos = Model::whereYear('fecha', $this->year)
@@ -86,9 +93,7 @@ class Arrendamiento extends Component
 
     public function store()
     {
-        if (!auth()->check()) {
-            return redirect()->route('login')->with('error', 'La sesión ha expirado. Por favor, inicie sesión de nuevo.');
-        }
+
 
         if (!$this->fecha) {
             $this->fecha = Carbon::now()->format('Y-m-d');
@@ -115,7 +120,7 @@ class Arrendamiento extends Component
         try {
             DB::beginTransaction();
             Model::create($datos);
-            Cache::flush();
+            $this->clearCache();
             DB::commit();
         } catch (\Exception $e) {
             DB::rollBack();
@@ -130,9 +135,7 @@ class Arrendamiento extends Component
 
     public function edit($id)
     {
-        if (!auth()->check()) {
-            return redirect()->route('login')->with('error', 'La sesión ha expirado. Por favor, inicie sesión de nuevo.');
-        }
+
 
         $arrendamiento = Model::findOrFail($id);
 
@@ -162,9 +165,7 @@ class Arrendamiento extends Component
 
     public function editIngreso($id)
     {
-        if (!auth()->check()) {
-            return redirect()->route('login')->with('error', 'La sesión ha expirado. Por favor, inicie sesión de nuevo.');
-        }
+
 
         $arrendamiento = Model::findOrFail($id);
 
@@ -180,9 +181,7 @@ class Arrendamiento extends Component
 
     public function updateIngreso()
     {
-        if (!auth()->check()) {
-            return redirect()->route('login')->with('error', 'La sesión ha expirado. Por favor, inicie sesión de nuevo.');
-        }
+
 
         $this->validate(['ingreso' => 'nullable|integer']);
 
@@ -192,7 +191,7 @@ class Arrendamiento extends Component
             try {
                 DB::beginTransaction();
                 $arrendamiento->update(['ingreso' => $this->ingreso]);
-                Cache::flush();
+                $this->clearCache();
                 DB::commit();
             } catch (\Exception $e) {
                 DB::rollBack();
@@ -208,9 +207,7 @@ class Arrendamiento extends Component
 
     public function update()
     {
-        if (!auth()->check()) {
-            return redirect()->route('login')->with('error', 'La sesión ha expirado. Por favor, inicie sesión de nuevo.');
-        }
+
 
         $validated = $this->validate([
             'fecha' => 'required|date',
@@ -235,7 +232,7 @@ class Arrendamiento extends Component
             try {
                 DB::beginTransaction();
                 $arrendamiento->update($datos);
-                Cache::flush();
+                $this->clearCache();
                 DB::commit();
             } catch (\Exception $e) {
                 DB::rollBack();
@@ -251,9 +248,7 @@ class Arrendamiento extends Component
 
     public function destroy($id)
     {
-        if (!auth()->check()) {
-            return redirect()->route('login')->with('error', 'La sesión ha expirado. Por favor, inicie sesión de nuevo.');
-        }
+
 
         $arrendamiento = Model::findOrFail($id);
 
@@ -268,7 +263,7 @@ class Arrendamiento extends Component
         try {
             DB::beginTransaction();
             $arrendamiento->delete();
-            Cache::flush();
+            $this->clearCache();
             DB::commit();
             session()->flash('message', 'Arrendamiento eliminado con éxito.');
         } catch (\Exception $e) {
@@ -304,32 +299,40 @@ class Arrendamiento extends Component
         $this->detalle = null;
         $this->orden_cobro = null;
         $this->recibo = null;
-        $this->medio_de_pago = 'Transferencia';
+        $this->medio_de_pago = $this->getDefaultMedioDePago();
+    }
+
+    private function getDefaultMedioDePago()
+    {
+        return Cache::remember('default_medio_de_pago_transferencia', now()->addDay(), function () {
+            $medio = MedioDePago::activos()
+                ->where('nombre', 'like', '%Transferencia%')
+                ->first();
+            return $medio ? $medio->nombre : 'Transferencia';
+        });
     }
 
     public function updatingSearch()
     {
         $this->resetPage();
-        Cache::flush();
+        $this->clearCache();
     }
 
     public function updatingMes()
     {
         $this->resetPage();
-        Cache::flush();
+        $this->clearCache();
     }
 
     public function updatingYear()
     {
         $this->resetPage();
-        Cache::flush();
+        $this->clearCache();
     }
 
     public function toggleConfirmado($id)
     {
-        if (!auth()->check()) {
-            return redirect()->route('login')->with('error', 'La sesión ha expirado. Por favor, inicie sesión de nuevo.');
-        }
+
 
         if (auth()->user()->cannot('gestionar_tesoreria') && auth()->user()->cannot('supervisar_tesoreria')) {
             abort(403);
@@ -348,7 +351,7 @@ class Arrendamiento extends Component
 
         $arrendamiento->confirmado = !$arrendamiento->confirmado;
         $arrendamiento->save();
-        Cache::flush();
+        $this->clearCache();
 
         $this->emit('arrendamientoStatusUpdated'); // Emit the event
         $this->dispatchBrowserEvent('alert', ['type' => 'success', 'message' => 'Estado de confirmación actualizado.']);

@@ -279,10 +279,10 @@
                 <!-- Filtros -->
                 <div class="d-flex justify-content-between mb-3">
                     <div class="flex-fill mr-2">
-                        <input type="text" wire:model.live.debounce.300ms="search" class="form-control" placeholder="Buscar...">
+                        <input type="text" wire:model.debounce.300ms="search" class="form-control" placeholder="Buscar...">
                     </div>
                     <div class="flex-fill mr-2">
-                        <select wire:model.live="filtroTipoLibreta" class="form-control">
+                        <select wire:model="filtroTipoLibreta" class="form-control">
                             <option value="">Todos los tipos</option>
                             @foreach($tiposLibreta as $tipo)
                                 <option value="{{ $tipo->id }}">{{ $tipo->nombre }}</option>
@@ -337,10 +337,10 @@
                 <!-- Filtros -->
                 <div class="d-flex justify-content-between mb-3">
                     <div class="flex-fill mr-2">
-                        <input type="text" wire:model.live.debounce.300ms="search" class="form-control" placeholder="Buscar...">
+                        <input type="text" wire:model.debounce.300ms="search" class="form-control" placeholder="Buscar...">
                     </div>
                     <div class="flex-fill mr-2">
-                        <select wire:model.live="filtroTipoLibreta" class="form-control">
+                        <select wire:model="filtroTipoLibreta" class="form-control">
                             <option value="">Todos los tipos</option>
                             @foreach($tiposLibreta as $tipo)
                                 <option value="{{ $tipo->id }}">{{ $tipo->nombre }}</option>
@@ -348,7 +348,7 @@
                         </select>
                     </div>
                     <div class="flex-fill mr-2">
-                        <select wire:model.live="filtroServicio" class="form-control">
+                        <select wire:model="filtroServicio" class="form-control">
                             <option value="">Todos los servicios</option>
                             @foreach($servicios as $servicio)
                                 <option value="{{ $servicio->id }}">{{ $servicio->nombre }}</option>

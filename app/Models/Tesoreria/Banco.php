@@ -4,10 +4,11 @@ namespace App\Models\Tesoreria;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Traits\LogsActivityTrait;
 
 class Banco extends Model
 {
-    use SoftDeletes;
+    use SoftDeletes, LogsActivityTrait;
 
     protected $table = 'tes_bancos';
     protected $fillable = ['nombre', 'codigo', 'observaciones', 'created_by', 'updated_by'];

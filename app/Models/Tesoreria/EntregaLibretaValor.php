@@ -3,13 +3,14 @@
 namespace App\Models\Tesoreria;
 
 use App\Traits\Auditable;
+use App\Traits\LogsActivityTrait;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class EntregaLibretaValor extends Model
 {
-    use HasFactory, SoftDeletes, Auditable;
+    use HasFactory, SoftDeletes, Auditable, LogsActivityTrait;
 
     protected $table = 'tes_entregas_libretas_valores';
 

@@ -33,7 +33,7 @@ class Edit extends Component
         'recibo_fecha' => 'required|date',
         'orden_cobro' => 'required|string|max:255',
         'titular_nombre' => 'required|string|max:255',
-        'titular_cedula' => 'required|string|max:255',
+        'titular_cedula' => 'nullable|string|max:255',
         'titular_telefono' => 'nullable|string|max:255',
         'medio_pago_id' => 'required|exists:tes_medio_de_pagos,id',
         'monto' => 'required|numeric|min:0',
@@ -74,7 +74,7 @@ class Edit extends Component
             $exists = Prenda::where('transferencia', $value)
                 ->where('id', '!=', $this->prenda_id)
                 ->exists();
-                
+
             if ($exists) {
                 $this->showDuplicateAlert = true;
                 $this->dispatchBrowserEvent('swal:warning', [
@@ -112,7 +112,7 @@ class Edit extends Component
             $exists = Prenda::where('transferencia', $this->transferencia)
                 ->where('id', '!=', $this->prenda_id)
                 ->exists();
-                
+
             if ($exists) {
                 $this->emit('swal:confirm-duplicate-edit', [
                     'title' => 'Transferencia Duplicada',
@@ -133,7 +133,7 @@ class Edit extends Component
         }
 
         $prenda = Prenda::find($this->prenda_id);
-        
+
         if (!$prenda) {
             $this->dispatchBrowserEvent('swal:error', ['text' => 'Error: No se encontró el registro.']);
             return;
@@ -145,7 +145,7 @@ class Edit extends Component
             'recibo_fecha' => $this->recibo_fecha,
             'orden_cobro' => mb_strtoupper($this->orden_cobro, 'UTF-8'),
             'titular_nombre' => mb_strtoupper($this->titular_nombre, 'UTF-8'),
-            'titular_cedula' => mb_strtoupper($this->titular_cedula, 'UTF-8'),
+            'titular_cedula' => !empty($this->titular_cedula) ? mb_strtoupper($this->titular_cedula, 'UTF-8') : null,
             'titular_telefono' => mb_strtoupper($this->titular_telefono, 'UTF-8'),
             'medio_pago_id' => $this->medio_pago_id,
             'monto' => $this->monto,

@@ -1,30 +1,32 @@
 @extends('layouts.app')
 
-@section('title', 'Sesión Expirada')
+@section('title', 'Error Interno del Servidor')
 
 @section('content')
 <div class="container">
     <div class="row justify-content-center">
         <div class="col-md-6">
-            <div class="card border-warning">
-                <div class="card-header bg-warning text-white">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
                     <h4 class="mb-0">
-                        <i class="fas fa-clock"></i> Sesión Expirada
+                        <i class="fas fa-exclamation-circle"></i> Error Interno del Servidor
                     </h4>
                 </div>
                 <div class="card-body text-center">
                     <div class="mb-4">
-                        <i class="fas fa-hourglass-end fa-4x text-warning"></i>
+                        <i class="fas fa-server fa-4x text-danger"></i>
                     </div>
-                    <h5 class="card-title">Su sesión ha expirado</h5>
+                    <h5 class="card-title">Algo salió mal en nuestro servidor</h5>
                     <p class="card-text">
-                        Por seguridad, su sesión ha expirado debido a inactividad prolongada.
-                        Debe iniciar sesión nuevamente para continuar utilizando el sistema.
+                        Ha ocurrido un error inesperado. Por favor, diríjase al inicio.
                     </p>
                     <div class="mt-4">
-                        <a href="{{ route('login') }}" class="btn btn-primary btn-lg">
-                            <i class="fas fa-sign-in-alt mr-2"></i>Iniciar Sesión Nuevamente
+                        <a href="{{ route('home') }}" class="btn btn-primary btn-lg">
+                            <i class="fas fa-home mr-2"></i>Ir al Inicio
                         </a>
+                        <!-- <button onclick="location.reload()" class="btn btn-secondary btn-lg ml-2">
+                            <i class="fas fa-sync-alt mr-2"></i>Reintentar
+                        </button> -->
                     </div>
                 </div>
             </div>
@@ -33,14 +35,17 @@
 </div>
 @endsection
 
+
 @push('styles')
 <style>
     body {
         background-color: #f8f9fa;
     }
+
     .card {
         box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
     }
+
     .alert {
         border-radius: 0.375rem;
     }

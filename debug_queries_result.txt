@@ -1,0 +1,12 @@
+Comparing Queries for range: 2026-01-01 to 2026-01-31
+Query A (Service/Resumen - Items):
+  Count Items: 354
+  Sum Importe: 3,359,066.00
+  Unique Cobradas IDs: 215
+Query B (Controller/Medios - Headers):
+  Count Headers: 215
+  Sum Monto: 3,359,990.00
+--------------------------------------------------
+Difference (SumA - SumB): -924.00
+All IDs from Service are in Controller.
+All IDs from Controller are in Service.

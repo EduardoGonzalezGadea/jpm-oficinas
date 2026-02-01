@@ -5,10 +5,11 @@ namespace App\Models\Tesoreria;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes; // <-- Importado
+use App\Traits\LogsActivityTrait;
 
 class Dependencia extends Model
 {
-    use HasFactory, SoftDeletes; // <-- Agregado SoftDeletes
+    use HasFactory, SoftDeletes, LogsActivityTrait; // <-- Agregado SoftDeletes
 
     protected $table = 'tes_cch_dependencias';
     protected $primaryKey = 'idDependencias';

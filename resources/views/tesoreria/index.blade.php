@@ -29,39 +29,50 @@
                         para la gestión financiera de la institución.
                     </p>
 
-                    <!-- Características -->
                     <div class="row mt-5">
-                        <div class="col-md-4 mb-4">
-                            <div class="card h-100 border-success">
+                        <div class="col-md-3 mb-4">
+                            <div class="card h-100 border-success shadow-sm hover-elevate">
                                 <div class="card-body">
                                     <i class="fas fa-coins text-success mb-3" style="font-size: 2rem;"></i>
                                     <h5 class="card-title">Caja Chica</h5>
-                                    <p class="card-text text-muted">
+                                    <p class="card-text text-muted small">
                                         Administración eficiente de gastos menores y rendiciones.
                                     </p>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="col-md-4 mb-4">
-                            <div class="card h-100 border-info">
+                        <div class="col-md-3 mb-4">
+                            <div class="card h-100 border-info shadow-sm hover-elevate">
                                 <div class="card-body">
                                     <i class="fas fa-car text-info mb-3" style="font-size: 2rem;"></i>
-                                    <h5 class="card-title">Artículos de Multas de Tránsito</h5>
-                                    <p class="card-text text-muted">
-                                        Listado de artículos de multas de tránsito.
+                                    <h5 class="card-title">Infracciones</h5>
+                                    <p class="card-text text-muted small">
+                                        Artículos y montos de multas de tránsito.
                                     </p>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="col-md-4 mb-4">
-                            <div class="card h-100 border-warning">
+                        <div class="col-md-3 mb-4">
+                            <div class="card h-100 border-warning shadow-sm hover-elevate">
                                 <div class="card-body">
                                     <i class="fas fa-file-signature text-warning mb-3" style="font-size: 2rem;"></i>
-                                    <h5 class="card-title">Arrendamientos y Eventuales</h5>
-                                    <p class="card-text text-muted">
+                                    <h5 class="card-title">Contratos</h5>
+                                    <p class="card-text text-muted small">
                                         Control de arrendamientos y servicios eventuales.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-3 mb-4">
+                            <div class="card h-100 border-danger shadow-sm hover-elevate">
+                                <div class="card-body">
+                                    <i class="fas fa-receipt text-danger mb-3" style="font-size: 2rem;"></i>
+                                    <h5 class="card-title">Multas Cobradas</h5>
+                                    <p class="card-text text-muted small">
+                                        Registro y gestión de multas de tránsito cobradas.
                                     </p>
                                 </div>
                             </div>
@@ -73,11 +84,11 @@
                         <h5 class="mb-3">Progreso del Desarrollo</h5>
                         <div class="progress" style="height: 25px;">
                             <div class="progress-bar bg-success progress-bar-striped progress-bar-animated"
-                                 role="progressbar"
-                                 style="width: 65%"
-                                 aria-valuenow="65"
-                                 aria-valuemin="0"
-                                 aria-valuemax="100">
+                                role="progressbar"
+                                style="width: 65%"
+                                aria-valuenow="65"
+                                aria-valuemin="0"
+                                aria-valuemax="100">
                                 65% Completado
                             </div>
                         </div>
@@ -129,12 +140,12 @@
 
     .progress-bar {
         font-weight: 600;
-        text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
     }
 
     .btn-outline-primary:hover {
         transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0,123,255,0.3);
+        box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
         transition: all 0.3s ease;
     }
 

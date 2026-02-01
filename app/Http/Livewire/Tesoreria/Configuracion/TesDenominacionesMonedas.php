@@ -35,18 +35,11 @@ class TesDenominacionesMonedas extends Component
 
     public function render()
     {
-        // Verificar autenticación antes de procesar cualquier lógica
-        if (!auth()->check()) {
-            $this->dispatchBrowserEvent('redirect-to-login', [
-                'message' => 'La sesión ha expirado. Por favor, inicie sesión de nuevo.'
-            ]);
-            return view('livewire.tesoreria.configuracion.tes-denominaciones-monedas', [
-                'denominaciones' => collect(),
-            ]);
-        }
+
 
         $page = $this->page ?: 1;
-        $cacheKey = 'denominaciones_search_' . $this->search . '_page_' . $page;
+        $version = Cache::get('denominaciones_version', 1);
+        $cacheKey = 'denominaciones_v' . $version . '_search_' . $this->search . '_page_' . $page;
 
         $denominaciones = Cache::remember($cacheKey, now()->addDay(), function () {
             return Model::search($this->search)
@@ -81,7 +74,7 @@ class TesDenominacionesMonedas extends Component
             'activo' => $this->activo,
         ]);
 
-        Cache::flush();
+        $this->clearCache();
         $this->resetInput();
         $this->emit('denominacionStore');
         $this->dispatchBrowserEvent('alert', ['type' => 'success', 'message' => 'Denominación creada con éxito!', 'toast' => true]);
@@ -117,7 +110,7 @@ class TesDenominacionesMonedas extends Component
                 'descripcion' => $this->descripcion,
                 'activo' => $this->activo,
             ]);
-            Cache::flush();
+            $this->clearCache();
             $this->resetInput();
             $this->emit('denominacionUpdate');
             $this->dispatchBrowserEvent('alert', ['type' => 'success', 'message' => 'Denominación actualizada con éxito!', 'toast' => true]);
@@ -128,7 +121,7 @@ class TesDenominacionesMonedas extends Component
     {
         $denominacion = Model::findOrFail($id);
         $denominacion->delete();
-        Cache::flush();
+        $this->clearCache();
         $this->dispatchBrowserEvent('alert', ['type' => 'success', 'message' => 'Denominación eliminada con éxito!', 'toast' => true]);
     }
 
@@ -159,6 +152,12 @@ class TesDenominacionesMonedas extends Component
     public function updatingSearch()
     {
         $this->resetPage();
-        Cache::flush();
+        $this->clearCache();
+    }
+
+    private function clearCache()
+    {
+        $version = Cache::get('denominaciones_version', 1);
+        Cache::put('denominaciones_version', $version + 1, now()->addYear());
     }
 }

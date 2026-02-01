@@ -18,12 +18,18 @@
                 </a>
                 <div class="dropdown-menu" aria-labelledby="navbarDropdownTesoreria">
 
-                    {{-- Link Infracciones de Tránsito --}}
+                    {{-- Artículos de Multas de Tránsito (siempre al inicio) --}}
                     <a class="dropdown-item" href="{{ route('tesoreria.multas-transito') }}">
                         <i class="fas fa-list"></i> Artículos de Multas de Tránsito
                     </a>
+                    {{-- Link Multas Cobradas (segunda opción) --}}
+                    <a class="dropdown-item" href="{{ route('tesoreria.multas-cobradas.index') }}">
+                        <i class="fas fa-receipt mr-2"></i> Multas Cobradas
+                    </a>
                     {{-- Separador --}}
                     <div class="dropdown-divider"></div>
+
+                    {{-- Resto de opciones en orden alfabético --}}
                     {{-- Link Armas --}}
                     <div class="dropdown-submenu submenu-right">
                         <a class="dropdown-item dropdown-toggle" href="#" role="button">
@@ -46,29 +52,33 @@
                     <a class="dropdown-item" href="{{ route('tesoreria.caja-chica.index') }}" wire:navigate>
                         <i class="fas fa-coins mr-2"></i>Caja Chica
                     </a>
+                    {{-- Link Certificados de Residencia --}}
                     <a class="dropdown-item" href="{{ route('tesoreria.certificados-residencia.index') }}" wire:navigate>
                         <i class="fas fa-file-alt mr-2"></i> Certificados de Residencia
-                    </a>
-                    <a class="dropdown-item" href="{{ route('tesoreria.deposito-vehiculos.index') }}" wire:navigate>
-                        <i class="fas fa-car mr-2"></i> Depósito de Vehículos
                     </a>
                     {{-- Link Cheques --}}
                     <a class="dropdown-item" href="{{ route('tesoreria.cheques.index') }}" wire:navigate>
                         <i class="fas fa-money-check mr-2"></i>Cheques
                     </a>
+                    {{-- Link Depósito de Vehículos --}}
+                    <a class="dropdown-item" href="{{ route('tesoreria.deposito-vehiculos.index') }}" wire:navigate>
+                        <i class="fas fa-car mr-2"></i> Depósito de Vehículos
+                    </a>
+                    {{-- Link Eventuales --}}
                     <a class="dropdown-item" href="{{ route('tesoreria.eventuales.index') }}">
                         <i class="fas fa-hand-holding-usd mr-2"></i> Eventuales
                     </a>
+                    {{-- Link Prendas --}}
                     <a class="dropdown-item" href="{{ route('tesoreria.prendas.index') }}" wire:navigate>
                         <i class="fas fa-file-invoice-dollar mr-2"></i> Prendas
                     </a>
+                    {{-- Link Valores --}}
                     <a class="dropdown-item" href="{{ route('tesoreria.valores.index') }}">
                         <i class="fas fa-barcode mr-2"></i> Valores
                     </a>
                 </div>
             </li>
             @endcan
-
         </ul>
 
         <ul class="navbar-nav">
@@ -92,6 +102,11 @@
                             </a>
                         </div>
                     </div>
+                    @if(auth()->user()->hasAnyRole(['administrador', 'gerente_tesoreria', 'supervisor_tesoreria']))
+                    <a class="dropdown-item" href="{{ route('sistema.auditoria.index') }}">
+                        <i class="fas fa-history mr-2"></i>Historial de Auditoría
+                    </a>
+                    @endif
                     <div class="dropdown-divider"></div>
                     @endcan
                     <a class="dropdown-item" href="{{ route('pendrive.index') }}">
@@ -129,7 +144,7 @@
                         <div class="dropdown-menu">
                             {{-- Tema por Defecto (Bootstrap Original) --}}
                             <button type="button" class="dropdown-item theme-select-button"
-                                data-theme-name="bootstrap-default"
+                                data-theme-name="default"
                                 data-theme-path="{{ asset('libs/bootstrap-4.6.2-dist/css/bootstrap.min.css') }}">
                                 Por defecto
                                 <span class="text-success theme-active-indicator" style="display: none;">✔</span>
