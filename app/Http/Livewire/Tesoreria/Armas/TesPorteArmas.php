@@ -104,7 +104,8 @@ class TesPorteArmas extends Component
             $query->where('titular', 'like', '%' . $this->search . '%')
                 ->orWhere('cedula', 'like', '%' . $this->search . '%')
                 ->orWhere('orden_cobro', 'like', '%' . $this->search . '%')
-                ->orWhere('numero_tramite', 'like', '%' . $this->search . '%');
+                ->orWhere('numero_tramite', 'like', '%' . $this->search . '%')
+                ->orWhere('recibo', 'like', '%' . $this->search . '%');
         })
             ->whereYear('fecha', $this->anio)
             ->whereNull('planilla_id')
@@ -133,7 +134,8 @@ class TesPorteArmas extends Component
                 $query->where('titular', 'like', '%' . $this->search . '%')
                     ->orWhere('cedula', 'like', '%' . $this->search . '%')
                     ->orWhere('orden_cobro', 'like', '%' . $this->search . '%')
-                    ->orWhere('numero_tramite', 'like', '%' . $this->search . '%');
+                    ->orWhere('numero_tramite', 'like', '%' . $this->search . '%')
+                    ->orWhere('recibo', 'like', '%' . $this->search . '%');
             })
                 ->whereYear('fecha', $this->anio)
                 ->with('planilla')
@@ -156,7 +158,8 @@ class TesPorteArmas extends Component
             $query->where('titular', 'like', '%' . $this->search . '%')
                 ->orWhere('cedula', 'like', '%' . $this->search . '%')
                 ->orWhere('orden_cobro', 'like', '%' . $this->search . '%')
-                ->orWhere('numero_tramite', 'like', '%' . $this->search . '%');
+                ->orWhere('numero_tramite', 'like', '%' . $this->search . '%')
+                ->orWhere('recibo', 'like', '%' . $this->search . '%');
         })
             ->whereYear('fecha', $this->anio)
             ->whereNull('planilla_id')

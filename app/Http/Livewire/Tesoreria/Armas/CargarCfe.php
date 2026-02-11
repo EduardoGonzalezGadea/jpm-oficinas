@@ -18,6 +18,68 @@ class CargarCfe extends Component
         'archivo' => 'required|mimes:pdf|max:10240', // 10MB max
     ];
 
+    public function mount()
+    {
+        // 1. Intentar cargar desde CACHÉ (Nuevo método más seguro)
+        $prefillId = request()->query('prefill_id');
+        if ($prefillId && \Illuminate\Support\Facades\Cache::has('cfe_prefill_' . $prefillId)) {
+            $cacheData = \Illuminate\Support\Facades\Cache::get('cfe_prefill_' . $prefillId);
+            $data = $cacheData['datos'];
+
+            $this->datosExtraidos = [
+                'tipo_cfe' => $data['tipo_cfe'] ?? 'Detectado',
+                'serie' => $data['serie'] ?? '',
+                'numero' => $data['numero'] ?? '',
+                'fecha' => $data['fecha'] ?? '',
+                'rut_emisor' => $data['emisor_rut'] ?? '',
+                'razon_social_emisor' => $data['emisor_nombre'] ?? '',
+                'rut_receptor' => $data['receptor_documento'] ?? '',
+                'razon_social_receptor' => $data['receptor_nombre'] ?? '',
+                'monto_total' => $data['monto'] ?? 0,
+                'subtotal' => $data['subtotal'] ?? 0,
+                'iva' => $data['iva'] ?? 0,
+                'moneda' => $data['moneda'] ?? 'UYU',
+                'detalle' => $data['detalle'] ?? '',
+                'orden_cobro' => $data['orden_cobro'] ?? '',
+                'tramite' => $data['tramite'] ?? '',
+                'ingreso_contabilidad' => $data['ingreso_contabilidad'] ?? '',
+                'telefono' => $data['telefono'] ?? ''
+            ];
+
+            \Illuminate\Support\Facades\Cache::forget('cfe_prefill_' . $prefillId);
+            return;
+        }
+
+        // 2. Fallback: Verificar si hay datos pre-cargados desde la sesión
+        if (session()->has('cfe_datos_precargados') && in_array(session('cfe_tipo'), ['porte_armas', 'tenencia_armas'])) {
+            $data = session('cfe_datos_precargados');
+
+            // Mapear campos genéricos a lo que espera este Livewire
+            $this->datosExtraidos = [
+                'tipo_cfe' => $data['tipo_cfe'] ?? 'Detectado',
+                'serie' => $data['serie'] ?? '',
+                'numero' => $data['numero'] ?? '',
+                'fecha' => $data['fecha'] ?? '',
+                'rut_emisor' => $data['emisor_rut'] ?? '',
+                'razon_social_emisor' => $data['emisor_nombre'] ?? '',
+                'rut_receptor' => $data['receptor_documento'] ?? '',
+                'razon_social_receptor' => $data['receptor_nombre'] ?? '',
+                'monto_total' => $data['monto'] ?? 0,
+                'subtotal' => $data['subtotal'] ?? 0,
+                'iva' => $data['iva'] ?? 0,
+                'moneda' => $data['moneda'] ?? 'UYU',
+                'detalle' => $data['detalle'] ?? '',
+                'orden_cobro' => $data['orden_cobro'] ?? '',
+                'tramite' => $data['tramite'] ?? '',
+                'ingreso_contabilidad' => $data['ingreso_contabilidad'] ?? '',
+                'telefono' => $data['telefono'] ?? ''
+            ];
+
+            // Limpiar sesión después de cargar
+            session()->forget(['cfe_datos_precargados', 'cfe_tipo', 'cfe_filepath']);
+        }
+    }
+
     public function updatedArchivo()
     {
         $this->validate();

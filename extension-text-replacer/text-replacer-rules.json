@@ -1,0 +1,98 @@
+[
+  {
+    "replacement": "Tarjeta de Débito",
+    "trigger": "--td--"
+  },
+  {
+    "replacement": "Tarjeta de Débito",
+    "trigger": "--TD--"
+  },
+  {
+    "replacement": "Efectivo",
+    "trigger": "--ef--"
+  },
+  {
+    "replacement": "Efectivo",
+    "trigger": "--EF--"
+  },
+  {
+    "replacement": "Transferencia Bancaria",
+    "trigger": "--tb--"
+  },
+  {
+    "replacement": "Transferencia Bancaria",
+    "trigger": "--TB--"
+  },
+  {
+    "replacement": "Cheque",
+    "trigger": "--ch--"
+  },
+  {
+    "replacement": "Cheque",
+    "trigger": "--CH--"
+  },
+  {
+    "replacement": "MATRÍCULA",
+    "trigger": "--mat--"
+  },
+  {
+    "replacement": "MATRÍCULA",
+    "trigger": "--MAT--"
+  },
+  {
+    "replacement": "BOLETA",
+    "trigger": "--bol--"
+  },
+  {
+    "replacement": "BOLETA",
+    "trigger": "--BOL--"
+  },
+  {
+    "replacement": "INGRESO",
+    "trigger": "--ing--"
+  },
+  {
+    "replacement": "INGRESO",
+    "trigger": "--ING--"
+  },
+  {
+    "replacement": "O/C",
+    "trigger": "--oc--"
+  },
+  {
+    "replacement": "O/C",
+    "trigger": "--OC--"
+  },
+  {
+    "replacement": "Cancelación de factura",
+    "trigger": "--canf--"
+  },
+  {
+    "replacement": "Cancelación de factura",
+    "trigger": "--CANF--"
+  },
+  {
+    "replacement": "Cancelación de saldo",
+    "trigger": "--cans--"
+  },
+  {
+    "replacement": "Cancelación de saldo",
+    "trigger": "--CANS--"
+  },
+  {
+    "replacement": "Pago parcial",
+    "trigger": "--pagp--"
+  },
+  {
+    "replacement": "Pago parcial",
+    "trigger": "--PAGP--"
+  },
+  {
+    "replacement": "Multa de Tránsito Art.",
+    "trigger": "--mul--"
+  },
+  {
+    "replacement": "Multa de Tránsito Art.",
+    "trigger": "--MUL--"
+  }
+]

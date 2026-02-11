@@ -1,4 +1,4 @@
-<div class="@if($printMode) print-mode @endif">
+<div class="@if($printMode) print-mode @endif reporte-avanzado-container">
     @if($printMode)
     <div class="print-header">
         <h2>JEFATURA DE POLICÍA DE MONTEVIDEO</h2>
@@ -164,10 +164,13 @@
     <!-- Elementos visibles solo en pantalla, ocultos en impresión -->
     <div class="d-print-none">
         <div class="card">
-            <div class="card-header">
+            <div class="card-header d-flex justify-content-between align-items-center">
                 <h4 class="card-title p-0 m-0">
                     <i class="fas fa-chart-bar mr-2"></i>Reportes de Cheques
                 </h4>
+                <a href="{{ route('tesoreria.cheques.index') }}" class="btn btn-sm btn-outline-primary font-weight-bold">
+                    <i class="fas fa-arrow-left mr-1"></i> Volver a la Vista Principal
+                </a>
             </div>
             <div class="card-body">
                 <!-- Selector de tipo de reporte -->

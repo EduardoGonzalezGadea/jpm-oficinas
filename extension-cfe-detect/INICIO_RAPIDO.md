@@ -1,0 +1,1 @@
+["INSTRUCCIONES_INSTALACION.md](INSTRUCCIONES_INSTALACION.md)\n\n## Pr\u00f3ximos pasos\n\n1. Implementa la l\u00f3gica completa de extracci\u00f3n de datos en `CfeProcessorService.php`\n2. Crea \u00edconos personalizados para la extensi\u00f3n\n3. Mejora la interfaz de usuario del popup\n4. Agrega m\u00e1s funcionalidades seg\u00fan tus necesidades"]

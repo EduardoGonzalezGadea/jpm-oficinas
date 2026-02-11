@@ -88,8 +88,8 @@ input:checked+.slider:before {
 /* Botones flotantes fijos */
 .btn-float-base {
     position: fixed;
-    bottom: 5px;
-    right: 2px;
+    bottom: 10px;
+    right: 5px;
     width: 28px;
     height: 28px;
     border-radius: 50%;
@@ -97,7 +97,7 @@ input:checked+.slider:before {
     color: white;
     font-size: 12px;
     cursor: pointer;
-    z-index: 1000;
+    z-index: 9999 !important;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
     transition: all 0.3s ease;
     display: flex;
@@ -112,8 +112,7 @@ input:checked+.slider:before {
 
 .btn-home-float {
     background-color: #007bff;
-    bottom: 34px;
-    /* 5 + 29 */
+    bottom: 42px;
 }
 
 .btn-home-float:hover {
@@ -123,8 +122,7 @@ input:checked+.slider:before {
 
 .btn-scroll-top-float {
     background-color: #28a745;
-    bottom: 63px;
-    /* 34 + 29 */
+    bottom: 74px;
 }
 
 .btn-scroll-top-float:hover {
@@ -133,7 +131,7 @@ input:checked+.slider:before {
 
 .btn-scroll-bottom-float {
     background-color: #28a745;
-    bottom: 5px;
+    bottom: 10px;
 }
 
 .btn-scroll-bottom-float:hover {
@@ -291,4 +289,227 @@ div:where(.swal2-container) button:where(.swal2-styled) {
 .panel-gradient-bg .accordion .list-group-item-warning:hover strong,
 .panel-gradient-bg .accordion .list-group-item-warning:hover a {
     color: #212529 !important;
+}
+
+/* Espaciado para reportes avanzados para no solapar botones flotantes */
+.reporte-avanzado-container {
+    padding-bottom: 150px !important;
+}
+
+/* ==================== */
+/* BARRA DE NAVEGACIÓN Y SUBMENÚS */
+/* ==================== */
+
+.barra-oscura {
+    position: sticky;
+    top: 0;
+    z-index: 1030;
+}
+
+.barra-oscura::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: black;
+    mix-blend-mode: multiply;
+    opacity: 0.5;
+    z-index: -1;
+}
+
+.barra-oscura .navbar-nav .nav-link {
+    color: white;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.barra-oscura .navbar-nav .nav-link:hover,
+.barra-oscura .navbar-brand:hover {
+    color: yellow;
+}
+
+/* Estilos para submenús */
+.dropdown-submenu {
+    position: relative;
+}
+
+.submenu-right .dropdown-menu {
+    top: 0;
+    left: 100%;
+    right: auto;
+    margin-top: -1px;
+}
+
+.submenu-left .dropdown-menu {
+    top: 0;
+    left: auto;
+    right: 100%;
+    margin-top: -1px;
+}
+
+/* Mostrar submenú al hover */
+.dropdown-submenu:hover>.dropdown-menu {
+    display: block;
+}
+
+/* Agregar flecha al submenu */
+.dropdown-submenu>.dropdown-item::after {
+    margin-left: auto;
+    content: "";
+    border-top: 0.3em solid transparent;
+    border-right: 0;
+    border-bottom: 0.3em solid transparent;
+    border-left: 0.3em solid;
+    float: right;
+    margin-top: 0.5em;
+}
+
+/* ==================== */
+/* ESTILOS PARA FORMULARIOS COMPACTOS */
+/* ==================== */
+
+/* Inputs reducidos para mayor densidad de datos (Basado en form-control-sm) */
+.form-control-compact {
+    height: calc(1.5em + 0.5rem + 2px) !important;
+    /* Altura estándar de form-control-sm (aprox 31px) */
+    font-size: 0.875rem !important;
+    padding: 0.25rem 0.5rem !important;
+}
+
+/* Ajustes para input-groups compactos */
+.input-group-compact .input-group-text {
+    padding: 0 0.5rem !important;
+    height: calc(1.5em + 0.5rem + 2px) !important;
+    font-size: 0.875rem !important;
+}
+
+.input-group-compact .form-control,
+.input-group-compact .btn {
+    height: calc(1.5em + 0.5rem + 2px) !important;
+}
+
+.input-group-compact .btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 0.75rem !important;
+}
+
+/* Etiquetas minimalistas */
+.label-compact {
+    font-size: 0.65rem !important;
+    font-weight: bold !important;
+    text-transform: uppercase;
+    margin-bottom: 0 !important;
+    display: block;
+}
+
+/* Tablas densas */
+.table-compact td,
+.table-compact th {
+    padding: 0.25rem 0.5rem !important;
+    vertical-align: middle !important;
+}
+
+/* ANIMACIONES PARA MODALES (PREMIUM) */
+
+.modal-animate-in {
+    animation: modal-zoom-in 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes modal-zoom-in {
+    from {
+        opacity: 0;
+        transform: scale(0.92) translateY(-20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.modal-animate-out {
+    animation: modal-zoom-out 0.2s ease-in forwards;
+}
+
+@keyframes modal-zoom-out {
+    from {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    to {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+}
+
+.backdrop-animate-in {
+    animation: backdrop-fade-in 0.3s ease-out forwards;
+}
+
+@keyframes backdrop-fade-in {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 0.5;
+    }
+}
+
+/* ==================== */
+/* FLATPICKR COMPACTO */
+/* ==================== */
+.flatpickr-calendar {
+    width: 265px !important;
+    transform: scale(0.95);
+    transform-origin: top left;
+}
+
+.flatpickr-days {
+    width: 265px !important;
+}
+
+.dayContainer {
+    width: 265px !important;
+    min-width: 265px !important;
+    max-width: 265px !important;
+}
+
+.flatpickr-day {
+    max-width: 35px !important;
+    height: 35px !important;
+    line-height: 35px !important;
+    font-size: 0.8rem !important;
+}
+
+.flatpickr-month {
+    height: 35px !important;
+}
+
+.flatpickr-current-month {
+    padding-top: 5px !important;
+    font-size: 1rem !important;
+}
+
+.flatpickr-current-month .flatpickr-monthDropdown-months {
+    padding: 0 !important;
+}
+
+.flatpickr-weekday {
+    font-size: 0.75rem !important;
+    font-weight: bold !important;
+}
+
+.flatpickr-calendar.arrowTop:before,
+.flatpickr-calendar.arrowTop:after {
+    display: none !important;
+    /* Quitar flechas para ahorrar espacio */
+}
+
+.flatpickr-innerContainer {
+    padding-bottom: 5px !important;
 }

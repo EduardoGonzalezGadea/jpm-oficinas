@@ -2,10 +2,23 @@
 
 namespace App\Http\Livewire\Tesoreria\Prendas;
 
-use App\Models\Tesoreria\Prenda;
 use Livewire\Component;
 use Livewire\WithPagination;
+use App\Models\Tesoreria\Prenda;
 
+/**
+ * Componente Livewire: Índice de Prendas
+ *
+ * Este componente muestra la lista principal de prendas registradas en el sistema.
+ * Proporciona funcionalidades de:
+ * - Búsqueda por múltiples campos
+ * - Filtrado por año
+ * - Selección múltiple de prendas
+ * - Creación de planillas desde prendas seleccionadas
+ * - Eliminación de prendas
+ *
+ * @package App\Http\Livewire\Tesoreria\Prendas
+ */
 class Index extends Component
 {
     use WithPagination;
@@ -18,29 +31,26 @@ class Index extends Component
     public $selectedPrendas = [];
     public $selectAll = false;
 
-    protected $listeners = ['pg:eventRefresh-default' => 'refreshData', 'delete'];
+    protected $listeners = [
+        'pg:eventRefresh-default' => 'refreshData',
+        'delete',
+    ];
 
     public function mount()
     {
-        // Obtener años disponibles de los recibos
         $years = Prenda::selectRaw('YEAR(recibo_fecha) as year')
             ->distinct()
             ->orderBy('year', 'desc')
             ->pluck('year')
             ->toArray();
 
-        // Agregar siempre el año actual si no está presente
         $currentYear = (int) date('Y');
         if (!in_array($currentYear, $years)) {
             $years[] = $currentYear;
         }
 
-        // Ordenar descendentemente
         rsort($years);
-
         $this->years = $years;
-
-        // Seleccionar el año actual por defecto
         $this->selectedYear = $currentYear;
     }
 
@@ -58,7 +68,9 @@ class Index extends Component
     public function delete($id)
     {
         Prenda::find($id)->delete();
-        $this->dispatchBrowserEvent('swal:success', ['text' => 'Prenda eliminada correctamente.']);
+        $this->dispatchBrowserEvent('swal:success', [
+            'text' => 'Prenda eliminada correctamente.'
+        ]);
         $this->refreshData();
     }
 

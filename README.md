@@ -1,73 +1,90 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400"></a></p>
+# Sistema de Detección y Procesamiento de CFEs
 
-<p align="center">
-<a href="https://travis-ci.org/laravel/framework"><img src="https://travis-ci.org/laravel/framework.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+## Descripción
+Este proyecto implementa un sistema para detectar y procesar Comprobantes Fiscales Electrónicos (CFEs) descargados desde el sistema de facturación del estado. La solución consta de dos partes principales:
 
-## About Laravel
+1. **Backend Laravel**: Procesa PDFs y extrae datos de CFEs
+2. **Extensión del Navegador**: Detecta descargas de PDFs desde cualquier URL
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Arquitectura
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+### Backend Laravel
+- **Tabla**: `tes_cfe_pendientes` - Almacena CFEs pendientes de confirmación
+- **Modelo**: `TesCfePendiente` - Interfaz para interactuar con la tabla
+- **Servicio**: `CfeProcessorService` - Procesa PDFs y extrae datos
+- **Controlador API**: `CfeController` - Endpoints REST para gestionar CFEs
+- **Livewire**: Componente `CfePendientesIndex` - Interfaz para revisar y confirmar/rechazar CFEs
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### Extensión del Navegador
+- **manifest.json** - Configuración de la extensión
+- **background.js** - Detecta descargas completadas de PDFs
+- **popup/** - Interfaz para usuarios
+  - `popup.html` - Estructura HTML
+  - `popup.js` - Lógica de procesamiento
+  - `popup.css` - Estilos
 
-## Learning Laravel
+## Flujo de Trabajo
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+1. **Detección**: La extensión detecta descargas de PDFs desde cualquier URL
+2. **Notificación**: Se alerta al usuario sobre el CFE detectado
+3. **Procesamiento**: El usuario puede ver CFEs pendientes en la interfaz Livewire
+4. **Confirmación**: El usuario puede confirmar o rechazar cada CFE
+5. **Actualización**: El estado del CFE se actualiza en la base de datos
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains over 2000 video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## Tecnologías
 
-## Laravel Sponsors
+- Laravel 10
+- Livewire 3
+- Smalot\PdfParser
+- Chrome Extension APIs
+- Bootstrap 5
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the Laravel [Patreon page](https://patreon.com/taylorotwell).
+## Estado del Proyecto
 
-### Premium Partners
+Todas las tareas iniciales han sido completadas:
+- [x] Crear base de datos y tabla tes_cfe_pendientes
+- [x] Crear modelo TesCfePendiente
+- [x] Crear servicio CfeProcessorService
+- [x] Crear controlador API CfeController
+- [x] Crear request ProcesarCfeRequest
+- [x] Crear Livewire component CfePendientesIndex
+- [x] Crear vista Livewire cfe-pendientes-index.blade.php
+- [x] Crear extensión del navegador manifest.json
+- [x] Crear background.js
+- [x] Crear popup.html
+- [x] Crear popup.js
+- [x] Crear popup.css
+- [x] Crear directorio y archivos de íconos
+- [x] Configurar extensión para detectar PDFs desde cualquier URL
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Cubet Techno Labs](https://cubettech.com)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[Many](https://www.many.co.uk)**
-- **[Webdock, Fast VPS Hosting](https://www.webdock.io/en)**
-- **[DevSquad](https://devsquad.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[OP.GG](https://op.gg)**
-- **[WebReinvent](https://webreinvent.com/?utm_source=laravel&utm_medium=github&utm_campaign=patreon-sponsors)**
-- **[Lendio](https://lendio.com)**
+### Notas Importantes
 
-## Deployment
+- La extensión ahora detecta descargas de PDFs desde cualquier URL, no solo desde dominios específicos del gobierno
+- Esto permite probar el sistema con PDFs descargados de cualquier fuente
+- El archivo `manifest.json` utiliza `"<all_urls>"` en `host_permissions` para permitir el acceso universal
+- El archivo `background.js` ha sido simplificado eliminando la verificación de dominios específicos
+- [x] Crear base de datos y tabla tes_cfe_pendientes
+- [x] Crear modelo TesCfePendiente
+- [x] Crear servicio CfeProcessorService
+- [x] Crear controlador API CfeController
+- [x] Crear request ProcesarCfeRequest
+- [x] Crear Livewire component CfePendientesIndex
+- [x] Crear vista Livewire cfe-pendientes-index.blade.php
+- [x] Crear extensión del navegador manifest.json
+- [x] Crear background.js
+- [x] Crear popup.html
+- [x] Crear popup.js
+- [x] Crear popup.css
+- [x] Crear directorio y archivos de íconos
 
-When deploying the application to a production environment (like the intranet), you need to configure the specific environment variables.
+## Uso
 
-1.  Copy the `.env.example` file to a new `.env` file: `cp .env.example .env`.
-2.  Generate an application key: `php artisan key:generate`.
-3.  Configure all the necessary environment variables for your database, mail, etc.
-4.  **Proxy Configuration**: If the production server is behind a proxy, copy the contents of `.env.production.example` into your production `.env` file to apply the necessary proxy settings.
+1. Instalar dependencias de Laravel
+2. Configurar rutas API en `routes/api.php`
+3. Levantar servidor de desarrollo
+4. Instalar y cargar la extensión del navegador en Chrome/Firefox
+5. Procesar CFEs a través de la interfaz
 
-## Contributing
+## Contacto
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
-
-## Code of Conduct
-
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Para soporte o consultas, por favor contacte al equipo de desarrollo.

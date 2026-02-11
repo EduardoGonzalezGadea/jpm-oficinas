@@ -1,0 +1,32 @@
+name: Node.js Security Audit
+on:
+  push:
+  pull_request:
+jobs:
+  node-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      - name: Install root dependencies
+        run: npm ci
+        working-directory: '.'
+      - name: Audit production dependencies (root)
+        run: npm audit --production
+        working-directory: '.'
+      - name: Audit SweetAlert2 production dependencies
+        if: steps.node-audit.outcome == 'success'
+        run: |
+          if [ -d public/libs/sweetalert2 ]; then
+            cd public/libs/sweetalert2
+            npm ci
+            npm audit --production
+          else
+            echo "SweetAlert2 package not found; skipping."
+          fi
+        shell: bash

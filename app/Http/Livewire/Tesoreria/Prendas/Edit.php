@@ -2,10 +2,15 @@
 
 namespace App\Http\Livewire\Tesoreria\Prendas;
 
+use Livewire\Component;
 use App\Models\Tesoreria\MedioDePago;
 use App\Models\Tesoreria\Prenda;
-use Livewire\Component;
 
+/**
+ * Componente Livewire: Editar Prenda
+ *
+ * Maneja la edición de prendas existentes.
+ */
 class Edit extends Component
 {
     public $prenda_id;
@@ -93,7 +98,6 @@ class Edit extends Component
     {
         $this->validate();
 
-        // Validar unicidad de serie y número de recibo (excluyendo el actual)
         $existsRecibo = Prenda::where('recibo_serie', $this->recibo_serie)
             ->where('recibo_numero', $this->recibo_numero)
             ->where('id', '!=', $this->prenda_id)
@@ -107,7 +111,6 @@ class Edit extends Component
             return;
         }
 
-        // Verificar si hay transferencia duplicada (excluyendo el registro actual)
         if (!empty($this->transferencia)) {
             $exists = Prenda::where('transferencia', $this->transferencia)
                 ->where('id', '!=', $this->prenda_id)

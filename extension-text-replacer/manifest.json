@@ -1,0 +1,23 @@
+{
+    "manifest_version": 3,
+    "name": "Text Replacer Extension",
+    "version": "2.0",
+    "description": "Detecta y reemplaza textos automágicamente según reglas configurables.",
+    "permissions": [
+        "storage"
+    ],
+    "action": {
+        "default_popup": "popup.html"
+    },
+    "content_scripts": [
+        {
+            "matches": [
+                "<all_urls>"
+            ],
+            "js": [
+                "content.js"
+            ],
+            "run_at": "document_idle"
+        }
+    ]
+}

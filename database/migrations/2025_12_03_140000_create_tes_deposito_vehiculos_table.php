@@ -19,20 +19,20 @@ return new class extends Migration
             $table->string('recibo_serie');
             $table->string('recibo_numero');
             $table->date('recibo_fecha');
-            $table->string('orden_cobro');
+            $table->string('orden_cobro')->nullable();
             $table->foreignId('medio_pago_id')->constrained('tes_medio_de_pagos')->onDelete('restrict');
             $table->decimal('monto', 10, 2);
             $table->text('concepto');
             $table->unsignedBigInteger('planilla_id')->nullable();
-            
+
             // Auditoría
             $table->unsignedBigInteger('created_by')->nullable();
             $table->unsignedBigInteger('updated_by')->nullable();
             $table->unsignedBigInteger('deleted_by')->nullable();
-            
+
             $table->timestamps();
             $table->softDeletes();
-            
+
             // Índices
             $table->unique(['recibo_serie', 'recibo_numero'], 'unique_recibo');
             $table->index('recibo_fecha');
@@ -40,7 +40,7 @@ return new class extends Migration
             $table->index('created_by');
             $table->index('updated_by');
             $table->index('deleted_by');
-            
+
             // Foreign key a planillas
             $table->foreign('planilla_id')
                   ->references('id')

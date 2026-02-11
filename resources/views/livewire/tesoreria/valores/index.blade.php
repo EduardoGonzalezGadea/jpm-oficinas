@@ -5,6 +5,9 @@
                 <strong><i class="fas fa-barcode mr-2"></i>Gestión de Valores</strong>
             </h4>
             <div>
+                <a href="{{ route('tesoreria.valores.reportes') }}" class="btn btn-info mr-1">
+                    <i class="fas fa-chart-bar mr-1"></i> Stock
+                </a>
                 <a href="{{ route('tesoreria.valores.servicios') }}" class="btn btn-secondary mr-1">
                     <i class="fas fa-cogs mr-1"></i> Servicios
                 </a>
@@ -13,9 +16,6 @@
                 </a>
                 <a href="{{ route('tesoreria.valores.entregas') }}" class="btn btn-success mr-1">
                     <i class="fas fa-handshake mr-1"></i> Entregadas
-                </a>
-                <a href="{{ route('tesoreria.valores.reportes') }}" class="btn btn-info mr-1">
-                    <i class="fas fa-chart-bar mr-1"></i> Stock
                 </a>
                 <button wire:click="create()" class="btn btn-primary">
                     <i class="fas fa-plus mr-1"></i> Ingreso de Libreta

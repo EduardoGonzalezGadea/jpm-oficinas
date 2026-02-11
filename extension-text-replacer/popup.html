@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text Replacer Pro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #007bff;
+            --primary-hover: #0056b3;
+            --success: #28a745;
+            --info: #17a2b8;
+            --danger: #dc3545;
+            --bg-body: #f0f2f5;
+            --bg-card: #ffffff;
+            --text-main: #1c1e21;
+            --text-muted: #65676b;
+            --border: #dddfe2;
+            --radius-lg: 12px;
+            --radius-md: 8px;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            width: 380px;
+            margin: 0;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Glassmorphism Header */
+        header {
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        header h1 {
+            font-size: 18px;
+            font-weight: 700;
+            margin: 0;
+            background: linear-gradient(135deg, #007bff 0%, #00d4ff 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Toggle Switch */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .3s;
+            border-radius: 24px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .3s;
+            border-radius: 50%;
+        }
+
+        input:checked+.slider {
+            background-color: var(--primary);
+        }
+
+        input:checked+.slider:before {
+            transform: translateX(20px);
+        }
+
+        /* Main Container */
+        main {
+            padding: 20px;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            padding: 16px;
+            box-shadow: var(--shadow);
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+
+        input,
+        textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            font-size: 14px;
+            font-family: inherit;
+            box-sizing: border-box;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        input:focus,
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+        }
+
+        button {
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: 600;
+            border: none;
+            border-radius: var(--radius-md);
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            width: 100%;
+            padding: 12px;
+            font-size: 14px;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-hover);
+            transform: translateY(-1px);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        /* Search Bar */
+        .search-container {
+            position: relative;
+            margin-bottom: 12px;
+        }
+
+        .search-container input {
+            padding-left: 36px;
+            background-color: #fff;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        /* Rules List */
+        .list-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .list-header h3 {
+            font-size: 15px;
+            margin: 0;
+            color: var(--text-main);
+        }
+
+        .rules-list {
+            max-height: 280px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .rule-card {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s;
+        }
+
+        .rule-card:hover {
+            border-color: var(--primary);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .rule-content {
+            flex: 1;
+            margin-right: 12px;
+        }
+
+        .rule-trigger {
+            font-weight: 700;
+            color: var(--primary);
+            font-size: 13px;
+            display: block;
+            margin-bottom: 2px;
+        }
+
+        .rule-replacement {
+            font-size: 13px;
+            color: var(--text-muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 220px;
+        }
+
+        .btn-icon {
+            background: transparent;
+            padding: 6px;
+            color: var(--text-muted);
+        }
+
+        .btn-icon:hover {
+            color: var(--danger);
+            background: rgba(220, 53, 69, 0.1);
+        }
+
+        /* Footer Backup */
+        footer {
+            padding: 15px 20px;
+            background: white;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .backup-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .backup-btns {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-outline {
+            background: white;
+            border: 1px solid var(--border);
+            padding: 6px 12px;
+            font-size: 12px;
+            color: var(--text-main);
+        }
+
+        .btn-outline:hover {
+            background: #f8f9fa;
+            border-color: var(--text-muted);
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 30px 10px;
+            color: var(--text-muted);
+        }
+
+        .empty-state i {
+            font-size: 32px;
+            display: block;
+            margin-bottom: 10px;
+            opacity: 0.3;
+        }
+
+        /* Custom Scrollbar */
+        .rules-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .rules-list::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .rules-list::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>Text Replacer Pro</h1>
+        <label class="switch">
+            <input type="checkbox" id="masterToggle" checked>
+            <span class="slider"></span>
+        </label>
+    </header>
+
+    <main>
+        <!-- Form Area -->
+        <div class="card">
+            <div class="form-group">
+                <label for="trigger">Atajo / Trigger</label>
+                <input type="text" id="trigger" placeholder="Ej: --saludo--">
+            </div>
+            <div class="form-group">
+                <label for="replacement">Texto Final</label>
+                <textarea id="replacement" rows="2" placeholder="Ej: ¡Hola! ¿Cómo estás?"></textarea>
+            </div>
+            <button id="addBtn" class="btn-primary">+ Añadir Regla</button>
+        </div>
+
+        <!-- List Area -->
+        <div class="list-header">
+            <h3>Tus Reglas</h3>
+            <span id="rulesCount" style="font-size: 12px; color: var(--text-muted);">0 reglas</span>
+        </div>
+
+        <div class="search-container">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="searchInput" placeholder="Buscar regla...">
+        </div>
+
+        <div class="rules-list" id="replacementsList">
+            <!-- Dynamic Content -->
+        </div>
+    </main>
+
+    <footer>
+        <span class="backup-label">Respaldo de Datos</span>
+        <div class="backup-btns">
+            <button id="exportBtn" class="btn-outline">Exportar</button>
+            <button id="importBtn" class="btn-outline">Importar</button>
+        </div>
+        <input type="file" id="importFile" accept=".json" style="display: none;">
+    </footer>
+
+    <script src="popup.js"></script>
+</body>
+
+</html>

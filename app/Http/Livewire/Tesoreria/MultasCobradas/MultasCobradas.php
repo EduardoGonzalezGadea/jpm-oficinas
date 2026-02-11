@@ -60,6 +60,14 @@ class MultasCobradas extends Component
     public $resumenFechaDesde;
     public $resumenFechaHasta;
 
+    // Campos temporales para "Otros Datos"
+    public $temp_tel;
+    public $temp_periodo_desde;
+    public $temp_periodo_hasta;
+
+    public $sugerenciasDetalle = [];
+    public $mediosDisponibles = [];
+
     protected $queryString = [
         'search' => ['except' => ''],
         'anio' => ['except' => ''],
@@ -72,11 +80,21 @@ class MultasCobradas extends Component
         'recibo' => 'required|string|max:255',
         'fecha' => 'required|date',
         'monto' => 'required|numeric|min:0',
-        'cedula' => 'nullable|string|max:255',
+        'cedula' => 'nullable|string|max:20',
         'nombre' => 'nullable|string|max:255',
         'items_form.*.detalle' => 'required|string|max:255',
         'items_form.*.importe' => 'required|numeric|min:0',
     ];
+
+    /**
+     * Propiedades calculadas para la vista
+     */
+    public function getSumaItemsProperty(): float
+    {
+        return collect($this->items_form)->sum(function ($item) {
+            return (float) ($item['importe'] ?: 0);
+        });
+    }
 
     public function mount()
     {
@@ -92,7 +110,31 @@ class MultasCobradas extends Component
         $this->resumenFechaDesde = date('Y-m-d');
         $this->resumenFechaHasta = date('Y-m-d');
 
+        $this->cargarSugerenciasDetalle();
+        $this->cargarMediosPago();
         $this->resetItemsForm();
+    }
+
+    public function cargarMediosPago()
+    {
+        $medioPagoService = new \App\Services\Tesoreria\MedioPagoService();
+        $this->mediosDisponibles = $medioPagoService->obtenerMediosDisponibles();
+    }
+
+    public function cargarSugerenciasDetalle()
+    {
+        $anios = [date('Y'), date('Y') - 1];
+
+        $this->sugerenciasDetalle = TesMultasItems::whereHas('cobrada', function ($query) use ($anios) {
+            $query->whereIn(DB::raw('YEAR(fecha)'), $anios);
+        })
+            ->whereNotNull('detalle')
+            ->where('detalle', '!=', '')
+            ->select(DB::raw('TRIM(detalle) as detalle_normalizado'))
+            ->groupBy(DB::raw('TRIM(detalle)'))
+            ->orderBy('detalle_normalizado')
+            ->pluck('detalle_normalizado')
+            ->toArray();
     }
 
     // =========================================================================
@@ -100,16 +142,18 @@ class MultasCobradas extends Component
     // =========================================================================
 
     /**
-     * Genera clave de caché basada en los filtros actuales
+     * Genera clave de caché basada en los filtros actuales para registros
      */
     protected function getCacheKeyRegistros(): string
     {
         $page = $this->page ?? 1;
-        return 'multas_cobradas.regs.' .
-               $this->anio . '.' .
-               $this->mes . '.' .
-               md5($this->search) . '.' .
-               $page;
+        return sprintf(
+            'multas_cobradas.registros.%s.%s.%s.%d',
+            $this->anio,
+            $this->mes,
+            md5($this->search),
+            $page
+        );
     }
 
     /**
@@ -117,9 +161,19 @@ class MultasCobradas extends Component
      */
     protected function getCacheKeyTotales(): string
     {
-        return 'multas_cobradas.totales.' .
-               $this->resumenFechaDesde . '.' .
-               $this->resumenFechaHasta;
+        return sprintf(
+            'multas_cobradas.totales.%s.%s',
+            $this->resumenFechaDesde,
+            $this->resumenFechaHasta
+        );
+    }
+
+    /**
+     * Genera clave de caché para reportes avanzados
+     */
+    protected function getCacheKeyReporteAvanzado(array $filters): string
+    {
+        return 'multas_cobradas.reporte.' . md5(serialize($filters));
     }
 
     /**
@@ -136,11 +190,11 @@ class MultasCobradas extends Component
     protected function cacheAvailable(): bool
     {
         try {
-            // Verificar que el driver no sea 'null' y que soporte etiquetas
+            // Verificar que el driver no sea 'null'
             if (config('cache.default') === 'null') {
                 return false;
             }
-            return Cache::getStore() instanceof \Illuminate\Cache\TaggableStore;
+            return true;
         } catch (\Exception $e) {
             return false;
         }
@@ -153,12 +207,55 @@ class MultasCobradas extends Component
     protected function invalidateCache(): void
     {
         try {
-            if ($this->cacheAvailable()) {
-                Cache::tags([$this->getCacheTag()])->flush();
-            }
-            Cache::flush();
+            // Invalidar claves de caché específicas para multas cobradas
+            $this->invalidateSpecificCacheKeys();
         } catch (\Exception $e) {
             // Silenciar errores de caché - no debe interrumpir la operación principal
+        }
+    }
+
+    /**
+     * Invalida claves de caché específicas para multas cobradas
+     */
+    protected function invalidateSpecificCacheKeys(): void
+    {
+        try {
+            $cacheDriver = config('cache.default');
+
+            // Para drivers que soportan patrones (Redis, Memcached)
+            if (in_array($cacheDriver, ['redis', 'memcached'])) {
+                $this->invalidateCacheByPattern(Cache::getPrefix() . 'multas_cobradas.*');
+            } elseif ($cacheDriver === 'file') {
+                // Para driver file, no podemos invalidar por patrón fácilmente
+                // Simplemente limpiamos el caché de la aplicación
+                Cache::flush();
+            }
+        } catch (\Exception $e) {
+            // Silenciar errores - no es crítico
+        }
+    }
+
+    /**
+     * Invalida claves de caché por patrón (solo para drivers que lo soportan)
+     */
+    protected function invalidateCacheByPattern(string $pattern): void
+    {
+        try {
+            $store = Cache::getStore();
+
+            if ($store instanceof \Illuminate\Cache\RedisStore) {
+                $redis = $store->connection();
+                $keys = $redis->keys($pattern);
+
+                if (!empty($keys)) {
+                    $redis->del($keys);
+                }
+            } elseif ($store instanceof \Illuminate\Cache\MemcachedStore) {
+                // Memcached no soporta búsqueda por patrones directamente
+                // Se debe implementar una estrategia diferente (ej: almacenar claves en una lista)
+            }
+        } catch (\Exception $e) {
+            // Silenciar errores - no es crítico
         }
     }
 
@@ -173,15 +270,15 @@ class MultasCobradas extends Component
 
         if ($useCache) {
             try {
-                // Intentar con caché
-                $registros = Cache::tags([$this->getCacheTag()])->remember(
+                // Intentar con caché (sin tags)
+                $registros = Cache::remember(
                     $this->getCacheKeyRegistros(),
                     now()->addMinutes(5),
                     function () {
                         return $this->fetchRegistros();
                     }
                 );
-                $totalesPorMedio = Cache::tags([$this->getCacheTag()])->remember(
+                $totalesPorMedio = Cache::remember(
                     $this->getCacheKeyTotales(),
                     now()->addMinutes(5),
                     function () {
@@ -223,16 +320,16 @@ class MultasCobradas extends Component
             $query->where(function ($q) use ($searchTerm) {
                 // Campos del header
                 $q->where('nombre', 'like', $searchTerm)
-                  ->orWhere('recibo', 'like', $searchTerm)
-                  ->orWhere('cedula', 'like', $searchTerm)
-                  ->orWhere('adenda', 'like', $searchTerm)
-                  ->orWhere('forma_pago', 'like', $searchTerm)
-                  ->orWhere('referencias', 'like', $searchTerm)
-                  // Búsqueda en items relacionados (detalle y descripción)
-                  ->orWhereHas('items', function ($subq) use ($searchTerm) {
-                      $subq->where('detalle', 'like', $searchTerm)
-                           ->orWhere('descripcion', 'like', $searchTerm);
-                  });
+                    ->orWhere('recibo', 'like', $searchTerm)
+                    ->orWhere('cedula', 'like', $searchTerm)
+                    ->orWhere('adenda', 'like', $searchTerm)
+                    ->orWhere('forma_pago', 'like', $searchTerm)
+                    ->orWhere('referencias', 'like', $searchTerm)
+                    // Búsqueda en items relacionados (detalle y descripción)
+                    ->orWhereHas('items', function ($subq) use ($searchTerm) {
+                        $subq->where('detalle', 'like', $searchTerm)
+                            ->orWhere('descripcion', 'like', $searchTerm);
+                    });
             });
         }
 
@@ -242,7 +339,7 @@ class MultasCobradas extends Component
     }
 
     /**
-     * Calcula totales por medio de pago (lógica extraída del render)
+     * Calcula totales por medio de pago usando el servicio de medios de pago
      */
     protected function calcularTotalesMediosPago()
     {
@@ -252,6 +349,9 @@ class MultasCobradas extends Component
             ->select('forma_pago', 'monto')
             ->get();
 
+        // Crear instancia del servicio
+        $medioPagoService = new \App\Services\Tesoreria\MedioPagoService();
+
         // Procesar medios de pago y crear subtotales
         $subtotales = [];
         $combinaciones = [];
@@ -259,46 +359,29 @@ class MultasCobradas extends Component
 
         foreach ($registros_pago as $item) {
             $forma_pago = $item->forma_pago ?: 'SIN DATOS';
-            $partes = explode('/', $forma_pago);
+            $partes = $medioPagoService->parsearMedioPago($forma_pago);
 
             // Si solo hay un medio de pago
             if (count($partes) == 1) {
-                $medio = mb_strtoupper(trim(explode(':', $partes[0])[0]), 'UTF-8');
+                $nombreOriginal = $partes[0]['nombre'];
+                $medio = $medioPagoService->obtenerNombreReal($nombreOriginal);
                 if (!isset($subtotales[$medio])) {
                     $subtotales[$medio] = 0;
                 }
                 $subtotales[$medio] += $item->monto;
             } else {
                 // Si hay múltiples medios de pago combinados
-                $medios_con_valores = [];
-                $nombre_medios = [];
+                $medios_con_valores = $medioPagoService->calcularValoresMedios($forma_pago, $item->monto);
 
-                foreach ($partes as $parte) {
-                    $datos = explode(':', trim($parte));
-                    $nombre_medio = mb_strtoupper(trim($datos[0]), 'UTF-8');
-                    $nombre_medios[] = $nombre_medio;
+                // Normalizar nombres con acentos y ordenar
+                $nombresReal = array_map(fn($m) => $medioPagoService->obtenerNombreReal($m['nombre']), $medios_con_valores);
+                sort($nombresReal);
+                $nombre_combinado = implode(' / ', $nombresReal);
 
-                    // Extraer el valor específico si existe
-                    if (isset($datos[1])) {
-                        $valor_str = trim($datos[1]);
-                        $valor_limpio = str_replace('.', '', $valor_str);
-                        $valor_limpio = str_replace(',', '.', $valor_limpio);
+                foreach ($medios_con_valores as $medio_con_valor) {
+                    $medio = $medioPagoService->obtenerNombreReal($medio_con_valor['nombre']);
+                    $valor = $medio_con_valor['valor'];
 
-                        if (is_numeric($valor_limpio)) {
-                            $valor = floatval($valor_limpio);
-                        } else {
-                            $valor = $item->monto / count($partes);
-                        }
-                    } else {
-                        $valor = $item->monto / count($partes);
-                    }
-
-                    $medios_con_valores[$nombre_medio] = $valor;
-                }
-
-                $nombre_combinado = implode(' / ', $nombre_medios);
-
-                foreach ($medios_con_valores as $medio => $valor) {
                     if (!isset($subtotales[$medio])) {
                         $subtotales[$medio] = 0;
                     }
@@ -316,7 +399,7 @@ class MultasCobradas extends Component
                 if (!isset($combinaciones[$nombre_combinado])) {
                     $combinaciones[$nombre_combinado] = 0;
                 }
-                $combinaciones[$nombre_combinado] += array_sum($medios_con_valores);
+                $combinaciones[$nombre_combinado] += array_sum(array_column($medios_con_valores, 'valor'));
             }
         }
 
@@ -464,7 +547,8 @@ class MultasCobradas extends Component
 
     public function edit($id)
     {
-        $registro = TesMultasCobradas::with('items')->findOrFail($id);
+        $registro = TesMultasCobradas::findOrFail($id);
+        $registro->load('items');
         $this->registro_id = $registro->id;
         $this->recibo = $registro->recibo;
         $this->cedula = $registro->cedula;
@@ -476,6 +560,19 @@ class MultasCobradas extends Component
         $this->referencias = $registro->referencias;
         $this->adenda = $registro->adenda;
         $this->forma_pago = $registro->forma_pago;
+
+        // Intentar separar TEL y PERÍODO si existen en adicional
+        if ($registro->adicional) {
+            // Formato esperado: TEL. XXXX PERÍODO DD/MM/YYYY - DD/MM/YYYY
+            if (preg_match('/TEL\.\s*(.*?)\s*PERÍODO\s*(.*?)\s*-\s*(.*)/i', $registro->adicional, $matches)) {
+                $this->temp_tel = trim($matches[1]);
+                $this->temp_periodo_desde = trim($matches[2]);
+                $this->temp_periodo_hasta = trim($matches[3]);
+            } else {
+                // Si no coincide con el patrón pero tiene datos, lo dejamos en temp_tel por ejemplo
+                $this->temp_tel = $registro->adicional;
+            }
+        }
 
         $this->items_form = $registro->items->map(function ($item) {
             return [
@@ -497,19 +594,49 @@ class MultasCobradas extends Component
     public function save()
     {
         $this->isSaving = true;
+
+        // Construir campo adicional (Otros Datos)
+        $partesAdicional = [];
+        if ($this->temp_tel) {
+            $partesAdicional[] = "TEL. " . trim($this->temp_tel);
+        }
+        if ($this->temp_periodo_desde || $this->temp_periodo_hasta) {
+            $desde = $this->temp_periodo_desde ?: '...';
+            $hasta = $this->temp_periodo_hasta ?: '...';
+            // Asegurar formato uruguayo si vienen como Y-m-d desde el componente (aunque usen datepicker-uy)
+            try {
+                if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $desde)) $desde = \Carbon\Carbon::parse($desde)->format('d/m/Y');
+                if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $hasta)) $hasta = \Carbon\Carbon::parse($hasta)->format('d/m/Y');
+            } catch (\Exception $e) {
+            }
+
+            $partesAdicional[] = "PERÍODO " . $desde . " - " . $hasta;
+        }
+        $this->adicional = implode(' ', $partesAdicional);
+
         $this->validate();
 
         // Validación de consistencia de montos
         $this->validarConsistenciaMontos();
 
+        // Validación de medio de pago
+        $this->validarMedioPago();
+
         try {
             DB::beginTransaction();
+
+            $medioPagoService = new \App\Services\Tesoreria\MedioPagoService();
+            $medioPagoStr = $this->forma_pago ?: 'SIN DATOS';
+            $formaPagoNormalizada = $medioPagoService->validarYNormalizar(
+                $medioPagoStr,
+                $this->monto
+            );
 
             $data = $this->convertirCamposAMayusculas(
                 ['nombre', 'domicilio', 'adicional', 'referencias', 'adenda'],
                 [
-                    'recibo' => $this->recibo,
-                    'cedula' => $this->cedula,
+                    'recibo' => trim($this->recibo),
+                    'cedula' => preg_replace('/[^0-9KkRUTrut-]/', '', $this->cedula),
                     'nombre' => $this->nombre,
                     'domicilio' => $this->domicilio,
                     'adicional' => $this->adicional,
@@ -517,22 +644,22 @@ class MultasCobradas extends Component
                     'monto' => $this->monto,
                     'referencias' => $this->referencias,
                     'adenda' => $this->adenda,
-                    'forma_pago' => $this->forma_pago ?: 'SIN DATOS',
+                    'forma_pago' => $formaPagoNormalizada,
                 ]
             );
 
             if ($this->editMode) {
-                $cobro = TesMultasCobradas::find($this->registro_id);
+                $cobro = TesMultasCobradas::findOrFail($this->registro_id);
                 $data['updated_by'] = auth()->id();
                 $cobro->update($data);
 
-                // Actualizar Items
+                // Actualizar Items - Borrar y crear (simplificado)
                 $cobro->items()->delete();
                 foreach ($this->items_form as $itemData) {
                     $cobro->items()->create([
-                        'detalle' => mb_strtoupper($itemData['detalle'], 'UTF-8'),
-                        'descripcion' => mb_strtoupper($itemData['descripcion'], 'UTF-8'),
-                        'importe' => $itemData['importe'],
+                        'detalle' => trim($itemData['detalle']),
+                        'descripcion' => trim($itemData['descripcion']),
+                        'importe' => (float) $itemData['importe'],
                         'created_by' => auth()->id(),
                     ]);
                 }
@@ -544,9 +671,9 @@ class MultasCobradas extends Component
 
                 foreach ($this->items_form as $itemData) {
                     $cobro->items()->create([
-                        'detalle' => mb_strtoupper($itemData['detalle'], 'UTF-8'),
-                        'descripcion' => mb_strtoupper($itemData['descripcion'], 'UTF-8'),
-                        'importe' => $itemData['importe'],
+                        'detalle' => trim($itemData['detalle']),
+                        'descripcion' => trim($itemData['descripcion']),
+                        'importe' => (float) $itemData['importe'],
                         'created_by' => auth()->id(),
                     ]);
                 }
@@ -556,7 +683,7 @@ class MultasCobradas extends Component
             DB::commit();
             $this->showModal = false;
             $this->resetForm();
-            // Invalidar caché después de operaciones de escritura
+            $this->cargarSugerenciasDetalle();
             $this->invalidateCache();
         } catch (\Exception $e) {
             DB::rollBack();
@@ -580,9 +707,20 @@ class MultasCobradas extends Component
         if (abs($this->monto - $sumaItems) > 0.01) {
             throw \Illuminate\Validation\ValidationException::withMessages([
                 'monto' => 'El monto total ($' . number_format($this->monto, 2, ',', '.') . ') ' .
-                          'no coincide con la suma de los ítems ($' . number_format($sumaItems, 2, ',', '.') . ').'
+                    'no coincide con la suma de los ítems ($' . number_format($sumaItems, 2, ',', '.') . ').'
             ]);
         }
+    }
+
+    /**
+     * Valida el medio de pago usando el servicio de medios de pago
+     *
+     * @throws \Illuminate\Validation\ValidationException
+     */
+    protected function validarMedioPago(): void
+    {
+        $medioPagoService = new \App\Services\Tesoreria\MedioPagoService();
+        $medioPagoService->validarYNormalizar($this->forma_pago ?: 'SIN DATOS', $this->monto);
     }
 
     public function confirmDelete($id)
@@ -603,6 +741,7 @@ class MultasCobradas extends Component
         }
         $this->showDeleteModal = false;
         $this->registroAEliminar = null;
+        $this->cargarSugerenciasDetalle();
         // Invalidar caché después de eliminación
         $this->invalidateCache();
     }
@@ -625,7 +764,10 @@ class MultasCobradas extends Component
         $this->monto = '';
         $this->referencias = '';
         $this->adenda = '';
-        $this->forma_pago = 'SIN DATOS';
+        $this->forma_pago = '';
+        $this->temp_tel = '';
+        $this->temp_periodo_desde = '';
+        $this->temp_periodo_hasta = '';
         $this->resetItemsForm();
         $this->resetErrorBag();
     }

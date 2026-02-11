@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>Detector de CFEs</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #eee;
+            width: 320px;
+            padding: 16px;
+        }
+
+        h1 {
+            font-size: 1.1em;
+            margin-bottom: 12px;
+            color: #4fc3f7;
+            text-align: center;
+        }
+
+        .section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 12px;
+        }
+
+        .section-title {
+            font-size: 0.85em;
+            color: #888;
+            margin-bottom: 8px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            background: rgba(0, 0, 0, 0.3);
+            color: #fff;
+            font-size: 0.9em;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #4fc3f7;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.9em;
+            cursor: pointer;
+            margin-top: 8px;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #4fc3f7, #2196f3);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(79, 195, 247, 0.3);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: #ccc;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px;
+            border-radius: 6px;
+            font-size: 0.85em;
+        }
+
+        .status-indicator.active {
+            background: rgba(76, 175, 80, 0.2);
+            color: #4caf50;
+        }
+
+        .status-indicator.inactive {
+            background: rgba(244, 67, 54, 0.2);
+            color: #f44336;
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .dot.active {
+            background: #4caf50;
+        }
+
+        .dot.inactive {
+            background: #f44336;
+        }
+
+        .saved-msg {
+            color: #4caf50;
+            font-size: 0.8em;
+            text-align: center;
+            margin-top: 8px;
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Detector de CFEs</h1>
+
+    <div class="section">
+        <div class="section-title">Estado</div>
+        <div id="status" class="status-indicator active">
+            <span class="dot active"></span>
+            <span>Extension activa</span>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">URL del Servidor</div>
+        <input type="text" id="serverUrl" placeholder="http://localhost/oficinas/public">
+        <div style="display: flex; gap: 8px; margin-top: 8px;">
+            <button class="btn btn-primary" id="saveUrl" style="flex: 1;">Guardar</button>
+            <button class="btn btn-secondary" id="autoDetect" title="Detectar URL desde pestaña actual">Auto</button>
+        </div>
+        <div class="saved-msg" id="savedMsg">Guardado correctamente</div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Acciones</div>
+        <button class="btn btn-secondary" id="openApp">Abrir Aplicacion</button>
+    </div>
+
+    <script src="popup.js"></script>
+</body>
+
+</html>

@@ -3,6 +3,9 @@
         <div class="card-header bg-info text-white card-header-gradient py-2 px-3 d-flex justify-content-between align-items-center">
             <h4 class="mb-0"><strong><i class="fas fa-file-invoice-dollar mr-2"></i>Gestión de Prendas</strong></h4>
             <div>
+                <a href="{{ route('tesoreria.prendas.reportes') }}" class="btn btn-secondary mr-2">
+                    <i class="fas fa-filter"></i> Filtrar
+                </a>
                 <a href="{{ route('tesoreria.prendas.planillas.index') }}" class="btn btn-success mr-2">
                     <i class="fas fa-list-alt"></i> Planillas
                 </a>
@@ -47,7 +50,7 @@
                             <th class="align-middle">Recibo</th>
                             <th class="align-middle">Orden Cobro</th>
                             <th class="align-middle">Titular</th>
-                            <th class="align-middle">Cédula</ th>
+                            <th class="align-middle">Cédula</th>
                             <th class="align-middle">Monto</th>
                             <th class="align-middle">Medio Pago</th>
                             <th class="align-middle d-print-none">Acciones</th>

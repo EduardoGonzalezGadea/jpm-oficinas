@@ -48,6 +48,64 @@ Route::get('/', function () {
     return view('welcome');
 })->name('home');
 
+Route::get('/download-extension', function () {
+    $zipFileName = 'extension-cfe-detect.zip';
+    $zipPath = storage_path($zipFileName);
+    $extensionPath = base_path('extension-cfe-detect');
+
+    if (!extension_loaded('zip')) {
+        return "La extensión PHP ZIP no está habilitada en este servidor.";
+    }
+
+    $zip = new \ZipArchive();
+    if ($zip->open($zipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) === TRUE) {
+        $files = new \RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator($extensionPath),
+            \RecursiveIteratorIterator::LEAVES_ONLY
+        );
+
+        foreach ($files as $name => $file) {
+            if (!$file->isDir()) {
+                $filePath = $file->getRealPath();
+                $relativePath = substr($filePath, strlen($extensionPath) + 1);
+                $zip->addFile($filePath, $relativePath);
+            }
+        }
+        $zip->close();
+    }
+
+    return response()->download($zipPath)->deleteFileAfterSend(true);
+})->name('extension.download');
+
+Route::get('/download-text-replacer-extension', function () {
+    $zipFileName = 'extension-text-replacer.zip';
+    $zipPath = storage_path($zipFileName);
+    $extensionPath = base_path('extension-text-replacer');
+
+    if (!extension_loaded('zip')) {
+        return "La extensión PHP ZIP no está habilitada en este servidor.";
+    }
+
+    $zip = new \ZipArchive();
+    if ($zip->open($zipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) === TRUE) {
+        $files = new \RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator($extensionPath),
+            \RecursiveIteratorIterator::LEAVES_ONLY
+        );
+
+        foreach ($files as $name => $file) {
+            if (!$file->isDir()) {
+                $filePath = $file->getRealPath();
+                $relativePath = substr($filePath, strlen($extensionPath) + 1);
+                $zip->addFile($filePath, $relativePath);
+            }
+        }
+        $zip->close();
+    }
+
+    return response()->download($zipPath)->deleteFileAfterSend(true);
+})->name('extension.text-replacer.download');
+
 // Ruta pública para acceso como invitado a multas de tránsito
 Route::get('/multas-transito-publico', function () {
     return view('tesoreria.multas-publico');
@@ -270,6 +328,10 @@ Route::middleware(['web', 'jwt.verify', 'two-factor'])->group(function () {
             })->name('cargar-cfe');
             Route::get('/imprimir-detalles/{fechaDesde}/{fechaHasta}', \App\Http\Livewire\Tesoreria\MultasCobradas\PrintMultasCobradasFull::class)->name('imprimir-detalles');
             Route::get('/imprimir-resumen/{fechaDesde}/{fechaHasta}', \App\Http\Livewire\Tesoreria\MultasCobradas\PrintMultasCobradasResumen::class)->name('imprimir-resumen');
+
+            // Reportes Avanzados
+            Route::get('/reportes', \App\Http\Livewire\Tesoreria\MultasCobradas\MultasCobradasReporte::class)->name('reportes');
+            Route::get('/imprimir-avanzado', \App\Http\Livewire\Tesoreria\MultasCobradas\PrintMultasCobradasAdvanced::class)->name('imprimir-avanzado');
         });
 
         // Rutas de Eventuales
@@ -292,6 +354,10 @@ Route::middleware(['web', 'jwt.verify', 'two-factor'])->group(function () {
             Route::get('/imprimir-detalles/{year}/{mes}', PrintEventualesFull::class)->name('imprimir-detalles');
 
             Route::get('/cargar-efactura', [App\Http\Controllers\Tesoreria\EventualesController::class, 'cargarEfactura'])->name('cargar-efactura');
+
+            // Reportes Avanzados
+            Route::get('/reportes', \App\Http\Livewire\Tesoreria\Eventuales\EventualesReporte::class)->name('reportes');
+            Route::get('/imprimir-avanzado', \App\Http\Livewire\Tesoreria\Eventuales\PrintEventualesAdvanced::class)->name('imprimir-avanzado');
         });
 
         // Rutas de Arrendamientos
@@ -303,6 +369,10 @@ Route::middleware(['web', 'jwt.verify', 'two-factor'])->group(function () {
             })->name('planillas-print');
             Route::get('/imprimir/{year}/{mes}', PrintArrendamientos::class)->name('imprimir');
             Route::get('/imprimir-todo/{year}/{mes}', PrintArrendamientosFull::class)->name('imprimir-todo');
+
+            // Reportes Avanzados
+            Route::get('/reportes', \App\Http\Livewire\Tesoreria\Arrendamientos\ArrendamientosReporte::class)->name('reportes');
+            Route::get('/imprimir-avanzado', \App\Http\Livewire\Tesoreria\Arrendamientos\PrintArrendamientosAdvanced::class)->name('imprimir-avanzado');
         });
 
         // Rutas de Armas
@@ -312,6 +382,14 @@ Route::middleware(['web', 'jwt.verify', 'two-factor'])->group(function () {
             Route::get('/cargar-cfe', [ArmasController::class, 'cargarCfe'])->name('cargar-cfe');
             Route::get('/tenencia/imprimir/{id}', [ArmasImpresionController::class, 'imprimirTenencia'])->name('tenencia.imprimir');
             Route::get('/porte/imprimir/{id}', [ArmasImpresionController::class, 'imprimirPorte'])->name('porte.imprimir');
+
+            // Reportes Avanzados Porte
+            Route::get('/porte/reportes', \App\Http\Livewire\Tesoreria\Armas\PorteArmasReporte::class)->name('porte.reportes');
+            Route::get('/porte/imprimir-avanzado', \App\Http\Livewire\Tesoreria\Armas\PrintPorteArmasAdvanced::class)->name('porte.imprimir-avanzado');
+
+            // Reportes Avanzados Tenencia
+            Route::get('/tenencia/reportes', \App\Http\Livewire\Tesoreria\Armas\TenenciaArmasReporte::class)->name('tenencia.reportes');
+            Route::get('/tenencia/imprimir-avanzado', \App\Http\Livewire\Tesoreria\Armas\PrintTenenciaArmasAdvanced::class)->name('tenencia.imprimir-avanzado');
 
             // Planillas Porte
             Route::prefix('porte/planillas')->name('porte.planillas.')->group(function () {
@@ -330,23 +408,40 @@ Route::middleware(['web', 'jwt.verify', 'two-factor'])->group(function () {
 
 
         // Rutas de Certificados de Residencia
-        Route::get('/certificados-residencia', \App\Http\Livewire\Tesoreria\CertificadosResidencia\Index::class)->name('certificados-residencia.index');
+        Route::prefix('certificados-residencia')->name('certificados-residencia.')->group(function () {
+            Route::get('/', \App\Http\Livewire\Tesoreria\CertificadosResidencia\Index::class)->name('index');
+            // Reportes Avanzados
+            Route::get('/reportes', \App\Http\Livewire\Tesoreria\CertificadosResidencia\CertificadosReporte::class)->name('reportes');
+            Route::get('/imprimir-avanzado', \App\Http\Livewire\Tesoreria\CertificadosResidencia\PrintCertificadosAdvanced::class)->name('imprimir-avanzado');
+        });
 
         // Rutas de Gestión de Prendas
-        Route::get('/prendas', \App\Http\Livewire\Tesoreria\Prendas\Index::class)->name('prendas.index');
+        Route::prefix('prendas')->name('prendas.')->group(function () {
+            Route::get('/', \App\Http\Livewire\Tesoreria\Prendas\Index::class)->name('index');
+            // Reportes Avanzados
+            Route::get('/reportes', \App\Http\Livewire\Tesoreria\Prendas\PrendasReporte::class)->name('reportes');
+            Route::get('/imprimir-avanzado', \App\Http\Livewire\Tesoreria\Prendas\PrintPrendasAdvanced::class)->name('imprimir-avanzado');
 
-        // Rutas de Planillas de Prendas
-        Route::prefix('prendas/planillas')->name('prendas.planillas.')->group(function () {
-            Route::get('/', \App\Http\Livewire\Tesoreria\Prendas\Planillas\Index::class)->name('index');
-            Route::get('/{id}', \App\Http\Livewire\Tesoreria\Prendas\Planillas\Show::class)->name('show');
-            Route::get('/{id}/imprimir', function ($id) {
-                $planilla = App\Models\Tesoreria\PrendaPlanilla::findOrFail($id);
-                return view('tesoreria.prendas.planillas-print', compact('planilla'));
-            })->name('print');
+            // Rutas de Planillas de Prendas
+            Route::prefix('planillas')->name('planillas.')->group(function () {
+                Route::get('/', \App\Http\Livewire\Tesoreria\Prendas\Planillas\Index::class)->name('index');
+                Route::get('/{id}', \App\Http\Livewire\Tesoreria\Prendas\Planillas\Show::class)->name('show');
+                Route::get('/{id}/imprimir', function ($id) {
+                    $planilla = App\Models\Tesoreria\PrendaPlanilla::findOrFail($id);
+                    return view('tesoreria.prendas.planillas-print', compact('planilla'));
+                })->name('print');
+            });
         });
 
         // Rutas de Gestión de Depósito de Vehículos
-        Route::get('/deposito-vehiculos', [App\Http\Controllers\Tesoreria\DepositoVehiculosController::class, 'index'])->name('deposito-vehiculos.index');
+        Route::prefix('deposito-vehiculos')->name('deposito-vehiculos.')->group(function () {
+            Route::get('/', [App\Http\Controllers\Tesoreria\DepositoVehiculosController::class, 'index'])->name('index');
+            // Reportes Avanzados
+            Route::get('/reportes', \App\Http\Livewire\Tesoreria\DepositoVehiculos\DepositoVehiculosReporte::class)->name('reportes');
+            Route::get('/imprimir-avanzado', function () {
+                return "Impresión Avanzada No Implementada aún";
+            })->name('imprimir-avanzado');
+        });
 
         // Rutas de Planillas de Depósito de Vehículos
         Route::prefix('deposito-vehiculos/planillas')->name('deposito-vehiculos.planillas.')->group(function () {

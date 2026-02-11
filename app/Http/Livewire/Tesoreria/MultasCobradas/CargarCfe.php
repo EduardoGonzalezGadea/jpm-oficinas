@@ -23,6 +23,26 @@ class CargarCfe extends Component
         'archivo' => 'required|mimes:pdf|max:10240', // 10MB max
     ];
 
+    public function mount()
+    {
+        // 1. Intentar cargar desde Caché (Nuevo método más seguro para la extensión)
+        $prefillId = request()->query('prefill_id');
+        if ($prefillId && Cache::has('cfe_prefill_' . $prefillId)) {
+            $cacheData = Cache::get('cfe_prefill_' . $prefillId);
+            if (in_array($cacheData['tipo'] ?? '', ['multas_cobradas', 'Multas Cobradas'])) {
+                $this->datosExtraidos = $cacheData['datos'];
+                Cache::forget('cfe_prefill_' . $prefillId); // Limpiar
+                return;
+            }
+        }
+
+        // 2. Fallback: Verificar si hay datos pre-cargados desde la sesión (Antiguo método)
+        if (session()->has('cfe_datos_precargados') && session('cfe_tipo') === 'multas_cobradas') {
+            $this->datosExtraidos = session('cfe_datos_precargados');
+            session()->forget(['cfe_datos_precargados', 'cfe_tipo', 'cfe_filepath']);
+        }
+    }
+
     public function updatedArchivo()
     {
         $this->validate();

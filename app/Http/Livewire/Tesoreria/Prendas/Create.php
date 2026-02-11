@@ -2,10 +2,15 @@
 
 namespace App\Http\Livewire\Tesoreria\Prendas;
 
+use Livewire\Component;
 use App\Models\Tesoreria\MedioDePago;
 use App\Models\Tesoreria\Prenda;
-use Livewire\Component;
 
+/**
+ * Componente Livewire: Crear Prenda
+ *
+ * Maneja el formulario de registro de nuevas prendas.
+ */
 class Create extends Component
 {
     public $recibo_serie;
@@ -75,7 +80,6 @@ class Create extends Component
     {
         $this->validate();
 
-        // Validar unicidad de serie y número de recibo
         $existsRecibo = Prenda::where('recibo_serie', $this->recibo_serie)
             ->where('recibo_numero', $this->recibo_numero)
             ->exists();
@@ -88,7 +92,6 @@ class Create extends Component
             return;
         }
 
-        // Verificar si hay transferencia duplicada
         if (!empty($this->transferencia)) {
             $exists = Prenda::where('transferencia', $this->transferencia)->exists();
             if ($exists) {

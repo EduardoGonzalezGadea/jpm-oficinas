@@ -2,9 +2,14 @@
 
 namespace App\Http\Livewire\Tesoreria\Prendas\Planillas;
 
-use App\Models\Tesoreria\PrendaPlanilla;
 use Livewire\Component;
+use App\Models\Tesoreria\PrendaPlanilla;
 
+/**
+ * Componente Livewire: Ver Detalle de Planilla
+ *
+ * Muestra los detalles de una planilla específica.
+ */
 class Show extends Component
 {
     public $planilla;
@@ -13,7 +18,11 @@ class Show extends Component
     public function mount($id)
     {
         $this->planillaId = $id;
-        $this->planilla = PrendaPlanilla::with(['prendas.medioPago', 'createdBy', 'anuladaPor'])
+        $this->planilla = PrendaPlanilla::with([
+            'prendas.medioPago',
+            'createdBy',
+            'anuladaPor'
+        ])
             ->findOrFail($id);
     }
 

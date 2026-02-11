@@ -14,6 +14,7 @@ class VerifyCsrfToken extends Middleware
     protected $except = [
         'hora-uruguay',
         'valor-ur',
-        'tema/cambiar'
+        'tema/cambiar',
+        'api/cfe/*',
     ];
 }

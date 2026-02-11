@@ -18,23 +18,21 @@
     <script>
         (function() {
             @auth
-            // Obtener el tema guardado en el perfil del usuario
+            // Obtenemos los valores directamente del usuario autenticado
             const userThemePath = "{{ auth()->user()->theme_path }}";
             const userThemeName = "{{ auth()->user()->theme }}";
 
-            // Sincronizar con LocalStorage para coherencia con el resto de la App
-            localStorage.setItem("bootswatch-theme", userThemePath);
-            localStorage.setItem("bootswatch-theme-name", userThemeName);
+            if (userThemePath) {
+                localStorage.setItem("bootswatch-theme", userThemePath);
+                localStorage.setItem("bootswatch-theme-name", userThemeName);
 
-            // Crear y agregar el elemento link
-            const themeLink = document.createElement('link');
-            themeLink.id = 'bootswatch-theme';
-            themeLink.rel = 'stylesheet';
-            themeLink.href = userThemePath;
-            document.head.appendChild(themeLink);
+                const themeLink = document.createElement('link');
+                themeLink.id = 'bootswatch-theme';
+                themeLink.rel = 'stylesheet';
+                themeLink.href = userThemePath;
+                document.head.appendChild(themeLink);
+            }
             @else
-            // Para invitados, no cargamos ningún tema de Bootswatch, dejando el Bootstrap base.
-            // Opcionalmente limpiamos LocalStorage para evitar confusiones.
             localStorage.removeItem("bootswatch-theme");
             localStorage.removeItem("bootswatch-theme-name");
             @endauth
@@ -47,6 +45,10 @@
     <link href="{{ asset('libs/fontawesome-free-5.15.4-web/css/all.min.css') }}" rel="stylesheet">
     {{-- SweetAlert2 --}}
     <link href="{{ asset('libs/sweetalert2/dist/sweetalert2.min.css') }}" rel="stylesheet">
+
+    <!-- Flatpickr (Fechas dd/mm/yyyy) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" type="text/css" href="https://npmcdn.com/flatpickr/dist/themes/material_blue.css">
 
     <!-- Alpine.js Intersect Plugin -->
     <script defer src="https://unpkg.com/@alpinejs/intersect@3.x.x/dist/cdn.min.js"></script>
@@ -142,13 +144,226 @@
             border-radius: 0.5rem;
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
         }
+
+        /* Contenedor para apilar banners si faltan varias extensiones */
+        #extension-banners-container {
+            position: fixed;
+            bottom: 15px;
+            left: 15px;
+            right: 15px;
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            pointer-events: none;
+            /* Permitir clics a través del contenedor, pero no de sus hijos */
+        }
+
+        .extension-banner {
+            display: none;
+            /* Se activa vía JS con flex */
+            pointer-events: auto;
+            background: white;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+            align-items: center;
+            justify-content: space-between;
+            animation: slideUp 0.5s ease-out;
+            font-size: 14px;
+        }
+
+        #cfe-extension-banner {
+            background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+        }
+
+        #text-replacer-banner {
+            background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
+        }
+
+        .extension-banner .btn-install {
+            background: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-weight: bold;
+            text-decoration: none;
+            margin-left: 10px;
+            white-space: nowrap;
+            display: inline-block;
+        }
+
+        #cfe-extension-banner .btn-install {
+            color: #f57c00;
+        }
+
+        #text-replacer-banner .btn-install {
+            color: #1e7e34;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        /* Ajustes para pantallas pequeñas */
+        @media (max-width: 600px) {
+            #extension-banners-container {
+                bottom: 10px;
+                left: 10px;
+                right: 10px;
+            }
+
+            .extension-banner {
+                flex-direction: column;
+                text-align: center;
+                padding: 15px;
+            }
+
+            .extension-banner>div:first-child {
+                margin-bottom: 10px;
+            }
+
+            .extension-banner .btn-install {
+                margin-left: 0;
+                margin-bottom: 8px;
+                width: 100%;
+            }
+
+            .extension-banner .close {
+                position: absolute;
+                top: 5px;
+                right: 10px;
+            }
+        }
     </style>
+
+    @auth
+    @if(auth()->user()->hasRole('admin') || auth()->user()->esAdministrador())
+    <script>
+        (function() {
+            let extensionVerified = false;
+
+            function checkExtension() {
+                if (extensionVerified) return;
+
+                const isInstalled = document.documentElement.hasAttribute('data-cfe-extension-installed');
+                const banner = document.getElementById('cfe-extension-banner');
+
+                if (isInstalled) {
+                    extensionVerified = true;
+                    if (banner) banner.style.setProperty('display', 'none', 'important');
+                } else {
+                    if (banner) banner.style.setProperty('display', 'flex', 'important');
+                }
+            }
+
+            let textReplacerVerified = false;
+
+            function checkTextReplacerExtension() {
+                if (textReplacerVerified) return;
+
+                const isInstalled = document.documentElement.hasAttribute('data-text-replacer-installed');
+                const banner = document.getElementById('text-replacer-banner');
+
+                if (isInstalled) {
+                    textReplacerVerified = true;
+                    if (banner) banner.style.setProperty('display', 'none', 'important');
+                } else {
+                    if (banner) banner.style.setProperty('display', 'flex', 'important');
+                }
+            }
+
+            // Escuchar el evento personalizado de la extensión CFE
+            window.addEventListener('cfe-extension-detected', function() {
+                extensionVerified = true;
+                const banner = document.getElementById('cfe-extension-banner');
+                if (banner) banner.style.setProperty('display', 'none', 'important');
+                document.documentElement.setAttribute('data-cfe-extension-installed', 'true');
+            });
+
+            // Escuchar el evento personalizado de la extensión Text Replacer
+            window.addEventListener('text-replacer-detected', function() {
+                textReplacerVerified = true;
+                const banner = document.getElementById('text-replacer-banner');
+                if (banner) banner.style.setProperty('display', 'none', 'important');
+                document.documentElement.setAttribute('data-text-replacer-installed', 'true');
+            });
+
+            // Dar 3 segundos para que las extensiones se reporten antes de mostrar los banners
+            window.addEventListener('load', function() {
+                setTimeout(() => {
+                    checkExtension();
+                    checkTextReplacerExtension();
+                }, 3000);
+            });
+        })();
+    </script>
+    @endif
+    @endauth
 
     {{-- @routes --}}
 </head>
 
 <body>
     @auth
+    @if(auth()->user()->hasRole('admin') || auth()->user()->esAdministrador())
+    <div id="extension-banners-container">
+        <div id="cfe-extension-banner" class="extension-banner">
+            <div>
+                <i class="fas fa-puzzle-piece mr-2"></i>
+                <strong>¡Atención!</strong> La extensión "Detector de CFEs" no está instalada.
+            </div>
+            <div>
+                <a href="{{ route('extension.download') }}" class="btn-install mr-2" data-no-loader="true">
+                    <i class="fas fa-download mr-1"></i> Descargar
+                </a>
+                <a href="#" onclick="Swal.fire({
+                            title: 'Instalación CFE',
+                            html: '<div class=\'text-left\'><ol><li>Descarga el ZIP.</li><li>Descomprime en una carpeta.</li><li>Ve a <b>Extensiones</b> en el navegador.</li><li>Activa <b>Modo Desarrollador</b>.</li><li>Clic en <b>Cargar descomprimida</b>.</li></ol></div>',
+                            icon: 'info',
+                            confirmButtonText: 'Entendido'
+                        }); return false;" class="text-white small underline">
+                    ¿Cómo instalar?
+                </a>
+                <button type="button" class="close text-white ml-3" onclick="document.getElementById('cfe-extension-banner').style.display='none'">
+                    <span>&times;</span>
+                </button>
+            </div>
+        </div>
+
+        <div id="text-replacer-banner" class="extension-banner">
+            <div>
+                <i class="fas fa-keyboard mr-2"></i>
+                <strong>¡Atención!</strong> La extensión "Text Replacer" no está instalada.
+            </div>
+            <div>
+                <a href="{{ route('extension.text-replacer.download') }}" class="btn-install mr-2" data-no-loader="true">
+                    <i class="fas fa-download mr-1"></i> Descargar
+                </a>
+                <a href="#" onclick="Swal.fire({
+                            title: 'Instalación Text Replacer',
+                            html: '<div class=\'text-left\'><ol><li>Descarga el ZIP.</li><li>Descomprime en una carpeta.</li><li>Ve a <b>Extensiones</b> en el navegador.</li><li>Activa <b>Modo Desarrollador</b>.</li><li>Clic en <b>Cargar descomprimida</b>.</li></ol></div>',
+                            icon: 'info',
+                            confirmButtonText: 'Entendido'
+                        }); return false;" class="text-white small underline">
+                    ¿Cómo instalar?
+                </a>
+                <button type="button" class="close text-white ml-3" onclick="document.getElementById('text-replacer-banner').style.display='none'">
+                    <span>&times;</span>
+                </button>
+            </div>
+        </div>
+    </div>
+    @endif
     @include('layouts.nav')
     @endauth
 
@@ -574,9 +789,45 @@
                 }
             });
         });
+
+        window.addEventListener('openInNewTab', event => {
+            window.open(event.detail, '_blank');
+        });
+
+        document.addEventListener('livewire:load', function() {
+            window.livewire.on('openInNewTab', (url) => {
+                window.open(url, '_blank');
+            });
+        });
     </script>
 
     <script src="{{ asset('js/print.js') }}"></script>
+
+    <!-- Flatpickr JS -->
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://npmcdn.com/flatpickr/dist/l10n/es.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            initFlatpickr();
+        });
+
+        document.addEventListener('livewire:load', function() {
+            initFlatpickr();
+            Livewire.hook('message.processed', (message, component) => {
+                initFlatpickr();
+            });
+        });
+
+        function initFlatpickr() {
+            flatpickr(".datepicker-uy", {
+                locale: "es",
+                dateFormat: "Y-m-d", // Formato interno (compatible con Livewire/ISO)
+                altInput: true,
+                altFormat: "d/m/Y", // Formato visual para Uruguay
+                allowInput: true,
+            });
+        }
+    </script>
 </body>
 
 </html>

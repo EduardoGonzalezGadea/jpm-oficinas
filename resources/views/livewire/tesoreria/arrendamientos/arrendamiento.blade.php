@@ -3,6 +3,12 @@
         .text-nowrap-custom {
             white-space: nowrap;
         }
+
+        .btn-action-fixed {
+            width: 30px;
+            padding-left: 0;
+            padding-right: 0;
+        }
     </style>
     <div class="container-fluid p-0 m-0">
         <div>
@@ -10,6 +16,9 @@
                 <div class="card-header bg-info text-white card-header-gradient py-2 px-3 d-flex justify-content-between align-items-center">
                     <h4 class="mb-0"><strong><i class="fas fa-file-signature mr-2"></i>Arrendamientos</strong></h4>
                     <div class="btn-group d-print-none">
+                        <a href="{{ route('tesoreria.arrendamientos.reportes') }}" class="btn btn-secondary">
+                            <i class="fas fa-filter"></i> Filtrar
+                        </a>
                         <a href="{{ route('tesoreria.arrendamientos.imprimir-todo', ['year' => $year, 'mes' => $mes]) }}" target="_blank" class="btn btn-info">
                             <i class="fas fa-print"></i> Detalles
                         </a>
@@ -26,11 +35,11 @@
                     <!-- Selector de Fecha/Mes/Año -->
                     <div class="form-row mb-3">
                         <div class="col-md-5">
-                            <div class="input-group">
+                            <div class="input-group input-group-sm">
                                 <div class="input-group-prepend">
                                     <span class="input-group-text">Mes y Año</span>
                                 </div>
-                                <select id="mesSelector" class="form-control" wire:model="mes">
+                                <select id="mesSelector" class="form-control form-control-sm" wire:model="mes">
                                     <option value="1">Enero</option>
                                     <option value="2">Febrero</option>
                                     <option value="3">Marzo</option>
@@ -44,12 +53,12 @@
                                     <option value="11">Noviembre</option>
                                     <option value="12">Diciembre</option>
                                 </select>
-                                <input type="number" id="anioSelector" class="form-control" wire:model="year">
+                                <input type="number" id="anioSelector" class="form-control form-control-sm" wire:model="year">
                             </div>
                         </div>
                         <div class="col-md-7 align-self-end d-print-none">
                             <div class="btn-group d-flex" role="group">
-                                <div class="input-group">
+                                <div class="input-group input-group-sm">
                                     <input type="text" wire:model="search" id="search"
                                         class="form-control form-control-sm"
                                         placeholder="Buscar por nombre, ingreso, monto, O/C o recibo...">
@@ -124,21 +133,21 @@
                                     <td class="text-center align-middle d-print-none">
                                         <div class="btn-group" role="group">
                                             <button wire:click="showDetails({{ $arrendamiento->id }})"
-                                                class="btn btn-sm btn-outline-info" data-toggle="modal"
+                                                class="btn btn-sm btn-outline-info btn-action-fixed" data-toggle="modal"
                                                 data-target="#detailsModal" title="Detalles">
                                                 <i class="fas fa-eye"></i>
                                             </button>
                                             <button wire:click="editIngreso({{ $arrendamiento->id }})"
-                                                class="btn btn-sm btn-outline-success" title="Ingreso">
+                                                class="btn btn-sm btn-outline-success btn-action-fixed" title="Ingreso">
                                                 <i class="fas fa-file-invoice-dollar"></i>
                                             </button>
                                             <button wire:click="edit({{ $arrendamiento->id }})"
-                                                class="btn btn-sm btn-outline-primary" title="Editar">
+                                                class="btn btn-sm btn-outline-primary btn-action-fixed" title="Editar">
                                                 <i class="fas fa-edit"></i>
                                             </button>
                                             <button
                                                 x-on:click="$dispatch('swal:confirm', { title: '¿Estás seguro?', text: '¡No podrás revertir esto!', method: 'destroy', id: {{ $arrendamiento->id }}, confirmButtonText: 'Sí, elimínalo' })"
-                                                class="btn btn-sm btn-outline-danger" title="Eliminar">
+                                                class="btn btn-sm btn-outline-danger btn-action-fixed" title="Eliminar">
                                                 <i class="fas fa-trash-alt"></i>
                                             </button>
                                         </div>

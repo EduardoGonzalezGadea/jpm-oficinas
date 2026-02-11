@@ -1,19 +1,13 @@
 <?php
 
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\CfeController;
 
-/*
-|--------------------------------------------------------------------------
-| API Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register API routes for your application. These
-| routes are loaded by the RouteServiceProvider within a group which
-| is assigned the "api" middleware group. Enjoy building your API!
-|
-*/
-
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
-});
+// Rutas de CFE - Sin sesión para evitar conflictos con la extensión
+Route::post('/cfe/procesar', [CfeController::class, 'procesarCfe']);
+Route::get('/cfe/pendientes', [CfeController::class, 'pendientes']);
+Route::post('/cfe/{id}/confirmar', [CfeController::class, 'confirmarCfe']);
+Route::post('/cfe/{id}/rechazar', [CfeController::class, 'rechazarCfe']);
+Route::post('/cfe/analizar', [CfeController::class, 'analizarCfe']);
+Route::post('/cfe/analizar-archivo', [CfeController::class, 'analizarCfeConArchivo']);
+Route::post('/cfe/crear-registro', [CfeController::class, 'crearRegistro']);

@@ -154,7 +154,7 @@ class Index extends Component
 
     public function mount()
     {
-        $this->mesActual = session('caja_chica_mes') ?: now()->locale('es')->translatedFormat('F');
+        $this->mesActual = strtolower(session('caja_chica_mes') ?: now()->locale('es')->translatedFormat('F'));
         $this->anioActual = session('caja_chica_anio') ?: now()->year;
         $this->fechaHasta = now()->format('Y-m-d');
         $this->tablaCajaChica = collect();
@@ -204,6 +204,7 @@ class Index extends Component
 
     public function updatedMesActual()
     {
+        $this->mesActual = strtolower($this->mesActual); // Asegurar minúsculas
         session()->forget(['caja_chica_mes', 'caja_chica_anio']);
         $this->cargarDatos();
     }
@@ -256,9 +257,14 @@ class Index extends Component
 
     public function cargarTablaCajaChica()
     {
-        $this->tablaCajaChica = CajaChica::where('mes', $this->mesActual)
+        $this->tablaCajaChica = CajaChica::where(function ($query) {
+            $query->where('mes', $this->mesActual)
+                ->orWhere('mes', ucfirst($this->mesActual))
+                ->orWhere('mes', strtolower($this->mesActual));
+        })
             ->where('anio', $this->anioActual)
             ->get();
+
         $this->cajaChicaSeleccionada = $this->tablaCajaChica->first();
         if ($this->cajaChicaSeleccionada) {
             $this->nuevoPendiente['relCajaChica'] = $this->cajaChicaSeleccionada->idCajaChica;
@@ -269,64 +275,31 @@ class Index extends Component
 
     public function cargarTablaPendientesDetalle()
     {
-        if (!$this->cajaChicaSeleccionada) {
-            $this->tablaPendientesDetalle = collect();
-            return;
-        }
-
         try {
-            $fechaHastaStr = Carbon::createFromFormat('Y-m-d', $this->fechaHasta)->endOfDay()->toDateTimeString();
+            $fechaHastaStr = $this->fechaHasta ? Carbon::parse($this->fechaHasta)->endOfDay()->toDateTimeString() : now()->endOfDay()->toDateTimeString();
 
-            $pendientesActual = Pendiente::where('relCajaChica', $this->cajaChicaSeleccionada->idCajaChica)
-                ->where('fechaPendientes', '<=', $fechaHastaStr)
-                ->with('dependencia')
-                ->selectRaw(
-                    'tes_cch_pendientes.*,
-                    (SELECT SUM(rendido) FROM tes_cch_movimientos WHERE tes_cch_movimientos.relPendiente = tes_cch_pendientes.idPendientes AND fechaMovimientos <= ? AND deleted_at IS NULL) as tot_rendido,
-                    (SELECT SUM(reintegrado) FROM tes_cch_movimientos WHERE tes_cch_movimientos.relPendiente = tes_cch_pendientes.idPendientes AND fechaMovimientos <= ? AND deleted_at IS NULL) as tot_reintegrado,
-                    (SELECT SUM(recuperado) FROM tes_cch_movimientos WHERE tes_cch_movimientos.relPendiente = tes_cch_pendientes.idPendientes AND fechaMovimientos <= ? AND deleted_at IS NULL) as tot_recuperado,
-                    (SELECT COUNT(*) FROM tes_cch_movimientos WHERE tes_cch_movimientos.relPendiente = tes_cch_pendientes.idPendientes AND fechaMovimientos <= ? AND deleted_at IS NULL AND rendido > 0 AND (documentos IS NULL OR TRIM(documentos) = \'\')) as count_undoc,
-                    (SELECT COUNT(*) FROM tes_cch_movimientos WHERE tes_cch_movimientos.relPendiente = tes_cch_pendientes.idPendientes AND deleted_at IS NULL) as cant_movimientos',
-                    [$fechaHastaStr, $fechaHastaStr, $fechaHastaStr, $fechaHastaStr]
-                )
-                ->orderBy('pendiente', 'ASC')
-                ->get();
+            // Determinar el primer día del mes seleccionado para separar "actual" de "anteriores"
+            $meses = [
+                'enero' => 1,
+                'febrero' => 2,
+                'marzo' => 3,
+                'abril' => 4,
+                'mayo' => 5,
+                'junio' => 6,
+                'julio' => 7,
+                'agosto' => 8,
+                'septiembre' => 9,
+                'octubre' => 10,
+                'noviembre' => 11,
+                'diciembre' => 12
+            ];
+            $mesNo = $meses[strtolower($this->mesActual)] ?? now()->month;
+            $primerDiaMesActual = Carbon::create($this->anioActual, $mesNo, 1)->startOfMonth();
 
-            $pendientesActual = $pendientesActual->map(function ($pendiente) {
-                $pendiente->tot_rendido = $pendiente->tot_rendido ?? 0;
-                $pendiente->tot_reintegrado = $pendiente->tot_reintegrado ?? 0;
-                $pendiente->tot_recuperado = $pendiente->tot_recuperado ?? 0;
-
-                $totalGastado = $pendiente->tot_rendido + $pendiente->tot_reintegrado;
-                $diferencia = $totalGastado > 0 ? $totalGastado - $pendiente->montoPendientes : 0;
-                $pendiente->extra = $diferencia > 0 ? $diferencia : 0;
-
-                $pendiente->saldo = $pendiente->montoPendientes - ($pendiente->tot_reintegrado + $pendiente->tot_recuperado);
-
-                // Cálculo de rendido sin documentos según nueva lógica:
-                // Si tiene movimientos rendidos sin docs, sumar (Rendido - Recuperado) total del pendiente
-                if (($pendiente->count_undoc ?? 0) > 0) {
-                    $pendiente->rendido_sin_docs_calc = ($pendiente->tot_rendido - $pendiente->tot_recuperado);
-                } else {
-                    $pendiente->rendido_sin_docs_calc = 0;
-                }
-
-                $pendiente->es_mes_anterior = false; // Flag for current month
-                return $pendiente;
-            });
-
-            // Obtener pendientes del mes anterior con saldo > 0
-            $mesAnioAnterior = $this->getMesAnioAnterior();
-            $mesAnterior = $mesAnioAnterior['mes'];
-            $anioAnterior = $mesAnioAnterior['anio'];
-
-            $cajaChicaAnterior = CajaChica::where('mes', $mesAnterior)
-                ->where('anio', $anioAnterior)
-                ->first();
-
-            $pendientesAnterior = collect();
-            if ($cajaChicaAnterior) {
-                $pendientesAnterior = Pendiente::where('relCajaChica', $cajaChicaAnterior->idCajaChica)
+            // 1. Pendientes del MES SELECCIONADO (vinculados a la Caja Chica seleccionada)
+            $pendientesActual = collect();
+            if ($this->cajaChicaSeleccionada) {
+                $pendientesActual = Pendiente::where('relCajaChica', $this->cajaChicaSeleccionada->idCajaChica)
                     ->where('fechaPendientes', '<=', $fechaHastaStr)
                     ->with('dependencia')
                     ->selectRaw(
@@ -338,47 +311,94 @@ class Index extends Component
                         (SELECT COUNT(*) FROM tes_cch_movimientos WHERE tes_cch_movimientos.relPendiente = tes_cch_pendientes.idPendientes AND deleted_at IS NULL) as cant_movimientos',
                         [$fechaHastaStr, $fechaHastaStr, $fechaHastaStr, $fechaHastaStr]
                     )
-                    ->orderBy('pendiente', 'ASC')
                     ->get();
-
-                $pendientesAnterior = $pendientesAnterior->map(function ($pendiente) {
-                    $pendiente->tot_rendido = $pendiente->tot_rendido ?? 0;
-                    $pendiente->tot_reintegrado = $pendiente->tot_reintegrado ?? 0;
-                    $pendiente->tot_recuperado = $pendiente->tot_recuperado ?? 0;
-
-                    $totalGastado = $pendiente->tot_rendido + $pendiente->tot_reintegrado;
-                    $diferencia = $totalGastado > 0 ? $totalGastado - $pendiente->montoPendientes : 0;
-                    $pendiente->extra = $diferencia > 0 ? $diferencia : 0;
-
-                    $pendiente->saldo = $pendiente->montoPendientes - ($pendiente->tot_reintegrado + $pendiente->tot_recuperado);
-
-                    // Cálculo de rendido sin documentos (Mes Anterior)
-                    if (($pendiente->count_undoc ?? 0) > 0) {
-                        $pendiente->rendido_sin_docs_calc = ($pendiente->tot_rendido - $pendiente->tot_recuperado);
-                    } else {
-                        $pendiente->rendido_sin_docs_calc = 0;
-                    }
-
-                    $pendiente->es_mes_anterior = true; // Flag for previous month
-                    return $pendiente;
-                })->filter(function ($pendiente) {
-                    return $pendiente->saldo > 0;
-                });
             }
 
-            $allPendientes = $pendientesActual->concat($pendientesAnterior)->sortBy('pendiente')->values();
+            $pendientesActual = $pendientesActual->map(function ($p) {
+                $p->tot_rendido = $p->tot_rendido ?? 0;
+                $p->tot_reintegrado = $p->tot_reintegrado ?? 0;
+                $p->tot_recuperado = $p->tot_recuperado ?? 0;
+
+                $totalGastado = $p->tot_rendido + $p->tot_reintegrado;
+                $diferencia = $totalGastado > 0 ? $totalGastado - $p->montoPendientes : 0;
+                $p->extra = $diferencia > 0 ? $diferencia : 0;
+
+                // Lógica de saldo igual a PanelController
+                if ($totalGastado > $p->montoPendientes) {
+                    $p->saldo = $p->tot_rendido - $p->tot_recuperado;
+                } else {
+                    $p->saldo = $p->montoPendientes - $p->tot_reintegrado - $p->tot_recuperado;
+                }
+
+                if (($p->count_undoc ?? 0) > 0) {
+                    $p->rendido_sin_docs_calc = ($p->tot_rendido - $p->tot_recuperado);
+                } else {
+                    $p->rendido_sin_docs_calc = 0;
+                }
+
+                $p->es_mes_anterior = false;
+                return $p;
+            });
+
+            $inicioMesAnterior = (clone $primerDiaMesActual)->subMonth()->startOfMonth();
+
+            // 2. Pendientes del MES ANTERIOR (fecha >= inicioMesAnterior y fecha < primer día mes actual)
+            $pendientesAnteriores = Pendiente::where('fechaPendientes', '>=', $inicioMesAnterior->toDateTimeString())
+                ->where('fechaPendientes', '<', $primerDiaMesActual->toDateTimeString())
+                ->where('fechaPendientes', '<=', $fechaHastaStr)
+                ->with('dependencia')
+                ->selectRaw(
+                    'tes_cch_pendientes.*,
+                    (SELECT SUM(rendido) FROM tes_cch_movimientos WHERE tes_cch_movimientos.relPendiente = tes_cch_pendientes.idPendientes AND fechaMovimientos <= ? AND deleted_at IS NULL) as tot_rendido,
+                    (SELECT SUM(reintegrado) FROM tes_cch_movimientos WHERE tes_cch_movimientos.relPendiente = tes_cch_pendientes.idPendientes AND fechaMovimientos <= ? AND deleted_at IS NULL) as tot_reintegrado,
+                    (SELECT SUM(recuperado) FROM tes_cch_movimientos WHERE tes_cch_movimientos.relPendiente = tes_cch_pendientes.idPendientes AND fechaMovimientos <= ? AND deleted_at IS NULL) as tot_recuperado,
+                    (SELECT COUNT(*) FROM tes_cch_movimientos WHERE tes_cch_movimientos.relPendiente = tes_cch_pendientes.idPendientes AND fechaMovimientos <= ? AND deleted_at IS NULL AND rendido > 0 AND (documentos IS NULL OR TRIM(documentos) = \'\')) as count_undoc,
+                    (SELECT COUNT(*) FROM tes_cch_movimientos WHERE tes_cch_movimientos.relPendiente = tes_cch_pendientes.idPendientes AND deleted_at IS NULL) as cant_movimientos',
+                    [$fechaHastaStr, $fechaHastaStr, $fechaHastaStr, $fechaHastaStr]
+                )
+                ->get();
+
+            $idActuales = $pendientesActual->pluck('idPendientes')->toArray();
+
+            $pendientesAnteriores = $pendientesAnteriores->filter(function ($p) use ($idActuales) {
+                return !in_array($p->idPendientes, $idActuales);
+            })->map(function ($p) {
+                $p->tot_rendido = $p->tot_rendido ?? 0;
+                $p->tot_reintegrado = $p->tot_reintegrado ?? 0;
+                $p->tot_recuperado = $p->tot_recuperado ?? 0;
+
+                $totalGastado = $p->tot_rendido + $p->tot_reintegrado;
+                $diferencia = $totalGastado > 0 ? $totalGastado - $p->montoPendientes : 0;
+                $p->extra = $diferencia > 0 ? $diferencia : 0;
+
+                if ($totalGastado > $p->montoPendientes) {
+                    $p->saldo = $p->tot_rendido - $p->tot_recuperado;
+                } else {
+                    $p->saldo = $p->montoPendientes - $p->tot_reintegrado - $p->tot_recuperado;
+                }
+
+                if (($p->count_undoc ?? 0) > 0) {
+                    $p->rendido_sin_docs_calc = ($p->tot_rendido - $p->tot_recuperado);
+                } else {
+                    $p->rendido_sin_docs_calc = 0;
+                }
+
+                $p->es_mes_anterior = true;
+                return $p;
+            })->filter(function ($p) {
+                return round($p->saldo, 2) > 0;
+            });
+
+            $allPendientes = $pendientesActual->concat($pendientesAnteriores)->sortBy('pendiente')->values();
 
             // Aplicar filtro de búsqueda si existe
             if (!empty($this->searchPendientes)) {
                 $search = mb_strtolower($this->searchPendientes, 'UTF-8');
-                $allPendientes = $allPendientes->filter(function ($pendiente) use ($search) {
-                    $numero = mb_strtolower((string)$pendiente->pendiente, 'UTF-8');
-                    $dependencia = mb_strtolower($pendiente->dependencia->dependencia ?? '', 'UTF-8');
-                    $monto = number_format($pendiente->montoPendientes, 2, ',', '.');
-
-                    return str_contains($numero, $search) ||
-                        str_contains($dependencia, $search) ||
-                        str_contains($monto, $search);
+                $allPendientes = $allPendientes->filter(function ($p) use ($search) {
+                    $numero = mb_strtolower((string)$p->pendiente, 'UTF-8');
+                    $dependencia = mb_strtolower($p->dependencia->dependencia ?? '', 'UTF-8');
+                    $monto = number_format($p->montoPendientes, 2, ',', '.');
+                    return str_contains($numero, $search) || str_contains($dependencia, $search) || str_contains($monto, $search);
                 })->values();
             }
 
@@ -391,42 +411,29 @@ class Index extends Component
 
     public function cargarTablaPagos()
     {
-        if (!$this->cajaChicaSeleccionada) {
-            $this->tablaPagos = collect();
-            return;
-        }
-
         try {
-            $fechaHastaStr = Carbon::createFromFormat('Y-m-d', $this->fechaHasta)->endOfDay()->toDateTimeString();
+            $fechaHastaStr = $this->fechaHasta ? Carbon::parse($this->fechaHasta)->endOfDay()->toDateTimeString() : now()->endOfDay()->toDateTimeString();
 
-            $pagosActual = Pago::where('relCajaChica_Pagos', $this->cajaChicaSeleccionada->idCajaChica)
-                ->where('fechaEgresoPagos', '<=', $fechaHastaStr)
-                ->with('acreedor')
-                ->selectRaw(
-                    'tes_cch_pagos.*,
-                    (montoPagos - CASE WHEN fechaIngresoPagos IS NOT NULL AND fechaIngresoPagos <= ? THEN recuperadoPagos ELSE 0 END) as saldo_pagos,
-                    CASE WHEN fechaIngresoPagos IS NOT NULL AND fechaIngresoPagos <= ? THEN recuperadoPagos ELSE 0 END as recuperado_en_periodo',
-                    [$fechaHastaStr, $fechaHastaStr]
-                )
-                ->orderBy('fechaEgresoPagos', 'ASC')
-                ->get()
-                ->map(function ($pago) {
-                    $pago->es_mes_anterior = false;
-                    return $pago;
-                });
+            $meses = [
+                'enero' => 1,
+                'febrero' => 2,
+                'marzo' => 3,
+                'abril' => 4,
+                'mayo' => 5,
+                'junio' => 6,
+                'julio' => 7,
+                'agosto' => 8,
+                'septiembre' => 9,
+                'octubre' => 10,
+                'noviembre' => 11,
+                'diciembre' => 12
+            ];
+            $mesNo = $meses[strtolower($this->mesActual)] ?? now()->month;
+            $primerDiaMesActual = Carbon::create($this->anioActual, $mesNo, 1)->startOfMonth();
 
-            // Obtener pagos del mes anterior con saldo > 0
-            $mesAnioAnterior = $this->getMesAnioAnterior();
-            $mesAnterior = $mesAnioAnterior['mes'];
-            $anioAnterior = $mesAnioAnterior['anio'];
-
-            $cajaChicaAnterior = CajaChica::where('mes', $mesAnterior)
-                ->where('anio', $anioAnterior)
-                ->first();
-
-            $pagosAnterior = collect();
-            if ($cajaChicaAnterior) {
-                $pagosAnterior = Pago::where('relCajaChica_Pagos', $cajaChicaAnterior->idCajaChica)
+            $pagosActual = collect();
+            if ($this->cajaChicaSeleccionada) {
+                $pagosActual = Pago::where('relCajaChica_Pagos', $this->cajaChicaSeleccionada->idCajaChica)
                     ->where('fechaEgresoPagos', '<=', $fechaHastaStr)
                     ->with('acreedor')
                     ->selectRaw(
@@ -436,31 +443,50 @@ class Index extends Component
                         [$fechaHastaStr, $fechaHastaStr]
                     )
                     ->orderBy('fechaEgresoPagos', 'ASC')
-                    ->get()
-                    ->map(function ($pago) {
-                        $pago->es_mes_anterior = true;
-                        return $pago;
-                    })
-                    ->filter(function ($pago) {
-                        return ($pago['saldo_pagos'] ?? 0) > 0;
-                    });
+                    ->get();
             }
 
-            $allPagos = $pagosActual->concat($pagosAnterior)->sortBy('fechaEgresoPagos')->values();
+            $pagosActual = $pagosActual->map(function ($p) {
+                $p->es_mes_anterior = false;
+                return $p;
+            });
 
-            // Aplicar filtro de búsqueda si existe
+            $inicioMesAnterior = (clone $primerDiaMesActual)->subMonth()->startOfMonth();
+
+            // 2. Pagos de MES ANTERIOR (fecha >= inicioMesAnterior y fecha < primer día mes actual)
+            $pagosAnteriores = Pago::where('fechaEgresoPagos', '>=', $inicioMesAnterior->toDateString())
+                ->where('fechaEgresoPagos', '<', $primerDiaMesActual->toDateString())
+                ->where('fechaEgresoPagos', '<=', $fechaHastaStr)
+                ->with('acreedor')
+                ->selectRaw(
+                    'tes_cch_pagos.*,
+                    (montoPagos - CASE WHEN fechaIngresoPagos IS NOT NULL AND fechaIngresoPagos <= ? THEN recuperadoPagos ELSE 0 END) as saldo_pagos,
+                    CASE WHEN fechaIngresoPagos IS NOT NULL AND fechaIngresoPagos <= ? THEN recuperadoPagos ELSE 0 END as recuperado_en_periodo',
+                    [$fechaHastaStr, $fechaHastaStr]
+                )
+                ->get();
+
+            $idActualesPagos = $pagosActual->pluck('idPagos')->toArray();
+
+            $pagosAnteriores = $pagosAnteriores->filter(function ($p) use ($idActualesPagos) {
+                return !in_array($p->idPagos, $idActualesPagos);
+            })->map(function ($p) {
+                $p->es_mes_anterior = true;
+                return $p;
+            })->filter(function ($p) {
+                return round(($p->saldo_pagos ?? 0), 2) > 0;
+            });
+
+            $allPagos = $pagosActual->concat($pagosAnteriores)->sortBy('fechaEgresoPagos')->values();
+
             if (!empty($this->searchPagos)) {
                 $search = mb_strtolower($this->searchPagos, 'UTF-8');
-                $allPagos = $allPagos->filter(function ($pago) use ($search) {
-                    $egreso = mb_strtolower((string)($pago->egresoPagos ?? ''), 'UTF-8');
-                    $acreedor = mb_strtolower($pago->acreedor->acreedor ?? '', 'UTF-8');
-                    $concepto = mb_strtolower($pago->conceptoPagos ?? '', 'UTF-8');
-                    $monto = number_format($pago->montoPagos, 2, ',', '.');
-
-                    return str_contains($egreso, $search) ||
-                        str_contains($acreedor, $search) ||
-                        str_contains($concepto, $search) ||
-                        str_contains($monto, $search);
+                $allPagos = $allPagos->filter(function ($p) use ($search) {
+                    $egreso = mb_strtolower((string)($p->egresoPagos ?? ''), 'UTF-8');
+                    $acreedor = mb_strtolower($p->acreedor->acreedor ?? '', 'UTF-8');
+                    $concepto = mb_strtolower($p->conceptoPagos ?? '', 'UTF-8');
+                    $monto = number_format($p->montoPagos, 2, ',', '.');
+                    return str_contains($egreso, $search) || str_contains($acreedor, $search) || str_contains($concepto, $search) || str_contains($monto, $search);
                 })->values();
             }
 
@@ -475,12 +501,8 @@ class Index extends Component
     {
         $this->tablaTotales = [];
 
-        if (!$this->cajaChicaSeleccionada) {
-            return;
-        }
-
         try {
-            $montoCajaChica = floatval($this->cajaChicaSeleccionada->montoCajaChica);
+            $montoCajaChica = $this->cajaChicaSeleccionada ? floatval($this->cajaChicaSeleccionada->montoCajaChica) : 0;
 
             $this->tablaTotales['Monto Caja Chica'] = $montoCajaChica;
 
@@ -1177,6 +1199,8 @@ class Index extends Component
         });
     }
 
+
+
     private function getMesAnioAnterior()
     {
         $meses = [
@@ -1194,16 +1218,11 @@ class Index extends Component
             'diciembre' => 12
         ];
 
-        // Asegurarse de que el nombre del mes esté en minúsculas para la búsqueda
         $mesActualLower = strtolower($this->mesActual);
-
         $mesNumero = $meses[$mesActualLower] ?? null;
 
         if (is_null($mesNumero)) {
-            // Esto no debería ocurrir si translatedFormat('F') funciona correctamente,
-            // pero es una salvaguarda.
-            $this->dispatchBrowserEvent('swal:toast-error', ['text' => 'Error interno: Nombre de mes no reconocido: ' . $this->mesActual]);
-            return ['mes' => '', 'anio' => '']; // Retornar vacío para evitar más errores
+            return ['mes' => '', 'anio' => ''];
         }
 
         $fechaActual = Carbon::create($this->anioActual, $mesNumero, 1);

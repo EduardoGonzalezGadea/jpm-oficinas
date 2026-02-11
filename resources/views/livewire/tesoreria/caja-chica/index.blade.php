@@ -17,6 +17,12 @@
     </div>
     @endif
 
+    <style>
+        .fila-mes-anterior {
+            background-color: rgba(255, 193, 7, 0.15) !important;
+        }
+    </style>
+
     <!-- Cabecera de Caja Chica -->
     <div class="card mb-3">
         <div class="card-header bg-info text-white card-header-gradient py-2 px-3 d-flex justify-content-between align-items-center">
@@ -403,7 +409,7 @@
             <tbody>
                 @forelse ($tablaPendientesDetalle as $item)
                 <tr wire:key="pendiente-{{ $item->idPendientes }}"
-                    class="{{ $item->es_mes_anterior ?? false ? 'table-warning' : '' }}">
+                    class="{{ ($item->es_mes_anterior ?? false) ? 'table-warning fila-mes-anterior' : '' }}">
                     <td class="text-right align-middle font-weight-bold">{{ $item->pendiente }}</td>
                     <td class="text-center align-middle">
                         {{ $item->fechaPendientes ? $item->fechaPendientes->format('d/m/Y') : '' }}
@@ -615,7 +621,7 @@
             <tbody>
                 @forelse ($tablaPagos as $item)
                 <tr wire:key="pago-{{ $item->idPagos }}"
-                    class="{{ $item->es_mes_anterior ?? false ? 'table-warning' : '' }}">
+                    class="{{ ($item->es_mes_anterior ?? false) ? 'table-warning fila-mes-anterior' : '' }}">
                     <td class="text-center align-middle">
                         {{ $item->fechaEgresoPagos ? $item->fechaEgresoPagos->format('d/m/Y') : '' }}
                     </td>

@@ -2,10 +2,15 @@
 
 namespace App\Http\Livewire\Tesoreria\Prendas\Planillas;
 
-use App\Models\Tesoreria\PrendaPlanilla;
 use Livewire\Component;
 use Livewire\WithPagination;
+use App\Models\Tesoreria\PrendaPlanilla;
 
+/**
+ * Componente Livewire: Índice de Planillas de Prendas
+ *
+ * Muestra la lista de planillas con paginación y anulación.
+ */
 class Index extends Component
 {
     use WithPagination;
@@ -36,7 +41,7 @@ class Index extends Component
     {
         try {
             $planilla = PrendaPlanilla::find($id);
-            
+
             if (!$planilla) {
                 $this->dispatchBrowserEvent('swal:error', [
                     'text' => 'Planilla no encontrada.',

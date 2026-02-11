@@ -23,6 +23,48 @@ class CargarEfactura extends Component
         'archivo' => 'required|mimes:pdf|max:10240', // 10MB max
     ];
 
+    public function mount()
+    {
+        // 1. Intentar cargar desde CACHÉ (Nuevo método más seguro)
+        $prefillId = request()->query('prefill_id');
+        if ($prefillId && \Illuminate\Support\Facades\Cache::has('cfe_prefill_' . $prefillId)) {
+            $cacheData = \Illuminate\Support\Facades\Cache::get('cfe_prefill_' . $prefillId);
+            $data = $cacheData['datos'];
+
+            $this->datosExtraidos = [
+                'titular' => $data['titular'] ?? ($data['receptor_nombre'] ?? ''),
+                'fecha' => $data['fecha'] ?? '',
+                'monto' => $data['monto'] ?? 0.0,
+                'medio_de_pago' => $data['medio_de_pago'] ?? '',
+                'detalle' => $data['detalle'] ?? '',
+                'orden_cobro' => $data['orden_cobro'] ?? '',
+                'recibo' => $data['recibo'] ?? (($data['serie'] ?? '') . ($data['numero'] ?? '')),
+            ];
+
+            \Illuminate\Support\Facades\Cache::forget('cfe_prefill_' . $prefillId);
+            return;
+        }
+
+        // 2. Fallback: Verificar si hay datos pre-cargados desde la sesión
+        if (session()->has('cfe_datos_precargados') && session('cfe_tipo') === 'eventuales') {
+            $data = session('cfe_datos_precargados');
+
+            // Mapear campos genéricos a lo que espera este Livewire
+            $this->datosExtraidos = [
+                'titular' => $data['receptor_nombre'] ?? '',
+                'fecha' => $data['fecha'] ?? '',
+                'monto' => $data['monto'] ?? 0.0,
+                'medio_de_pago' => '',
+                'detalle' => $data['detalle'] ?? '',
+                'orden_cobro' => '',
+                'recibo' => ($data['serie'] ?? '') . ($data['numero'] ?? ''),
+            ];
+
+            // Limpiar sesión después de cargar
+            session()->forget(['cfe_datos_precargados', 'cfe_tipo', 'cfe_filepath']);
+        }
+    }
+
     public function updatedArchivo()
     {
         $this->validate();

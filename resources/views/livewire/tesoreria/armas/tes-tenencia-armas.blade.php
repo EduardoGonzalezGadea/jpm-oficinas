@@ -3,6 +3,9 @@
         <div class="card-header bg-info text-white card-header-gradient py-2 px-3 d-flex justify-content-between align-items-center">
             <h4 class="mb-0"><strong><i class="fas fa-address-card mr-2"></i>Listado de Tenencia de Armas</strong></h4>
             <div class="btn-group d-print-none">
+                <a href="{{ route('tesoreria.armas.tenencia.reportes') }}" class="btn btn-secondary border mr-2">
+                    <i class="fas fa-filter"></i> Filtrar
+                </a>
                 <a href="{{ route('tesoreria.armas.tenencia.planillas.index') }}" class="btn btn-success border mr-2">
                     <i class="fas fa-list"></i> Planillas
                 </a>

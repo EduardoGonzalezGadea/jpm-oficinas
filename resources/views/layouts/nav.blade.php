@@ -226,81 +226,8 @@
     </div>
 </nav>
 
-<style>
-    /* La clase que aplicas a tu <nav> */
-    .barra-oscura {
-        /* Establece la posición relativa para que el ::before se posicione correctamente */
-        position: relative;
-        /* Establece un z-index base para la barra de navegación. */
-        z-index: 10;
-    }
 
-    /* El pseudoelemento que oscurece el fondo */
-    .barra-oscura::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: black;
-        mix-blend-mode: multiply;
-        opacity: 0.5;
-        /* Esto es lo que hace la magia:
-     - El z-index negativo lo coloca 'detrás' del contenido.
-     - Asegura que el ::before no capture los eventos de clic.
-  */
-        z-index: -1;
-    }
 
-    /* Opcional: Esto ayuda a que el texto siempre sea claro y legible */
-    .barra-oscura .navbar-nav .nav-link {
-        color: white;
-        /* Opcional, para que el texto sea más fácil de leer sobre un fondo oscuro */
-        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
-    }
-
-    .barra-oscura .navbar-nav .nav-link:hover {
-        color: yellow;
-    }
-
-    /* Estilos para submenús */
-    .dropdown-submenu {
-        position: relative;
-    }
-
-    .submenu-right .dropdown-menu {
-        top: 0;
-        left: 100%;
-        right: auto;
-        margin-top: -1px;
-    }
-
-    .submenu-left .dropdown-menu {
-        top: 0;
-        left: auto;
-        right: 100%;
-        margin-top: -1px;
-    }
-
-    /* Mostrar submenú al hover */
-    .dropdown-submenu:hover>.dropdown-menu {
-        display: block;
-    }
-
-    /* Agregar flecha al submenu */
-    .dropdown-submenu>.dropdown-item::after {
-        display: inline-block;
-        margin-left: auto;
-        content: "";
-        border-top: 0.3em solid transparent;
-        border-right: 0;
-        border-bottom: 0.3em solid transparent;
-        border-left: 0.3em solid;
-        float: right;
-        margin-top: 0.5em;
-    }
-</style>
 
 @push('scripts')
 <script>
