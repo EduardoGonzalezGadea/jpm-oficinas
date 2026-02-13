@@ -363,6 +363,9 @@ Route::middleware(['web', 'jwt.verify', 'two-factor'])->group(function () {
         // Rutas de Arrendamientos
         Route::prefix('arrendamientos')->name('arrendamientos.')->group(function () {
             Route::get('/', [ArrendamientoController::class, 'index'])->name('index');
+            Route::get('/cargar-cfe', function () {
+                return view('tesoreria.arrendamientos.cargar-cfe');
+            })->name('cargar-cfe');
             Route::get('/planillas/imprimir/{id}', function ($id) {
                 $planilla = App\Models\Tesoreria\Planilla::findOrFail($id);
                 return view('tesoreria.arrendamientos.planillas-print', compact('planilla'));
@@ -410,6 +413,9 @@ Route::middleware(['web', 'jwt.verify', 'two-factor'])->group(function () {
         // Rutas de Certificados de Residencia
         Route::prefix('certificados-residencia')->name('certificados-residencia.')->group(function () {
             Route::get('/', \App\Http\Livewire\Tesoreria\CertificadosResidencia\Index::class)->name('index');
+            Route::get('/cargar-cfe', function () {
+                return view('tesoreria.certificados-residencia.cargar-cfe');
+            })->name('cargar-cfe');
             // Reportes Avanzados
             Route::get('/reportes', \App\Http\Livewire\Tesoreria\CertificadosResidencia\CertificadosReporte::class)->name('reportes');
             Route::get('/imprimir-avanzado', \App\Http\Livewire\Tesoreria\CertificadosResidencia\PrintCertificadosAdvanced::class)->name('imprimir-avanzado');

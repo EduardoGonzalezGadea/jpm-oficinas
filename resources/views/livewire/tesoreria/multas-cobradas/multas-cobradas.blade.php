@@ -1,5 +1,9 @@
 <div>
     <style>
+        [x-cloak] {
+            display: none !important;
+        }
+
         .text-nowrap-custom {
             white-space: nowrap;
         }
@@ -281,58 +285,47 @@
 
     <!-- Modal Formulario -->
     @if($showModal)
-    <div class="modal fade show" style="display: block;" tabindex="-1" role="dialog" x-data="{ 
+    <div class="modal fade show" style="display: block;" tabindex="-1" role="dialog" x-cloak x-data="{ 
         isClosing: false,
-        closeModal() {
-            this.isClosing = true;
-            setTimeout(() => {
-                $wire.set('showModal', false);
-            }, 200);
-        },
-        totalLocal: @entangle('monto'),
-        formaPagoLocal: @entangle('forma_pago'),
-        items: @entangle('items_form'),
         mediosAgregados: [],
         nuevoMedio: '',
         nuevoMonto: '',
         
         init() {
             this.parseMedios();
-            this.calculateTotal();
             this.$nextTick(() => {
                 const el = document.getElementById('input-recibo');
                 if (el) el.focus();
             });
-            // Observar cambios externos (como al abrir para edición)
-            this.$watch('formaPagoLocal', (val) => {
-                if (val && this.mediosAgregados.length === 0) this.parseMedios();
-                if (!val) this.mediosAgregados = [];
-            });
-            this.$watch('items', () => this.calculateTotal());
+        },
+
+        closeModal() {
+            this.isClosing = true;
+            setTimeout(() => {
+                $wire.set('showModal', false);
+            }, 200);
         },
 
         parseNumber(val) {
             if (!val) return 0;
             if (typeof val === 'number') return val;
             let s = val.toString().trim();
-            // Si tiene coma, es formato regional (miles con punto, decimal con coma)
             if (s.includes(',')) {
                 return parseFloat(s.replace(/\./g, '').replace(',', '.')) || 0;
             }
-            // Si tiene más de un punto, definitivamente son miles
             if ((s.match(/\./g) || []).length > 1) {
                 return parseFloat(s.replace(/\./g, '')) || 0;
             }
-            // Si tiene un solo punto y no tiene coma, lo tratamos como decimal estándar
             return parseFloat(s) || 0;
         },
         
         parseMedios() {
-            if (!this.formaPagoLocal || this.formaPagoLocal === 'SIN DATOS') {
+            let formaPago = $wire.forma_pago;
+            if (!formaPago || formaPago === 'SIN DATOS') {
                 this.mediosAgregados = [];
                 return;
             }
-            let partes = this.formaPagoLocal.split('/');
+            let partes = formaPago.split('/');
             this.mediosAgregados = partes.filter(p => p.trim() !== '').map(p => {
                 let sub = p.split(':');
                 return {
@@ -345,12 +338,11 @@
         agregarMedio() {
             if (!this.nuevoMedio) return;
             
-            // Normalizar nombre quitando : si viene del datalist
             let nombre = this.nuevoMedio.replace(':', '').trim();
+            let totalActual = parseFloat($wire.monto || 0);
             
-            // Si el monto está vacío, sugerimos el saldo restante
             if (!this.nuevoMonto || this.nuevoMonto == 0) {
-                let saldo = parseFloat(this.totalLocal || 0) - this.calcularTotalMedios();
+                let saldo = totalActual - this.calcularTotalMedios();
                 if (saldo > 0) this.nuevoMonto = saldo.toFixed(2);
             }
 
@@ -374,16 +366,14 @@
         },
         
         syncFormaPago() {
-            this.formaPagoLocal = this.mediosAgregados.map(m => m.nombre + (m.monto ? ':' + m.monto : '')).join('/');
-        },
-        
-        calculateTotal() {
-            let sum = this.items.reduce((acc, item) => acc + this.parseNumber(item.importe), 0);
-            this.totalLocal = sum.toFixed(2);
+            $wire.forma_pago = this.mediosAgregados.map(m => {
+                let val = this.parseNumber(m.monto);
+                return m.nombre + (val ? ':' + val.toFixed(2) : '');
+            }).join('/');
         },
 
         confirmSave() {
-            let totalFactura = parseFloat(this.totalLocal || 0);
+            let totalFactura = parseFloat($wire.monto || 0);
             let totalMedios = this.calcularTotalMedios();
             let diferencia = Math.abs(totalFactura - totalMedios);
 
@@ -504,8 +494,7 @@
                                                         <div class="input-group input-group-compact">
                                                             <div class="input-group-prepend"><span class="input-group-text bg-transparent border-0 text-muted">$</span></div>
                                                             <input type="number" step="1.00" wire:model="items_form.{{ $index }}.importe"
-                                                                class="form-control form-control-compact text-right font-weight-bold item-importe"
-                                                                @input="calculateTotal()" required>
+                                                                class="form-control form-control-compact text-right font-weight-bold item-importe" required>
                                                         </div>
                                                     </td>
                                                     <td class="p-1 align-middle text-center">
@@ -525,7 +514,7 @@
                                                         <span class="small mb-0 text-white font-weight-bold">MONTO TOTAL A PERCIBIR:</span>
                                                     </td>
                                                     <td class="py-1 pr-1">
-                                                        <div class="h6 mb-0 text-right font-weight-bold text-white" x-text="'$ ' + parseNumber(totalLocal).toLocaleString('es-UY', {minimumFractionDigits: 2})">
+                                                        <div class="h6 mb-0 text-right font-weight-bold text-white">
                                                             $ {{ number_format($this->sumaItems, 2, ',', '.') }}
                                                         </div>
                                                     </td>
@@ -550,10 +539,10 @@
                                         <div class="input-group-prepend">
                                             <span class="input-group-text p-1 px-2 border-right-0"><i class="fas fa-plus text-success" style="font-size: 0.7rem;"></i></span>
                                         </div>
-                                        <input type="text" x-model="nuevoMedio" class="form-control form-control-compact border-left-0"
+                                        <input type="text" x-model="nuevoMedio" x-cloak class="form-control form-control-compact border-left-0"
                                             placeholder="Medio..." list="sugerencias-medios"
                                             @keydown.enter.prevent="agregarMedio()">
-                                        <input type="number" x-model="nuevoMonto" class="form-control form-control-compact"
+                                        <input type="number" x-model="nuevoMonto" x-cloak class="form-control form-control-compact"
                                             placeholder="Monto" style="max-width: 90px;"
                                             @keydown.enter.prevent="agregarMedio()">
                                         <div class="input-group-append">
@@ -563,7 +552,7 @@
                                         </div>
                                     </div>
 
-                                    <div class="d-flex flex-wrap align-items-center mb-0" style="min-height: 30px;">
+                                    <div class="d-flex flex-wrap align-items-center mb-0" style="min-height: 30px;" x-cloak>
                                         <template x-for="(m, index) in mediosAgregados" :key="index">
                                             <div class="badge badge-info mr-1 mb-1 p-1 px-2 d-flex align-items-center shadow-sm" style="font-size: 0.75rem;">
                                                 <i class="fas fa-wallet mr-1 small opacity-75"></i>
@@ -575,7 +564,7 @@
                                         </template>
                                     </div>
 
-                                    <input type="hidden" wire:model.defer="forma_pago">
+                                    <input type="hidden" wire:model="forma_pago">
                                     @error('forma_pago') <span class="text-danger d-block small font-weight-bold">{{ $message }}</span> @enderror
                                 </div>
                             </div>
@@ -644,7 +633,7 @@
             @endforeach
     </datalist>
 
-    <!-- Modal Detalle -->
+    <!-- Modal Detalle Mejorado -->
     @if($showDetailModal)
     <div class="modal fade show" style="display: block;" tabindex="-1" role="dialog"
         x-data="{ 
@@ -654,136 +643,283 @@
                 setTimeout(() => {
                     $wire.set('showDetailModal', false);
                 }, 200);
+            },
+            editFromDetail(id) {
+                const wire = $wire;
+                this.isClosing = true;
+                setTimeout(() => {
+                    wire.set('showDetailModal', false);
+                    setTimeout(() => {
+                        wire.edit(id);
+                    }, 300);
+                }, 250);
             }
         }">
-        <div class="modal-dialog modal-lg modal-dialog-scrollable modal-animate-in"
+        <div class="modal-dialog modal-xl modal-dialog-scrollable modal-animate-in"
             :class="{'modal-animate-out': isClosing}"
             role="document">
-            <div class="modal-content border-0 shadow-lg" style="max-height: 95vh;">
-                <div class="modal-header bg-info text-white py-2">
-                    <h5 class="modal-title font-weight-bold mb-0 text-white">
-                        <i class="fas fa-file-invoice mr-2"></i> Detalles del Cobro
-                    </h5>
-                    <button type="button" class="close text-white" @click="closeDetail()">
+            <div class="modal-content border-0 shadow" style="max-height: 90vh;">
+                <!-- Header Mejorado -->
+                <div class="modal-header bg-gradient-info text-white py-2" style="background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-white rounded-circle p-2 mr-3" style="width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-file-invoice text-info"></i>
+                        </div>
+                        <div>
+                            <h5 class="modal-title font-weight-bold mb-0 text-white" style="text-shadow: 2px 2px 4px rgba(0,0,0,0.5); letter-spacing: 0.5px; font-size: 1.25rem;">Detalle del Comprobante</h5>
+                            <small class="text-white font-weight-bold" style="text-shadow: 1px 1px 3px rgba(0,0,0,0.4); font-size: 0.85rem;">Información completa del registro de cobro</small>
+                        </div>
+                    </div>
+                    <button type="button" class="close text-white" @click="closeDetail()" style="opacity: 0.9;">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
-                <div class="modal-body p-0">
+
+                <div class="modal-body p-0" style="overflow-y: auto;">
                     @if($selectedRegistro)
-                    <div class="p-4 border-bottom bg-light d-flex justify-content-between align-items-center">
-                        <div>
-                            <span class="text-uppercase small font-weight-bold text-muted d-block mb-1">CANTIDAD TOTAL</span>
-                            <h2 class="font-weight-bold mb-0 text-success">{{ $selectedRegistro->monto_formateado }}</h2>
-                        </div>
-                        <div class="text-right d-none d-sm-block">
-                            <span class="badge badge-info p-2 px-3">
-                                <i class="fas fa-hashtag mr-1"></i> RECIBO: {{ $selectedRegistro->recibo }}
-                            </span>
-                            <span class="badge badge-secondary p-2 px-3 ml-2">
-                                <i class="fas fa-calendar-alt mr-1"></i> {{ $selectedRegistro->fecha->format('d/m/Y') }}
-                            </span>
+                    <!-- Header Card con Monto Total -->
+                    <div class="p-3 bg-light border-bottom">
+                        <div class="row align-items-center">
+                            <div class="col-md-4 mb-2 mb-md-0">
+                                <div class="bg-white rounded shadow-sm p-3 text-center border">
+                                    <small class="text-secondary text-uppercase font-weight-bold d-block mb-1" style="font-size: 0.7rem; letter-spacing: 0.5px;">Monto Total Cobrado</small>
+                                    <h2 class="font-weight-bold mb-0 text-success">{{ $selectedRegistro->monto_formateado }}</h2>
+                                </div>
+                            </div>
+                            <div class="col-md-8">
+                                <div class="d-flex flex-wrap justify-content-md-end gap-2">
+                                    <div class="badge badge-light border px-3 py-2 mr-2 mb-2">
+                                        <i class="fas fa-hashtag text-info mr-1"></i>
+                                        <span class="text-secondary small">Recibo:</span>
+                                        <span class="font-weight-bold ml-1">{{ $selectedRegistro->recibo }}</span>
+                                    </div>
+                                    <div class="badge badge-light border px-3 py-2 mr-2 mb-2">
+                                        <i class="fas fa-calendar-alt text-info mr-1"></i>
+                                        <span class="text-secondary small">Fecha:</span>
+                                        <span class="font-weight-bold ml-1">{{ $selectedRegistro->fecha->format('d/m/Y') }}</span>
+                                    </div>
+                                    <div class="badge badge-light border px-3 py-2 mb-2">
+                                        <i class="fas fa-list text-info mr-1"></i>
+                                        <span class="text-secondary small">Ítems:</span>
+                                        <span class="font-weight-bold ml-1">{{ $selectedRegistro->items->count() }}</span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="px-4 py-3">
-                        <!-- Sección de Identificación -->
-                        <div class="row mb-3">
-                            <div class="col-md-12">
-                                <div class="card bg-light border-0">
-                                    <div class="card-body p-3">
-                                        <h6 class="text-info font-weight-bold mb-3 border-bottom pb-2">
-                                            <i class="fas fa-id-card mr-2"></i>DATOS DEL CONTRIBUYENTE
-                                        </h6>
-                                        <div class="row text-dark">
-                                            <div class="col-md-8">
-                                                <small class="text-muted d-block text-uppercase font-weight-bold" style="font-size: 0.65rem;">Nombre / Razón Social</small>
-                                                <span class="h5 font-weight-bold mb-0">{{ $selectedRegistro->nombre ?: 'SIN DATOS' }}</span>
-                                            </div>
-                                            <div class="col-md-4">
-                                                <small class="text-muted d-block text-uppercase font-weight-bold" style="font-size: 0.65rem;">Cédula / RUT</small>
-                                                <span class="h5 font-weight-bold mb-0">{{ $selectedRegistro->cedula ?: 'SIN DATOS' }}</span>
-                                            </div>
+                    <div class="p-3">
+                        <!-- Sección de Identificación del Contribuyente -->
+                        <div class="card border shadow-sm mb-3">
+                            <div class="card-header bg-light border-bottom py-2 d-flex align-items-center">
+                                <i class="fas fa-user-circle text-info mr-2"></i>
+                                <span class="font-weight-bold">Datos del Contribuyente</span>
+                            </div>
+                            <div class="card-body py-3">
+                                <div class="row">
+                                    <div class="col-md-8 mb-3 mb-md-0">
+                                        <label class="text-secondary small font-weight-bold text-uppercase mb-1" style="font-size: 0.7rem; letter-spacing: 0.5px;">Nombre / Razón Social</label>
+                                        <div class="h5 font-weight-bold mb-0">
+                                            {{ $selectedRegistro->nombre ?: 'Sin datos' }}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="text-secondary small font-weight-bold text-uppercase mb-1" style="font-size: 0.7rem; letter-spacing: 0.5px;">Documento</label>
+                                        <div class="h5 font-weight-bold mb-0">
+                                            @if($selectedRegistro->cedula)
+                                            <span class="badge badge-secondary">{{ $selectedRegistro->cedula }}</span>
+                                            @else
+                                            <span class="text-secondary font-italic small">No registrado</span>
+                                            @endif
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Desglose de Ítems -->
-                        <h6 class="text-info font-weight-bold mb-2 mt-2"><i class="fas fa-list-ul mr-2"></i>DESGLOSE DE CONCEPTOS</h6>
-                        <div class="table-responsive mb-4 rounded border shadow-sm">
-                            <table class="table table-sm table-hover mb-0 text-dark">
-                                <thead class="bg-primary text-white small">
-                                    <tr>
-                                        <th class="pl-3 py-2">DETALLE</th>
-                                        <th class="py-2">DESCRIPCIÓN</th>
-                                        <th class="text-right pr-3 py-2">IMPORTE</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach($selectedRegistro->items as $item)
-                                    <tr>
-                                        <td class="pl-3 align-middle font-weight-bold">{{ $item->detalle }}</td>
-                                        <td class="align-middle text-muted small">{{ $item->descripcion }}</td>
-                                        <td class="text-right pr-3 align-middle font-weight-bold text-nowrap text-success">
-                                            $ {{ number_format($item->importe, 2, ',', '.') }}
-                                        </td>
-                                    </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
+                        <!-- Desglose de Conceptos en Card -->
+                        <div class="card border shadow-sm mb-3">
+                            <div class="card-header bg-light border-bottom py-2 d-flex justify-content-between align-items-center">
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-list-ul text-info mr-2"></i>
+                                    <span class="font-weight-bold">Desglose de Conceptos</span>
+                                </div>
+                                <span class="badge badge-info">{{ $selectedRegistro->items->count() }} ítem(s)</span>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="table-responsive">
+                                    <table class="table table-hover table-striped mb-0">
+                                        <thead class="thead-light">
+                                            <tr>
+                                                <th class="pl-3 py-2 border-0 font-weight-bold text-secondary" style="font-size: 0.75rem; width: 50%;">
+                                                    <i class="fas fa-tag mr-1 text-info"></i>CONCEPTO
+                                                </th>
+                                                <th class="py-2 border-0 font-weight-bold text-secondary" style="font-size: 0.75rem; width: 30%;">
+                                                    <i class="fas fa-align-left mr-1 text-info"></i>DESCRIPCIÓN
+                                                </th>
+                                                <th class="text-right pr-3 py-2 border-0 font-weight-bold text-secondary" style="font-size: 0.75rem; width: 20%;">
+                                                    <i class="fas fa-dollar-sign mr-1 text-info"></i>IMPORTE
+                                                </th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach($selectedRegistro->items as $item)
+                                            <tr>
+                                                <td class="pl-3 align-middle py-2">
+                                                    <span class="font-weight-bold">{{ $item->detalle }}</span>
+                                                </td>
+                                                <td class="align-middle py-2">
+                                                    @if($item->descripcion)
+                                                    <span class="text-secondary small">{{ $item->descripcion }}</span>
+                                                    @else
+                                                    <span class="text-secondary font-italic small">-</span>
+                                                    @endif
+                                                </td>
+                                                <td class="text-right pr-3 align-middle py-2">
+                                                    <span class="font-weight-bold text-success">$ {{ number_format($item->importe, 2, ',', '.') }}</span>
+                                                </td>
+                                            </tr>
+                                            @endforeach
+                                        </tbody>
+                                        <tfoot class="bg-dark text-white">
+                                            <tr>
+                                                <td colspan="2" class="text-right py-2 pr-3">
+                                                    <span class="font-weight-bold">TOTAL GENERAL:</span>
+                                                </td>
+                                                <td class="text-right pr-3 py-2">
+                                                    <span class="font-weight-bold h5 mb-0">{{ $selectedRegistro->monto_formateado }}</span>
+                                                </td>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                            </div>
                         </div>
 
+                        <!-- Sección de Información Adicional -->
                         <div class="row">
-                            <!-- Otros Datos y Domicilio -->
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <h6 class="text-info font-weight-bold mb-3"><i class="fas fa-map-marker-alt mr-2"></i>DOMICILIO Y PAGO</h6>
-                                    <div class="card border-0 bg-light p-3">
+                            <!-- Domicilio y Pago -->
+                            <div class="col-md-6 mb-3">
+                                <div class="card border shadow-sm h-100">
+                                    <div class="card-header bg-light border-bottom py-2">
+                                        <i class="fas fa-map-marker-alt text-info mr-2"></i>
+                                        <span class="font-weight-bold">Información de Pago</span>
+                                    </div>
+                                    <div class="card-body">
                                         <div class="mb-3">
-                                            <small class="text-muted d-block text-uppercase font-weight-bold" style="font-size: 0.65rem;">Dirección / Domicilio</small>
-                                            <span class="text-dark font-weight-bold">{{ $selectedRegistro->domicilio ?: 'NO REGISTRADO' }}</span>
+                                            <label class="text-secondary small font-weight-bold text-uppercase mb-1" style="font-size: 0.7rem;">
+                                                <i class="fas fa-home mr-1"></i>Dirección / Domicilio
+                                            </label>
+                                            <p class="mb-0">
+                                                {{ $selectedRegistro->domicilio ?: 'No registrado' }}
+                                            </p>
                                         </div>
+
                                         <div class="mb-3">
-                                            <small class="text-muted d-block text-uppercase font-weight-bold" style="font-size: 0.65rem;">Medio de Pago</small>
-                                            <span class="badge badge-info p-2 px-3 text-uppercase font-weight-bold" style="font-size: 0.75rem;">{{ $selectedRegistro->forma_pago ?: 'SIN DATOS' }}</span>
+                                            <label class="text-secondary small font-weight-bold text-uppercase mb-1" style="font-size: 0.7rem;">
+                                                <i class="fas fa-credit-card mr-1"></i>Medio de Pago
+                                            </label>
+                                            <div>
+                                                @if($selectedRegistro->forma_pago)
+                                                @foreach(explode('/', $selectedRegistro->forma_pago) as $medio)
+                                                @php
+                                                $partes = explode(':', $medio);
+                                                $nombre = trim($partes[0]);
+                                                $monto = isset($partes[1]) ? trim($partes[1]) : null;
+                                                @endphp
+                                                <span class="badge badge-outline-info border px-2 py-1 mr-1 mb-1" style="font-size: 0.8rem;">
+                                                    {{ $nombre }}:@if($monto)
+                                                    @if(strpos($monto, ',') !== false)
+                                                    {{-- El monto ya tiene formato uruguayo (usa coma como separador decimal) --}}
+                                                    <span class="font-weight-bold ml-1">$ {{ $monto }}</span>
+                                                    @else
+                                                    {{-- El monto es un número sin formato o formato inglés --}}
+                                                    <span class="font-weight-bold ml-1">$ {{ number_format((float)$monto, 2, ',', '.') }}</span>
+                                                    @endif
+                                                    @endif
+                                                </span>
+                                                @endforeach
+                                                @else
+                                                <span class="badge badge-light border text-secondary">Sin datos</span>
+                                                @endif
+                                            </div>
                                         </div>
+
                                         @if($selectedRegistro->adicional)
                                         <div>
-                                            <small class="text-muted d-block text-uppercase font-weight-bold" style="font-size: 0.65rem;">Otros Datos (Tel / Período)</small>
-                                            <span class="text-dark small font-weight-bold">{{ $selectedRegistro->adicional }}</span>
+                                            <label class="text-secondary small font-weight-bold text-uppercase mb-1" style="font-size: 0.7rem;">
+                                                <i class="fas fa-info-circle mr-1"></i>Datos Adicionales
+                                            </label>
+                                            <p class="mb-0 small">{{ $selectedRegistro->adicional }}</p>
                                         </div>
                                         @endif
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- Adenda -->
-                            <div class="col-md-6">
-                                <h6 class="text-info font-weight-bold mb-3"><i class="fas fa-sticky-note mr-2"></i>ADENDA / OBSERVACIONES</h6>
-                                <div class="bg-white p-3 rounded border text-dark h-100 shadow-sm" style="min-height: 120px; white-space: pre-wrap; font-size: 0.9rem;">{{ $selectedRegistro->adenda ?: 'Sin observaciones registradas.' }}</div>
+                            <!-- Adenda/Observaciones -->
+                            <div class="col-md-6 mb-3">
+                                <div class="card border shadow-sm h-100">
+                                    <div class="card-header bg-light border-bottom py-2">
+                                        <i class="fas fa-sticky-note text-info mr-2"></i>
+                                        <span class="font-weight-bold">Observaciones</span>
+                                    </div>
+                                    <div class="card-body">
+                                        @if(trim($selectedRegistro->adenda))
+                                        <div class="bg-light p-3 rounded border" style="font-size: 0.9rem; min-height: 100px;">
+                                            {{ trim($selectedRegistro->adenda) }}
+                                        </div>
+                                        @else
+                                        <div class="text-center text-secondary py-4">
+                                            <i class="fas fa-clipboard-list fa-2x mb-2 opacity-25"></i>
+                                            <p class="mb-0 small">Sin observaciones registradas</p>
+                                        </div>
+                                        @endif
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
-                        <!-- Metadata de Registro -->
-                        <div class="mt-4 pt-3 border-top d-flex flex-column flex-sm-row justify-content-between text-muted small px-1 border-light">
-                            <div class="mb-2 mb-sm-0">
-                                <i class="fas fa-user-edit mr-1"></i> Registrado por: <span class="font-weight-bold">{{ $selectedRegistro->creator->nombre }} {{ $selectedRegistro->creator->apellido }}</span>
-                            </div>
-                            <div>
-                                <i class="fas fa-clock mr-1 text-info"></i> Sistema: <span class="font-weight-bold">{{ $selectedRegistro->created_at->format('d/m/Y H:i') }}</span>
+                        <!-- Información del Sistema -->
+                        <div class="card border bg-light mt-2">
+                            <div class="card-body py-2">
+                                <div class="row text-secondary small">
+                                    <div class="col-md-6 mb-1 mb-md-0">
+                                        <i class="fas fa-user-edit mr-1"></i>
+                                        <span>Registrado por:</span>
+                                        <span class="font-weight-bold ml-1">
+                                            {{ $selectedRegistro->creator->nombre }} {{ $selectedRegistro->creator->apellido }}
+                                        </span>
+                                    </div>
+                                    <div class="col-md-6 text-md-right">
+                                        <i class="fas fa-clock mr-1"></i>
+                                        <span>Fecha/Hora de registro:</span>
+                                        <span class="font-weight-bold ml-1">
+                                            {{ $selectedRegistro->created_at->format('d/m/Y H:i') }}
+                                        </span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
                     @endif
                 </div>
-                <div class="modal-footer py-2 bg-light">
-                    <button type="button" class="btn btn-secondary btn-sm px-4 shadow-sm" @click="closeDetail()">
-                        <i class="fas fa-times mr-1"></i> Cerrar
-                    </button>
-                    <button type="button" class="btn btn-info btn-sm px-4 shadow-sm d-print-none" onclick="window.print()">
-                        <i class="fas fa-print mr-1"></i> Imprimir Página
-                    </button>
+
+                <!-- Footer Mejorado -->
+                <div class="modal-footer bg-light border-top py-3">
+                    <div class="d-flex w-100 justify-content-between align-items-center">
+                        <button type="button" class="btn btn-outline-secondary btn-sm px-4" @click="closeDetail()">
+                            <i class="fas fa-arrow-left mr-1"></i> Volver
+                        </button>
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-info btn-sm px-3" onclick="window.print()">
+                                <i class="fas fa-print mr-1"></i> Imprimir
+                            </button>
+                            <button type="button" class="btn btn-primary btn-sm px-3" @click="editFromDetail({{ $selectedRegistro->id ?? 0 }})">
+                                <i class="fas fa-edit mr-1"></i> Editar
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -983,4 +1119,5 @@
             font-family: inherit;
         }
     </style>
+
 </div>

@@ -9,6 +9,54 @@ use Illuminate\Validation\ValidationException;
 class MedioPagoService
 {
     /**
+     * Parsea un valor numérico que puede estar en formato uruguayo (1.234,56)
+     * o en formato estándar (1234.56). Detecta automáticamente el formato.
+     */
+    protected function parsearValorNumerico(string $valorStr): ?float
+    {
+        $valorStr = trim($valorStr);
+        if (empty($valorStr)) return null;
+
+        $tieneComa = strpos($valorStr, ',') !== false;
+        $tienePunto = strpos($valorStr, '.') !== false;
+
+        if ($tieneComa && $tienePunto) {
+            // Ambos separadores presentes
+            $posComa = strrpos($valorStr, ',');
+            $posPunto = strrpos($valorStr, '.');
+
+            if ($posComa > $posPunto) {
+                // Formato uruguayo: 1.234,56 → coma es decimal
+                $limpio = str_replace('.', '', $valorStr);
+                $limpio = str_replace(',', '.', $limpio);
+            } else {
+                // Formato inglés: 1,234.56 → punto es decimal
+                $limpio = str_replace(',', '', $valorStr);
+            }
+        } elseif ($tieneComa) {
+            // Solo coma: puede ser decimal uruguayo (1234,56)
+            $limpio = str_replace(',', '.', $valorStr);
+        } elseif ($tienePunto) {
+            // Solo punto: verificar si es separador de miles o decimal
+            $partesPunto = explode('.', $valorStr);
+            if (count($partesPunto) == 2 && strlen($partesPunto[1]) == 3 && strlen($partesPunto[0]) <= 3) {
+                // Patrón como 1.234 o 12.345 → separador de miles sin decimales
+                $limpio = str_replace('.', '', $valorStr);
+            } elseif (count($partesPunto) > 2) {
+                // Múltiples puntos: 1.234.567 → separadores de miles
+                $limpio = str_replace('.', '', $valorStr);
+            } else {
+                // Un solo punto con parte decimal de 1-2 dígitos: 1234.56 → decimal estándar
+                $limpio = $valorStr;
+            }
+        } else {
+            // Sin separadores
+            $limpio = $valorStr;
+        }
+
+        return is_numeric($limpio) ? floatval($limpio) : null;
+    }
+    /**
      * Elimina acentos y caracteres especiales de un string
      */
     public function quitarAcentos(string $string): string
@@ -55,9 +103,9 @@ class MedioPagoService
                 return false;
             }
 
-            // Verificar que el valor sea numérico
-            $valorLimpio = str_replace(',', '.', str_replace('.', '', $valor));
-            if (!is_numeric($valorLimpio) || floatval($valorLimpio) < 0) {
+            // Verificar que el valor sea numérico usando el parser inteligente
+            $valorParseado = $this->parsearValorNumerico($valor);
+            if ($valorParseado === null || $valorParseado < 0) {
                 return false;
             }
         }
@@ -101,15 +149,7 @@ class MedioPagoService
             $nombreMedio = mb_strtoupper($this->quitarAcentos(trim($datos[0])), 'UTF-8');
 
             if (isset($datos[1])) {
-                $valorStr = trim($datos[1]);
-                $valorLimpio = str_replace('.', '', $valorStr);
-                $valorLimpio = str_replace(',', '.', $valorLimpio);
-
-                if (is_numeric($valorLimpio)) {
-                    $valor = floatval($valorLimpio);
-                } else {
-                    $valor = null;
-                }
+                $valor = $this->parsearValorNumerico($datos[1]);
             } else {
                 $valor = null;
             }

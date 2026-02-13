@@ -63,12 +63,20 @@ class CfeProcessorService
     {
         $text = mb_strtolower($text, 'UTF-8');
 
-        if (Str::contains($text, 'certificado de residencia') || Str::contains($text, 'certificado residencia')) {
+        // Versión sin acentos del texto para detección insensible a acentos
+        $textSinAcentos = $this->quitarAcentos($text);
+
+        if (Str::contains($textSinAcentos, 'certificado de residencia') || Str::contains($textSinAcentos, 'certificado residencia')) {
             return 'certificado_residencia';
         }
 
-        if (Str::contains($text, 'multa') || Str::contains($text, 'infracción') || Str::contains($text, 'infraccion') || Str::contains($text, 'tránsito') || Str::contains($text, 'transito')) {
+        if (Str::contains($textSinAcentos, 'multa') || Str::contains($textSinAcentos, 'infraccion') || Str::contains($textSinAcentos, 'transito')) {
             return 'multas_cobradas';
+        }
+
+        // Detección de arrendamientos - buscar en el detalle (antes de eventuales para evitar falso positivo)
+        if (Str::contains($textSinAcentos, 'arrendamiento') || Str::contains($textSinAcentos, 'arrendamientos')) {
+            return 'arrendamientos';
         }
 
         if (Str::contains($text, 'aguinaldo') || Str::contains($text, 'policias eventuales') || Str::contains($text, 'eventuales')) {
@@ -91,6 +99,16 @@ class CfeProcessorService
     }
 
     /**
+     * Elimina acentos de un texto para comparación insensible.
+     */
+    protected function quitarAcentos(string $text): string
+    {
+        $search  = ['á', 'é', 'í', 'ó', 'ú', 'ñ', 'ü', 'Á', 'É', 'Í', 'Ó', 'Ú', 'Ñ', 'Ü'];
+        $replace = ['a', 'e', 'i', 'o', 'u', 'n', 'u', 'a', 'e', 'i', 'o', 'u', 'n', 'u'];
+        return str_replace($search, $replace, $text);
+    }
+
+    /**
      * Extract data from a CFE based on its text.
      *
      * @param  string  $text
@@ -106,10 +124,17 @@ class CfeProcessorService
 
         // Si es CFE de multas, usar lógica específica
         if ($tipoCfe === 'multas_cobradas') {
-            // Assuming extraerDatosMultas exists and returns an array
-            // The instruction snippet suggests adding 'items' here, but the method itself is not provided.
-            // For now, I'll assume it returns the full data.
             return $this->extraerDatosMultas($text);
+        }
+
+        // Si es CFE de certificado de residencia, usar lógica específica
+        if ($tipoCfe === 'certificado_residencia') {
+            return $this->extraerDatosCertificadoResidencia($text);
+        }
+
+        // Si es CFE de arrendamientos, usar lógica específica
+        if ($tipoCfe === 'arrendamientos') {
+            return $this->extraerDatosArrendamientos($text);
         }
 
         // Si es CFE de eventuales o genérico (e-factura), usar lógica específica
@@ -593,6 +618,339 @@ class CfeProcessorService
         return $datos;
     }
 
+    /**
+     * Extract data from CFE for Certificado de Residencia.
+     *
+     * @param  string  $text
+     * @return array
+     */
+    protected function extraerDatosCertificadoResidencia(string $text): array
+    {
+        $text = mb_convert_encoding($text, 'UTF-8', 'UTF-8');
+
+        $datos = [
+            'tipo_cfe' => 'No detectado',
+            'serie' => '',
+            'numero' => '',
+            'fecha' => '',
+            'cedula_receptor' => '',
+            'nombre_receptor' => '',
+            'monto' => 0.0,
+            'monto_total' => 0.0,
+            'moneda' => 'UYU',
+            'telefono' => '',
+            'forma_pago' => 'SIN DATOS',
+            'detalle' => '',
+            'descripcion' => '',
+            'cedula_titular' => '',
+            'retira_es_titular' => true,
+        ];
+
+        // Tipo de CFE
+        if (preg_match('/(e-Factura|e-Ticket|e-Boleta)(?:\s+Cobranza)?/is', $text, $matches)) {
+            $datos['tipo_cfe'] = $matches[0];
+        }
+
+        // Serie y Número
+        if (preg_match('/([A-Z])[\s\t]+(\d+)[\s\t]+(?:Contado|Cr.dito)/i', $text, $matches)) {
+            $datos['serie'] = $matches[1];
+            $datos['numero'] = $matches[2];
+        }
+
+        // Fecha
+        if (preg_match('/FECHA[\s:]+(?:MONEDA[\s:]+)?(\d{2}\/\d{2}\/\d{4})/i', $text, $matches)) {
+            $datos['fecha'] = $matches[1];
+        } elseif (preg_match('/(\d{2}\/\d{2}\/\d{4})/i', $text, $matches)) {
+            $datos['fecha'] = $matches[1];
+        }
+
+        // Receptor (CI del CFE)
+        if (preg_match('/(?:C\.I\.|RUT).*?:\s*([\d\.-]+)/is', $text, $matches)) {
+            $datos['cedula_receptor'] = $matches[1];
+        }
+
+        // Nombre Receptor
+        if (preg_match('/NOMBRE O DENOMINACIÓN DOMICILIO FISCAL\s*\n\s*(.*?)(?=\s*\n\s*(?:INFORMACION ADICIONAL|DETALLE DESCRIPCIÓN|PERIODO|FECHA|$))/isu', $text, $matches)) {
+            $datos['nombre_receptor'] = trim(preg_replace('/\s+/', ' ', $matches[1]));
+        } elseif (preg_match('/FISCAL\s*(.*?)(?=\s*(?:INFORMACION|DETALLE|FECHA|\d{2}\/\d{2}\/\d{4}|$))/isu', $text, $matches)) {
+            $datos['nombre_receptor'] = trim(preg_replace('/\s+/', ' ', $matches[1]));
+        }
+
+        // Monto Total
+        if (preg_match('/TOTAL\s+A\s+PAGAR:\s*([\d\.,]+)/is', $text, $matches)) {
+            $datos['monto_total'] = $matches[1];
+            $datos['monto'] = floatval(str_replace(['.', ','], ['', '.'], $matches[1]));
+        } elseif (preg_match('/MONTO\s+NO\s+FACTURABLE:\s*([\d\.,]+)/is', $text, $matches)) {
+            $datos['monto_total'] = $matches[1];
+            $datos['monto'] = floatval(str_replace(['.', ','], ['', '.'], $matches[1]));
+        }
+
+        // Medios de Pago
+        if (preg_match('/TOTAL\s+A\s+PAGAR:[\s\t]*[\d\.,]+(.*?)(?=REFERENCIAS:)/isu', $text, $matches)) {
+            $bloquePago = trim($matches[1]);
+            if (!empty($bloquePago)) {
+                $lineasPago = explode("\n", $bloquePago);
+                $pagos = [];
+                foreach ($lineasPago as $linea) {
+                    $linea = trim($linea);
+                    if (empty($linea)) continue;
+                    if (preg_match('/^(.*?):[\s\t]*([\d\.,]+)$/u', $linea, $mpm)) {
+                        $pagos[] = trim($mpm[1]) . ": " . trim($mpm[2]);
+                    } elseif (!empty($linea)) {
+                        $pagos[] = $linea;
+                    }
+                }
+                if (!empty($pagos)) {
+                    $datos['forma_pago'] = implode(' / ', $pagos);
+                }
+            }
+        }
+
+        // Teléfono
+        if (preg_match('/(?:TEL\.|TELÉFONO|CEL\.)\s*([\d\s\-\/]+)/i', $text, $matches)) {
+            $datos['telefono'] = trim($matches[1]);
+        }
+
+        // Moneda
+        if (preg_match('/Peso uruguayo/i', $text)) {
+            $datos['moneda'] = 'UYU';
+        } elseif (preg_match('/Dólar/i', $text)) {
+            $datos['moneda'] = 'USD';
+        }
+
+        // Extracción de Items (Detalle + Descripción)
+        if (preg_match('/DETALLE\s+DESCRIPCI.N.*?IMPORTE\s*(.*?)(?=\s*MONTO\s+NO\s+FACTURABLE)/isu', $text, $matches)) {
+            $bloqueItems = trim($matches[1]);
+            $lineas = explode("\n", $bloqueItems);
+            $bufferItem = [];
+
+            foreach ($lineas as $linea) {
+                $linea = trim($linea);
+                if (empty($linea)) continue;
+
+                if (preg_match('/^(.*?)([\d\.,]+(?:\s*\(Unid\))?\s*[\d\.,]+\s+([\d\.,]+))$/i', $linea, $m)) {
+                    $restoLinea = trim($m[1]);
+                    if (!empty($restoLinea)) {
+                        $bufferItem[] = $restoLinea;
+                    }
+
+                    $fullText = implode(' ', $bufferItem);
+                    $fullText = trim(preg_replace('/\s+/', ' ', $fullText));
+
+                    if (preg_match('/^(.*?)\t+(.*?)$/u', $fullText, $parts)) {
+                        $datos['detalle'] = trim($parts[1]);
+                        $datos['descripcion'] = trim($parts[2]);
+                    } elseif (mb_stripos($fullText, 'CORRESPONDE A') !== false) {
+                        $pos = mb_stripos($fullText, 'CORRESPONDE A');
+                        $datos['detalle'] = trim(mb_substr($fullText, 0, $pos));
+                        $datos['descripcion'] = trim(mb_substr($fullText, $pos));
+                    } else {
+                        $datos['detalle'] = $fullText;
+                        $datos['descripcion'] = '';
+                    }
+
+                    $bufferItem = [];
+                } else {
+                    $bufferItem[] = $linea;
+                }
+            }
+        }
+
+        // Detectar si la descripción contiene una cédula (del titular del certificado)
+        if (!empty($datos['descripcion'])) {
+            if (preg_match('/([\d][\d\.]{4,}[\d])/u', $datos['descripcion'], $ciMatch)) {
+                $ciLimpia = preg_replace('/[^0-9]/', '', $ciMatch[1]);
+                if (strlen($ciLimpia) >= 6 && strlen($ciLimpia) <= 10) {
+                    $datos['cedula_titular'] = $ciMatch[1];
+                    $datos['retira_es_titular'] = false;
+                }
+            }
+        }
+
+        // Si no se detectó CI en la descripción, el receptor del CFE es el titular
+        if ($datos['retira_es_titular']) {
+            $datos['cedula_titular'] = $datos['cedula_receptor'];
+        }
+
+        return $datos;
+    }
+
+    /**
+     * Extract data from CFE for Arrendamientos.
+     *
+     * @param  string  $text
+     * @return array
+     */
+    protected function extraerDatosArrendamientos(string $text): array
+    {
+        $text = mb_convert_encoding($text, 'UTF-8', 'UTF-8');
+
+        $datos = [
+            'tipo_cfe' => 'No detectado',
+            'serie' => '',
+            'numero' => '',
+            'fecha' => '',
+            'cedula' => '',
+            'nombre' => '',
+            'telefono' => '',
+            'monto' => 0.0,
+            'monto_total' => 0.0,
+            'moneda' => 'UYU',
+            'detalle' => '',
+            'orden_cobro' => '',
+            'forma_pago' => 'SIN DATOS',
+            'adenda' => '',
+        ];
+
+        // Tipo de CFE
+        if (preg_match('/(e-Factura|e-Ticket|e-Boleta)(?:\s+Cobranza)?/is', $text, $matches)) {
+            $datos['tipo_cfe'] = $matches[0];
+        }
+
+        // Serie y Número
+        if (preg_match('/([A-Z])[\s\t]+(\d+)[\s\t]+(?:Contado|Cr.dito)/i', $text, $matches)) {
+            $datos['serie'] = $matches[1];
+            $datos['numero'] = $matches[2];
+        }
+
+        // Fecha
+        if (preg_match('/FECHA[\s:]+(?:MONEDA[\s:]+)?(\d{2}\/\d{2}\/\d{4})/i', $text, $matches)) {
+            $datos['fecha'] = $matches[1];
+        } elseif (preg_match('/(\d{2}\/\d{2}\/\d{4})/i', $text, $matches)) {
+            $datos['fecha'] = $matches[1];
+        }
+
+        // Receptor (Cédula o RUT)
+        if (preg_match('/(?:C\.I\.|RUT).*?:\s*([\d\.-]+)/is', $text, $matches)) {
+            $datos['cedula'] = $matches[1];
+        }
+
+        // Nombre Receptor
+        if (preg_match('/NOMBRE O DENOMINACIÓN DOMICILIO FISCAL\s*\n\s*(.*?)(?=\s*\n\s*(?:INFORMACION ADICIONAL|DETALLE DESCRIPCIÓN|PERIODO|FECHA|$))/isu', $text, $matches)) {
+            $datos['nombre'] = trim(preg_replace('/\s+/', ' ', $matches[1]));
+        } elseif (preg_match('/FISCAL\s*(.*?)(?=\s*(?:INFORMACION|DETALLE|FECHA|\d{2}\/\d{2}\/\d{4}|$))/isu', $text, $matches)) {
+            $datos['nombre'] = trim(preg_replace('/\s+/', ' ', $matches[1]));
+        }
+
+        // Teléfono (de info adicional)
+        if (preg_match('/(?:TEL\.|TELÉFONO|CEL\.)\s*([\d\s\-\/]+)/i', $text, $matches)) {
+            $datos['telefono'] = trim($matches[1]);
+        }
+
+        // Monto Total
+        if (preg_match('/TOTAL\s+A\s+PAGAR:\s*([\d\.,]+)/is', $text, $matches)) {
+            $datos['monto_total'] = $matches[1];
+            $datos['monto'] = floatval(str_replace(['.', ','], ['', '.'], $matches[1]));
+        } elseif (preg_match('/MONTO\s+NO\s+FACTURABLE:\s*([\d\.,]+)/is', $text, $matches)) {
+            $datos['monto_total'] = $matches[1];
+            $datos['monto'] = floatval(str_replace(['.', ','], ['', '.'], $matches[1]));
+        }
+
+        // Moneda
+        if (preg_match('/Peso uruguayo/i', $text)) {
+            $datos['moneda'] = 'UYU';
+        } elseif (preg_match('/Dólar/i', $text)) {
+            $datos['moneda'] = 'USD';
+        }
+
+        // Medios de Pago (entre TOTAL A PAGAR y REFERENCIAS)
+        if (preg_match('/TOTAL\s+A\s+PAGAR:[\s\t]*[\d\.,]+(.*?)(?=REFERENCIAS:)/isu', $text, $matches)) {
+            $bloquePago = trim($matches[1]);
+            if (!empty($bloquePago)) {
+                $lineasPago = explode("\n", $bloquePago);
+                $pagos = [];
+                foreach ($lineasPago as $linea) {
+                    $linea = trim($linea);
+                    if (empty($linea)) continue;
+                    if (preg_match('/^(.*?):[\s\t]*([\d\.,]+)$/u', $linea, $mpm)) {
+                        $pagos[] = trim($mpm[1]) . ": " . trim($mpm[2]);
+                    } elseif (!empty($linea)) {
+                        $pagos[] = $linea;
+                    }
+                }
+                if (!empty($pagos)) {
+                    $datos['forma_pago'] = implode(' / ', $pagos);
+                }
+            }
+        }
+
+        // Extracción de Detalle (concatenar todo el bloque de ítems)
+        if (preg_match('/DETALLE\s+DESCRIPCI.N.*?IMPORTE\s*(.*?)(?=\s*MONTO\s+NO\s+FACTURABLE)/isu', $text, $matches)) {
+            $bloqueItems = trim($matches[1]);
+            $lineas = explode("\n", $bloqueItems);
+            $bufferDetalle = [];
+
+            foreach ($lineas as $linea) {
+                $linea = trim($linea);
+                if (empty($linea)) continue;
+
+                // Remover las cantidades y montos del final de línea
+                if (preg_match('/^(.*?)([\d\.,]+(?:\s*\(Unid\))?\s*[\d\.,]+\s+[\d\.,]+)$/i', $linea, $m)) {
+                    $restoLinea = trim($m[1]);
+                    if (!empty($restoLinea)) {
+                        $bufferDetalle[] = $restoLinea;
+                    }
+                } else {
+                    $bufferDetalle[] = $linea;
+                }
+            }
+
+            if (!empty($bufferDetalle)) {
+                $datos['detalle'] = trim(preg_replace('/\s+/', ' ', implode(' ', $bufferDetalle)));
+            }
+        }
+
+        // Adenda
+        if (preg_match('/ADENDA\s*\n(.*?)(?=\s*(?:Fecha\s+de|Puede\s+verificar|I\.V\.A\.|NÚMERO\s+DE\s+CAE|$))/isu', $text, $matches)) {
+            $adendaRaw = trim($matches[1]);
+            $lineas = explode("\n", $adendaRaw);
+            $lineasLimpias = array_map(function ($linea) {
+                $linea = trim($linea);
+                $linea = preg_replace('/(\d)([A-Z])/u', '$1 $2', $linea);
+                return $linea;
+            }, $lineas);
+            $lineasLimpias = array_filter($lineasLimpias, function ($linea) {
+                return !empty($linea) && $linea !== '1';
+            });
+            $datos['adenda'] = implode("\n", $lineasLimpias);
+        }
+
+        // Extraer Orden de Cobro de la adenda
+        // Búsqueda insensible a mayúsculas y acentos
+        if (!empty($datos['adenda'])) {
+            $adendaSinAcentos = $this->quitarAcentos(mb_strtolower($datos['adenda'], 'UTF-8'));
+
+            // Patrones para orden de cobro: ORDEN DE COBRO, ORDEN COBRO, O.C., O/C, O.(C.
+            if (preg_match('/(?:orden\s+de\s+cobro|orden\s+cobro|o\.\s*\(?c\.?|o\/c)\s*(\d+)/iu', $adendaSinAcentos, $ocMatch)) {
+                $datos['orden_cobro'] = $ocMatch[1];
+            } else {
+                // Si hay solamente un número en la adenda, es el número de orden de cobro
+                $numerosEncontrados = [];
+                if (preg_match_all('/\b(\d{3,})\b/', $datos['adenda'], $numMatches)) {
+                    $numerosEncontrados = $numMatches[1];
+                }
+                if (count($numerosEncontrados) === 1) {
+                    $datos['orden_cobro'] = $numerosEncontrados[0];
+                }
+            }
+        }
+
+        // Validación: Verificar que el detalle contenga "arrendamiento"
+        $detalleNorm = $this->quitarAcentos(mb_strtolower($datos['detalle'], 'UTF-8'));
+        if (strpos($detalleNorm, 'arrendamiento') === false && strpos($detalleNorm, 'arrendamientos') === false) {
+            return [
+                'error_validacion' => 'Este comprobante no corresponde a un Arrendamiento. No se encontró la palabra "ARRENDAMIENTO" en el detalle del CFE.'
+            ];
+        }
+
+        // Si se pagó por transferencia, concatenar la información del pago al detalle
+        if (stripos($datos['forma_pago'], 'Transferencia') !== false) {
+            $datos['detalle'] .= ' - ' . $datos['forma_pago'];
+        }
+
+        return $datos;
+    }
+
     protected function extraerItemsMultas(string $text): array
     {
         $items = [];
@@ -670,6 +1028,7 @@ class CfeProcessorService
             $nombresAmigables = [
                 'certificado_residencia' => 'Certificado de Residencia',
                 'multas_cobradas' => 'Multas Cobradas',
+                'arrendamientos' => 'Arrendamientos',
                 'porte_armas' => 'Porte de Armas',
                 'tenencia_armas' => 'Tenencia de Armas',
                 'eventuales' => 'Eventuales (e-Factura)',
@@ -728,6 +1087,18 @@ class CfeProcessorService
                 case 'tenencia_armas':
                     $redirectUrl = url('tesoreria/armas/cargar-cfe');
                     $mensaje = 'Registro preparado para el módulo de Armas.';
+                    break;
+
+                case 'Certificado de Residencia':
+                case 'certificado_residencia':
+                    $redirectUrl = url('tesoreria/certificados-residencia/cargar-cfe');
+                    $mensaje = 'Registro preparado para el módulo de Certificados de Residencia.';
+                    break;
+
+                case 'Arrendamientos':
+                case 'arrendamientos':
+                    $redirectUrl = url('tesoreria/arrendamientos/cargar-cfe');
+                    $mensaje = 'Registro preparado para el módulo de Arrendamientos.';
                     break;
 
                 default:

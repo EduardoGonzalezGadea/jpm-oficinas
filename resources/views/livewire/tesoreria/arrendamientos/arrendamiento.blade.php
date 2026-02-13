@@ -25,6 +25,9 @@
                         <a href="{{ route('tesoreria.arrendamientos.imprimir', ['year' => $year, 'mes' => $mes]) }}" target="_blank" class="btn btn-success">
                             <i class="fas fa-print"></i> Imprimir
                         </a>
+                        <a href="{{ route('tesoreria.arrendamientos.cargar-cfe') }}" class="btn btn-warning" style="background-color: #fd7e14; border-color: #fd7e14; color: white;">
+                            <i class="fas fa-file-upload"></i> Cargar CFE
+                        </a>
                         <button type="button" class="btn btn-primary" wire:click.prevent="create"
                             data-toggle="modal" data-target="#arrendamientoModal">
                             Crear Arrendamiento

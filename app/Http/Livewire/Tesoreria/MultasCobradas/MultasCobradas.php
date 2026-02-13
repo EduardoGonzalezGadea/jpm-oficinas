@@ -547,6 +547,10 @@ class MultasCobradas extends Component
 
     public function edit($id)
     {
+        // Cerrar el modal de detalle si está abierto
+        $this->showDetailModal = false;
+        $this->selectedRegistro = null;
+        
         $registro = TesMultasCobradas::findOrFail($id);
         $registro->load('items');
         $this->registro_id = $registro->id;
@@ -563,14 +567,27 @@ class MultasCobradas extends Component
 
         // Intentar separar TEL y PERÍODO si existen en adicional
         if ($registro->adicional) {
-            // Formato esperado: TEL. XXXX PERÍODO DD/MM/YYYY - DD/MM/YYYY
-            if (preg_match('/TEL\.\s*(.*?)\s*PERÍODO\s*(.*?)\s*-\s*(.*)/i', $registro->adicional, $matches)) {
-                $this->temp_tel = trim($matches[1]);
-                $this->temp_periodo_desde = trim($matches[2]);
-                $this->temp_periodo_hasta = trim($matches[3]);
-            } else {
-                // Si no coincide con el patrón pero tiene datos, lo dejamos en temp_tel por ejemplo
-                $this->temp_tel = $registro->adicional;
+            $adicional = trim($registro->adicional);
+            
+            // Buscar TEL. (opcional) - captura todo hasta PERÍODO o fin del string
+            // El teléfono puede tener espacios, pero se detiene antes de "PERÍODO"
+            if (preg_match('/TEL\.\s*(.+?)(?=\s+PER[ÍI]ODO\s+|$)/ui', $adicional, $matchesTel)) {
+                $telExtraido = trim($matchesTel[1]);
+                // Verificar que no sea vacío y no contenga fechas
+                if (!empty($telExtraido) && !preg_match('/\d{2}\/\d{2}\/\d{4}/', $telExtraido)) {
+                    $this->temp_tel = $telExtraido;
+                }
+            }
+            
+            // Buscar PERÍODO (opcional) - formato: PERÍODO DD/MM/YYYY - DD/MM/YYYY
+            if (preg_match('/PER[ÍI]ODO\s+(\d{2}\/\d{2}\/\d{4})\s*-\s*(\d{2}\/\d{2}\/\d{4})/ui', $adicional, $matchesPeriodo)) {
+                $this->temp_periodo_desde = trim($matchesPeriodo[1]);
+                $this->temp_periodo_hasta = trim($matchesPeriodo[2]);
+            }
+            
+            // Si no se encontró ningún patrón reconocido, todo va a teléfono
+            if (empty($this->temp_tel) && empty($this->temp_periodo_desde)) {
+                $this->temp_tel = $adicional;
             }
         }
 
