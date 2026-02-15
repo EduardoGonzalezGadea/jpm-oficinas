@@ -1,6 +1,6 @@
-<div x-data="{ 
-    valorUr: '', 
-    mesUr: '', 
+<div x-data="{
+    valorUr: '',
+    mesUr: '',
     loading: true,
     async fetchUr() {
         try {
@@ -51,7 +51,7 @@
             <div class="row mb-2 align-items-center">
                 <div class="col-md-5">
                     <div class="input-group input-group-sm">
-                        <input wire:model.debounce.500ms="search" type="text" class="form-control"
+                        <input wire:model.debounce.800ms="search" type="text" class="form-control" autofocus
                             placeholder="Buscar por artículo.apartado o por descripción...">
                         <div class="input-group-append">
                             <button class="btn btn-outline-danger" type="button" wire:click="$set('search', '')" title="Limpiar filtro">
@@ -141,7 +141,7 @@
                 </table>
             </div>
 
-            @if ($multas instanceof \Illuminate\Pagination\LengthAwarePaginator && $multas->hasPages())
+            @if (method_exists($multas, 'hasPages') && $multas->hasPages())
             <div class="d-flex justify-content-center mt-3 d-print-none">
                 {{ $multas->links() }}
             </div>

@@ -17,6 +17,7 @@ class Multa extends Model
     protected $fillable = [
         'articulo',
         'apartado',
+        'articulo_completo',
         'descripcion',
         'moneda',
         'importe_original',
@@ -35,6 +36,20 @@ class Multa extends Model
 
     protected $dates = ['deleted_at'];
     public $timestamps = true;
+
+    /**
+     * Boot method para actualizar articulo_completo automáticamente
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::saving(function ($model) {
+            // Actualizar articulo_completo antes de guardar
+            // Formato: "103.2A" si hay apartado, "103" si no hay
+            $model->articulo_completo = $model->articulo . ($model->apartado ? '.' . $model->apartado : '');
+        });
+    }
 
     public function scopePorArticulo($query, $articulo)
     {

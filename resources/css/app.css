@@ -195,7 +195,7 @@ div:where(.swal2-container) button:where(.swal2-styled) {
 
 /* Contenedor del panel principal con gradiente */
 .panel-gradient-bg {
-    background: linear-gradient(180deg, #1e3a5f 0%, #6b3a5f 50%, #e57373 100%) !important;
+    background: linear-gradient(180deg, #1e3a5f 0%, #3b6b9a 40%, #7ba3c9 70%, #a8d4f5 100%) !important;
     min-height: 100vh;
     margin: -0.75rem -0.5rem -1rem -0.5rem !important;
     /* Compensar el mt-1 y p-2 del main y el padding del container-fluid */
@@ -205,9 +205,50 @@ div:where(.swal2-container) button:where(.swal2-styled) {
     overflow-x: hidden;
 }
 
-/* Variante para tema oscuro - gradiente más oscuro */
+/* Variante para tema oscuro - gradiente azul oscuro a azul claro oscuro */
 .panel-gradient-bg.dark-theme {
-    background: linear-gradient(180deg, #0a1929 0%, #4a1929 50%, #b71c1c 100%) !important;
+    background: linear-gradient(180deg, #0a1929 0%, #1a3a5f 40%, #2a5a8a 70%, #3a7ab0 100%) !important;
+}
+
+/* Íconos más claros y brillantes en tema oscuro */
+.panel-gradient-bg.dark-theme i,
+.panel-gradient-bg.dark-theme .fas,
+.panel-gradient-bg.dark-theme .far,
+.panel-gradient-bg.dark-theme .fab,
+.panel-gradient-bg.dark-theme .fa {
+    color: #7dd3fc !important;
+    text-shadow: 0 0 8px rgba(125, 211, 252, 0.4);
+}
+
+/* Íconos de colores específicos más brillantes en tema oscuro */
+.panel-gradient-bg.dark-theme .text-success i,
+.panel-gradient-bg.dark-theme i.text-success {
+    color: #86efac !important;
+    text-shadow: 0 0 8px rgba(134, 239, 172, 0.4);
+}
+
+.panel-gradient-bg.dark-theme .text-info i,
+.panel-gradient-bg.dark-theme i.text-info {
+    color: #93c5fd !important;
+    text-shadow: 0 0 8px rgba(147, 197, 253, 0.4);
+}
+
+.panel-gradient-bg.dark-theme .text-warning i,
+.panel-gradient-bg.dark-theme i.text-warning {
+    color: #fcd34d !important;
+    text-shadow: 0 0 8px rgba(252, 211, 77, 0.4);
+}
+
+.panel-gradient-bg.dark-theme .text-danger i,
+.panel-gradient-bg.dark-theme i.text-danger {
+    color: #fca5a5 !important;
+    text-shadow: 0 0 8px rgba(252, 165, 165, 0.4);
+}
+
+.panel-gradient-bg.dark-theme .text-primary i,
+.panel-gradient-bg.dark-theme i.text-primary {
+    color: #93c5fd !important;
+    text-shadow: 0 0 8px rgba(147, 197, 253, 0.4);
 }
 
 /* Asegurar que los textos sean legibles en el gradiente */

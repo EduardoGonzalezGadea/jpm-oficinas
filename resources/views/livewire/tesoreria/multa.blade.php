@@ -1,6 +1,6 @@
-<div x-data="{ 
-    valorUr: '', 
-    mesUr: '', 
+<div x-data="{
+    valorUr: '',
+    mesUr: '',
     loading: true,
     soaLoading: false,
     async fetchUr() {
@@ -55,7 +55,7 @@
             <div class="d-flex justify-content-between align-items-center flex-wrap">
                 <div class="text-nowrap">
                     <h4 class="mb-0">
-                        <strong>Listado de Artículos de Multas de Tránsito</strong>
+                        <strong>Artículos de Multas de Tránsito</strong>
                     </h4>
                 </div>
                 <div class="text-center flex-grow-1 mx-2">
@@ -88,7 +88,7 @@
             <div class="row mb-2 align-items-center">
                 <div class="col-md-5">
                     <div class="input-group input-group-sm">
-                        <input wire:model.debounce.500ms="search" type="text" class="form-control d-print-none"
+                        <input wire:model.debounce.800ms="search" type="text" class="form-control d-print-none" autofocus
                             placeholder="Buscar por artículo.apartado o por descripción...">
                         <div class="input-group-append d-print-none">
                             <button class="btn btn-outline-danger" type="button" wire:click="$set('search', '')" title="Limpiar filtro">
@@ -211,7 +211,7 @@
             @endif
 
             @if((isset($multas) && $multas->isNotEmpty()) || !empty($search))
-            @if ($multas instanceof \Illuminate\Pagination\LengthAwarePaginator && $multas->hasPages())
+            @if (method_exists($multas, 'hasPages') && $multas->hasPages())
             <div class="d-flex justify-content-center mt-3 d-print-none">
                 {{ $multas->links() }}
             </div>

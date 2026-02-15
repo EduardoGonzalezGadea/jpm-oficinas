@@ -520,13 +520,14 @@ class MultasCobradas extends Component
     public function resetItemsForm()
     {
         $this->items_form = [
-            ['detalle' => '', 'descripcion' => '', 'importe' => '']
+            ['_uid' => uniqid(), 'detalle' => '', 'descripcion' => '', 'importe' => '']
         ];
     }
 
     public function addItem()
     {
-        $this->items_form[] = ['detalle' => '', 'descripcion' => '', 'importe' => ''];
+        $this->items_form[] = ['_uid' => uniqid(), 'detalle' => '', 'descripcion' => '', 'importe' => ''];
+        $this->dispatchBrowserEvent('update-total', ['total' => $this->suma_items]);
     }
 
     public function removeItem($index)
@@ -536,6 +537,7 @@ class MultasCobradas extends Component
         if (empty($this->items_form)) {
             $this->addItem();
         }
+        $this->dispatchBrowserEvent('update-total', ['total' => $this->suma_items]);
     }
 
     public function create()
@@ -550,7 +552,7 @@ class MultasCobradas extends Component
         // Cerrar el modal de detalle si está abierto
         $this->showDetailModal = false;
         $this->selectedRegistro = null;
-        
+
         $registro = TesMultasCobradas::findOrFail($id);
         $registro->load('items');
         $this->registro_id = $registro->id;
@@ -568,7 +570,7 @@ class MultasCobradas extends Component
         // Intentar separar TEL y PERÍODO si existen en adicional
         if ($registro->adicional) {
             $adicional = trim($registro->adicional);
-            
+
             // Buscar TEL. (opcional) - captura todo hasta PERÍODO o fin del string
             // El teléfono puede tener espacios, pero se detiene antes de "PERÍODO"
             if (preg_match('/TEL\.\s*(.+?)(?=\s+PER[ÍI]ODO\s+|$)/ui', $adicional, $matchesTel)) {
@@ -578,13 +580,13 @@ class MultasCobradas extends Component
                     $this->temp_tel = $telExtraido;
                 }
             }
-            
+
             // Buscar PERÍODO (opcional) - formato: PERÍODO DD/MM/YYYY - DD/MM/YYYY
             if (preg_match('/PER[ÍI]ODO\s+(\d{2}\/\d{2}\/\d{4})\s*-\s*(\d{2}\/\d{2}\/\d{4})/ui', $adicional, $matchesPeriodo)) {
                 $this->temp_periodo_desde = trim($matchesPeriodo[1]);
                 $this->temp_periodo_hasta = trim($matchesPeriodo[2]);
             }
-            
+
             // Si no se encontró ningún patrón reconocido, todo va a teléfono
             if (empty($this->temp_tel) && empty($this->temp_periodo_desde)) {
                 $this->temp_tel = $adicional;
@@ -597,9 +599,11 @@ class MultasCobradas extends Component
                 'detalle' => $item->detalle,
                 'descripcion' => $item->descripcion,
                 'importe' => $item->importe,
+                '_uid' => uniqid(),
             ];
         })->toArray();
 
+        // Si no hay item, crear uno por defecto (esto asegura que siempre haya al menos uno al abrir)
         if (empty($this->items_form)) {
             $this->resetItemsForm();
         }
@@ -608,7 +612,7 @@ class MultasCobradas extends Component
         $this->showModal = true;
     }
 
-    public function save()
+    public function save($force = false)
     {
         $this->isSaving = true;
 
@@ -637,7 +641,7 @@ class MultasCobradas extends Component
         $this->validarConsistenciaMontos();
 
         // Validación de medio de pago
-        $this->validarMedioPago();
+        $this->validarMedioPago($force);
 
         try {
             DB::beginTransaction();
@@ -646,7 +650,7 @@ class MultasCobradas extends Component
             $medioPagoStr = $this->forma_pago ?: 'SIN DATOS';
             $formaPagoNormalizada = $medioPagoService->validarYNormalizar(
                 $medioPagoStr,
-                $this->monto
+                $force ? null : $this->monto
             );
 
             $data = $this->convertirCamposAMayusculas(
@@ -734,10 +738,13 @@ class MultasCobradas extends Component
      *
      * @throws \Illuminate\Validation\ValidationException
      */
-    protected function validarMedioPago(): void
+    protected function validarMedioPago($ignoreConsistency = false): void
     {
         $medioPagoService = new \App\Services\Tesoreria\MedioPagoService();
-        $medioPagoService->validarYNormalizar($this->forma_pago ?: 'SIN DATOS', $this->monto);
+        $medioPagoService->validarYNormalizar(
+            $this->forma_pago ?: 'SIN DATOS',
+            $ignoreConsistency ? null : $this->monto
+        );
     }
 
     public function confirmDelete($id)

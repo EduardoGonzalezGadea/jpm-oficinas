@@ -78,7 +78,10 @@ class PrintMultasCobradasFull extends Component
                         $valor = $item->monto / count($partes);
                     }
 
-                    $medios_con_valores[$nombre_medio] = $valor;
+                    if (!isset($medios_con_valores[$nombre_medio])) {
+                        $medios_con_valores[$nombre_medio] = 0;
+                    }
+                    $medios_con_valores[$nombre_medio] += $valor;
                 }
 
                 $nombre_combinado = implode(' / ', $nombre_medios);

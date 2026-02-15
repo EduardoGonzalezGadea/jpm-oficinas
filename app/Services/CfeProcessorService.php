@@ -83,11 +83,17 @@ class CfeProcessorService
             return 'eventuales';
         }
 
-        if (Str::contains($text, 'porte') || Str::contains($text, 'arma')) {
+        if (Str::contains($textSinAcentos, 'tenencia') || Str::contains($textSinAcentos, 'tahta')) {
+            return 'tenencia_armas';
+        }
+
+        if (Str::contains($textSinAcentos, 'porte')) {
             return 'porte_armas';
         }
 
-        if (Str::contains($text, 'tenencia') || Str::contains($text, 'tahta')) {
+        if (Str::contains($textSinAcentos, 'arma')) {
+            // Si dice 'arma' pero no es tenencia ni porte, podría ser cualquiera de los dos, 
+            // pero por lo visto en los documentos, suele ser parte de TAHTA.
             return 'tenencia_armas';
         }
 
@@ -250,13 +256,20 @@ class CfeProcessorService
         }
 
         // Serie y Número
-        if (preg_match('/SERIE\s+NÚMERO[^\n]+\n\s*([A-Z]+)\s+(\d+)/i', $text, $matches)) {
+        if (preg_match('/SERIE\s*N.MERO.*?\n\s*([A-Z]+)[\s\t]+(\d+)/iu', $text, $matches)) {
+            $datos['serie'] = $matches[1];
+            $datos['numero'] = $matches[2];
+        } elseif (preg_match('/([A-Z])[\s\t]+(\d+)[\s\t]+(?:Contado|Cr.dito)/i', $text, $matches)) {
             $datos['serie'] = $matches[1];
             $datos['numero'] = $matches[2];
         }
 
         // Fecha
-        if (preg_match('/FECHA\s+MONEDA\s*\n\s*(\d{2}\/\d{2}\/\d{4})/i', $text, $matches)) {
+        if (preg_match('/FECHA\s*MONEDA.*?(?:\n|\t|\s)+(\d{2}\/\d{2}\/\d{4})/iu', $text, $matches)) {
+            $datos['fecha'] = $matches[1];
+        } elseif (preg_match('/FECHA[\s:]+(?:MONEDA[\s:]+)?(\d{2}\/\d{2}\/\d{4})/i', $text, $matches)) {
+            $datos['fecha'] = $matches[1];
+        } elseif (preg_match('/(\d{2}\/\d{2}\/\d{4})/', $text, $matches)) {
             $datos['fecha'] = $matches[1];
         }
 
@@ -296,26 +309,67 @@ class CfeProcessorService
             $datos['moneda'] = 'USD';
         }
 
-        // Datos adicionales de Jefatura
-        if (preg_match('/ING\.\s*(\d+)/i', $text, $matches)) {
-            $datos['ingreso_contabilidad'] = $matches[1];
-        } elseif (preg_match('/INGRESO\s*(\d+)/i', $text, $matches)) {
+        // Datos adicionales de Jefatura (Ingreso y O/C)
+        if (preg_match('/(?:ING\.?|ING:|INGRESO|ING)(?:\s*N.?)?[:\s\t-]*(\d+)/iu', $text, $matches)) {
             $datos['ingreso_contabilidad'] = $matches[1];
         }
 
-        if (preg_match('/ORDEN DE COBRO\s*(\d+)/i', $text, $matches)) {
-            $datos['orden_cobro'] = $matches[1];
-        } elseif (preg_match('/O\/C\s*(\d+)/i', $text, $matches)) {
+        if (preg_match('/(?:ORDEN\s+DE\s+COBRO|ORDEN\s+COBRO|O\.C\.|O\/C|O\.\(?C\.)(?:\s*N.?)?[:\s\t-]*(\d+)/iu', $text, $matches)) {
             $datos['orden_cobro'] = $matches[1];
         }
 
-        if (preg_match('/TRÁMITE\s*([\d\/]+)/i', $text, $matches)) {
+        // Trámite
+        if (preg_match('/(?:TRÁMITE|TRAMITE)(?:\s*N.?)?[:\s\t-]*([\d\/]+)/iu', $text, $matches)) {
             $datos['tramite'] = $matches[1];
         }
 
         // Teléfono
-        if (preg_match('/(?:TEL\.|TELÉFONO|CEL\.)\s*([\d\s\-\/]+)/i', $text, $matches)) {
+        if (preg_match('/(?:TEL\.?|TELÉFONO|CEL\.)\s*([\d\s\-\/]+)/iu', $text, $matches)) {
             $datos['telefono'] = trim($matches[1]);
+        }
+
+        // Adenda
+        if (preg_match('/ADENDA\s*\n(.*?)(?=\s*(?:Fecha\s+de|Puede\s+verificar|I\.V\.A\.|NÚMERO\s+DE\s+CAE|$))/isu', $text, $matches)) {
+            $adendaRaw = trim($matches[1]);
+            $lineas = explode("\n", $adendaRaw);
+            $lineasLimpias = array_map(function ($linea) {
+                $linea = trim($linea);
+                // Separar números de letras pegadas si ocurre
+                $linea = preg_replace('/(\d)([A-Z])/u', '$1 $2', $linea);
+                return $linea;
+            }, $lineas);
+            $lineasLimpias = array_filter($lineasLimpias, function ($linea) {
+                return !empty($linea) && $linea !== '1';
+            });
+            $datos['adenda'] = implode("\n", $lineasLimpias);
+        }
+
+        // Orden de Cobro y otros de la adenda
+        if (!empty($datos['adenda'])) {
+            $adendaNorm = $this->quitarAcentos(mb_strtolower($datos['adenda'], 'UTF-8'));
+
+            // Si después de los regex anteriores todavía no tenemos O/C, buscar en la adenda
+            if (empty($datos['orden_cobro'])) {
+                if (preg_match('/(?:orden\s+de\s+cobro|orden\s+cobro|o\.\s*\(?c\.?|o\/c)\s*(\d+)/iu', $adendaNorm, $ocMatch)) {
+                    $datos['orden_cobro'] = $ocMatch[1];
+                } else {
+                    // Buscar un número de 4 a 6 dígitos que esté solo o con separadores
+                    $numeros = [];
+                    if (preg_match_all('/\b(\d{4,6})\b/', $datos['adenda'], $numMatches)) {
+                        $numeros = $numMatches[1];
+                    }
+                    if (count($numeros) === 1) {
+                        $datos['orden_cobro'] = $numeros[0];
+                    }
+                }
+            }
+
+            // Si no tenemos ingreso, buscar en adenda
+            if (empty($datos['ingreso_contabilidad'])) {
+                if (preg_match('/(?:ing\.?|ing:|ingreso|ing)(?:\s*n.?)?[:\s\t-]*(\d+)/iu', $adendaNorm, $ingMatch)) {
+                    $datos['ingreso_contabilidad'] = $ingMatch[1];
+                }
+            }
         }
 
         // Detalle descriptivo

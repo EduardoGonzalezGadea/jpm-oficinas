@@ -50,7 +50,29 @@ function analyzePdf() {
         return;
     }
 
-    // Pedir al background.js que lea el archivo y lo envíe al servidor
+    // Primero revisar si el background ya lo analizó y guardó el resultado
+    var storageKey = 'cfe_analysis_' + downloadId;
+    chrome.storage.local.get([storageKey], function (result) {
+        if (result[storageKey]) {
+            console.log("Usando resultado pre-analizado del almacenamiento local");
+            var data = result[storageKey];
+
+            // Limpiar el storage para no acumular basura
+            chrome.storage.local.remove([storageKey]);
+
+            if (data.es_cfe) {
+                showCfeData(data);
+            } else {
+                showNotCfe(data.mensaje || "Este PDF no contiene un CFE válido.");
+            }
+        } else {
+            // Fallback: Analizar normalmente si no estaba en storage
+            requestNewAnalysis();
+        }
+    });
+}
+
+function requestNewAnalysis() {
     chrome.runtime.sendMessage({
         action: "analyzePdf",
         downloadId: downloadId,
@@ -69,7 +91,7 @@ function analyzePdf() {
             if (data.es_cfe) {
                 showCfeData(data);
             } else {
-                showNotCfe(data.mensaje || "Este PDF no contiene un CFE valido.");
+                showNotCfe(data.mensaje || "Este PDF no contiene un CFE válido.");
             }
         } else {
             showError(response && response.error ? response.error : "Error al analizar el PDF");

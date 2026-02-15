@@ -319,21 +319,36 @@ class Index extends Component
                 $p->tot_reintegrado = $p->tot_reintegrado ?? 0;
                 $p->tot_recuperado = $p->tot_recuperado ?? 0;
 
-                $totalGastado = $p->tot_rendido + $p->tot_reintegrado;
-                $diferencia = $totalGastado > 0 ? $totalGastado - $p->montoPendientes : 0;
+                $totalMovs = $p->tot_rendido + $p->tot_reintegrado;
+
+                // Cálculo de Extra
+                $diferencia = $totalMovs > 0 ? $totalMovs - $p->montoPendientes : 0;
                 $p->extra = $diferencia > 0 ? $diferencia : 0;
 
-                // Lógica de saldo igual a PanelController
-                if ($totalGastado > $p->montoPendientes) {
-                    $p->saldo = $p->tot_rendido - $p->tot_recuperado;
+                // Lógica de Saldo Final (Validada con casos de prueba)
+                // Lógica de Saldo Final (Validada con casos de prueba)
+                // Usar round para evitar problemas de coma flotante
+                if (round($totalMovs, 2) > round($p->montoPendientes, 2)) {
+                    // Caso con Extra: Saldo es todo lo movido (Rendido + Reintegrado) menos lo recuperado
+                    $p->saldo = $totalMovs - $p->tot_recuperado;
                 } else {
+                    // Caso Normal: Saldo es el Monto original menos lo ya devuelto (Reintegrado + Recuperado)
                     $p->saldo = $p->montoPendientes - $p->tot_reintegrado - $p->tot_recuperado;
                 }
+                $p->saldo = max(0, $p->saldo);
 
                 if (($p->count_undoc ?? 0) > 0) {
                     $p->rendido_sin_docs_calc = ($p->tot_rendido - $p->tot_recuperado);
                 } else {
                     $p->rendido_sin_docs_calc = 0;
+                }
+
+                // Calcular extra pendiente (no recuperado)
+                if ($p->extra > 0) {
+                    $saldo_gasto = $p->tot_rendido - $p->tot_recuperado;
+                    $p->extra_pendiente = max(0, min($p->extra, $saldo_gasto));
+                } else {
+                    $p->extra_pendiente = 0;
                 }
 
                 $p->es_mes_anterior = false;
@@ -367,20 +382,33 @@ class Index extends Component
                 $p->tot_reintegrado = $p->tot_reintegrado ?? 0;
                 $p->tot_recuperado = $p->tot_recuperado ?? 0;
 
-                $totalGastado = $p->tot_rendido + $p->tot_reintegrado;
-                $diferencia = $totalGastado > 0 ? $totalGastado - $p->montoPendientes : 0;
+                $totalMovs = $p->tot_rendido + $p->tot_reintegrado;
+
+                // Cálculo de Extra
+                $diferencia = $totalMovs > 0 ? $totalMovs - $p->montoPendientes : 0;
                 $p->extra = $diferencia > 0 ? $diferencia : 0;
 
-                if ($totalGastado > $p->montoPendientes) {
-                    $p->saldo = $p->tot_rendido - $p->tot_recuperado;
+                // Lógica de Saldo Final (Validada con casos de prueba)
+                // Lógica de Saldo Final (Validada con casos de prueba)
+                if (round($totalMovs, 2) > round($p->montoPendientes, 2)) {
+                    $p->saldo = $totalMovs - $p->tot_recuperado;
                 } else {
                     $p->saldo = $p->montoPendientes - $p->tot_reintegrado - $p->tot_recuperado;
                 }
+                $p->saldo = max(0, $p->saldo);
 
                 if (($p->count_undoc ?? 0) > 0) {
                     $p->rendido_sin_docs_calc = ($p->tot_rendido - $p->tot_recuperado);
                 } else {
                     $p->rendido_sin_docs_calc = 0;
+                }
+
+                // Calcular extra pendiente (no recuperado)
+                if ($p->extra > 0) {
+                    $saldo_gasto = $p->tot_rendido - $p->tot_recuperado;
+                    $p->extra_pendiente = max(0, min($p->extra, $saldo_gasto));
+                } else {
+                    $p->extra_pendiente = 0;
                 }
 
                 $p->es_mes_anterior = true;
@@ -402,7 +430,32 @@ class Index extends Component
                 })->values();
             }
 
-            $this->tablaPendientesDetalle = $allPendientes;
+            $this->tablaPendientesDetalle = $allPendientes->map(function ($item) {
+                // Convertir a array para evitar problemas livewire con stdClass
+                $arr = $item->toArray();
+
+                // INYECTAR MANUALMENTE LAS PROPIEDADES CALCULADAS
+                // toArray() de Eloquent ignora propiedades dinámicas no incluidas en attributes/appends,
+                // o usa accessors que sobreescriben nuestros cálculos.
+                $arr['saldo'] = $item->saldo;
+                $arr['extra'] = $item->extra;
+                $arr['extra_pendiente'] = $item->extra_pendiente;
+                $arr['tot_rendido'] = $item->tot_rendido;
+                $arr['tot_reintegrado'] = $item->tot_reintegrado;
+                $arr['tot_recuperado'] = $item->tot_recuperado;
+                $arr['es_mes_anterior'] = $item->es_mes_anterior;
+
+                // Asegurar estructura de dependencia
+                $arr['dependencia'] = $arr['dependencia'] ?? ['dependencia' => ''];
+                if (is_object($arr['dependencia'])) { // Por si acaso toArray no fue profundo (Eloquent toArray lo es)
+                    $arr['dependencia'] = (array) $arr['dependencia'];
+                }
+
+                // Agregar fecha formateada
+                $arr['fecha_formateada'] = $item->fechaPendientes ? Carbon::parse($item->fechaPendientes)->format('d/m/Y') : '';
+
+                return $arr;
+            });
         } catch (\Exception $e) {
             $this->dispatchBrowserEvent('swal:toast-error', ['text' => 'Error al cargar pendientes: ' . $e->getMessage()]);
             $this->tablaPendientesDetalle = collect();
@@ -490,7 +543,21 @@ class Index extends Component
                 })->values();
             }
 
-            $this->tablaPagos = $allPagos;
+            $this->tablaPagos = $allPagos->map(function ($item) {
+                // Convertir a array
+                $arr = $item->toArray();
+
+                // Asegurar adreedor
+                $arr['acreedor'] = $arr['acreedor'] ?? ['acreedor' => ''];
+                if (is_object($arr['acreedor'])) {
+                    $arr['acreedor'] = (array) $arr['acreedor'];
+                }
+
+                // Agregar fecha formateada
+                $arr['fecha_formateada'] = $item->fechaEgresoPagos ? Carbon::parse($item->fechaEgresoPagos)->format('d/m/Y') : '';
+
+                return $arr;
+            });
         } catch (\Exception $e) {
             $this->dispatchBrowserEvent('swal:toast-error', ['text' => 'Error al cargar pagos: ' . $e->getMessage()]);
             $this->tablaPagos = collect();
@@ -511,13 +578,34 @@ class Index extends Component
             $totalRendido = $this->tablaPendientesDetalle->sum('tot_rendido');
             $totalReintegrado = $this->tablaPendientesDetalle->sum('tot_reintegrado');
             $totalRecuperado = $this->tablaPendientesDetalle->sum('tot_recuperado');
-            $stExtras = $this->tablaPendientesDetalle->sum('extra');
+            $stExtras = $this->tablaPendientesDetalle->sum('extra_pendiente'); // Usar el extra pendiente calculado
 
             $totalGastado = $totalRendido + $totalReintegrado;
+            // $stPendientes es la suma de saldos pendientes de aquellos que NO se pasaron (normales)
+            // Pero simplificando, el saldo total pendiente global se puede calcular diferente.
+            // Usemos la suma directa de saldos, pero hay que distinguir tipos.
+
+            // Revertimos a la lógica anterior pero ajustada:
+            // Total Pendiente (Dinero en calle): Monto - Gastado (donde gastado <= monto)
+            // El problema es que "extra" distorsiona.
+
+            // Cálculo Alternativo más robusto basado en items:
+            // Saldo "Normal" Pendiente = Sum(max(0, Monto - Reintegrado - Recuperado)) - pero si gastó más...
+            // Mejor mantener la lógica simple de sumas si funcionaba excepto por el extra.
+
             $stPendientes = $totalMontoPendientes - $totalGastado;
+            // Si gastamos extra globalmente, esto resta de más. Hay que sumar TotalExtraGenerado (sum('extra')) para compensar.
+            $totalGeneratedExtra = $this->tablaPendientesDetalle->sum('extra');
+            $stPendientes = ($totalMontoPendientes + $totalGeneratedExtra) - $totalGastado;
+            // ($totalMontoPendientes + $totalExtra) es el Total "Debit" real. $totalGastado es el Credit.
+            // Pero 'extra' es derivado de gastado.
+            // Si gaste 1200 (1000 monto), tengo 200 extra.
+            // 1000 + 200 - 1200 = 0 pendiente. Correcto.
+
             $stPendientes = $stPendientes > 0 ? $stPendientes : 0;
 
             $stRendidos = $totalRendido - $totalRecuperado;
+            // Restar solo el extra que AUN falta recuperar.
             $stRendidos = max(0, $stRendidos - $stExtras);
 
             $this->tablaTotales['Total Pendientes'] = $stPendientes;
@@ -529,6 +617,7 @@ class Index extends Component
             $this->tablaTotales['Total Rendido Sin Docs'] = $totalRendidoSinDocs;
 
             // Calcular totales de pagos usando tablaPagos
+            // Nota: tablaPagos ahora es una colección de arrays, no objetos stdClass
             $pagosConEgreso = $this->tablaPagos->filter(function ($p) {
                 $egreso = $p['egresoPagos'] ?? null;
                 return !is_null($egreso) && trim((string)$egreso) !== '';
@@ -1176,27 +1265,84 @@ class Index extends Component
             return;
         }
 
-        // Obtener IDs de dependencias que ya tienen pendientes en el mes actual
-        $idsConPendiente = $this->tablaPendientesDetalle
-            ->where('es_mes_anterior', false)
-            ->pluck('relDependencia')
-            ->unique()
-            ->toArray();
+        // Obtener conteo de pendientes por dependencia para el mes actual directamente de la BD
+        // Esto evita errores cuando la tabla principal está filtrada por búsqueda
+        $conteoPorDependencia = Pendiente::where('relCajaChica', $this->cajaChicaSeleccionada->idCajaChica)
+            ->where('fechaPendientes', '<=', $this->fechaHasta ? Carbon::parse($this->fechaHasta)->endOfDay()->toDateTimeString() : now()->endOfDay()->toDateTimeString())
+            ->selectRaw('relDependencia, count(*) as total')
+            ->groupBy('relDependencia')
+            ->pluck('total', 'relDependencia');
 
-        // Obtener todas las dependencias que no están en esa lista y que no sean Tesorería
-        $todasFaltantes = Dependencia::whereNotIn('idDependencias', $idsConPendiente)
-            ->where('dependencia', '<>', 'Dirección de Tesorería')
+        // Obtener todas las dependencias excepto Tesorería
+        $todasDependencias = Dependencia::where('dependencia', '<>', 'Dirección de Tesorería')
             ->orderBy('dependencia', 'ASC')
             ->get();
 
+        $faltantes = collect();
+
+        foreach ($todasDependencias as $dep) {
+            $nombreNorm = $this->normalizarParaComparar($dep->dependencia);
+            $esEspecial = str_contains($nombreNorm, '(especial)');
+
+            // Determinar la meta de registros para esta dependencia
+            $meta = 1;
+
+            if (!$esEspecial) {
+                // Verificar si es una de las dependencias quincenales
+                // "Direccion de Administracion" y "Direccion de Logistica y Apoyo"
+                if (
+                    str_contains($nombreNorm, 'direccion de administracion') ||
+                    str_contains($nombreNorm, 'direccion de logistica y apoyo')
+                ) {
+                    $meta = 2;
+                }
+            }
+
+            $cantidadActual = $conteoPorDependencia->get($dep->idDependencias, 0);
+
+            if ($cantidadActual < $meta) {
+                $faltantes->push($dep);
+            }
+        }
+
         // Separar normales de especiales
-        $this->dependenciasSinPendientes = $todasFaltantes->filter(function ($dep) {
+        $this->dependenciasSinPendientes = $faltantes->filter(function ($dep) {
             return !str_contains(strtolower($dep->dependencia), '(especial)');
         });
 
-        $this->dependenciasEspecialesSinPendientes = $todasFaltantes->filter(function ($dep) {
+        $this->dependenciasEspecialesSinPendientes = $faltantes->filter(function ($dep) {
             return str_contains(strtolower($dep->dependencia), '(especial)');
         });
+    }
+
+    private function normalizarParaComparar($string)
+    {
+        $string = mb_strtolower($string, 'UTF-8');
+        $replacements = [
+            'á' => 'a',
+            'é' => 'e',
+            'í' => 'i',
+            'ó' => 'o',
+            'ú' => 'u',
+            'à' => 'a',
+            'è' => 'e',
+            'ì' => 'i',
+            'ò' => 'o',
+            'ù' => 'u',
+            'ä' => 'a',
+            'ë' => 'e',
+            'ï' => 'i',
+            'ö' => 'o',
+            'ü' => 'u',
+            'â' => 'a',
+            'ê' => 'e',
+            'î' => 'i',
+            'ô' => 'o',
+            'û' => 'u',
+            'ñ' => 'n',
+            'ç' => 'c'
+        ];
+        return strtr($string, $replacements);
     }
 
 
@@ -1277,9 +1423,6 @@ class Index extends Component
 
         DB::beginTransaction();
         try {
-            // $pendiente->deleted_by = auth()->id(); // Columna no existe en BD
-            $pendiente->save(); // Guardar solo si hubo cambios previos, pero aquí es redundante si solo era para deleted_by.
-            // Mejor simplemente borramos:
             $pendiente->delete();
 
             DB::commit();
@@ -1321,8 +1464,6 @@ class Index extends Component
 
         DB::beginTransaction();
         try {
-            // $pago->deleted_by = auth()->id(); // Columna no existe en BD
-            // $pago->save();
             $pago->delete();
 
             DB::commit();

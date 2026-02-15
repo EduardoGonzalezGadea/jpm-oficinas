@@ -408,7 +408,8 @@
     <style>
         body {
             font-family: 'Nunito', sans-serif;
-            background-color: #f8f9fa;
+            background: linear-gradient(180deg, #1e3a5f 0%, #3b6b9a 40%, #7ba3c9 70%, #a8d4f5 100%);
+            min-height: 100vh;
         }
 
         .welcome-container {
@@ -423,31 +424,41 @@
         .logo-container {
             display: flex;
             align-items: center;
+            justify-content: space-between;
             margin-bottom: 1.5rem;
             width: 100%;
         }
 
         .logo-container img {
             max-width: 120px;
-            margin-right: 1.5rem;
             flex-shrink: 0;
+        }
+
+        .logo-left {
+            margin-right: 1.5rem;
+        }
+
+        .logo-right {
+            margin-left: 1.5rem;
         }
 
         .logo-text {
             flex-grow: 1;
             text-align: center;
-            padding-right: 120px;
-            /* Para compensar el ancho del logo y mantener el texto centrado en el espacio restante */
         }
 
         .logo-text h1 {
             margin-bottom: 0.5rem;
             font-size: 1.8rem;
+            color: #e0f0ff;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3), 0 0 10px rgba(0, 0, 0, 0.2);
         }
 
         .logo-text p {
             margin-bottom: 0.25rem;
             line-height: 1.3;
+            color: #c8e4ff;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.25);
         }
 
         .card {
@@ -503,11 +514,6 @@
                 max-width: 80px;
             }
 
-            .logo-text {
-                padding-right: 80px;
-                /* Ajustar el padding para dispositivos móviles */
-            }
-
             .logo-text h1 {
                 font-size: 1.5rem;
             }
@@ -521,11 +527,12 @@
             <div class="row">
                 <div class="col-lg-10 mx-auto">
                     <div class="logo-container">
-                        <img src="{{ asset('images/icons/jpm.png') }}" alt="JPM Logo" class="img-fluid">
+                        <img src="{{ asset('images/icons/jpm.png') }}" alt="JPM Logo" class="img-fluid logo-left">
                         <div class="logo-text">
                             <h1>Tesorería | Oficinas</h1>
                             <p class="lead mb-1">Sistema de Apoyo de la Dirección de Tesorería</p>
                         </div>
+                        <img src="{{ asset('favicon.ico') }}" alt="MI Logo" class="img-fluid logo-right">
                     </div>
 
                     <div class="row mt-3">

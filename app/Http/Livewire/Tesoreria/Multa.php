@@ -3,16 +3,18 @@
 namespace App\Http\Livewire\Tesoreria;
 
 use App\Models\Tesoreria\Multa as MultaModel;
+use App\Builders\MultaQueryBuilder;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Traits\CacheMultaTrait;
 
 class Multa extends Component
 {
-    use WithPagination;
+    use WithPagination, CacheMultaTrait;
 
     protected $paginationTheme = 'bootstrap';
 
@@ -34,7 +36,6 @@ class Multa extends Component
     public $sortField = 'articulo';
     public $sortDirection = 'asc';
     public $perPage = 50;
-    public $multasCargadas = false; // Flag para controlar carga progresiva
 
     protected $queryString = [
         'search' => ['except' => ''],
@@ -63,36 +64,21 @@ class Multa extends Component
 
     public function mount()
     {
-        // Iniciar carga automática de multas después de mount
-        $this->loadMultasAutomaticamente();
+        // Carga inmediata sin flags innecesarios
     }
-
-
 
     public function updatedSearch($value)
     {
         $this->resetPage();
-        Cache::flush();
-
-        if (empty($value)) {
-            $this->multasCargadas = true;
-        } else {
-            $this->multasCargadas = false;
-        }
+        // Invalidar solo caché de multas, no toda la caché
+        $this->invalidateMultasCache();
     }
 
     public function updatingPerPage()
     {
         $this->resetPage();
-        Cache::flush();
+        $this->invalidateMultasCache();
     }
-
-    public function loadMultas()
-    {
-        $this->multasCargadas = true;
-    }
-
-
 
     public function sortBy($field)
     {
@@ -103,12 +89,12 @@ class Multa extends Component
         }
         $this->sortField = $field;
         $this->resetPage();
-        Cache::flush();
+        $this->invalidateMultasCache();
     }
 
     public function refreshList()
     {
-        Cache::flush();
+        $this->invalidateMultasCache();
         $this->resetPage();
     }
 
@@ -121,7 +107,7 @@ class Multa extends Component
 
             if (isset($data->success) && $data->success) {
                 $this->dispatchBrowserEvent('swal:success', ['text' => $data->message]);
-                Cache::flush();
+                $this->invalidateMultasCache();
                 $this->resetPage();
             } else {
                 $mensaje = $data->error ?? 'Error desconocido al actualizar SOA.';
@@ -161,7 +147,6 @@ class Multa extends Component
 
         DB::transaction(function () {
             try {
-                // Log the operation for debugging
                 Log::info('Multa store operation started', [
                     'multa_id' => $this->multa_id,
                     'articulo' => $this->articulo,
@@ -182,7 +167,9 @@ class Multa extends Component
                 );
 
                 Log::info('Multa store operation completed', ['multa_id' => $multa->id]);
-                Cache::flush();
+
+                // Invalidar solo caché de multas
+                $this->invalidateMultasCache();
             } catch (\Exception $e) {
                 Log::error('Multa store operation failed', [
                     'error' => $e->getMessage(),
@@ -190,7 +177,7 @@ class Multa extends Component
                     'articulo' => $this->articulo
                 ]);
 
-                throw $e; // Re-throw to trigger transaction rollback
+                throw $e;
             }
         });
 
@@ -204,7 +191,7 @@ class Multa extends Component
     {
         DB::transaction(function () use ($id) {
             MultaModel::find($id)->delete();
-            Cache::flush();
+            $this->invalidateMultasCache();
         });
         $this->dispatchBrowserEvent('swal:success', ['text' => 'Multa eliminada exitosamente.']);
     }
@@ -234,37 +221,25 @@ class Multa extends Component
 
     public function render()
     {
-        $multas = collect();
+        $cacheKey = $this->getMultasCacheKey();
+        $ttl = $this->getMultasCacheTTL();
 
-        if (!empty($this->search) || $this->multasCargadas) {
-            $page = $this->page ?: 1;
-            $cacheKey = 'multas_search_' . $this->search . '_perpage_' . $this->perPage . '_sortfield_' . $this->sortField . '_sortdirection_' . $this->sortDirection . '_page_' . $page;
+        $multas = Cache::remember($cacheKey, $ttl, function () {
+            // Usar Query Builder optimizado
+            $query = MultaQueryBuilder::forList([
+                'search' => $this->search,
+                'sortField' => $this->sortField,
+                'sortDirection' => $this->sortDirection,
+            ]);
 
-            $multas = Cache::remember($cacheKey, now()->addDay(), function () {
-                $query = MultaModel::query();
-
-                if (!empty($this->search)) {
-                    $query->where(function ($q) {
-                        $q->whereRaw("CONCAT_WS('.', articulo, apartado) like ?", ["%" . $this->search . "%"])
-                            ->orWhere('descripcion', 'like', '%' . $this->search . '%');
-                    });
-                }
-
-                $query->orderBy($this->sortField, $this->sortDirection);
-
-                if ((int)$this->perPage === -1) {
-                    return $query->get();
-                } else {
-                    return $query->paginate($this->perPage);
-                }
-            });
-        }
+            // Usar simplePaginate para mejor rendimiento (no cuenta total de registros)
+            if ((int)$this->perPage === -1) {
+                return $query->get();
+            } else {
+                return $query->simplePaginate($this->perPage);
+            }
+        });
 
         return view('livewire.tesoreria.multa', compact('multas'));
-    }
-
-    public function loadMultasAutomaticamente()
-    {
-        $this->multasCargadas = true;
     }
 }

@@ -93,7 +93,7 @@
                                     class="form-control"
                                     placeholder="Buscar por nombre, recibo, cédula, concepto...">
                                 <div class="input-group-append">
-                                    <button class="btn btn-outline-danger" type="button" wire:click="$set('search', '')" title="Limpiar filtro">
+                                    <button class="btn btn-danger" type="button" wire:click="$set('search', '')" title="Limpiar filtro">
                                         <i class="fas fa-times"></i>
                                     </button>
                                 </div>
@@ -130,18 +130,35 @@
                                         @endif
                                     </td>
                                     <td class="text-center align-middle">
-                                        <span class="badge badge-info">{{ $registro->items->count() }}</span>
+                                        @php
+                                        $itemsTooltip = $registro->items->map(function($item) {
+                                        $detalle = $item->detalle ?: 'Sin detalle';
+                                        // Eliminar "MULTAS DE TRÁNSITO" o "MULTAS DE TRANSITO" al principio
+                                        $detalle = preg_replace('/^MULTAS DE TRANSITO\s*/i', '', $detalle);
+                                        $detalle = preg_replace('/^MULTAS DE TRÁNSITO\s*/i', '', $detalle);
+                                        return '<strong>' . trim($detalle) . '</strong>: $ ' . number_format($item->importe, 2, ',', '.');
+                                        })->join('<br><br>');
+                                        @endphp
+                                        <span class="badge badge-info"
+                                            data-toggle="tooltip"
+                                            data-html="true"
+                                            data-placement="auto"
+                                            data-boundary="window"
+                                            title="{!! $itemsTooltip !!}"
+                                            style="cursor: help;">
+                                            {{ $registro->items->count() }}
+                                        </span>
                                     </td>
                                     <td class="text-right align-middle font-weight-bold text-nowrap">{{ $registro->monto_formateado }}</td>
                                     <td class="text-center align-middle text-nowrap d-print-none">
                                         <div class="btn-group">
-                                            <button wire:click="showDetails({{ $registro->id }})" class="btn btn-sm btn-outline-info py-0 px-2" title="Ver Detalle">
+                                            <button wire:click="showDetails({{ $registro->id }})" class="btn btn-sm btn-info py-0 px-2" title="Ver Detalle">
                                                 <i class="fas fa-eye fa-sm"></i>
                                             </button>
-                                            <button wire:click="edit({{ $registro->id }})" class="btn btn-sm btn-outline-primary py-0 px-2" title="Editar">
+                                            <button wire:click="edit({{ $registro->id }})" class="btn btn-sm btn-primary py-0 px-2" title="Editar">
                                                 <i class="fas fa-edit fa-sm"></i>
                                             </button>
-                                            <button wire:click="confirmDelete({{ $registro->id }})" class="btn btn-sm btn-outline-danger py-0 px-2" title="Eliminar">
+                                            <button wire:click="confirmDelete({{ $registro->id }})" class="btn btn-sm btn-danger py-0 px-2" title="Eliminar">
                                                 <i class="fas fa-trash fa-sm"></i>
                                             </button>
                                         </div>
@@ -285,17 +302,22 @@
 
     <!-- Modal Formulario -->
     @if($showModal)
-    <div class="modal fade show" style="display: block;" tabindex="-1" role="dialog" x-cloak x-data="{ 
+    <div class="modal fade show" style="display: block;" tabindex="-1" role="dialog" wire:ignore.self
+        x-cloak
+        x-data="{
         isClosing: false,
         mediosAgregados: [],
         nuevoMedio: '',
         nuevoMonto: '',
-        
+        totalItems: {{ $this->suma_items ?? 0 }},
+
         init() {
             this.parseMedios();
             this.$nextTick(() => {
                 const el = document.getElementById('input-recibo');
                 if (el) el.focus();
+                // Ensure calculation runs after everything is ready
+                this.calculateTotalItems();
             });
         },
 
@@ -318,7 +340,19 @@
             }
             return parseFloat(s) || 0;
         },
-        
+
+        formatMoney(value) {
+            return '$ ' + value.toLocaleString('es-UY', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        },
+
+        calculateTotalItems() {
+            // Use querySelectorAll to find all current inputs in the DOM
+            let inputs = document.querySelectorAll('.item-importe');
+            this.totalItems = Array.from(inputs).reduce((sum, el) => {
+                return sum + this.parseNumber(el.value);
+            }, 0);
+        },
+
         parseMedios() {
             let formaPago = $wire.forma_pago;
             if (!formaPago || formaPago === 'SIN DATOS') {
@@ -334,13 +368,13 @@
                 };
             });
         },
-        
+
         agregarMedio() {
             if (!this.nuevoMedio) return;
-            
+
             let nombre = this.nuevoMedio.replace(':', '').trim();
             let totalActual = parseFloat($wire.monto || 0);
-            
+
             if (!this.nuevoMonto || this.nuevoMonto == 0) {
                 let saldo = totalActual - this.calcularTotalMedios();
                 if (saldo > 0) this.nuevoMonto = saldo.toFixed(2);
@@ -350,21 +384,21 @@
                 nombre: nombre,
                 monto: this.nuevoMonto
             });
-            
+
             this.nuevoMedio = '';
             this.nuevoMonto = '';
             this.syncFormaPago();
         },
-        
+
         calcularTotalMedios() {
             return this.mediosAgregados.reduce((acc, m) => acc + this.parseNumber(m.monto), 0);
         },
-        
+
         removerMedio(index) {
             this.mediosAgregados.splice(index, 1);
             this.syncFormaPago();
         },
-        
+
         syncFormaPago() {
             $wire.forma_pago = this.mediosAgregados.map(m => {
                 let val = this.parseNumber(m.monto);
@@ -373,9 +407,13 @@
         },
 
         confirmSave() {
-            let totalFactura = parseFloat($wire.monto || 0);
+            this.calculateTotalItems();
+            
+            let totalFactura = this.totalItems;
             let totalMedios = this.calcularTotalMedios();
             let diferencia = Math.abs(totalFactura - totalMedios);
+            
+            $wire.set('monto', totalFactura, true);
 
             if (diferencia > 0.01) {
                 Swal.fire({
@@ -390,7 +428,7 @@
                     reverseButtons: true
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        $wire.save();
+                        $wire.save(true);
                     }
                 });
             } else {
@@ -401,7 +439,10 @@
         <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable modal-animate-in"
             :class="{'modal-animate-out': isClosing}"
             role="document" style="max-width: 95%;">
-            <div class="modal-content shadow-lg border-0">
+            <div class="modal-content shadow-lg border-0"
+                @click="calculateTotalItems()"
+                @keyup="calculateTotalItems()"
+                x-on:update-total.window="totalItems = $event.detail.total">
                 <div class="modal-header bg-primary text-white py-2 shadow-sm">
                     <h6 class="modal-title font-weight-bold mb-0">
                         <i class="fas {{ $editMode ? 'fa-edit' : 'fa-plus-circle' }} mr-2"></i>
@@ -479,29 +520,42 @@
                                             </thead>
                                             <tbody>
                                                 @foreach($items_form as $index => $item)
-                                                <tr class="item-row">
+                                                <tr class="item-row" wire:key="item-row-{{ $item['_uid'] ?? $index }}">
                                                     <td class="pl-3">
                                                         <input type="text" wire:model.defer="items_form.{{ $index }}.detalle"
+                                                            wire:key="detalle-{{ $item['_uid'] }}"
                                                             class="form-control form-control-compact @error('items_form.'.$index.'.detalle') is-invalid @enderror"
                                                             placeholder="Concepto..." list="sugerencias-detalle" required>
                                                     </td>
                                                     <td>
                                                         <input type="text" wire:model.defer="items_form.{{ $index }}.descripcion"
+                                                            wire:key="descripcion-{{ $item['_uid'] }}"
                                                             class="form-control form-control-compact"
                                                             placeholder="Opcional...">
                                                     </td>
                                                     <td class="pr-1">
                                                         <div class="input-group input-group-compact">
                                                             <div class="input-group-prepend"><span class="input-group-text bg-transparent border-0 text-muted">$</span></div>
-                                                            <input type="number" step="1.00" wire:model="items_form.{{ $index }}.importe"
-                                                                class="form-control form-control-compact text-right font-weight-bold item-importe" required>
+                                                            <input type="number" step="1.00" wire:model.defer="items_form.{{ $index }}.importe"
+                                                                wire:key="importe-{{ $item['_uid'] }}"
+                                                                class="form-control form-control-compact text-right font-weight-bold item-importe"
+                                                                value="{{ $item['importe'] }}"
+                                                                @input="calculateTotalItems()"
+                                                                required>
                                                         </div>
                                                     </td>
                                                     <td class="p-1 align-middle text-center">
                                                         @if(count($items_form) > 1)
                                                         <button type="button" wire:click="removeItem({{ $index }})"
+                                                            wire:loading.attr="disabled"
+                                                            wire:target="removeItem({{ $index }})"
                                                             class="btn btn-link text-danger p-0" title="Eliminar fila">
-                                                            <i class="fas fa-times-circle"></i>
+                                                            <span wire:loading.remove wire:target="removeItem({{ $index }})">
+                                                                <i class="fas fa-times-circle"></i>
+                                                            </span>
+                                                            <span wire:loading wire:target="removeItem({{ $index }})">
+                                                                <i class="fas fa-spinner fa-spin text-muted"></i>
+                                                            </span>
                                                         </button>
                                                         @endif
                                                     </td>
@@ -515,7 +569,7 @@
                                                     </td>
                                                     <td class="py-1 pr-1">
                                                         <div class="h6 mb-0 text-right font-weight-bold text-white">
-                                                            $ {{ number_format($this->sumaItems, 2, ',', '.') }}
+                                                            <span x-text="formatMoney(totalItems)"></span>
                                                         </div>
                                                     </td>
                                                     <td></td>
@@ -636,7 +690,7 @@
     <!-- Modal Detalle Mejorado -->
     @if($showDetailModal)
     <div class="modal fade show" style="display: block;" tabindex="-1" role="dialog"
-        x-data="{ 
+        x-data="{
             isClosing: false,
             closeDetail() {
                 this.isClosing = true;
@@ -659,266 +713,101 @@
             :class="{'modal-animate-out': isClosing}"
             role="document">
             <div class="modal-content border-0 shadow" style="max-height: 90vh;">
-                <!-- Header Mejorado -->
-                <div class="modal-header bg-gradient-info text-white py-2" style="background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);">
-                    <div class="d-flex align-items-center">
-                        <div class="bg-white rounded-circle p-2 mr-3" style="width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;">
-                            <i class="fas fa-file-invoice text-info"></i>
+                <!-- Header Compacto -->
+                <div class="modal-header bg-dark text-white py-2 px-3">
+                    <div class="d-flex align-items-center w-100 justify-content-between">
+                        <div class="d-flex align-items-center">
+                            <span class="badge badge-light mr-2">{{ $selectedRegistro->recibo }}</span>
+                            <span class="text-light small">{{ $selectedRegistro->fecha->format('d/m/Y') }}</span>
                         </div>
-                        <div>
-                            <h5 class="modal-title font-weight-bold mb-0 text-white" style="text-shadow: 2px 2px 4px rgba(0,0,0,0.5); letter-spacing: 0.5px; font-size: 1.25rem;">Detalle del Comprobante</h5>
-                            <small class="text-white font-weight-bold" style="text-shadow: 1px 1px 3px rgba(0,0,0,0.4); font-size: 0.85rem;">Información completa del registro de cobro</small>
-                        </div>
+                        <button type="button" class="close text-white" @click="closeDetail()" style="opacity: 0.9;">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
                     </div>
-                    <button type="button" class="close text-white" @click="closeDetail()" style="opacity: 0.9;">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
+                </div>
+
+                <!-- Sección de Monto Total Minimalista -->
+                <div class="border-bottom py-2 px-3 bg-light d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center">
+                        <span class="text-muted small mr-2">Total:</span>
+                        <span class="h5 font-weight-bold text-success mb-0">{{ $selectedRegistro->monto_formateado }}</span>
+                    </div>
+                    <div class="d-flex flex-wrap">
+                        @foreach(explode('/', $selectedRegistro->forma_pago) as $medio)
+                        <span class="badge badge-secondary mr-1">{{ $medio }}</span>
+                        @endforeach
+                    </div>
                 </div>
 
                 <div class="modal-body p-0" style="overflow-y: auto;">
                     @if($selectedRegistro)
-                    <!-- Header Card con Monto Total -->
-                    <div class="p-3 bg-light border-bottom">
-                        <div class="row align-items-center">
-                            <div class="col-md-4 mb-2 mb-md-0">
-                                <div class="bg-white rounded shadow-sm p-3 text-center border">
-                                    <small class="text-secondary text-uppercase font-weight-bold d-block mb-1" style="font-size: 0.7rem; letter-spacing: 0.5px;">Monto Total Cobrado</small>
-                                    <h2 class="font-weight-bold mb-0 text-success">{{ $selectedRegistro->monto_formateado }}</h2>
-                                </div>
+                    <!-- Sección de Contribuyente -->
+                    <div class="border-bottom py-2 px-3 bg-light">
+                        <div class="row small">
+                            <div class="col-md-6">
+                                <span class="text-muted">Nombre:</span>
+                                <strong>{{ $selectedRegistro->nombre }}</strong>
                             </div>
-                            <div class="col-md-8">
-                                <div class="d-flex flex-wrap justify-content-md-end gap-2">
-                                    <div class="badge badge-light border px-3 py-2 mr-2 mb-2">
-                                        <i class="fas fa-hashtag text-info mr-1"></i>
-                                        <span class="text-secondary small">Recibo:</span>
-                                        <span class="font-weight-bold ml-1">{{ $selectedRegistro->recibo }}</span>
-                                    </div>
-                                    <div class="badge badge-light border px-3 py-2 mr-2 mb-2">
-                                        <i class="fas fa-calendar-alt text-info mr-1"></i>
-                                        <span class="text-secondary small">Fecha:</span>
-                                        <span class="font-weight-bold ml-1">{{ $selectedRegistro->fecha->format('d/m/Y') }}</span>
-                                    </div>
-                                    <div class="badge badge-light border px-3 py-2 mb-2">
-                                        <i class="fas fa-list text-info mr-1"></i>
-                                        <span class="text-secondary small">Ítems:</span>
-                                        <span class="font-weight-bold ml-1">{{ $selectedRegistro->items->count() }}</span>
-                                    </div>
-                                </div>
+                            <div class="col-md-3">
+                                <span class="text-muted">CI:</span>
+                                <strong>{{ $selectedRegistro->cedula }}</strong>
+                            </div>
+                            <div class="col-md-3">
+                                <span class="text-muted">Tel:</span>
+                                <strong>{{ $selectedRegistro->temp_tel }}</strong>
+                            </div>
+                        </div>
+                        <div class="row small mt-1">
+                            <div class="col-12">
+                                <span class="text-muted">Domicilio:</span>
+                                <span>{{ $selectedRegistro->domicilio }}</span>
                             </div>
                         </div>
                     </div>
 
-                    <div class="p-3">
-                        <!-- Sección de Identificación del Contribuyente -->
-                        <div class="card border shadow-sm mb-3">
-                            <div class="card-header bg-light border-bottom py-2 d-flex align-items-center">
-                                <i class="fas fa-user-circle text-info mr-2"></i>
-                                <span class="font-weight-bold">Datos del Contribuyente</span>
-                            </div>
-                            <div class="card-body py-3">
-                                <div class="row">
-                                    <div class="col-md-8 mb-3 mb-md-0">
-                                        <label class="text-secondary small font-weight-bold text-uppercase mb-1" style="font-size: 0.7rem; letter-spacing: 0.5px;">Nombre / Razón Social</label>
-                                        <div class="h5 font-weight-bold mb-0">
-                                            {{ $selectedRegistro->nombre ?: 'Sin datos' }}
-                                        </div>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <label class="text-secondary small font-weight-bold text-uppercase mb-1" style="font-size: 0.7rem; letter-spacing: 0.5px;">Documento</label>
-                                        <div class="h5 font-weight-bold mb-0">
-                                            @if($selectedRegistro->cedula)
-                                            <span class="badge badge-secondary">{{ $selectedRegistro->cedula }}</span>
-                                            @else
-                                            <span class="text-secondary font-italic small">No registrado</span>
-                                            @endif
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Desglose de Conceptos en Card -->
-                        <div class="card border shadow-sm mb-3">
-                            <div class="card-header bg-light border-bottom py-2 d-flex justify-content-between align-items-center">
-                                <div class="d-flex align-items-center">
-                                    <i class="fas fa-list-ul text-info mr-2"></i>
-                                    <span class="font-weight-bold">Desglose de Conceptos</span>
-                                </div>
-                                <span class="badge badge-info">{{ $selectedRegistro->items->count() }} ítem(s)</span>
-                            </div>
-                            <div class="card-body p-0">
-                                <div class="table-responsive">
-                                    <table class="table table-hover table-striped mb-0">
-                                        <thead class="thead-light">
-                                            <tr>
-                                                <th class="pl-3 py-2 border-0 font-weight-bold text-secondary" style="font-size: 0.75rem; width: 50%;">
-                                                    <i class="fas fa-tag mr-1 text-info"></i>CONCEPTO
-                                                </th>
-                                                <th class="py-2 border-0 font-weight-bold text-secondary" style="font-size: 0.75rem; width: 30%;">
-                                                    <i class="fas fa-align-left mr-1 text-info"></i>DESCRIPCIÓN
-                                                </th>
-                                                <th class="text-right pr-3 py-2 border-0 font-weight-bold text-secondary" style="font-size: 0.75rem; width: 20%;">
-                                                    <i class="fas fa-dollar-sign mr-1 text-info"></i>IMPORTE
-                                                </th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            @foreach($selectedRegistro->items as $item)
-                                            <tr>
-                                                <td class="pl-3 align-middle py-2">
-                                                    <span class="font-weight-bold">{{ $item->detalle }}</span>
-                                                </td>
-                                                <td class="align-middle py-2">
-                                                    @if($item->descripcion)
-                                                    <span class="text-secondary small">{{ $item->descripcion }}</span>
-                                                    @else
-                                                    <span class="text-secondary font-italic small">-</span>
-                                                    @endif
-                                                </td>
-                                                <td class="text-right pr-3 align-middle py-2">
-                                                    <span class="font-weight-bold text-success">$ {{ number_format($item->importe, 2, ',', '.') }}</span>
-                                                </td>
-                                            </tr>
-                                            @endforeach
-                                        </tbody>
-                                        <tfoot class="bg-dark text-white">
-                                            <tr>
-                                                <td colspan="2" class="text-right py-2 pr-3">
-                                                    <span class="font-weight-bold">TOTAL GENERAL:</span>
-                                                </td>
-                                                <td class="text-right pr-3 py-2">
-                                                    <span class="font-weight-bold h5 mb-0">{{ $selectedRegistro->monto_formateado }}</span>
-                                                </td>
-                                            </tr>
-                                        </tfoot>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Sección de Información Adicional -->
-                        <div class="row">
-                            <!-- Domicilio y Pago -->
-                            <div class="col-md-6 mb-3">
-                                <div class="card border shadow-sm h-100">
-                                    <div class="card-header bg-light border-bottom py-2">
-                                        <i class="fas fa-map-marker-alt text-info mr-2"></i>
-                                        <span class="font-weight-bold">Información de Pago</span>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="mb-3">
-                                            <label class="text-secondary small font-weight-bold text-uppercase mb-1" style="font-size: 0.7rem;">
-                                                <i class="fas fa-home mr-1"></i>Dirección / Domicilio
-                                            </label>
-                                            <p class="mb-0">
-                                                {{ $selectedRegistro->domicilio ?: 'No registrado' }}
-                                            </p>
-                                        </div>
-
-                                        <div class="mb-3">
-                                            <label class="text-secondary small font-weight-bold text-uppercase mb-1" style="font-size: 0.7rem;">
-                                                <i class="fas fa-credit-card mr-1"></i>Medio de Pago
-                                            </label>
-                                            <div>
-                                                @if($selectedRegistro->forma_pago)
-                                                @foreach(explode('/', $selectedRegistro->forma_pago) as $medio)
-                                                @php
-                                                $partes = explode(':', $medio);
-                                                $nombre = trim($partes[0]);
-                                                $monto = isset($partes[1]) ? trim($partes[1]) : null;
-                                                @endphp
-                                                <span class="badge badge-outline-info border px-2 py-1 mr-1 mb-1" style="font-size: 0.8rem;">
-                                                    {{ $nombre }}:@if($monto)
-                                                    @if(strpos($monto, ',') !== false)
-                                                    {{-- El monto ya tiene formato uruguayo (usa coma como separador decimal) --}}
-                                                    <span class="font-weight-bold ml-1">$ {{ $monto }}</span>
-                                                    @else
-                                                    {{-- El monto es un número sin formato o formato inglés --}}
-                                                    <span class="font-weight-bold ml-1">$ {{ number_format((float)$monto, 2, ',', '.') }}</span>
-                                                    @endif
-                                                    @endif
-                                                </span>
-                                                @endforeach
-                                                @else
-                                                <span class="badge badge-light border text-secondary">Sin datos</span>
-                                                @endif
-                                            </div>
-                                        </div>
-
-                                        @if($selectedRegistro->adicional)
-                                        <div>
-                                            <label class="text-secondary small font-weight-bold text-uppercase mb-1" style="font-size: 0.7rem;">
-                                                <i class="fas fa-info-circle mr-1"></i>Datos Adicionales
-                                            </label>
-                                            <p class="mb-0 small">{{ $selectedRegistro->adicional }}</p>
-                                        </div>
-                                        @endif
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Adenda/Observaciones -->
-                            <div class="col-md-6 mb-3">
-                                <div class="card border shadow-sm h-100">
-                                    <div class="card-header bg-light border-bottom py-2">
-                                        <i class="fas fa-sticky-note text-info mr-2"></i>
-                                        <span class="font-weight-bold">Observaciones</span>
-                                    </div>
-                                    <div class="card-body">
-                                        @if(trim($selectedRegistro->adenda))
-                                        <div class="bg-light p-3 rounded border" style="font-size: 0.9rem; min-height: 100px;">
-                                            {{ trim($selectedRegistro->adenda) }}
-                                        </div>
-                                        @else
-                                        <div class="text-center text-secondary py-4">
-                                            <i class="fas fa-clipboard-list fa-2x mb-2 opacity-25"></i>
-                                            <p class="mb-0 small">Sin observaciones registradas</p>
-                                        </div>
-                                        @endif
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Información del Sistema -->
-                        <div class="card border bg-light mt-2">
-                            <div class="card-body py-2">
-                                <div class="row text-secondary small">
-                                    <div class="col-md-6 mb-1 mb-md-0">
-                                        <i class="fas fa-user-edit mr-1"></i>
-                                        <span>Registrado por:</span>
-                                        <span class="font-weight-bold ml-1">
-                                            {{ $selectedRegistro->creator->nombre }} {{ $selectedRegistro->creator->apellido }}
-                                        </span>
-                                    </div>
-                                    <div class="col-md-6 text-md-right">
-                                        <i class="fas fa-clock mr-1"></i>
-                                        <span>Fecha/Hora de registro:</span>
-                                        <span class="font-weight-bold ml-1">
-                                            {{ $selectedRegistro->created_at->format('d/m/Y H:i') }}
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                    <!-- Tabla de Conceptos -->
+                    <div class="p-0">
+                        <table class="table table-sm table-borderless mb-0 small">
+                            <thead class="border-bottom">
+                                <tr class="text-muted">
+                                    <th class="border-0 py-1">CONCEPTO</th>
+                                    <th class="border-0 py-1" style="width: 120px;">DESCRIPCIÓN</th>
+                                    <th class="border-0 py-1 text-right" style="width: 100px;">IMPORTE</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($selectedRegistro->items as $item)
+                                <tr>
+                                    <td class="py-1">{{ $item->detalle }}</td>
+                                    <td class="py-1 text-muted">{{ $item->descripcion ?: '-' }}</td>
+                                    <td class="py-1 text-right font-weight-bold">$ {{ number_format($item->importe, 2, ',', '.') }}</td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
                     </div>
+
+                    <!-- Sección de Observaciones -->
+                    <div class="border-top py-2 px-3">
+                        <div class="small text-muted text-uppercase mb-1">Observaciones</div>
+                        <div class="small">{{ $selectedRegistro->adenda ?: 'Sin observaciones' }}</div>
+                    </div>
+
                     @endif
                 </div>
 
-                <!-- Footer Mejorado -->
-                <div class="modal-footer bg-light border-top py-3">
-                    <div class="d-flex w-100 justify-content-between align-items-center">
-                        <button type="button" class="btn btn-outline-secondary btn-sm px-4" @click="closeDetail()">
-                            <i class="fas fa-arrow-left mr-1"></i> Volver
+                <!-- Footer Minimalista -->
+                <div class="modal-footer py-2 px-3 bg-light border-top">
+                    <small class="text-muted mr-auto">
+                        <i class="fas fa-user-edit"></i> {{ $selectedRegistro->creator->nombre }} · {{ $selectedRegistro->created_at->format('d/m/Y H:i') }}
+                    </small>
+                    <div class="btn-group btn-group-sm">
+                        <button class="btn btn-secondary" onclick="window.print()">
+                            <i class="fas fa-print"></i>
                         </button>
-                        <div class="btn-group">
-                            <button type="button" class="btn btn-info btn-sm px-3" onclick="window.print()">
-                                <i class="fas fa-print mr-1"></i> Imprimir
-                            </button>
-                            <button type="button" class="btn btn-primary btn-sm px-3" @click="editFromDetail({{ $selectedRegistro->id ?? 0 }})">
-                                <i class="fas fa-edit mr-1"></i> Editar
-                            </button>
-                        </div>
+                        <button class="btn btn-primary" @click="editFromDetail({{ $selectedRegistro->id ?? 0 }})">
+                            <i class="fas fa-edit mr-1"></i> Editar
+                        </button>
                     </div>
                 </div>
             </div>
@@ -930,7 +819,7 @@
     <!-- Modal Borrar -->
     @if($showDeleteModal)
     <div class="modal fade show" style="display: block;" tabindex="-1" role="dialog"
-        x-data="{ 
+        x-data="{
             isClosing: false,
             closeDelete() {
                 this.isClosing = true;
@@ -1008,7 +897,7 @@
     <!-- Modal Selección de Fechas para Imprimir -->
     @if($showPrintModal)
     <div class="modal fade show" style="display: block;" tabindex="-1" role="dialog"
-        x-data="{ 
+        x-data="{
             isClosing: false,
             closePrint() {
                 this.isClosing = true;
@@ -1062,10 +951,10 @@
                                     <i class="fas fa-print mr-1"></i> IMPRESIÓN
                                 </div>
                                 <div class="card-body p-2">
-                                    <button type="button" class="btn btn-outline-info btn-block btn-sm mb-2" wire:click="generarReporteResumen">
+                                    <button type="button" class="btn btn-info btn-block btn-sm mb-2" wire:click="generarReporteResumen">
                                         <i class="fas fa-chart-pie mr-1"></i> Informe Resumen
                                     </button>
-                                    <button type="button" class="btn btn-outline-primary btn-block btn-sm" wire:click="generarReporte">
+                                    <button type="button" class="btn btn-primary btn-block btn-sm" wire:click="generarReporte">
                                         <i class="fas fa-list-alt mr-1"></i> Informe Detallado
                                     </button>
                                 </div>
@@ -1079,10 +968,10 @@
                                     <i class="fas fa-file-pdf mr-1"></i> DESCARGAR EN PDF
                                 </div>
                                 <div class="card-body p-2">
-                                    <button type="button" class="btn btn-outline-danger btn-block btn-sm mb-2" wire:click="generarPdfResumen">
+                                    <button type="button" class="btn btn-danger btn-block btn-sm mb-2" wire:click="generarPdfResumen">
                                         <i class="fas fa-file-pdf mr-1"></i> Descargar Resumen
                                     </button>
-                                    <button type="button" class="btn btn-outline-warning btn-block btn-sm" wire:click="generarPdfDetallado">
+                                    <button type="button" class="btn btn-warning btn-block btn-sm" wire:click="generarPdfDetallado">
                                         <i class="fas fa-file-download mr-1"></i> Descargar Detallado
                                     </button>
                                 </div>
@@ -1119,5 +1008,23 @@
             font-family: inherit;
         }
     </style>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            initTooltips();
+        });
+
+        document.addEventListener('livewire:load', function() {
+            initTooltips();
+        });
+
+        document.addEventListener('livewire:update', function() {
+            initTooltips();
+        });
+
+        function initTooltips() {
+            $('[data-toggle="tooltip"]').tooltip('dispose').tooltip();
+        }
+    </script>
 
 </div>

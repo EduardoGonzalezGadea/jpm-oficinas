@@ -18,7 +18,8 @@ class MultasNormalizationService
     public function getResumenData($dateFrom, $dateTo)
     {
         $items = TesMultasItems::whereHas('cobrada', function ($q) use ($dateFrom, $dateTo) {
-            $q->whereBetween('fecha', [$dateFrom, $dateTo]);
+            $q->whereDate('fecha', '>=', $dateFrom)
+                ->whereDate('fecha', '<=', $dateTo);
         })->with('cobrada')->get();
 
         $grouped = [];

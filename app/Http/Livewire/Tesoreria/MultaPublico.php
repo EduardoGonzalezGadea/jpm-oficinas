@@ -3,16 +3,18 @@
 namespace App\Http\Livewire\Tesoreria;
 
 use App\Models\Tesoreria\Multa as MultaModel;
+use App\Builders\MultaQueryBuilder;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Cache;
+use App\Traits\CacheMultaTrait;
 use DOMDocument;
 use DOMXPath;
 
 class MultaPublico extends Component
 {
-    use WithPagination;
+    use WithPagination, CacheMultaTrait;
 
     protected $paginationTheme = 'bootstrap';
 
@@ -33,13 +35,14 @@ class MultaPublico extends Component
     public function updatingSearch()
     {
         $this->resetPage();
-        Cache::flush();
+        // Invalidar solo caché de multas
+        $this->invalidateMultasCache();
     }
 
     public function updatingPerPage()
     {
         $this->resetPage();
-        Cache::flush();
+        $this->invalidateMultasCache();
     }
 
     public function sortBy($field)
@@ -51,28 +54,27 @@ class MultaPublico extends Component
         }
         $this->sortField = $field;
         $this->resetPage();
-        Cache::flush();
+        $this->invalidateMultasCache();
     }
 
     public function render()
     {
-        $page = $this->page ?: 1;
-        $cacheKey = 'multas_publico_search_' . $this->search . '_perpage_' . $this->perPage . '_sortfield_' . $this->sortField . '_sortdirection_' . $this->sortDirection . '_page_' . $page;
+        $cacheKey = 'multas_publico.' . $this->getMultasCacheKey();
+        $ttl = $this->getMultasCacheTTL();
 
-        $multas = Cache::remember($cacheKey, now()->addDay(), function () {
-            $query = MultaModel::query()
-                ->when($this->search, function ($query) {
-                    $query->where(function ($q) {
-                        $q->whereRaw("CONCAT_WS('.', articulo, apartado) like ?", ["%" . $this->search . "%"])
-                            ->orWhere('descripcion', 'like', '%' . $this->search . '%');
-                    });
-                })
-                ->orderBy($this->sortField, $this->sortDirection);
+        $multas = Cache::remember($cacheKey, $ttl, function () {
+            // Usar Query Builder optimizado
+            $query = MultaQueryBuilder::forList([
+                'search' => $this->search,
+                'sortField' => $this->sortField,
+                'sortDirection' => $this->sortDirection,
+            ]);
 
+            // Usar simplePaginate para mejor rendimiento (no cuenta total de registros)
             if ((int)$this->perPage === -1) {
                 return $query->get();
             } else {
-                return $query->paginate($this->perPage);
+                return $query->simplePaginate($this->perPage);
             }
         });
 

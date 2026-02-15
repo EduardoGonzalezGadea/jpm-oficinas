@@ -408,37 +408,37 @@
             </thead>
             <tbody>
                 @forelse ($tablaPendientesDetalle as $item)
-                <tr wire:key="pendiente-{{ $item->idPendientes }}"
-                    class="{{ ($item->es_mes_anterior ?? false) ? 'table-warning fila-mes-anterior' : '' }}">
-                    <td class="text-right align-middle font-weight-bold">{{ $item->pendiente }}</td>
+                <tr wire:key="pendiente-{{ $item['idPendientes'] }}"
+                    class="{{ ($item['es_mes_anterior'] ?? false) ? 'table-warning fila-mes-anterior' : '' }}">
+                    <td class="text-right align-middle font-weight-bold">{{ $item['pendiente'] }}</td>
                     <td class="text-center align-middle">
-                        {{ $item->fechaPendientes ? $item->fechaPendientes->format('d/m/Y') : '' }}
+                        {{ $item['fecha_formateada'] }}
                     </td>
-                    <td class="text-center align-middle">{{ $item->dependencia->dependencia ?? '' }}</td>
-                    <td class="text-right align-middle">{{ number_format($item->montoPendientes, 2, ',', '.') }}
+                    <td class="text-center align-middle">{{ $item['dependencia']['dependencia'] }}</td>
+                    <td class="text-right align-middle">{{ number_format($item['montoPendientes'], 2, ',', '.') }}
                     </td>
-                    <td class="text-right align-middle {{ ($item->rendido_sin_docs_calc ?? 0) > 0 ? 'table-danger font-weight-bold' : '' }}">
-                        {{ number_format($item->tot_rendido ?? 0, 2, ',', '.') }}
+                    <td class="text-right align-middle {{ ($item['rendido_sin_docs_calc'] ?? 0) > 0 ? 'table-danger font-weight-bold' : '' }}">
+                        {{ number_format($item['tot_rendido'] ?? 0, 2, ',', '.') }}
                     </td>
-                    <td class="text-right align-middle">{{ number_format($item->extra ?? 0, 2, ',', '.') }}</td>
+                    <td class="text-right align-middle">{{ number_format($item['extra'] ?? 0, 2, ',', '.') }}</td>
                     <td class="text-right align-middle">
-                        {{ number_format($item->tot_reintegrado ?? 0, 2, ',', '.') }}
+                        {{ number_format($item['tot_reintegrado'] ?? 0, 2, ',', '.') }}
                     </td>
                     <td class="text-right align-middle">
-                        {{ number_format($item->tot_recuperado ?? 0, 2, ',', '.') }}
+                        {{ number_format($item['tot_recuperado'] ?? 0, 2, ',', '.') }}
                     </td>
                     <td
-                        class="text-right align-middle {{ ($item->saldo ?? 0) > 0 ? 'text-danger font-weight-bold' : '' }}">
-                        {{ number_format($item->saldo ?? 0, 2, ',', '.') }}
+                        class="text-right align-middle {{ ($item['saldo'] ?? 0) > 0 ? 'text-danger font-weight-bold' : '' }}">
+                        {{ number_format($item['saldo'] ?? 0, 2, ',', '.') }}
                     </td>
                     <td class="text-center align-middle">
                         @php
                         $hasMovements =
-                        ($item->tot_rendido ?? 0) > 0 ||
-                        ($item->extra ?? 0) > 0 ||
-                        ($item->tot_reintegrado ?? 0) > 0 ||
-                        ($item->tot_recuperado ?? 0) > 0;
-                        $saldo = $item->saldo ?? 0;
+                        ($item['tot_rendido'] ?? 0) > 0 ||
+                        ($item['extra'] ?? 0) > 0 ||
+                        ($item['tot_reintegrado'] ?? 0) > 0 ||
+                        ($item['tot_recuperado'] ?? 0) > 0;
+                        $saldo = $item['saldo'] ?? 0;
                         @endphp
                         @if (!$hasMovements)
                         <i class="fas fa-check text-success" title="Sin movimientos"></i>
@@ -449,29 +449,29 @@
                         @endif
                     </td>
                     <td class="text-center align-middle d-print-none">
-                        <input type='hidden' name='selIdPendientes' value='{{ $item->idPendientes }}'>
+                        <input type='hidden' name='selIdPendientes' value='{{ $item['idPendientes'] }}'>
                         <div class='btn-group' role='group'>
-                            <button type="button" wire:click="irAEditar({{ $item->idPendientes }})"
+                            <button type="button" wire:click="irAEditar({{ $item['idPendientes'] }})"
                                 class="btn btn-sm btn-dark mr-1" title="Editar Pendiente">
                                 <i class="fas fa-pencil-alt"></i>
                             </button>
-                            @if (($item->tot_recuperado ?? 0) < ($item->tot_rendido ?? 0) && ($item->tot_rendido ?? 0) > 0)
+                            @if (($item['tot_recuperado'] ?? 0) < ($item['tot_rendido'] ?? 0) && ($item['tot_rendido'] ?? 0)> 0)
                                 <button type="button" class="btn btn-sm btn-info mr-1"
                                     title="Recuperar Dinero Rendido"
-                                    wire:click="openRecuperarRendidoModal({{ $item->idPendientes }})">
+                                    wire:click="openRecuperarRendidoModal({{ $item['idPendientes'] }})">
                                     <i class="fas fa-hand-holding-usd"></i>
                                 </button>
                                 @endif
-                                <a href="{{ route('tesoreria.caja-chica.imprimir.pendiente', $item->idPendientes) }}"
+                                <a href="{{ route('tesoreria.caja-chica.imprimir.pendiente', $item['idPendientes']) }}"
                                     target="_blank" class="btn btn-sm btn-dark mr-1" title="Imprimir Pendiente">
                                     <i class="fas fa-print"></i>
                                 </a>
                                 </a>
                                 @if(auth()->user()->hasRole(['administrador', 'gerente_tesoreria', 'supervisor_tesoreria']))
-                                @if(($item->cant_movimientos ?? 0) == 0)
+                                @if(($item['cant_movimientos'] ?? 0) == 0)
                                 <button type="button" class="btn btn-sm btn-danger ml-1"
                                     title="Eliminar Pendiente"
-                                    wire:click="confirmarEliminarPendiente({{ $item->idPendientes }})">
+                                    wire:click="confirmarEliminarPendiente({{ $item['idPendientes'] }})">
                                     <i class="fas fa-trash"></i>
                                 </button>
                                 @endif
@@ -527,6 +527,7 @@
                             <div class="col-md-4">
                                 <ul class="list-unstyled mb-0">
                                     @foreach($chunk as $dep)
+                                    @php $dep = (object) $dep; @endphp
                                     <li class="py-1" style="font-size: 0.8rem;">
                                         <i class="fas fa-circle text-muted mr-2" style="font-size: 0.4rem;"></i>
                                         {{ $dep->dependencia }}
@@ -554,6 +555,7 @@
                             <div class="col-md-4">
                                 <ul class="list-unstyled mb-0">
                                     @foreach($chunk as $dep)
+                                    @php $dep = (object) $dep; @endphp
                                     <li class="py-1" style="font-size: 0.8rem;">
                                         <i class="fas fa-circle text-muted mr-2" style="font-size: 0.4rem;"></i>
                                         {{ str_replace(' (especial)', '', $dep->dependencia) }}
@@ -620,56 +622,56 @@
             </thead>
             <tbody>
                 @forelse ($tablaPagos as $item)
-                <tr wire:key="pago-{{ $item->idPagos }}"
-                    class="{{ ($item->es_mes_anterior ?? false) ? 'table-warning fila-mes-anterior' : '' }}">
+                <tr wire:key="pago-{{ $item['idPagos'] }}"
+                    class="{{ ($item['es_mes_anterior'] ?? false) ? 'table-warning fila-mes-anterior' : '' }}">
                     <td class="text-center align-middle">
-                        {{ $item->fechaEgresoPagos ? $item->fechaEgresoPagos->format('d/m/Y') : '' }}
+                        {{ $item['fecha_formateada'] }}
                     </td>
-                    <td class="text-center align-middle font-weight-bold">{{ $item->egresoPagos ?? 'Sin número' }}
+                    <td class="text-center align-middle font-weight-bold">{{ $item['egresoPagos'] ?? 'Sin número' }}
                     </td>
-                    <td class="text-center align-middle">{{ $item->acreedor->acreedor ?? '' }}</td>
-                    <td>{{ $item->conceptoPagos }}</td>
-                    <td class="text-right align-middle">{{ number_format($item->montoPagos, 2, ',', '.') }}</td>
+                    <td class="text-center align-middle">{{ $item['acreedor']['acreedor'] }}</td>
+                    <td>{{ $item['conceptoPagos'] }}</td>
+                    <td class="text-right align-middle">{{ number_format($item['montoPagos'], 2, ',', '.') }}</td>
                     <td class="text-right align-middle">
-                        {{ number_format($item->recuperado_en_periodo ?? 0, 2, ',', '.') }}
+                        {{ number_format($item['recuperado_en_periodo'] ?? 0, 2, ',', '.') }}
                     </td>
                     <td
                         class="text-right align-middle
-                        {{ ($item->saldo_pagos ?? 0) > 0 ? 'text-danger font-weight-bold' : '' }}">
-                        {{ number_format($item->saldo_pagos ?? 0, 2, ',', '.') }}
-                        @if (($item->ingresoPagosBSE ?? null) == null && ($item->acreedor->acreedor ?? '') == 'Banco de Seguros del Estado')
+                        {{ ($item['saldo_pagos'] ?? 0) > 0 ? 'text-danger font-weight-bold' : '' }}">
+                        {{ number_format($item['saldo_pagos'] ?? 0, 2, ',', '.') }}
+                        @if (($item['ingresoPagosBSE'] ?? null) == null && ($item['acreedor']['acreedor'] ?? '') == 'Banco de Seguros del Estado')
                         <i class="fas fa-exclamation-triangle text-danger ml-1"
                             title="Ingreso BSE no encontrado"></i>
                         @endif
                     </td>
                     <td class="text-center align-middle d-print-none">
-                        <input type='hidden' name='selIdPagos' value='{{ $item->idPagos }}'>
+                        <input type='hidden' name='selIdPagos' value='{{ $item['idPagos'] }}'>
                         <div class='btn-group' role='group'>
                             <button type="button" class="btn btn-sm btn-dark mr-1"
-                                wire:click="$emit('mostrarModalEditarPago', {{ $item->idPagos }})" title="Editar">
+                                wire:click="$emit('mostrarModalEditarPago', {{ $item['idPagos'] }})" title="Editar">
                                 <i class="fas fa-pencil-alt"></i>
                             </button>
                             @if (
-                            ($item->recuperado_en_periodo ?? 0) < ($item->montoPagos ?? 0) &&
-                                ($item->montoPagos ?? 0) > 0 &&
-                                isset($item->egresoPagos) &&
-                                strlen(trim($item->egresoPagos)) > 0)
+                            ($item['recuperado_en_periodo'] ?? 0) < ($item['montoPagos'] ?? 0) &&
+                                ($item['montoPagos'] ?? 0)> 0 &&
+                                isset($item['egresoPagos']) &&
+                                strlen(trim($item['egresoPagos'])) > 0)
                                 <button type="button" class="btn btn-sm btn-info mr-1"
                                     title="Recuperar Pago Directo"
-                                    wire:click="openRecuperarPagoModal({{ $item->idPagos }})">
+                                    wire:click="openRecuperarPagoModal({{ $item['idPagos'] }})">
                                     <i class="fas fa-hand-holding-usd"></i>
                                 </button>
                                 @endif
-                                <a href="{{ route('tesoreria.caja-chica.imprimir.pago', $item->idPagos) }}"
+                                <a href="{{ route('tesoreria.caja-chica.imprimir.pago', $item['idPagos']) }}"
                                     target="_blank" class="btn btn-sm btn-dark mr-1" title="Imprimir Pago Directo">
                                     <i class="fas fa-print"></i>
                                 </a>
                                 </a>
                                 @if(auth()->user()->hasRole(['administrador', 'gerente_tesoreria', 'supervisor_tesoreria']))
-                                @if(empty($item->ingresoPagos) && ($item->recuperadoPagos ?? 0) == 0)
+                                @if(empty($item['ingresoPagos']) && ($item['recuperadoPagos'] ?? 0) == 0)
                                 <button type="button" class="btn btn-sm btn-danger ml-1"
                                     title="Eliminar Pago"
-                                    wire:click="confirmarEliminarPago({{ $item->idPagos }})">
+                                    wire:click="confirmarEliminarPago({{ $item['idPagos'] }})">
                                     <i class="fas fa-trash"></i>
                                 </button>
                                 @endif

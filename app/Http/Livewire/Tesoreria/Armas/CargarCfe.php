@@ -148,13 +148,20 @@ class CargarCfe extends Component
         }
 
         // Serie y Número
-        if (preg_match('/SERIE\s+NÚMERO[^\n]+\n\s*([A-Z]+)\s+(\d+)/i', $text, $matches)) {
+        if (preg_match('/SERIE\s*N.MERO.*?\n\s*([A-Z]+)[\s\t]+(\d+)/iu', $text, $matches)) {
+            $datos['serie'] = $matches[1];
+            $datos['numero'] = $matches[2];
+        } elseif (preg_match('/([A-Z])[\s\t]+(\d+)[\s\t]+(?:Contado|Cr.dito)/i', $text, $matches)) {
             $datos['serie'] = $matches[1];
             $datos['numero'] = $matches[2];
         }
 
         // Fecha (FECHA\tMONEDA\nDD/MM/AAAA)
-        if (preg_match('/FECHA\s+MONEDA\s*\n\s*(\d{2}\/\d{2}\/\d{4})/i', $text, $matches)) {
+        if (preg_match('/FECHA\s*MONEDA.*?(?:\n|\t|\s)+(\d{2}\/\d{2}\/\d{4})/iu', $text, $matches)) {
+            $datos['fecha'] = $matches[1];
+        } elseif (preg_match('/FECHA[\s:]+(?:MONEDA[\s:]+)?(\d{2}\/\d{2}\/\d{4})/i', $text, $matches)) {
+            $datos['fecha'] = $matches[1];
+        } elseif (preg_match('/(\d{2}\/\d{2}\/\d{4})/', $text, $matches)) {
             $datos['fecha'] = $matches[1];
         }
 
@@ -196,26 +203,62 @@ class CargarCfe extends Component
         }
 
         // Datos adicionales (específicos de Jefatura - Adenda)
-        // Soporta formatos como: "ORDEN DE COBRO 14821" o "ING. 39 - O/C 15639"
-        if (preg_match('/ING\.\s*(\d+)/i', $text, $matches)) {
-            $datos['ingreso_contabilidad'] = $matches[1];
-        } elseif (preg_match('/INGRESO\s*(\d+)/i', $text, $matches)) {
+        // Soporta formatos como: "ORDEN DE COBRO 14821", "ING. 39 - O/C 15639", "INGRESO N°:36", etc.
+        if (preg_match('/(?:ING\.?|ING:|INGRESO|ING)(?:\s*N.?)?[:\s\t-]*(\d+)/iu', $text, $matches)) {
             $datos['ingreso_contabilidad'] = $matches[1];
         }
 
-        if (preg_match('/ORDEN DE COBRO\s*(\d+)/i', $text, $matches)) {
-            $datos['orden_cobro'] = $matches[1];
-        } elseif (preg_match('/O\/C\s*(\d+)/i', $text, $matches)) {
+        if (preg_match('/(?:ORDEN\s+DE\s+COBRO|ORDEN\s+COBRO|O\.C\.|O\/C|O\.\(?C\.)(?:\s*N.?)?[:\s\t-]*(\d+)/iu', $text, $matches)) {
             $datos['orden_cobro'] = $matches[1];
         }
 
-        if (preg_match('/TRÁMITE\s*([\d\/]+)/i', $text, $matches)) {
+        if (preg_match('/(?:TRÁMITE|TRAMITE)(?:\s*N.?)?[:\s\t-]*([\d\/]+)/iu', $text, $matches)) {
             $datos['tramite'] = $matches[1];
         }
 
         // Teléfono
-        if (preg_match('/(?:TEL\.|TELÉFONO|CEL\.)\s*([\d\s\-\/]+)/i', $text, $matches)) {
+        if (preg_match('/(?:TEL\.?|TELÉFONO|CEL\.)\s*([\d\s\-\/]+)/iu', $text, $matches)) {
             $datos['telefono'] = trim($matches[1]);
+        }
+
+        // Adenda
+        if (preg_match('/ADENDA\s*\n(.*?)(?=\s*(?:Fecha\s+de|Puede\s+verificar|I\.V\.A\.|NÚMERO\s+DE\s+CAE|$))/isu', $text, $matches)) {
+            $adendaRaw = trim($matches[1]);
+            $lineas = explode("\n", $adendaRaw);
+            $lineasLimpias = array_map(function ($linea) {
+                $linea = trim($linea);
+                $linea = preg_replace('/(\d)([A-Z])/u', '$1 $2', $linea);
+                return $linea;
+            }, $lineas);
+            $lineasLimpias = array_filter($lineasLimpias, function ($linea) {
+                return !empty($linea) && $linea !== '1';
+            });
+            $datos['adenda'] = implode("\n", $lineasLimpias);
+        }
+
+        // Orden de Cobro y otros de la adenda
+        if (!empty($datos['adenda'])) {
+            $adendaNorm = $this->quitarAcentos(mb_strtolower($datos['adenda'], 'UTF-8'));
+
+            if (empty($datos['orden_cobro'])) {
+                if (preg_match('/(?:orden\s+de\s+cobro|orden\s+cobro|o\.\s*\(?c\.?|o\/c)\s*(\d+)/iu', $adendaNorm, $ocMatch)) {
+                    $datos['orden_cobro'] = $ocMatch[1];
+                } else {
+                    $numeros = [];
+                    if (preg_match_all('/\b(\d{4,6})\b/', $datos['adenda'], $numMatches)) {
+                        $numeros = $numMatches[1];
+                    }
+                    if (count($numeros) === 1) {
+                        $datos['orden_cobro'] = $numeros[0];
+                    }
+                }
+            }
+
+            if (empty($datos['ingreso_contabilidad'])) {
+                if (preg_match('/(?:ing\.?|ing:|ingreso|ing)(?:\s*n.?)?[:\s\t-]*(\d+)/iu', $adendaNorm, $ingMatch)) {
+                    $datos['ingreso_contabilidad'] = $ingMatch[1];
+                }
+            }
         }
 
         // Detalle descriptivo
@@ -223,11 +266,12 @@ class CargarCfe extends Component
             $datos['detalle'] = trim(preg_replace('/\s+/', ' ', $matches[1]));
         }
 
-        // Validación: Verificar que el detalle contenga "porte" o "tenencia"
+        // Validación: Verificar que el detalle contenga "porte", "tenencia" o "tahta"
         if (!empty($datos['detalle'])) {
-            $detalleMinusculas = strtolower($datos['detalle']);
+            $detalleMinusculas = mb_strtolower($datos['detalle'], 'UTF-8');
             $contienePorteOTenencia = (strpos($detalleMinusculas, 'porte') !== false) ||
-                (strpos($detalleMinusculas, 'tenencia') !== false);
+                (strpos($detalleMinusculas, 'tenencia') !== false) ||
+                (strpos($detalleMinusculas, 'tahta') !== false);
 
             if (!$contienePorteOTenencia) {
                 // Rechazar el CFE si no contiene "porte" o "tenencia"
@@ -341,5 +385,70 @@ class CargarCfe extends Component
         } catch (\Exception $e) {
             $this->mensajeError = "Error al guardar el registro: " . $e->getMessage();
         }
+    }
+
+    /**
+     * Remove accents from a string.
+     *
+     * @param  string  $string
+     * @return string
+     */
+    private function quitarAcentos($string)
+    {
+        $replacements = [
+            'à' => 'a',
+            'á' => 'a',
+            'â' => 'a',
+            'ã' => 'a',
+            'ä' => 'a',
+            'ç' => 'c',
+            'è' => 'e',
+            'é' => 'e',
+            'ê' => 'e',
+            'ë' => 'e',
+            'ì' => 'i',
+            'í' => 'i',
+            'î' => 'i',
+            'ï' => 'i',
+            'ñ' => 'n',
+            'ò' => 'o',
+            'ó' => 'o',
+            'ô' => 'o',
+            'õ' => 'o',
+            'ö' => 'o',
+            'ù' => 'u',
+            'ú' => 'u',
+            'û' => 'u',
+            'ü' => 'u',
+            'ý' => 'y',
+            'ÿ' => 'y',
+            'À' => 'A',
+            'Á' => 'A',
+            'Â' => 'A',
+            'Ã' => 'A',
+            'Ä' => 'A',
+            'Ç' => 'C',
+            'È' => 'E',
+            'É' => 'E',
+            'Ê' => 'E',
+            'Ë' => 'E',
+            'Ì' => 'I',
+            'Í' => 'I',
+            'Î' => 'I',
+            'Ï' => 'I',
+            'Ñ' => 'N',
+            'Ò' => 'O',
+            'Ó' => 'O',
+            'Ô' => 'O',
+            'Õ' => 'O',
+            'Ö' => 'O',
+            'Ù' => 'U',
+            'Ú' => 'U',
+            'Û' => 'U',
+            'Ü' => 'U',
+            'Ý' => 'Y'
+        ];
+
+        return strtr($string, $replacements);
     }
 }

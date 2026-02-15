@@ -47,16 +47,4 @@ class Pendiente extends Model
     {
         return $this->hasMany(Movimiento::class, 'relPendiente', 'idPendientes');
     }
-
-    public function getSaldoAttribute()
-    {
-        $rendido = $this->movimientos->sum('rendido');
-        $recuperado = $this->movimientos->sum('recuperado');
-
-        if ($rendido > 0) {
-            return $rendido - $recuperado;
-        }
-
-        return $this->montoPendientes;
-    }
 }
