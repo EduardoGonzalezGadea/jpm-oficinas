@@ -31,7 +31,6 @@
             margin-top: 10px;
             margin-bottom: 20px;
             table-layout: auto;
-            /* Allow auto width */
         }
 
         th,
@@ -40,9 +39,8 @@
             padding: 5px;
             text-align: left;
             vertical-align: middle;
-            /* Vertical align middle */
-            word-wrap: break-word;
-            /* Wrap long text */
+            word-break: break-word;
+            white-space: normal;
         }
 
         th {
@@ -87,7 +85,7 @@
         }
 
         .summary-print-table {
-            width: 70%;
+            width: 100%;
             border-collapse: collapse;
             font-size: 0.9em;
         }

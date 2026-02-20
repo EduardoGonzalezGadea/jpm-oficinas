@@ -26,6 +26,7 @@ class MultasCobradas extends Component
     public $showDetailModal = false;
     public $showPrintModal = false;
     public $deleteId = null;
+    public $edit_id = ''; // ID para edición automática desde URL
 
     // Estados de carga para UX
     public $isLoading = false;
@@ -74,6 +75,7 @@ class MultasCobradas extends Component
         'mes' => ['except' => ''],
         'resumenFechaDesde' => ['except' => ''],
         'resumenFechaHasta' => ['except' => ''],
+        'edit_id' => ['except' => ''],
     ];
 
     protected $rules = [
@@ -113,6 +115,23 @@ class MultasCobradas extends Component
         $this->cargarSugerenciasDetalle();
         $this->cargarMediosPago();
         $this->resetItemsForm();
+
+        // Verificar si hay una edición automática pendiente (desde CFE auto-registro)
+        // Prioridad 1: Parámetro URL (gestionado por Livewire queryString -> $this->edit_id)
+        if ($this->edit_id) {
+            try {
+                $this->edit($this->edit_id);
+            } catch (\Exception $e) {
+                // Si falla (ej: ID no existe), ignorar
+            }
+        }
+        // Prioridad 2: Sesión (fallback)
+        elseif (session()->has('edit_multa_id')) {
+            try {
+                $this->edit(session('edit_multa_id'));
+            } catch (\Exception $e) {
+            }
+        }
     }
 
     public function cargarMediosPago()
@@ -161,10 +180,12 @@ class MultasCobradas extends Component
      */
     protected function getCacheKeyTotales(): string
     {
+        $desde = $this->normalizarFechaInput($this->resumenFechaDesde);
+        $hasta = $this->normalizarFechaInput($this->resumenFechaHasta);
         return sprintf(
             'multas_cobradas.totales.%s.%s',
-            $this->resumenFechaDesde,
-            $this->resumenFechaHasta
+            $desde ?? '',
+            $hasta ?? ''
         );
     }
 
@@ -343,9 +364,12 @@ class MultasCobradas extends Component
      */
     protected function calcularTotalesMediosPago()
     {
+        $desde = $this->normalizarFechaInput($this->resumenFechaDesde);
+        $hasta = $this->normalizarFechaInput($this->resumenFechaHasta);
+
         $registros_pago = TesMultasCobradas::query()
-            ->whereDate('fecha', '>=', $this->resumenFechaDesde)
-            ->whereDate('fecha', '<=', $this->resumenFechaHasta)
+            ->when($desde, fn($q) => $q->whereDate('fecha', '>=', $desde))
+            ->when($hasta, fn($q) => $q->whereDate('fecha', '<=', $hasta))
             ->select('forma_pago', 'monto')
             ->get();
 
@@ -809,5 +833,59 @@ class MultasCobradas extends Component
             $total += (float) ($item['importe'] ?: 0);
         }
         $this->monto = round($total, 2);
+    }
+
+    /**
+     * Formatea la forma de pago con números en formato uruguayo.
+     */
+    public function formatearFormaPagoUy(?string $formaPago): string
+    {
+        $formaPago = trim($formaPago ?? '');
+        if ($formaPago === '') {
+            return '';
+        }
+
+        $medioPagoService = new \App\Services\Tesoreria\MedioPagoService();
+        $partes = $medioPagoService->parsearMedioPago($formaPago);
+
+        $partesFormateadas = [];
+        foreach ($partes as $parte) {
+            $nombre = $parte['nombre'] ?? $parte['nombre_original'] ?? '';
+            $valor = $parte['valor'];
+
+            if ($valor !== null) {
+                $partesFormateadas[] = sprintf('%s: %s', $nombre, number_format($valor, 2, ',', '.'));
+            } else {
+                $partesFormateadas[] = $nombre;
+            }
+        }
+
+        return implode(' / ', array_filter($partesFormateadas));
+    }
+
+    /**
+     * Normaliza fechas de entrada (DD/MM/YYYY o YYYY-MM-DD) a YYYY-MM-DD.
+     */
+    private function normalizarFechaInput(?string $fecha): ?string
+    {
+        if (!$fecha) {
+            return null;
+        }
+
+        $fecha = trim($fecha);
+
+        try {
+            if (preg_match('/^\d{2}\/\d{2}\/\d{4}$/', $fecha)) {
+                return \Carbon\Carbon::createFromFormat('d/m/Y', $fecha)->format('Y-m-d');
+            }
+
+            if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $fecha)) {
+                return \Carbon\Carbon::createFromFormat('Y-m-d', $fecha)->format('Y-m-d');
+            }
+        } catch (\Exception $e) {
+            return null;
+        }
+
+        return null;
     }
 }

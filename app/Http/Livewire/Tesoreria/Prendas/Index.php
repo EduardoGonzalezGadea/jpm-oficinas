@@ -30,6 +30,7 @@ class Index extends Component
     public $years = [];
     public $selectedPrendas = [];
     public $selectAll = false;
+    public $autoEditPrendaId = null;
 
     protected $listeners = [
         'pg:eventRefresh-default' => 'refreshData',
@@ -52,6 +53,11 @@ class Index extends Component
         rsort($years);
         $this->years = $years;
         $this->selectedYear = $currentYear;
+
+        // Si venimos de cargar un CFE, capturar el ID para abrir el modal de edición
+        if (session()->has('edit_prenda_id')) {
+            $this->autoEditPrendaId = session('edit_prenda_id');
+        }
     }
 
     public function confirmDelete($id)

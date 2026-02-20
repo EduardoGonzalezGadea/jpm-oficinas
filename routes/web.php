@@ -424,6 +424,9 @@ Route::middleware(['web', 'jwt.verify', 'two-factor'])->group(function () {
         // Rutas de Gestión de Prendas
         Route::prefix('prendas')->name('prendas.')->group(function () {
             Route::get('/', \App\Http\Livewire\Tesoreria\Prendas\Index::class)->name('index');
+            Route::get('/cargar-cfe', function () {
+                return view('tesoreria.prendas.cargar-cfe');
+            })->name('cargar-cfe');
             // Reportes Avanzados
             Route::get('/reportes', \App\Http\Livewire\Tesoreria\Prendas\PrendasReporte::class)->name('reportes');
             Route::get('/imprimir-avanzado', \App\Http\Livewire\Tesoreria\Prendas\PrintPrendasAdvanced::class)->name('imprimir-avanzado');

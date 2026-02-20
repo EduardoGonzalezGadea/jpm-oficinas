@@ -32,7 +32,7 @@
                             <i class="fas fa-file-invoice-dollar"></i> Cargar eFactura
                         </a>
                         <button type="button" class="btn btn-primary" wire:click.prevent="create">
-                            Crear Eventual
+                            <i class="fas fa-plus"></i> Nuevo
                         </button>
                     </div>
                 </div>

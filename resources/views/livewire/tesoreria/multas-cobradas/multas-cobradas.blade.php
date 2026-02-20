@@ -112,7 +112,7 @@
                                 <tr class="text-dark">
                                     <th class="text-center align-middle">Fecha</th>
                                     <th class="text-center align-middle">Recibo</th>
-                                    <th class="text-center align-middle">Nombre / Cédula</th>
+                                    <th class="text-center align-middle">Nombre / Cédula / Forma de Pago</th>
                                     <th class="text-center align-middle">Ítems</th>
                                     <th class="text-center align-middle">Monto Total</th>
                                     <th class="text-center align-middle d-print-none">Acciones</th>
@@ -125,8 +125,15 @@
                                     <td class="text-center align-middle font-weight-bold">{{ $registro->recibo }}</td>
                                     <td class="align-middle">
                                         <div class="font-weight-bold">{{ $registro->nombre }}</div>
-                                        @if($registro->cedula)
-                                        <div class="text-muted small">{{ $registro->cedula }}</div>
+                                        @if($registro->cedula || $registro->forma_pago)
+                                        <div class="text-muted small">
+                                            @if($registro->cedula)
+                                            <span>CI: {{ $registro->cedula }}</span>
+                                            @endif
+                                            @if($registro->forma_pago)
+                                            <span class="{{ $registro->cedula ? 'ml-2' : '' }}">FORMA DE PAGO: {{ $this->formatearFormaPagoUy($registro->forma_pago) }}</span>
+                                            @endif
+                                        </div>
                                         @endif
                                     </td>
                                     <td class="text-center align-middle">

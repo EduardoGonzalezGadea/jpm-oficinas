@@ -16,8 +16,8 @@ class PrintMultasCobradasFull extends Component
 
     public function mount($fechaDesde, $fechaHasta)
     {
-        $this->fechaDesde = $fechaDesde;
-        $this->fechaHasta = $fechaHasta;
+        $this->fechaDesde = $this->normalizarFechaInput($fechaDesde) ?? $fechaDesde;
+        $this->fechaHasta = $this->normalizarFechaInput($fechaHasta) ?? $fechaHasta;
         $this->isPdf = request()->query('pdf') == 1;
 
         $this->multas = TesMultasCobradas::with('items')
@@ -34,6 +34,8 @@ class PrintMultasCobradasFull extends Component
             ->select('forma_pago', 'monto')
             ->get();
 
+        $medioPagoService = new \App\Services\Tesoreria\MedioPagoService();
+
         // Procesar medios de pago y crear subtotales
         $subtotales = [];
         $combinaciones = [];
@@ -41,73 +43,48 @@ class PrintMultasCobradasFull extends Component
 
         foreach ($registros_pago as $item) {
             $forma_pago = $item->forma_pago ?: 'SIN DATOS';
-            $partes = explode('/', $forma_pago);
+            $partes = $medioPagoService->parsearMedioPago($forma_pago);
 
             // Si solo hay un medio de pago
             if (count($partes) == 1) {
-                $medio = trim(explode(':', $partes[0])[0]);
+                $medio = $medioPagoService->obtenerNombreReal($partes[0]['nombre']);
                 if (!isset($subtotales[$medio])) {
                     $subtotales[$medio] = 0;
                 }
                 $subtotales[$medio] += $item->monto;
             } else {
                 // Si hay múltiples medios de pago combinados
-                $medios_con_valores = [];
-                $nombre_medios = [];
+                $medios_con_valores = $medioPagoService->calcularValoresMedios($forma_pago, $item->monto);
 
-                foreach ($partes as $parte) {
-                    $datos = explode(':', trim($parte));
-                    $nombre_medio = trim($datos[0]);
-                    $nombre_medios[] = $nombre_medio;
-
-                    // Extraer el valor específico si existe
-                    if (isset($datos[1])) {
-                        $valor_str = trim($datos[1]);
-                        // Limpiar formato uruguayo: eliminar puntos (miles) y reemplazar coma (decimal) por punto
-                        $valor_limpio = str_replace('.', '', $valor_str); // Eliminar separador de miles
-                        $valor_limpio = str_replace(',', '.', $valor_limpio); // Reemplazar decimal
-
-                        if (is_numeric($valor_limpio)) {
-                            $valor = floatval($valor_limpio);
-                        } else {
-                            // Si aún no es numérico, dividir equitativamente como fallback
-                            $valor = $item->monto / count($partes);
-                        }
-                    } else {
-                        // Sin valor, dividir equitativamente
-                        $valor = $item->monto / count($partes);
-                    }
-
-                    if (!isset($medios_con_valores[$nombre_medio])) {
-                        $medios_con_valores[$nombre_medio] = 0;
-                    }
-                    $medios_con_valores[$nombre_medio] += $valor;
-                }
-
-                $nombre_combinado = implode(' / ', $nombre_medios);
+                $nombresReal = array_map(fn($m) => $medioPagoService->obtenerNombreReal($m['nombre']), $medios_con_valores);
+                sort($nombresReal);
+                $nombre_combinado = implode(' / ', $nombresReal);
 
                 // Acumular en subtotales generales
-                foreach ($medios_con_valores as $medio => $valor) {
-                    if (!isset($subtotales[$medio])) {
-                        $subtotales[$medio] = 0;
+                foreach ($medios_con_valores as $medio) {
+                    $medioNombre = $medioPagoService->obtenerNombreReal($medio['nombre']);
+                    $valorMedio = $medio['valor'];
+
+                    if (!isset($subtotales[$medioNombre])) {
+                        $subtotales[$medioNombre] = 0;
                     }
-                    $subtotales[$medio] += $valor;
+                    $subtotales[$medioNombre] += $valorMedio;
 
                     // Guardar también en subtotales de combinados
                     if (!isset($subtotales_combinados[$nombre_combinado])) {
                         $subtotales_combinados[$nombre_combinado] = [];
                     }
-                    if (!isset($subtotales_combinados[$nombre_combinado][$medio])) {
-                        $subtotales_combinados[$nombre_combinado][$medio] = 0;
+                    if (!isset($subtotales_combinados[$nombre_combinado][$medioNombre])) {
+                        $subtotales_combinados[$nombre_combinado][$medioNombre] = 0;
                     }
-                    $subtotales_combinados[$nombre_combinado][$medio] += $valor;
+                    $subtotales_combinados[$nombre_combinado][$medioNombre] += $valorMedio;
                 }
 
                 // Guardar el total de la combinación (suma de los valores específicos)
                 if (!isset($combinaciones[$nombre_combinado])) {
                     $combinaciones[$nombre_combinado] = 0;
                 }
-                $combinaciones[$nombre_combinado] += array_sum($medios_con_valores);
+                $combinaciones[$nombre_combinado] += array_sum(array_column($medios_con_valores, 'valor'));
             }
         }
 
@@ -156,5 +133,59 @@ class PrintMultasCobradasFull extends Component
     {
         return view('livewire.tesoreria.multas-cobradas.print-multas-cobradas-full')
             ->layout('layouts.print');
+    }
+
+    /**
+     * Formatea la forma de pago con números en formato uruguayo.
+     */
+    public function formatearFormaPagoUy(?string $formaPago): string
+    {
+        $formaPago = trim($formaPago ?? '');
+        if ($formaPago === '') {
+            return '';
+        }
+
+        $medioPagoService = new \App\Services\Tesoreria\MedioPagoService();
+        $partes = $medioPagoService->parsearMedioPago($formaPago);
+
+        $partesFormateadas = [];
+        foreach ($partes as $parte) {
+            $nombre = $parte['nombre'] ?? $parte['nombre_original'] ?? '';
+            $valor = $parte['valor'];
+
+            if ($valor !== null) {
+                $partesFormateadas[] = sprintf('%s: %s', $nombre, number_format($valor, 2, ',', '.'));
+            } else {
+                $partesFormateadas[] = $nombre;
+            }
+        }
+
+        return implode(' / ', array_filter($partesFormateadas));
+    }
+
+    /**
+     * Normaliza fechas de entrada (DD/MM/YYYY o YYYY-MM-DD) a YYYY-MM-DD.
+     */
+    private function normalizarFechaInput(?string $fecha): ?string
+    {
+        if (!$fecha) {
+            return null;
+        }
+
+        $fecha = trim($fecha);
+
+        try {
+            if (preg_match('/^\d{2}\/\d{2}\/\d{4}$/', $fecha)) {
+                return \Carbon\Carbon::createFromFormat('d/m/Y', $fecha)->format('Y-m-d');
+            }
+
+            if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $fecha)) {
+                return \Carbon\Carbon::createFromFormat('Y-m-d', $fecha)->format('Y-m-d');
+            }
+        } catch (\Exception $e) {
+            return null;
+        }
+
+        return null;
     }
 }

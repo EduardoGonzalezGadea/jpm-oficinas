@@ -15,7 +15,7 @@
                 </button>
                 @endif
                 <button wire:click="create" class="btn btn-primary">
-                    <i class="fas fa-plus"></i> Nuevo Registro
+                    <i class="fas fa-plus"></i> Nuevo
                 </button>
             </div>
         </div>

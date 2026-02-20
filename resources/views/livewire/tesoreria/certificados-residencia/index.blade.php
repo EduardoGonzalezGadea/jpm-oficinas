@@ -6,14 +6,14 @@
             <div class="d-flex justify-content-between align-items-center">
                 <h4 class="card-title px-1 m-0"><strong><i class="fas fa-file-alt mr-2"></i>Gestión de Certificados de Residencia</strong></h4>
                 <div>
-                    <a href="{{ route('tesoreria.certificados-residencia.cargar-cfe') }}" class="btn btn-success mr-2">
+                    <a href="{{ route('tesoreria.certificados-residencia.cargar-cfe') }}" class="btn btn-warning mr-2">
                         <i class="fas fa-file-upload"></i> Cargar CFE entrega
                     </a>
                     <a href="{{ route('tesoreria.certificados-residencia.reportes') }}" class="btn btn-secondary mr-2">
                         <i class="fas fa-filter"></i> Filtrar
                     </a>
                     <button class="btn btn-primary" wire:click="$emit('showCreateModal')">
-                        <i class="fas fa-plus"></i> Ingresar Nuevo
+                        <i class="fas fa-plus"></i> Nuevo
                     </button>
                 </div>
             </div>

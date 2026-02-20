@@ -30,7 +30,7 @@
                         </a>
                         <button type="button" class="btn btn-primary" wire:click.prevent="create"
                             data-toggle="modal" data-target="#arrendamientoModal">
-                            Crear Arrendamiento
+                            <i class="fas fa-plus"></i> Nuevo
                         </button>
                     </div>
                 </div>

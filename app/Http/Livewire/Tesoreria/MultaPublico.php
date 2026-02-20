@@ -70,11 +70,10 @@ class MultaPublico extends Component
                 'sortDirection' => $this->sortDirection,
             ]);
 
-            // Usar simplePaginate para mejor rendimiento (no cuenta total de registros)
             if ((int)$this->perPage === -1) {
                 return $query->get();
             } else {
-                return $query->simplePaginate($this->perPage);
+                return $query->paginate($this->perPage);
             }
         });
 

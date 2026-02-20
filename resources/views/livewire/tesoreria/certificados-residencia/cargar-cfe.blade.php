@@ -18,10 +18,10 @@
         }
 
         .upload-box:hover {
-            border-color: #17a2b8;
-            background-color: rgba(128, 128, 128, 0.1);
+            border-color: #e0a800;
+            background-color: rgba(255, 193, 7, 0.08);
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 5px 15px rgba(255, 193, 7, 0.15);
         }
 
         .upload-box.has-file {
@@ -107,7 +107,7 @@
 
     {{-- Card de Carga de PDF --}}
     <div class="card {{ $datosExtraidos ? 'mb-2' : 'mb-4' }} shadow-sm">
-        <div class="card-header bg-info text-white py-2 px-3 d-flex justify-content-between align-items-center">
+        <div class="card-header py-2 px-3 d-flex justify-content-between align-items-center" style="background-color: #f0ad4e; color: #212529;">
             <h5 class="mb-0 font-weight-bold"><i class="fas fa-file-upload mr-2"></i>Cargar CFE de Certificado de Residencia</h5>
         </div>
         <div class="card-body py-3">
@@ -125,7 +125,7 @@
                         <i class="fas fa-file-pdf text-success"></i>
                         <h6 class="text-success font-weight-bold mb-1">{{ $archivo->getClientOriginalName() }}</h6>
                         @else
-                        <i class="fas fa-cloud-upload-alt text-info"></i>
+                        <i class="fas fa-cloud-upload-alt" style="color: #e0a800;"></i>
                         <h6 class="font-weight-bold mb-1">Arrastra el CFE del Certificado aquí</h6>
                         <p class="text-muted small mb-0">Haz clic para buscar el archivo PDF</p>
                         @endif

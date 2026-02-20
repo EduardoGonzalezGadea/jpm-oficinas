@@ -74,4 +74,32 @@ class PrintMultasCobradasAdvanced extends BaseReportComponent
     {
         return 'livewire.tesoreria.multas-cobradas.print-multas-cobradas-advanced';
     }
+
+    /**
+     * Formatea la forma de pago con números en formato uruguayo.
+     */
+    public function formatearFormaPagoUy(?string $formaPago): string
+    {
+        $formaPago = trim($formaPago ?? '');
+        if ($formaPago === '') {
+            return '';
+        }
+
+        $medioPagoService = new \App\Services\Tesoreria\MedioPagoService();
+        $partes = $medioPagoService->parsearMedioPago($formaPago);
+
+        $partesFormateadas = [];
+        foreach ($partes as $parte) {
+            $nombre = $parte['nombre'] ?? $parte['nombre_original'] ?? '';
+            $valor = $parte['valor'];
+
+            if ($valor !== null) {
+                $partesFormateadas[] = sprintf('%s: %s', $nombre, number_format($valor, 2, ',', '.'));
+            } else {
+                $partesFormateadas[] = $nombre;
+            }
+        }
+
+        return implode(' / ', array_filter($partesFormateadas));
+    }
 }

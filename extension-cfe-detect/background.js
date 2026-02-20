@@ -55,38 +55,44 @@ chrome.downloads.onChanged.addListener(function (delta) {
                 console.log("PDF detected! Starting analysis...");
 
                 // Obtener URL del servidor
-                chrome.storage.local.get(['serverUrl'], function(result) {
+                chrome.storage.local.get(['serverUrl'], function (result) {
                     var serverUrl = result.serverUrl || "http://localhost/oficinas/public";
-                    
+
                     // Analizar internamente ANTES de abrir la pestaña
                     analyzePdfInternal(delta.id, filename, serverUrl)
-                        .then(function(data) {
+                        .then(function (data) {
                             if (data && data.es_cfe) {
-                                console.log("Valid CFE detected! Opening analyze window...");
-                                
-                                // Guardar resultado para no re-analizar
-                                var key = 'cfe_analysis_' + delta.id;
-                                var store = {};
-                                store[key] = data;
-                                
-                                chrome.storage.local.set(store, function() {
-                                    // Abrir ventana de analisis
-                                    var analyzeUrl = chrome.runtime.getURL("analyze.html");
-                                    analyzeUrl += "?downloadId=" + delta.id;
-                                    analyzeUrl += "&filename=" + encodeURIComponent(filename);
-                                    analyzeUrl += "&filepath=" + encodeURIComponent(filepath);
-                                    analyzeUrl += "&preanalyzed=true";
-    
-                                    chrome.tabs.create({
-                                        url: analyzeUrl,
-                                        active: true
-                                    });
-                                });
+
+                                // LOGICA NUEVA: Auto-registro para multas
+                                if (data.tipo_cfe_codigo === 'multas_cobradas' || data.tipo_cfe_codigo === 'Multas Cobradas') {
+                                    console.log("Multa detectada! Intentando auto-registro...");
+
+                                    registrarMultaAuto(data.datos, serverUrl)
+                                        .then(function (res) {
+                                            if (res.success) {
+                                                console.log("Auto-registro exitoso:", res.redirect_url);
+                                                // Reutilizar pestaña existente o abrir una nueva
+                                                openOrFocusAppTab(res.redirect_url, serverUrl);
+                                            } else {
+                                                console.error("Fallo auto-registro:", res.mensaje);
+                                                // Fallback a ventana de análisis
+                                                openAnalyzeWindow(delta.id, filename, filepath, data);
+                                            }
+                                        })
+                                        .catch(function (err) {
+                                            console.error("Error red auto-registro:", err);
+                                            openAnalyzeWindow(delta.id, filename, filepath, data);
+                                        });
+                                } else {
+                                    console.log("Valid CFE detected! Opening analyze window...");
+                                    openAnalyzeWindow(delta.id, filename, filepath, data);
+                                }
+
                             } else {
                                 console.log("PDF analyzed but NOT a valid/allowed CFE. Ignoring.");
                             }
                         })
-                        .catch(function(err) {
+                        .catch(function (err) {
                             console.error("Error identifying PDF content:", err);
                         });
                 });
@@ -113,7 +119,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 
 // Funcion interna que devuelve Promise
 function analyzePdfInternal(downloadId, filename, serverUrl) {
-    return new Promise(function(resolve, reject) {
+    return new Promise(function (resolve, reject) {
         chrome.downloads.search({ id: parseInt(downloadId) }, function (results) {
             if (!results || results.length === 0) {
                 reject(new Error("Download not found"));
@@ -153,7 +159,7 @@ function analyzePdfInternal(downloadId, filename, serverUrl) {
                 })
                 .then(function (response) {
                     if (!response.ok) {
-                        return response.json().then(function(err) {
+                        return response.json().then(function (err) {
                             throw new Error(err.mensaje || "HTTP " + response.status);
                         });
                     }
@@ -176,10 +182,64 @@ function analyzePdfFromDownload(request, sendResponse) {
     var serverUrl = request.serverUrl;
 
     analyzePdfInternal(downloadId, filename, serverUrl)
-        .then(function(data) {
+        .then(function (data) {
             sendResponse({ success: true, data: data });
         })
-        .catch(function(error) {
+        .catch(function (error) {
             sendResponse({ success: false, error: error.message });
         });
+}
+
+function openAnalyzeWindow(downloadId, filename, filepath, data) {
+    var key = 'cfe_analysis_' + downloadId;
+    var store = {};
+    store[key] = data;
+
+    chrome.storage.local.set(store, function () {
+        var analyzeUrl = chrome.runtime.getURL("analyze.html");
+        analyzeUrl += "?downloadId=" + downloadId;
+        analyzeUrl += "&filename=" + encodeURIComponent(filename);
+        analyzeUrl += "&filepath=" + encodeURIComponent(filepath);
+        analyzeUrl += "&preanalyzed=true";
+
+        chrome.tabs.create({
+            url: analyzeUrl,
+            active: true
+        });
+    });
+}
+
+function registrarMultaAuto(datos, serverUrl) {
+    return fetch(serverUrl + "/api/cfe/registrar-multa-auto", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json"
+        },
+        body: JSON.stringify({ datos: datos })
+    }).then(response => response.json());
+}
+
+function openOrFocusAppTab(targetUrl, baseUrl) {
+    chrome.tabs.query({}, function (tabs) {
+        var foundTab = null;
+
+        // Buscar una pestaña que coincida con la URL base de la aplicación
+        for (var i = 0; i < tabs.length; i++) {
+            var tab = tabs[i];
+            if (tab.url && tab.url.toLowerCase().startsWith(baseUrl.toLowerCase())) {
+                foundTab = tab;
+                break;
+            }
+        }
+
+        if (foundTab) {
+            // Si existe, actualizarla y enfocarla
+            chrome.tabs.update(foundTab.id, { url: targetUrl, active: true });
+            chrome.windows.update(foundTab.windowId, { focused: true });
+        } else {
+            // Si no, crear una nueva
+            chrome.tabs.create({ url: targetUrl, active: true });
+        }
+    });
 }

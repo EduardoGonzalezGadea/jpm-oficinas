@@ -428,7 +428,7 @@
 
     @if($reporteTipo === 'stock')
     <!-- Historial de Reportes (Acordeón) -->
-    <div class="accordion mt-4 d-print-none" id="accordionHistorial" wire:poll.visible.10s="cargarHistorial">
+    <div class="accordion mt-4 d-print-none" id="accordionHistorial">
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h2 class="mb-0 flex-grow-1">
@@ -443,8 +443,8 @@
                 </h2>
             </div>
 
-            <div id="collapseHistorial" class="collapse {{ $mostrarHistorial ? 'show' : '' }}">
-                <div class="card-body">
+        <div id="collapseHistorial" class="collapse {{ $mostrarHistorial ? 'show' : '' }}">
+            <div class="card-body" @if($mostrarHistorial) wire:poll.visible.60s="cargarHistorial" @endif>
                     @if(count($historialStock) > 0)
                     <div class="list-group">
                         @foreach($historialStock as $index => $archivo)

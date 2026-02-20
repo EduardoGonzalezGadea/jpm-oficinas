@@ -169,7 +169,7 @@ class CargarCfe extends Component
         }
 
         // Teléfono (de info adicional)
-        if (preg_match('/(?:TEL\.|TELÉFONO|CEL\.)\s*([\d\s\-\/]+)/i', $text, $matches)) {
+        if (preg_match('/(?:TEL\.?|TEL(?:E|É)FONO|CEL\.?)[\s:]*([\d][\d\s\-\/\.]{5,})/iu', $text, $matches)) {
             $datos['telefono'] = trim($matches[1]);
         }
 

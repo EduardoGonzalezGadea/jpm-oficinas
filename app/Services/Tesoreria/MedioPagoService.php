@@ -146,7 +146,9 @@ class MedioPagoService
 
         foreach ($partes as $parte) {
             $datos = explode(':', trim($parte));
-            $nombreMedio = mb_strtoupper($this->quitarAcentos(trim($datos[0])), 'UTF-8');
+            $nombreOriginal = trim($datos[0]);
+            $nombreMedio = mb_strtoupper($this->quitarAcentos($nombreOriginal), 'UTF-8');
+            $nombreNormalizado = $this->obtenerNombreReal($nombreOriginal);
 
             if (isset($datos[1])) {
                 $valor = $this->parsearValorNumerico($datos[1]);
@@ -155,7 +157,8 @@ class MedioPagoService
             }
 
             $resultado[] = [
-                'nombre' => trim($datos[0]), // Mantener original sin forzar Mayúsculas
+                'nombre' => $nombreNormalizado, // Normalizado (sin distinguir mayúsculas/acentos)
+                'nombre_original' => $nombreOriginal,
                 'valor' => $valor,
             ];
         }

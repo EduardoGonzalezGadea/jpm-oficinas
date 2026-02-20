@@ -236,4 +236,37 @@ class CfeController extends Controller
             ]);
         }
     }
+    /**
+     * Crear un registro de Multa automáticamente y devolver URL de redirección
+     *
+     * @param  Request  $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function registrarMultaAuto(Request $request)
+    {
+        try {
+            $datos = $request->input('datos');
+            $userId = auth()->id() ?? 1;
+
+            // Usar el servicio para registrar automáticamente
+            $cobro = $this->cfeProcessorService->registrarMultaAuto($datos, $userId);
+
+            // Redirigir al índice con el ID para abrir el modal
+            // Usamos parámetro GET para mayor robustez al abrir nueva pestaña
+            $redirectUrl = route('tesoreria.multas-cobradas.index', ['edit_id' => $cobro->id]);
+
+            session()->flash('message', 'Multa registrada automáticamente desde CFE.');
+
+            return response()->json([
+                'success' => true,
+                'redirect_url' => $redirectUrl,
+                'mensaje' => 'Multa registrada correctamente.'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'mensaje' => 'Error al registrar multa: ' . $e->getMessage()
+            ]);
+        }
+    }
 }

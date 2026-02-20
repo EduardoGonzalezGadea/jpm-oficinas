@@ -1,5 +1,30 @@
 <div id="print-container" style="background: white; padding: 20px;">
     <x-reports.header :title="$titulo" :usuario="$usuario_impresion" :fecha="$fecha_impresion" />
+    <style>
+        @page {
+            margin: 10mm;
+            size: auto;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            vertical-align: middle;
+            word-break: break-word;
+            white-space: normal;
+        }
+    </style>
 
     <table class="table table-bordered table-sm table-striped">
         <thead class="thead-light">
@@ -27,7 +52,7 @@
                         @endforeach
                     </ul>
                 </td>
-                <td class="text-nowrap">{{ $multa->forma_pago }}</td>
+                <td>{{ $this->formatearFormaPagoUy($multa->forma_pago) }}</td>
                 <td class="text-right text-nowrap">{{ $multa->monto_formateado }}</td>
             </tr>
             @empty
@@ -51,7 +76,7 @@
             const element = document.getElementById('print-container');
             const filename = '{{ $titulo }} - {{ date("d-m-Y") }}.pdf';
             const opt = {
-                margin: [10, 10, 10, 10],
+                margin: [5, 5, 5, 5],
                 filename: filename,
                 image: {
                     type: 'jpeg',
@@ -60,7 +85,10 @@
                 html2canvas: {
                     scale: 2,
                     useCORS: true,
-                    logging: false
+                    logging: false,
+                    letterRendering: true,
+                    scrollY: 0,
+                    windowWidth: document.getElementById('print-container').scrollWidth
                 },
                 jsPDF: {
                     unit: 'mm',
@@ -72,7 +100,21 @@
                 }
             };
 
-            html2pdf().set(opt).from(element).save().then(() => {
+            const generarPdf = async () => {
+                window.scrollTo(0, 0);
+
+                if (document.fonts && document.fonts.ready) {
+                    try {
+                        await document.fonts.ready;
+                    } catch (e) {}
+                }
+                // Dar tiempo extra a renderizar contenido extenso
+                await new Promise(resolve => setTimeout(resolve, 2000));
+
+                return html2pdf().set(opt).from(element).save();
+            };
+
+            generarPdf().then(() => {
                 setTimeout(() => {
                     window.close();
                 }, 1000);

@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Http\Livewire\Tesoreria\Arrendamientos;
+namespace App\Http\Livewire\Tesoreria\Prendas;
 
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use Smalot\PdfParser\Parser;
-use App\Models\Tesoreria\Arrendamiento;
+use App\Models\Tesoreria\Prenda;
 use App\Models\Tesoreria\MedioDePago;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
@@ -29,7 +29,7 @@ class CargarCfe extends Component
         if ($prefillId && Cache::has('cfe_prefill_' . $prefillId)) {
             $cacheData = Cache::get('cfe_prefill_' . $prefillId);
             $tipo = $cacheData['tipo'] ?? '';
-            if (in_array($tipo, ['arrendamientos', 'Arrendamientos'])) {
+            if (in_array($tipo, ['prendas', 'Prendas'])) {
                 $this->datosExtraidos = $cacheData['datos'];
                 Cache::forget('cfe_prefill_' . $prefillId);
                 return;
@@ -37,7 +37,7 @@ class CargarCfe extends Component
         }
 
         // 2. Fallback: sesión
-        if (session()->has('cfe_datos_precargados') && session('cfe_tipo') === 'arrendamientos') {
+        if (session()->has('cfe_datos_precargados') && session('cfe_tipo') === 'prendas') {
             $this->datosExtraidos = session('cfe_datos_precargados');
             session()->forget(['cfe_datos_precargados', 'cfe_tipo', 'cfe_filepath']);
         }
@@ -244,11 +244,11 @@ class CargarCfe extends Component
             }
         }
 
-        // Validación: Verificar que el detalle contenga "arrendamiento"
+        // Validación: Verificar que el detalle contenga "prenda" o "prendas"
         $detalleNorm = $this->quitarAcentos(mb_strtolower($datos['detalle'], 'UTF-8'));
-        if (strpos($detalleNorm, 'arrendamiento') === false && strpos($detalleNorm, 'arrendamientos') === false) {
+        if (strpos($detalleNorm, 'prenda') === false && strpos($detalleNorm, 'prendas') === false) {
             return [
-                'error_validacion' => 'Este comprobante no corresponde a un Arrendamiento. No se encontró la palabra "ARRENDAMIENTO" en el detalle del CFE.'
+                'error_validacion' => 'Este comprobante no corresponde a Prendas. No se encontró la palabra "PRENDA" en el detalle del CFE.'
             ];
         }
 
@@ -276,43 +276,71 @@ class CargarCfe extends Component
             }
 
             $fecha = \Carbon\Carbon::createFromFormat('d/m/Y', $this->datosExtraidos['fecha']);
-            $recibo = $this->datosExtraidos['serie'] . '-' . $this->datosExtraidos['numero'];
+            $serie = $this->datosExtraidos['serie'];
+            $numero = $this->datosExtraidos['numero'];
 
-            // Verificar duplicados por recibo y fecha
-            $existe = Arrendamiento::where('recibo', $recibo)
-                ->whereDate('fecha', $fecha->format('Y-m-d'))
+            // Verificar duplicados por serie+numero
+            $existe = Prenda::where('recibo_serie', $serie)
+                ->where('recibo_numero', $numero)
                 ->exists();
 
             if ($existe) {
                 $this->dispatchBrowserEvent('swal:toast-error', [
-                    'text' => "El recibo {$recibo} ya fue cargado el día {$this->datosExtraidos['fecha']}."
+                    'text' => "El recibo {$serie}-{$numero} ya fue cargado."
                 ]);
                 DB::rollBack();
                 return;
             }
 
             // Determinar medio de pago
-            $medioPago = $this->datosExtraidos['forma_pago'] ?? 'SIN DATOS';
-            // Intentar mapear a medio de pago del sistema
-            if (stripos($medioPago, 'Transferencia') !== false) {
-                $medioPago = $this->getDefaultMedioDePago('Transferencia');
-            } elseif (stripos($medioPago, 'Efectivo') !== false) {
-                $medioPago = $this->getDefaultMedioDePago('Efectivo');
+            $medioPagoNombre = $this->datosExtraidos['forma_pago'] ?? 'SIN DATOS';
+            $medioPagoId = null;
+
+            if (stripos($medioPagoNombre, 'Transferencia') !== false) {
+                $medio = MedioDePago::activos()
+                    ->where('nombre', 'like', '%Transferencia%')
+                    ->first();
+                $medioPagoId = $medio ? $medio->id : null;
+            } elseif (stripos($medioPagoNombre, 'Efectivo') !== false) {
+                $medio = MedioDePago::activos()
+                    ->where('nombre', 'like', '%Efectivo%')
+                    ->first();
+                $medioPagoId = $medio ? $medio->id : null;
             }
 
-            // Determinar detalle
-            $detalle = mb_strtoupper($this->datosExtraidos['detalle'], 'UTF-8');
+            // Si no se encontró, buscar el primer medio de pago activo
+            if (!$medioPagoId) {
+                $medio = MedioDePago::activos()->first();
+                $medioPagoId = $medio ? $medio->id : null;
+            }
 
-            Arrendamiento::create([
-                'fecha' => $fecha->format('Y-m-d'),
-                'nombre' => mb_strtoupper($this->datosExtraidos['nombre'], 'UTF-8'),
-                'cedula' => $this->datosExtraidos['cedula'],
-                'telefono' => $this->datosExtraidos['telefono'] ?? null,
+            // Determinar concepto (detalle del CFE)
+            $concepto = mb_strtoupper($this->datosExtraidos['detalle'], 'UTF-8');
+
+            // Determinar transferencia
+            $transferencia = null;
+            $transferenciaFecha = null;
+            if (stripos($medioPagoNombre, 'Transferencia') !== false) {
+                // Intentar extraer número de transferencia del detalle de pago
+                if (preg_match('/Transferencia[^:]*:\s*([\d\.,]+)/i', $medioPagoNombre, $tMatch)) {
+                    $transferencia = 'CFE ' . $serie . '-' . $numero;
+                }
+                $transferenciaFecha = $fecha->format('Y-m-d');
+            }
+
+            $prenda = Prenda::create([
+                'recibo_serie' => mb_strtoupper($serie, 'UTF-8'),
+                'recibo_numero' => mb_strtoupper($numero, 'UTF-8'),
+                'recibo_fecha' => $fecha->format('Y-m-d'),
+                'orden_cobro' => mb_strtoupper($this->datosExtraidos['orden_cobro'] ?? '', 'UTF-8'),
+                'titular_nombre' => mb_strtoupper($this->datosExtraidos['nombre'], 'UTF-8'),
+                'titular_cedula' => $this->datosExtraidos['cedula'] ?? null,
+                'titular_telefono' => $this->datosExtraidos['telefono'] ?? null,
+                'medio_pago_id' => $medioPagoId,
                 'monto' => $monto,
-                'detalle' => $detalle,
-                'orden_cobro' => $this->datosExtraidos['orden_cobro'] ?? null,
-                'recibo' => $recibo,
-                'medio_de_pago' => $medioPago,
+                'concepto' => $concepto,
+                'transferencia' => $transferencia,
+                'transferencia_fecha' => $transferenciaFecha,
             ]);
 
             DB::commit();
@@ -321,23 +349,14 @@ class CargarCfe extends Component
             $this->datosExtraidos = null;
             $this->archivo = null;
 
-            session()->flash('message', 'Arrendamiento cargado exitosamente desde CFE.');
-            return redirect()->route('tesoreria.arrendamientos.index');
+            // Redirigir al índice de prendas con indicación de abrir modal de edición
+            session()->flash('message', 'Prenda cargada exitosamente desde CFE.');
+            session()->flash('edit_prenda_id', $prenda->id);
+            return redirect()->route('tesoreria.prendas.index');
         } catch (\Exception $e) {
             DB::rollBack();
             $this->mensajeError = "Error al guardar el registro: " . $e->getMessage();
         }
-    }
-
-    /**
-     * Busca un medio de pago activo que coincida con el término dado.
-     */
-    private function getDefaultMedioDePago(string $termino): string
-    {
-        $medio = MedioDePago::activos()
-            ->where('nombre', 'like', "%{$termino}%")
-            ->first();
-        return $medio ? $medio->nombre : $termino;
     }
 
     public function limpiar()
@@ -349,6 +368,6 @@ class CargarCfe extends Component
 
     public function render()
     {
-        return view('livewire.tesoreria.arrendamientos.cargar-cfe');
+        return view('livewire.tesoreria.prendas.cargar-cfe');
     }
 }

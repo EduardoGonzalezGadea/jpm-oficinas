@@ -3,17 +3,20 @@
         <div class="card-header bg-info text-white card-header-gradient py-2 px-3 d-flex justify-content-between align-items-center">
             <h4 class="mb-0"><strong><i class="fas fa-file-invoice-dollar mr-2"></i>Gestión de Prendas</strong></h4>
             <div>
-                <a href="{{ route('tesoreria.prendas.reportes') }}" class="btn btn-secondary mr-2">
+                <a href="{{ route('tesoreria.prendas.reportes') }}" class="btn btn-secondary">
                     <i class="fas fa-filter"></i> Filtrar
                 </a>
-                <a href="{{ route('tesoreria.prendas.planillas.index') }}" class="btn btn-success mr-2">
+                <a href="{{ route('tesoreria.prendas.planillas.index') }}" class="btn btn-success">
                     <i class="fas fa-list-alt"></i> Planillas
                 </a>
-                <button wire:click="createPlanilla" class="btn btn-warning mr-2" @if(count($selectedPrendas)==0) disabled @endif>
+                <button wire:click="createPlanilla" class="btn btn-primary" style="background-color: #6f42c1; border-color: #6f42c1; color: white;" @if(count($selectedPrendas)==0) disabled @endif>
                     <i class="fas fa-plus-circle"></i> Crear Planilla @if(count($selectedPrendas) > 0) ({{ count($selectedPrendas) }}) @endif
                 </button>
+                <a href="{{ route('tesoreria.prendas.cargar-cfe') }}" class="btn btn-warning">
+                    <i class="fas fa-file-upload"></i> Cargar CFE
+                </a>
                 <button wire:click="$emit('showCreateModal')" class="btn btn-primary">
-                    <i class="fas fa-plus"></i> Nuevo Registro
+                    <i class="fas fa-plus"></i> Nuevo
                 </button>
             </div>
         </div>
@@ -104,4 +107,14 @@
     <livewire:tesoreria.prendas.create />
     <livewire:tesoreria.prendas.edit />
     <livewire:tesoreria.prendas.show />
+
+    @if($autoEditPrendaId)
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(function() {
+                window.livewire.emit('showEditModal', @json($autoEditPrendaId));
+            }, 500);
+        });
+    </script>
+    @endif
 </div>

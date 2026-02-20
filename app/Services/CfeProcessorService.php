@@ -8,6 +8,9 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Smalot\PdfParser\Parser;
+use App\Models\Tesoreria\TesMultasCobradas;
+use App\Models\Tesoreria\TesMultasItems;
+use Illuminate\Support\Facades\DB;
 
 class CfeProcessorService
 {
@@ -72,6 +75,11 @@ class CfeProcessorService
 
         if (Str::contains($textSinAcentos, 'multa') || Str::contains($textSinAcentos, 'infraccion') || Str::contains($textSinAcentos, 'transito')) {
             return 'multas_cobradas';
+        }
+
+        // Detección de prendas
+        if (Str::contains($textSinAcentos, 'prenda') || Str::contains($textSinAcentos, 'prendas')) {
+            return 'prendas';
         }
 
         // Detección de arrendamientos - buscar en el detalle (antes de eventuales para evitar falso positivo)
@@ -141,6 +149,11 @@ class CfeProcessorService
         // Si es CFE de arrendamientos, usar lógica específica
         if ($tipoCfe === 'arrendamientos') {
             return $this->extraerDatosArrendamientos($text);
+        }
+
+        // Si es CFE de prendas, usar lógica específica (similar a arrendamientos)
+        if ($tipoCfe === 'prendas') {
+            return $this->extraerDatosPrendas($text);
         }
 
         // Si es CFE de eventuales o genérico (e-factura), usar lógica específica
@@ -324,7 +337,7 @@ class CfeProcessorService
         }
 
         // Teléfono
-        if (preg_match('/(?:TEL\.?|TELÉFONO|CEL\.)\s*([\d\s\-\/]+)/iu', $text, $matches)) {
+        if (preg_match('/(?:TEL\.?|TEL(?:E|É)FONO|CEL\.?)[\s:]*([\d][\d\s\-\/\.]{5,})/iu', $text, $matches)) {
             $datos['telefono'] = trim($matches[1]);
         }
 
@@ -761,7 +774,7 @@ class CfeProcessorService
         }
 
         // Teléfono
-        if (preg_match('/(?:TEL\.|TELÉFONO|CEL\.)\s*([\d\s\-\/]+)/i', $text, $matches)) {
+        if (preg_match('/(?:TEL\.?|TEL(?:E|É)FONO|CEL\.?)[\s:]*([\d][\d\s\-\/\.]{5,})/iu', $text, $matches)) {
             $datos['telefono'] = trim($matches[1]);
         }
 
@@ -887,7 +900,7 @@ class CfeProcessorService
         }
 
         // Teléfono (de info adicional)
-        if (preg_match('/(?:TEL\.|TELÉFONO|CEL\.)\s*([\d\s\-\/]+)/i', $text, $matches)) {
+        if (preg_match('/(?:TEL\.?|TEL(?:E|É)FONO|CEL\.?)[\s:]*([\d][\d\s\-\/\.]{5,})/iu', $text, $matches)) {
             $datos['telefono'] = trim($matches[1]);
         }
 
@@ -1005,6 +1018,179 @@ class CfeProcessorService
         return $datos;
     }
 
+    /**
+     * Extract data from CFE for Prendas.
+     * Estructura similar a Arrendamientos.
+     *
+     * @param  string  $text
+     * @return array
+     */
+    protected function extraerDatosPrendas(string $text): array
+    {
+        $text = mb_convert_encoding($text, 'UTF-8', 'UTF-8');
+
+        $datos = [
+            'tipo_cfe' => 'No detectado',
+            'serie' => '',
+            'numero' => '',
+            'fecha' => '',
+            'cedula' => '',
+            'nombre' => '',
+            'telefono' => '',
+            'monto' => 0.0,
+            'monto_total' => 0.0,
+            'moneda' => 'UYU',
+            'detalle' => '',
+            'orden_cobro' => '',
+            'forma_pago' => 'SIN DATOS',
+            'adenda' => '',
+        ];
+
+        // Tipo de CFE
+        if (preg_match('/(e-Factura|e-Ticket|e-Boleta)(?:\s+Cobranza)?/is', $text, $matches)) {
+            $datos['tipo_cfe'] = $matches[0];
+        }
+
+        // Serie y Número
+        if (preg_match('/([A-Z])[\s\t]+(\d+)[\s\t]+(?:Contado|Cr.dito)/i', $text, $matches)) {
+            $datos['serie'] = $matches[1];
+            $datos['numero'] = $matches[2];
+        }
+
+        // Fecha
+        if (preg_match('/FECHA[\s:]+(?:MONEDA[\s:]+)?(\d{2}\/\d{2}\/\d{4})/i', $text, $matches)) {
+            $datos['fecha'] = $matches[1];
+        } elseif (preg_match('/(\d{2}\/\d{2}\/\d{4})/i', $text, $matches)) {
+            $datos['fecha'] = $matches[1];
+        }
+
+        // Receptor (Cédula o RUT)
+        if (preg_match('/(?:C\.I\.|RUT).*?:\s*([\d\.-]+)/is', $text, $matches)) {
+            $datos['cedula'] = $matches[1];
+        }
+
+        // Nombre Receptor
+        if (preg_match('/NOMBRE O DENOMINACIÓN DOMICILIO FISCAL\s*\n\s*(.*?)(?=\s*\n\s*(?:INFORMACION ADICIONAL|DETALLE DESCRIPCIÓN|PERIODO|FECHA|$))/isu', $text, $matches)) {
+            $datos['nombre'] = trim(preg_replace('/\s+/', ' ', $matches[1]));
+        } elseif (preg_match('/FISCAL\s*(.*?)(?=\s*(?:INFORMACION|DETALLE|FECHA|\d{2}\/\d{2}\/\d{4}|$))/isu', $text, $matches)) {
+            $datos['nombre'] = trim(preg_replace('/\s+/', ' ', $matches[1]));
+        }
+
+        // Teléfono (de info adicional)
+        if (preg_match('/(?:TEL\.?|TEL(?:E|É)FONO|CEL\.?)[\s:]*([\d][\d\s\-\/\.]{5,})/iu', $text, $matches)) {
+            $datos['telefono'] = trim($matches[1]);
+        }
+
+        // Monto Total
+        if (preg_match('/TOTAL\s+A\s+PAGAR:\s*([\d\.,]+)/is', $text, $matches)) {
+            $datos['monto_total'] = $matches[1];
+            $datos['monto'] = floatval(str_replace(['.', ','], ['', '.'], $matches[1]));
+        } elseif (preg_match('/MONTO\s+NO\s+FACTURABLE:\s*([\d\.,]+)/is', $text, $matches)) {
+            $datos['monto_total'] = $matches[1];
+            $datos['monto'] = floatval(str_replace(['.', ','], ['', '.'], $matches[1]));
+        }
+
+        // Moneda
+        if (preg_match('/Peso uruguayo/i', $text)) {
+            $datos['moneda'] = 'UYU';
+        } elseif (preg_match('/Dólar/i', $text)) {
+            $datos['moneda'] = 'USD';
+        }
+
+        // Medios de Pago (entre TOTAL A PAGAR y REFERENCIAS)
+        if (preg_match('/TOTAL\s+A\s+PAGAR:[\s\t]*[\d\.,]+(.*?)(?=REFERENCIAS:)/isu', $text, $matches)) {
+            $bloquePago = trim($matches[1]);
+            if (!empty($bloquePago)) {
+                $lineasPago = explode("\n", $bloquePago);
+                $pagos = [];
+                foreach ($lineasPago as $linea) {
+                    $linea = trim($linea);
+                    if (empty($linea)) continue;
+                    if (preg_match('/^(.*?):[\s\t]*([\d\.,]+)$/u', $linea, $mpm)) {
+                        $pagos[] = trim($mpm[1]) . ": " . trim($mpm[2]);
+                    } elseif (!empty($linea)) {
+                        $pagos[] = $linea;
+                    }
+                }
+                if (!empty($pagos)) {
+                    $datos['forma_pago'] = implode(' / ', $pagos);
+                }
+            }
+        }
+
+        // Extracción de Detalle (concatenar todo el bloque de ítems)
+        if (preg_match('/DETALLE\s+DESCRIPCI.N.*?IMPORTE\s*(.*?)(?=\s*MONTO\s+NO\s+FACTURABLE)/isu', $text, $matches)) {
+            $bloqueItems = trim($matches[1]);
+            $lineas = explode("\n", $bloqueItems);
+            $bufferDetalle = [];
+
+            foreach ($lineas as $linea) {
+                $linea = trim($linea);
+                if (empty($linea)) continue;
+
+                if (preg_match('/^(.*?)([\d\.,]+(?:\s*\(Unid\))?\s*[\d\.,]+\s+[\d\.,]+)$/i', $linea, $m)) {
+                    $restoLinea = trim($m[1]);
+                    if (!empty($restoLinea)) {
+                        $bufferDetalle[] = $restoLinea;
+                    }
+                } else {
+                    $bufferDetalle[] = $linea;
+                }
+            }
+
+            if (!empty($bufferDetalle)) {
+                $datos['detalle'] = trim(preg_replace('/\s+/', ' ', implode(' ', $bufferDetalle)));
+            }
+        }
+
+        // Adenda
+        if (preg_match('/ADENDA\s*\n(.*?)(?=\s*(?:Fecha\s+de|Puede\s+verificar|I\.V\.A\.|NÚMERO\s+DE\s+CAE|$))/isu', $text, $matches)) {
+            $adendaRaw = trim($matches[1]);
+            $lineas = explode("\n", $adendaRaw);
+            $lineasLimpias = array_map(function ($linea) {
+                $linea = trim($linea);
+                $linea = preg_replace('/(\d)([A-Z])/u', '$1 $2', $linea);
+                return $linea;
+            }, $lineas);
+            $lineasLimpias = array_filter($lineasLimpias, function ($linea) {
+                return !empty($linea) && $linea !== '1';
+            });
+            $datos['adenda'] = implode("\n", $lineasLimpias);
+        }
+
+        // Extraer Orden de Cobro de la adenda
+        if (!empty($datos['adenda'])) {
+            $adendaSinAcentos = $this->quitarAcentos(mb_strtolower($datos['adenda'], 'UTF-8'));
+
+            if (preg_match('/(?:orden\s+de\s+cobro|orden\s+cobro|o\.\s*\(?c\.?|o\/c)\s*(\d+)/iu', $adendaSinAcentos, $ocMatch)) {
+                $datos['orden_cobro'] = $ocMatch[1];
+            } else {
+                $numerosEncontrados = [];
+                if (preg_match_all('/\b(\d{3,})\b/', $datos['adenda'], $numMatches)) {
+                    $numerosEncontrados = $numMatches[1];
+                }
+                if (count($numerosEncontrados) === 1) {
+                    $datos['orden_cobro'] = $numerosEncontrados[0];
+                }
+            }
+        }
+
+        // Validación: Verificar que el detalle contenga "prenda"
+        $detalleNorm = $this->quitarAcentos(mb_strtolower($datos['detalle'], 'UTF-8'));
+        if (strpos($detalleNorm, 'prenda') === false && strpos($detalleNorm, 'prendas') === false) {
+            return [
+                'error_validacion' => 'Este comprobante no corresponde a Prendas. No se encontró la palabra "PRENDA" en el detalle del CFE.'
+            ];
+        }
+
+        // Si se pagó por transferencia, concatenar la información del pago al detalle
+        if (stripos($datos['forma_pago'], 'Transferencia') !== false) {
+            $datos['detalle'] .= ' - ' . $datos['forma_pago'];
+        }
+
+        return $datos;
+    }
+
     protected function extraerItemsMultas(string $text): array
     {
         $items = [];
@@ -1066,7 +1252,7 @@ class CfeProcessorService
             // Detectar tipo de CFE
             $tipoCfe = $this->detectarTipoCfe($text);
 
-            if ($tipoCfe === 'desconocido') {
+            if ($tipoCfe === 'desconocido' || $tipoCfe === 'generico') {
                 return [
                     'es_cfe' => false,
                     'mensaje' => 'Este PDF no contiene un CFE reconocido por el sistema.',
@@ -1083,6 +1269,7 @@ class CfeProcessorService
                 'certificado_residencia' => 'Certificado de Residencia',
                 'multas_cobradas' => 'Multas Cobradas',
                 'arrendamientos' => 'Arrendamientos',
+                'prendas' => 'Prendas',
                 'porte_armas' => 'Porte de Armas',
                 'tenencia_armas' => 'Tenencia de Armas',
                 'eventuales' => 'Eventuales (e-Factura)',
@@ -1155,6 +1342,12 @@ class CfeProcessorService
                     $mensaje = 'Registro preparado para el módulo de Arrendamientos.';
                     break;
 
+                case 'Prendas':
+                case 'prendas':
+                    $redirectUrl = url('tesoreria/prendas/cargar-cfe');
+                    $mensaje = 'Registro preparado para el módulo de Prendas.';
+                    break;
+
                 default:
                     return [
                         'success' => false,
@@ -1187,6 +1380,90 @@ class CfeProcessorService
                 'success' => false,
                 'mensaje' => 'Error al preparar el registro: ' . $e->getMessage()
             ];
+        }
+    }
+    /**
+     * Registra automáticamente una multa a partir de los datos analizados.
+     *
+     * @param  array  $datos
+     * @param  int    $userId
+     * @return \App\Models\Tesoreria\TesMultasCobradas
+     * @throws \Exception
+     */
+    public function registrarMultaAuto(array $datos, int $userId)
+    {
+        // Validar items
+        if (empty($datos['items'])) {
+            throw new \Exception("No se detectaron ítems válidos para guardar.");
+        }
+
+        DB::beginTransaction();
+        try {
+            $montoTotal = $datos['monto_total'];
+            if (is_string($montoTotal)) {
+                $montoTotal = (float)str_replace(['.', ','], ['', '.'], $montoTotal);
+            }
+
+            // Validar consistencia
+            $sumaItems = collect($datos['items'])->sum('importe');
+            // Usamos un delta pequeño para evitar errores de precisión flotante
+            if (abs($montoTotal - $sumaItems) > 0.1) {
+                // Formatting para mensaje
+                $montoFormat = number_format($montoTotal, 2, ',', '.');
+                $sumaFormat = number_format($sumaItems, 2, ',', '.');
+
+                throw new \Exception("ERROR DE CONSISTENCIA: El total ($ {$montoFormat}) NO coincide con la suma de los ítems ($ {$sumaFormat}).");
+            }
+
+            // Parsear fecha
+            try {
+                $fecha = \Carbon\Carbon::createFromFormat('d/m/Y', $datos['fecha']);
+            } catch (\Exception $e) {
+                $fecha = now();
+            }
+
+            $recibo = $datos['serie'] . '-' . $datos['numero'];
+
+            // Verificar duplicados
+            $existe = TesMultasCobradas::where('recibo', $recibo)
+                ->whereDate('fecha', $fecha->format('Y-m-d'))
+                ->exists();
+
+            if ($existe) {
+                throw new \Exception("El recibo {$recibo} ya fue cargado el día {$datos['fecha']}.");
+            }
+
+            $cobro = TesMultasCobradas::create([
+                'fecha' => $fecha->format('Y-m-d'),
+                'recibo' => $recibo,
+                'monto' => $montoTotal,
+                'nombre' => mb_strtoupper($datos['nombre'], 'UTF-8'),
+                'cedula' => $datos['cedula'],
+                'adicional' => $datos['adicional'] ?? null,
+                'adenda' => $datos['adenda'] ?? null,
+                'referencias' => $datos['referencias'] ?? null,
+                'forma_pago' => $datos['forma_pago'] ?? 'SIN DATOS',
+                'created_by' => $userId,
+            ]);
+
+            foreach ($datos['items'] as $itemData) {
+                $cobro->items()->create([
+                    'detalle' => mb_strtoupper($itemData['detalle'], 'UTF-8'),
+                    'descripcion' => mb_strtoupper($itemData['descripcion'], 'UTF-8'),
+                    'importe' => $itemData['importe'],
+                    'created_by' => $userId,
+                ]);
+            }
+
+            DB::commit();
+
+            // Invalidar caché si existe la función
+            Cache::flush();
+
+            return $cobro;
+        } catch (\Exception $e) {
+            DB::rollBack();
+            throw $e;
         }
     }
 }

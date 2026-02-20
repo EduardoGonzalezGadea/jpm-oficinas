@@ -1,4 +1,4 @@
-<div id="print-container" style="background: white; padding: 10px;">
+<div id="print-container" class="{{ $isPdf ? 'pdf-mode' : '' }}" style="background: white; padding: 10px;">
     <style>
         @page {
             margin: 5mm;
@@ -23,6 +23,7 @@
             padding: 5px;
             margin-bottom: 8px;
             page-break-inside: avoid;
+            break-inside: avoid;
         }
 
         .multa-record p {
@@ -86,6 +87,7 @@
             width: 100%;
             margin-top: 4px;
             border-collapse: collapse;
+            table-layout: auto;
         }
 
         .items-table th,
@@ -93,6 +95,9 @@
             border: 1px solid #ccc;
             padding: 2px 4px;
             font-size: 0.85em;
+            vertical-align: middle;
+            word-break: break-word;
+            white-space: normal;
         }
 
         .items-table th {
@@ -117,6 +122,7 @@
             width: fit-content;
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
+            print-color-adjust: exact;
         }
 
         .summary-print-container {
@@ -127,20 +133,25 @@
         }
 
         .summary-print-table {
-            width: 70%;
+            width: 100%;
             border-collapse: collapse;
             font-size: 0.9em;
+            table-layout: auto;
         }
 
         .summary-print-table th,
         .summary-print-table td {
             border: 1px solid #000;
             padding: 6px 10px;
+            vertical-align: middle;
+            word-break: break-word;
+            white-space: normal;
         }
 
         .summary-print-table th {
             background-color: #f0f0f0 !important;
             -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
         }
 
         .summary-print-table .total-row {
@@ -148,6 +159,20 @@
             color: #fff !important;
             font-weight: bold;
             -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        /* Evitar páginas en blanco en generación PDF */
+        .pdf-mode .multa-record {
+            page-break-inside: auto;
+            break-inside: auto;
+        }
+
+        @media print {
+            .multa-record {
+                page-break-inside: avoid;
+                break-inside: avoid;
+            }
         }
     </style>
 
@@ -192,10 +217,10 @@
                 </div>
                 @endif
 
-                @if($multa->referencias)
+                @if($multa->forma_pago)
                 <div class="adenda-box">
-                    <p class="mb-1"><strong>Referencias:</strong></p>
-                    <p class="adenda-content" style="font-family: inherit;">{{ $multa->referencias }}</p>
+                    <p class="mb-1"><strong>Medios de Pago:</strong></p>
+                    <p class="adenda-content" style="font-family: inherit;">{{ $this->formatearFormaPagoUy($multa->forma_pago) }}</p>
                 </div>
                 @endif
             </div>
@@ -271,6 +296,15 @@
 
 
     @if($isPdf)
+    <!-- Overlay de Carga -->
+    <div id="pdf-loading-overlay" data-html2canvas-ignore="true" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.95); z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;">
+        <div class="spinner-border text-primary" role="status" style="width: 4rem; height: 4rem;">
+            <span class="sr-only">Cargando...</span>
+        </div>
+        <h3 class="mt-4" style="color: #333; font-weight: bold;">Generando informe PDF...</h3>
+        <p class="text-muted">Por favor espere, esto puede tomar unos segundos/minutos dependiendo de la cantidad de datos.</p>
+    </div>
+
     <!-- Script para generación de PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script>
@@ -278,36 +312,87 @@
             const element = document.getElementById('print-container');
             const filename = 'Informe Multas Cobradas Detallado del {{ \Carbon\Carbon::parse($fechaDesde)->format("d-m-Y") }} al {{ \Carbon\Carbon::parse($fechaHasta)->format("d-m-Y") }}.pdf';
 
-            const opt = {
-                margin: [10, 10, 10, 10],
-                filename: filename,
-                image: {
-                    type: 'jpeg',
-                    quality: 0.98
-                },
-                html2canvas: {
-                    scale: 2,
-                    useCORS: true,
-                    logging: false,
-                    letterRendering: true
-                },
-                jsPDF: {
-                    unit: 'mm',
-                    format: 'a4',
-                    orientation: 'portrait'
-                },
-                pagebreak: {
-                    mode: ['css', 'legacy']
+            // Función para determinar la escala óptima basada en la altura del contenido
+            const calculateOptimalScale = (element) => {
+                const height = element.scrollHeight;
+                // Aumentamos a 50000 que es un límite seguro en la mayoría de escritorios modernos (Chrome/Edge ~65k, FF ~32k)
+                const maxCanvasHeight = 50000;
+                let scale = 1.5;
+
+                if ((height * scale) > maxCanvasHeight) {
+                    scale = maxCanvasHeight / height;
+                    // ELIMINADO: No forzamos un mínimo aquí para asegurar que el canvas se genere y NO salga en blanco.
                 }
+
+                console.log(`Altura: ${height}px. Escala Segura: ${scale.toFixed(4)}`);
+                return scale;
             };
 
-            // Generar y descargar PDF
-            html2pdf().set(opt).from(element).save().then(() => {
+            const generarPdf = async () => {
+                window.scrollTo(0, 0);
+
+                if (document.fonts && document.fonts.ready) {
+                    try {
+                        await document.fonts.ready;
+                    } catch (e) {}
+                }
+
+                await new Promise(resolve => setTimeout(resolve, 2500));
+
+                const dynamicScale = calculateOptimalScale(element);
+
+                // Si la escala necesaria es demasiado pequeña, el PDF será ilegible.
+                // Mejor recomendar imprimir nativamente.
+                if (dynamicScale < 0.25) {
+                    document.getElementById('pdf-loading-overlay').style.display = 'none';
+                    if (confirm('El informe es demasiado extenso para generarlo como PDF directo manteniendo la legibilidad.\n\n¿Desea abrir la opción de Imprimir del navegador (Recomendado para documentos muy largos)?')) {
+                        window.print();
+                        // No cerramos automáticamente para dar tiempo a imprimir
+                        return; // Cancelar html2pdf
+                    }
+                }
+
+                const scrollWidth = element.scrollWidth;
+
+                const opt = {
+                    margin: [5, 5, 5, 5],
+                    filename: filename,
+                    image: {
+                        type: 'jpeg',
+                        quality: 0.98
+                    },
+                    html2canvas: {
+                        scale: dynamicScale,
+                        useCORS: true,
+                        logging: false,
+                        letterRendering: true,
+                        scrollY: 0,
+                        windowWidth: scrollWidth
+                    },
+                    jsPDF: {
+                        unit: 'mm',
+                        format: 'a4',
+                        orientation: 'portrait'
+                    },
+                    pagebreak: {
+                        mode: ['css', 'legacy']
+                    }
+                };
+
+                return html2pdf().set(opt).from(element).save();
+            };
+
+            // Descarga automática luego de renderizar
+            generarPdf().then(() => {
                 setTimeout(() => {
                     window.close();
                 }, 1000);
             }).catch(err => {
                 console.error('Error al generar PDF:', err);
+                alert('Ocurrió un error al generar el PDF. El documento podría ser demasiado extenso.');
+                // Ocultar overlay si falla para que el usuario pueda intentar imprimir manualmente
+                const overlay = document.getElementById('pdf-loading-overlay');
+                if (overlay) overlay.style.display = 'none';
             });
         });
     </script>
