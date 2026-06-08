@@ -3,269 +3,230 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProcesarCfeRequest;
-use App\Models\TesCfePendiente;
+use App\Repositories\CfePendienteRepository;
 use App\Services\CfeProcessorService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 
 class CfeController extends Controller
 {
-    protected $cfeProcessorService;
-
-    public function __construct(CfeProcessorService $cfeProcessorService)
-    {
-        $this->cfeProcessorService = $cfeProcessorService;
-    }
+    public function __construct(
+        private readonly CfeProcessorService    $cfeProcessorService,
+        private readonly CfePendienteRepository $repository
+    ) {}
 
     /**
-     * Procesar un CFE enviado desde la extensión del navegador.
-     *
-     * @param  ProcesarCfeRequest  $request
-     * @return \Illuminate\Http\JsonResponse
+     * Procesa un CFE enviado desde la extensión del navegador y lo persiste como pendiente.
      */
-    public function procesarCfe(ProcesarCfeRequest $request)
+    public function procesarCfe(ProcesarCfeRequest $request): JsonResponse
     {
         try {
-            $userId = $request->user()->id;
-            $cfePendiente = $this->cfeProcessorService->procesarPdf($request->file('pdf_file'), $request->source_url, $userId);
+            $cfePendiente = $this->cfeProcessorService->procesarPdf(
+                $request->file('pdf_file'),
+                $request->source_url,
+                $request->user()->id
+            );
 
             return response()->json([
-                'success' => true,
-                'message' => 'CFE recibido y almacenado correctamente.',
-                'cfe_pendiente' => $cfePendiente
+                'success'       => true,
+                'message'       => 'CFE recibido y almacenado correctamente.',
+                'cfe_pendiente' => $cfePendiente,
             ], 201);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error al procesar el CFE: ' . $e->getMessage()
+                'message' => 'Error al procesar el CFE: ' . $e->getMessage(),
             ], 500);
         }
     }
 
     /**
-     * Obtener todos los CFEs pendientes.
-     *
-     * @return \Illuminate\Http\JsonResponse
+     * Lista todos los CFEs en estado "pendiente".
      */
-    public function pendientes()
+    public function pendientes(): JsonResponse
     {
         try {
-            $pendientes = TesCfePendiente::where('estado', 'pendiente')
-                ->orderBy('created_at', 'desc')
-                ->get();
-
+            $pendientes = $this->repository->buscarPorEstado('pendiente');
             return response()->json($pendientes);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error al obtener CFEs pendientes: ' . $e->getMessage()
+                'message' => 'Error al obtener CFEs pendientes: ' . $e->getMessage(),
             ], 500);
         }
     }
 
     /**
-     * Confirmar un CFE pendiente.
-     *
-     * @param  string  $id
-     * @return \Illuminate\Http\JsonResponse
+     * Confirma un CFE pendiente registrando quién lo procesó y cuándo.
      */
-    public function confirmarCfe($id)
+    public function confirmarCfe(int $id): JsonResponse
     {
         try {
-            $cfe = TesCfePendiente::find($id);
+            $cfe = $this->repository->buscarPorId($id);
+
             if (!$cfe || $cfe->estado !== 'pendiente') {
                 return response()->json([
                     'success' => false,
-                    'message' => 'CFE no encontrado o no está pendiente.'
+                    'message' => 'CFE no encontrado o no está pendiente.',
                 ], 404);
             }
 
-            $cfe->estado = 'confirmado';
-            $cfe->procesado_por = Auth::id();
-            $cfe->procesado_at = now();
+            $cfe->estado        = 'confirmado';
+            $cfe->procesado_por = auth()->id();
+            $cfe->procesado_at  = now();
             $cfe->save();
 
             return response()->json([
                 'success' => true,
                 'message' => 'CFE confirmado correctamente.',
-                'cfe' => $cfe
+                'cfe'     => $cfe,
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error al confirmar el CFE: ' . $e->getMessage()
+                'message' => 'Error al confirmar el CFE: ' . $e->getMessage(),
             ], 500);
         }
     }
 
     /**
-     * Rechazar un CFE pendiente.
-     *
-     * @param  string  $id
-     * @param  string  $motivo
-     * @return \Illuminate\Http\JsonResponse
+     * Rechaza un CFE pendiente registrando el motivo.
      */
-    public function rechazarCfe($id, Request $request)
+    public function rechazarCfe(int $id, Request $request): JsonResponse
     {
         try {
-            $cfe = TesCfePendiente::find($id);
+            $cfe = $this->repository->buscarPorId($id);
+
             if (!$cfe || $cfe->estado !== 'pendiente') {
                 return response()->json([
                     'success' => false,
-                    'message' => 'CFE no encontrado o no está pendiente.'
+                    'message' => 'CFE no encontrado o no está pendiente.',
                 ], 404);
             }
 
-            $cfe->estado = 'rechazado';
+            $cfe->estado         = 'rechazado';
             $cfe->motivo_rechazo = $request->input('motivo');
             $cfe->save();
 
             return response()->json([
                 'success' => true,
                 'message' => 'CFE rechazado correctamente.',
-                'cfe' => $cfe
+                'cfe'     => $cfe,
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error al rechazar el CFE: ' . $e->getMessage()
+                'message' => 'Error al rechazar el CFE: ' . $e->getMessage(),
             ], 500);
         }
     }
 
     /**
-     * Analizar un PDF para determinar si contiene un CFE.
-     *
-     * @param  Request  $request
-     * @return \Illuminate\Http\JsonResponse
+     * Analiza un PDF por ruta local y retorna si es CFE + datos extraídos.
+     * Usado por la extensión del navegador para previsualizar antes de confirmar.
      */
-    public function analizarCfe(Request $request)
+    public function analizarCfe(Request $request): JsonResponse
     {
         try {
             $filepath = $request->input('filepath');
-            $filename = $request->input('filename');
 
-            // Verificar si el archivo existe
             if (!$filepath || !file_exists($filepath)) {
                 return response()->json([
-                    'es_cfe' => false,
-                    'mensaje' => 'No se puede acceder al archivo: ' . $filepath
+                    'es_cfe'  => false,
+                    'mensaje' => 'No se puede acceder al archivo: ' . $filepath,
                 ]);
             }
 
-            // Usar el servicio para analizar el PDF
-            $resultado = $this->cfeProcessorService->analizarPdf($filepath);
-
-            return response()->json($resultado);
+            return response()->json($this->cfeProcessorService->analizarPdf($filepath));
         } catch (\Exception $e) {
             return response()->json([
-                'es_cfe' => false,
-                'mensaje' => 'Error al analizar el PDF: ' . $e->getMessage()
+                'es_cfe'  => false,
+                'mensaje' => 'Error al analizar el PDF: ' . $e->getMessage(),
             ]);
         }
     }
 
     /**
-     * Crear un registro a partir de los datos del CFE.
-     *
-     * @param  Request  $request
-     * @return \Illuminate\Http\JsonResponse
+     * Analiza un PDF enviado como archivo (upload) o por ruta.
+     * Endpoint primario de la extensión del navegador.
      */
-    public function crearRegistro(Request $request)
+    public function analizarCfeConArchivo(Request $request): JsonResponse
     {
         try {
-            $filepath = $request->input('filepath');
-            $tipoCfe = $request->input('tipo_cfe');
-            $datos = $request->input('datos');
+            $pdfFile = $request->file('pdf_file');
 
-            // Usar el servicio para crear el registro en el módulo correspondiente
-            $resultado = $this->cfeProcessorService->crearRegistroDesdeAnalisis($tipoCfe, $datos, $filepath);
+            if ($pdfFile && $pdfFile->isValid()) {
+                $tempPath = $pdfFile->store('temp-cfe');
+                $fullPath = storage_path('app/' . $tempPath);
+
+                $resultado = $this->cfeProcessorService->analizarPdf($fullPath);
+                @unlink($fullPath);
+
+                return response()->json($resultado);
+            }
+
+            $filepath = $request->input('filepath');
+            if ($filepath && file_exists($filepath)) {
+                return response()->json($this->cfeProcessorService->analizarPdf($filepath));
+            }
+
+            return response()->json([
+                'es_cfe'  => false,
+                'mensaje' => 'No se pudo acceder al archivo. filepath: ' . ($filepath ?? 'no proporcionado'),
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'es_cfe'  => false,
+                'mensaje' => 'Error al analizar el PDF: ' . $e->getMessage(),
+            ]);
+        }
+    }
+
+    /**
+     * Prepara un registro desde el análisis previo y retorna la URL de redirección
+     * al formulario del módulo correspondiente (con datos pre-cargados en caché).
+     */
+    public function crearRegistro(Request $request): JsonResponse
+    {
+        try {
+            $resultado = $this->cfeProcessorService->crearRegistroDesdeAnalisis(
+                $request->input('tipo_cfe'),
+                $request->input('datos', []),
+                $request->input('filepath')
+            );
 
             return response()->json($resultado);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'mensaje' => 'Error al crear el registro: ' . $e->getMessage()
+                'mensaje' => 'Error al crear el registro: ' . $e->getMessage(),
             ]);
         }
     }
 
     /**
-     * Analizar un PDF enviado directamente como archivo.
-     * Este endpoint es usado por la extensión del navegador.
-     *
-     * @param  Request  $request
-     * @return \Illuminate\Http\JsonResponse
+     * Registra automáticamente una multa desde los datos del CFE y retorna la URL
+     * de redirección al índice de multas con el modal de edición abierto.
      */
-    public function analizarCfeConArchivo(Request $request)
+    public function registrarMultaAuto(Request $request): JsonResponse
     {
         try {
-            $filepath = $request->input('filepath');
-            $filename = $request->input('filename');
-            $pdfFile = $request->file('pdf_file');
-
-            // Si se recibió un archivo, guardarlo temporalmente
-            if ($pdfFile && $pdfFile->isValid()) {
-                // Guardar el archivo en storage/app/temp-cfe
-                $tempPath = $pdfFile->store('temp-cfe');
-                $fullPath = storage_path('app/' . $tempPath);
-
-                // Usar el servicio para analizar el PDF
-                $resultado = $this->cfeProcessorService->analizarPdf($fullPath);
-
-                // Eliminar el archivo temporal
-                unlink($fullPath);
-
-                return response()->json($resultado);
-            }
-
-            // Fallback: intentar con la ruta si el archivo no se recibió
-            if ($filepath && file_exists($filepath)) {
-                $resultado = $this->cfeProcessorService->analizarPdf($filepath);
-                return response()->json($resultado);
-            }
-
-            return response()->json([
-                'es_cfe' => false,
-                'mensaje' => 'No se pudo acceder al archivo. filepath: ' . ($filepath ?? 'no proporcionado')
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'es_cfe' => false,
-                'mensaje' => 'Error al analizar el PDF: ' . $e->getMessage()
-            ]);
-        }
-    }
-    /**
-     * Crear un registro de Multa automáticamente y devolver URL de redirección
-     *
-     * @param  Request  $request
-     * @return \Illuminate\Http\JsonResponse
-     */
-    public function registrarMultaAuto(Request $request)
-    {
-        try {
-            $datos = $request->input('datos');
-            $userId = auth()->id() ?? 1;
-
-            // Usar el servicio para registrar automáticamente
-            $cobro = $this->cfeProcessorService->registrarMultaAuto($datos, $userId);
-
-            // Redirigir al índice con el ID para abrir el modal
-            // Usamos parámetro GET para mayor robustez al abrir nueva pestaña
-            $redirectUrl = route('tesoreria.multas-cobradas.index', ['edit_id' => $cobro->id]);
+            $cobro = $this->cfeProcessorService->registrarMultaAuto(
+                $request->input('datos', []),
+                auth()->id() ?? 1
+            );
 
             session()->flash('message', 'Multa registrada automáticamente desde CFE.');
 
             return response()->json([
-                'success' => true,
-                'redirect_url' => $redirectUrl,
-                'mensaje' => 'Multa registrada correctamente.'
+                'success'      => true,
+                'redirect_url' => route('tesoreria.multas-cobradas.index', ['edit_id' => $cobro->id]),
+                'mensaje'      => 'Multa registrada correctamente.',
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'mensaje' => 'Error al registrar multa: ' . $e->getMessage()
+                'mensaje' => 'Error al registrar multa: ' . $e->getMessage(),
             ]);
         }
     }

@@ -3,7 +3,7 @@
 namespace Tests\Unit\Services\Tesoreria;
 
 use App\Services\Tesoreria\MedioPagoService;
-use PHPUnit\Framework\TestCase;
+use Tests\TestCase;
 
 class MedioPagoServiceSimpleTest extends TestCase
 {

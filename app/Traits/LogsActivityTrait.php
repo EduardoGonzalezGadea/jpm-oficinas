@@ -71,6 +71,21 @@ trait LogsActivityTrait
             'Modulo' => 'sistema',
             'Anulacion' => 'sistema',
             'Dependencia' => 'sistema',
+            // Caja Diaria
+            'CajaDiaria' => 'caja_diaria',
+            'CajaMovimiento' => 'caja_diaria',
+            'DesgloseMoneda' => 'caja_diaria',
+            'EstadoCaja' => 'caja_diaria',
+            'TipoMovimiento' => 'caja_diaria',
+            'MedioPagoCaja' => 'caja_diaria',
+            'EstadoDeposito' => 'caja_diaria',
+            'InstanciaDesglose' => 'caja_diaria',
+            'EstadoER' => 'caja_diaria',
+            'Concepto' => 'caja_diaria',
+            'Institucion222' => 'caja_diaria',
+            'DistribucionER' => 'caja_diaria',
+            'EstadoRecaudacion' => 'caja_diaria',
+            'EstadoRecaudacionDetalle' => 'caja_diaria',
         ];
 
         return $logNames[$className] ?? 'sistema';
@@ -141,6 +156,21 @@ trait LogsActivityTrait
             'Modulo' => 'el módulo',
             'Anulacion' => 'la anulación',
             'Dependencia' => 'la dependencia',
+            // Caja Diaria
+            'CajaDiaria' => 'la caja diaria',
+            'CajaMovimiento' => 'el movimiento de caja',
+            'DesgloseMoneda' => 'el desglose de monedas',
+            'EstadoCaja' => 'el estado de caja',
+            'TipoMovimiento' => 'el tipo de movimiento',
+            'MedioPagoCaja' => 'el medio de pago de caja',
+            'EstadoDeposito' => 'el estado de depósito',
+            'InstanciaDesglose' => 'la instancia de desglose',
+            'EstadoER' => 'el estado de ER',
+            'Concepto' => 'el concepto',
+            'Institucion222' => 'la institución Art. 222',
+            'DistribucionER' => 'la distribución de ER',
+            'EstadoRecaudacion' => 'el estado de recaudación',
+            'EstadoRecaudacionDetalle' => 'el detalle de estado de recaudación',
         ];
 
         return $displayNames[$className] ?? 'el registro';

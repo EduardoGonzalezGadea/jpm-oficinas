@@ -18,9 +18,6 @@ return new class extends Migration
             $table->integer('updated_by')->unsigned()->nullable()->after('updated_at');
             $table->integer('deleted_by')->unsigned()->nullable()->after('deleted_at');
 
-            $table->foreign('created_by')->references('id')->on('users');
-            $table->foreign('updated_by')->references('id')->on('users');
-            $table->foreign('deleted_by')->references('id')->on('users');
         });
     }
 

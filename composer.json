@@ -19,11 +19,12 @@
         "laravel/tinker": "^2.7",
         "livewire/livewire": "2.12.7",
         "php-open-source-saver/jwt-auth": "1.4.2",
+        "phpoffice/phpspreadsheet": "4.1",
         "pragmarx/google2fa-laravel": "^2.3",
+        "smalot/pdfparser": "^2.0",
         "spatie/laravel-activitylog": "^4.7",
         "spatie/laravel-backup": "^8.2",
         "spatie/laravel-permission": "5.11",
-        "smalot/pdfparser": "^2.0",
         "tightenco/ziggy": "^2.5"
     },
     "require-dev": {
@@ -69,7 +70,12 @@
     "config": {
         "optimize-autoloader": true,
         "preferred-install": "dist",
-        "sort-packages": true
+        "sort-packages": true,
+        "audit": {
+            "block-insecure": true
+        },
+        "disable-tls": false,
+        "secure-http": true
     },
     "minimum-stability": "dev",
     "prefer-stable": true

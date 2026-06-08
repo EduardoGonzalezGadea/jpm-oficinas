@@ -142,9 +142,10 @@ class CargarCfe extends Component
             $datos['nombre'] = trim(preg_replace('/\s+/', ' ', $matches[1]));
         }
 
-        // Teléfono (de info adicional)
-        if (preg_match('/(?:TEL\.?|TEL(?:E|É)FONO|CEL\.?)[\s:]*([\d][\d\s\-\/\.]{5,})/iu', $text, $matches)) {
-            $datos['telefono'] = trim($matches[1]);
+        // Teléfono: Buscar solo en INFORMACION ADICIONAL
+        if (preg_match('/INFORMACION ADICIONAL\s*(.*?)(?=\s*(?:PERIODO|FECHA|DETALLE|$))/isu', $text, $matchesInfo) &&
+            preg_match('/(?:TEL\.?|TEL(?:E|É)FONO|CEL\.?)[\s:]*([\d][\d\s\-\/\.]{5,})/iu', $matchesInfo[1], $matchesTel)) {
+            $datos['telefono'] = trim($matchesTel[1]);
         }
 
         // Monto Total

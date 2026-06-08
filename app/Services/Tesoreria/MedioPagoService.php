@@ -69,12 +69,17 @@ class MedioPagoService
     public function validarFormato(string $medioPago): bool
     {
         // Formatos válidos:
-        // - "EFECTIVO:1000"
-        // - "EFECTIVO:1000/CHEQUE:2000"
-        // Cada medio DEBE tener su valor especificado con :
+        // - "EFECTIVO"                    (único medio sin valor)
+        // - "EFECTIVO:1000"                (medio con valor)
+        // - "EFECTIVO:1000/CHEQUE:2000"    (combinado con valores)
+        // - "SIN DATOS"                   (valor legacy especial)
+        // Separadores inválidos: | y similares
+
+        if (str_contains($medioPago, '|')) {
+            return false;
+        }
 
         $partes = explode('/', $medioPago);
-        $mediosValidos = $this->obtenerMediosDisponibles();
 
         foreach ($partes as $parte) {
             $parte = trim($parte);
@@ -85,27 +90,26 @@ class MedioPagoService
 
             $datos = explode(':', $parte);
 
-            // Ahora exigimos exactamente 2 partes (Nombre:Valor)
-            if (count($datos) !== 2) {
-                return false;
-            }
+            if (count($datos) === 1) {
+                // Formato NOMBRE (sin valor) — válido si no es solo un número
+                $nombre = trim($datos[0]);
+                if (empty($nombre) || is_numeric($nombre)) {
+                    return false;
+                }
+            } elseif (count($datos) === 2) {
+                // Formato NOMBRE:VALOR
+                $nombre = trim($datos[0]);
+                $valor  = trim($datos[1]);
 
-            $nombreLimpio = mb_strtoupper($this->quitarAcentos(trim($datos[0])), 'UTF-8');
-            $valor = trim($datos[1]);
+                if (empty($nombre) || empty($valor)) {
+                    return false;
+                }
 
-            if (empty($nombreLimpio) || empty($valor)) {
-                return false;
-            }
-
-            // Validar que el nombre exista en los medios activos (comparando sin acentos y en Mayúsculas)
-            $mediosValidosLimpios = array_map(fn($m) => mb_strtoupper($this->quitarAcentos($m), 'UTF-8'), $mediosValidos);
-            if (!in_array($nombreLimpio, $mediosValidosLimpios)) {
-                return false;
-            }
-
-            // Verificar que el valor sea numérico usando el parser inteligente
-            $valorParseado = $this->parsearValorNumerico($valor);
-            if ($valorParseado === null || $valorParseado < 0) {
+                $valorParseado = $this->parsearValorNumerico($valor);
+                if ($valorParseado === null || $valorParseado < 0) {
+                    return false;
+                }
+            } else {
                 return false;
             }
         }

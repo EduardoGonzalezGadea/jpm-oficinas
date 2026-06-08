@@ -15,6 +15,7 @@ class Update extends Component
     public $retira_nro_documento;
     public $retira_telefono;
     public $numero_recibo;
+    public $monto;
     public $retiraEsTitular = false;
     public $certificado;
 
@@ -63,6 +64,7 @@ class Update extends Component
             'retira_nro_documento' => 'required|string|max:255',
             'retira_telefono' => 'nullable|string|max:255',
             'numero_recibo' => 'nullable|string|max:255',
+            'monto' => 'nullable|numeric|min:0',
         ]);
 
         $certificado = CertificadoResidencia::find($this->certificado_id);
@@ -75,6 +77,7 @@ class Update extends Component
             'retira_nro_documento' => $this->retira_nro_documento,
             'retira_telefono' => $this->retira_telefono,
             'numero_recibo' => $this->numero_recibo,
+            'monto' => $this->monto,
             'estado' => 'Entregado',
         ]);
 
@@ -107,6 +110,7 @@ class Update extends Component
         $this->retira_nro_documento = '';
         $this->retira_telefono = '';
         $this->numero_recibo = '';
+        $this->monto = '';
         $this->retiraEsTitular = false;
     }
 }

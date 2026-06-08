@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Blade;
 use Livewire\Livewire;
 
 use Illuminate\Pagination\Paginator;
@@ -41,5 +42,14 @@ class AppServiceProvider extends ServiceProvider
         }
 
         // Registrar componentes Livewire manualmente
+
+        // Blade directives para formateo Uruguay
+        Blade::directive('money', function ($expression) {
+            return "<?php echo \\App\\Helpers\\FormatHelper::moneyUyu({$expression}); ?>";
+        });
+
+        Blade::directive('urudate', function ($expression) {
+            return "<?php echo \\App\\Helpers\\FormatHelper::dateUy({$expression}); ?>";
+        });
     }
 }

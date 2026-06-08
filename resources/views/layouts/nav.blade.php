@@ -16,11 +16,14 @@
                     data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                     <i class="fas fa-dollar-sign mr-2"></i>Tesorería
                 </a>
-                <div class="dropdown-menu" aria-labelledby="navbarDropdownTesoreria">
+                <div class="dropdown-menu dropdown-menu-columns" aria-labelledby="navbarDropdownTesoreria">
 
                     {{-- Artículos de Multas de Tránsito (siempre al inicio) --}}
                     <a class="dropdown-item" href="{{ route('tesoreria.multas-transito') }}">
                         <i class="fas fa-list"></i> Artículos de Multas de Tránsito
+                    </a>
+                    <a class="dropdown-item" href="{{ route('tesoreria.multas-303-2023') }}">
+                        <i class="fas fa-list-alt mr-2"></i> Multas CPT Dec. 303/2023
                     </a>
                     {{-- Link Multas Cobradas (segunda opción) --}}
                     <a class="dropdown-item" href="{{ route('tesoreria.multas-cobradas.index') }}">
@@ -48,6 +51,7 @@
                     <a class="dropdown-item" href="{{ route('tesoreria.arrendamientos.index') }}">
                         <i class="fas fa-file-signature mr-2"></i> Arrendamientos
                     </a>
+
                     {{-- Link Caja Chica --}}
                     <a class="dropdown-item" href="{{ route('tesoreria.caja-chica.index') }}" wire:navigate>
                         <i class="fas fa-coins mr-2"></i>Caja Chica
@@ -76,6 +80,13 @@
                     <a class="dropdown-item" href="{{ route('tesoreria.valores.index') }}">
                         <i class="fas fa-barcode mr-2"></i> Valores
                     </a>
+                    {{-- Reporte de Recibos (solo roles superiores) --}}
+                    @if(auth()->user()->hasAnyRole(['administrador', 'gerente_tesoreria', 'supervisor_tesoreria']))
+                    <div class="dropdown-divider"></div>
+                    <a class="dropdown-item" href="{{ route('tesoreria.reporte-recibos.index') }}">
+                        <i class="fas fa-clipboard-list mr-2 text-danger"></i> <strong>Reporte de Recibos</strong>
+                    </a>
+                    @endif
                 </div>
             </li>
             @endcan
@@ -87,7 +98,7 @@
                     data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                     <i class="fas fa-cogs mr-2"></i>Sistema
                 </a>
-                <div class="dropdown-menu" aria-labelledby="navbarDropdownSistema">
+                <div class="dropdown-menu dropdown-menu-columns dropdown-menu-right" aria-labelledby="navbarDropdownSistema">
                     @can('administrar_sistema', 'web')
                     <div class="dropdown-submenu submenu-left">
                         <a class="dropdown-item dropdown-toggle" href="#">
@@ -120,20 +131,19 @@
                             <a class="dropdown-item" href="{{ route('tesoreria.configuracion.medios-de-pago.index') }}">
                                 <i class="fas fa-credit-card mr-2"></i>Medios de Pago
                             </a>
-                            <a class="dropdown-item"
-                                href="{{ route('tesoreria.configuracion.tes-tipos-monedas.index') }}">
+                            <a class="dropdown-item" href="{{ route('tesoreria.configuracion.tes-tipos-monedas.index') }}">
                                 <i class="fas fa-money-bill-wave mr-2"></i>Tipos de Monedas
                             </a>
-                            <a class="dropdown-item"
-                                href="{{ route('tesoreria.configuracion.tes-denominaciones-monedas.index') }}">
+                            <a class="dropdown-item" href="{{ route('tesoreria.configuracion.tes-denominaciones-monedas.index') }}">
                                 <i class="fas fa-coins mr-2"></i>Denominaciones
                             </a>
                             <a class="dropdown-item" href="{{ route('tesoreria.bancos.index') }}">
-                                <i class="fas fa-tags mr-2"></i>Bancos
+                                <i class="fas fa-university mr-2"></i>Bancos
                             </a>
                             <a class="dropdown-item" href="{{ route('tesoreria.cuentas-bancarias.index') }}">
-                                <i class="fas fa-credit-card mr-2"></i>Cuentas Bancarias
+                                <i class="fas fa-money-check mr-2"></i>Cuentas Bancarias
                             </a>
+
                         </div>
                     </div>
                     <div class="dropdown-divider"></div>
@@ -232,7 +242,7 @@
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Prevenir que el click en el toggle del submenu cierre el menú principal
+        /* Comentado para evitar conflictos con el hover premium de CSS
         document.querySelectorAll('.dropdown-submenu a.dropdown-toggle').forEach(function(element) {
             element.addEventListener('click', function(e) {
                 let nextEl = this.nextElementSibling;
@@ -245,6 +255,7 @@
                 e.preventDefault();
             });
         });
+        */
     });
 </script>
 @endpush

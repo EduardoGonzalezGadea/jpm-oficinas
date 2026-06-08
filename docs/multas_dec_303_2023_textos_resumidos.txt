@@ -1,0 +1,217 @@
+Multa de Tránsito - Cod. 2.2 Uso indebido de aceras por vehículos
+Multa de Tránsito - Cod. 2.3 Uso indebido de las banquinas
+Multa de Tránsito - Cod. 2.6 Competencias vehiculares no autorizadas
+Multa de Tránsito - Cod. 3.1.1 Conducir sin licencia o tenerla suspendida
+Multa de Tránsito - Cod. 3.1.2 Licencia vencida o de categoría incorrecta
+Multa de Tránsito - Cod. 3.13 No comunicar cambio domicilio
+Multa de Tránsito - Cod. 3.3 Discapacitado sin vehículo adaptado
+Multa de Tránsito - Cod. 4.1.1 No exhibir documentación obligatoria
+Multa de Tránsito - Cod. 4.1.2 No portar documentación obligatoria
+Multa de Tránsito - Cod. 4.2.1 Conducir ebrio o rehusarse a espirometría
+Multa de Tránsito - Cod. 4.2.2 Conducir bajo drogas o rehusarse a examen
+Multa de Tránsito - Cod. 4.3.1 No respetar señalamiento
+Multa de Tránsito - Cod. 4.3.2 No respetar indicaciones del personal inspectivo
+Multa de Tránsito - Cod. 4.4.1 Conducir con imprudencia
+Multa de Tránsito - Cod. 4.4.2 Conducir usando el celular
+Multa de Tránsito - Cod. 4.5 Reparar vehículo en vía pública
+Multa de Tránsito - Cod. 4.6 Cargar combustible con motor encendido
+Multa de Tránsito - Cod. 4.7 Conducir sin cuidado o atención a los peatones
+Multa de Tránsito - Cod. 4.8 Conductor o pasajeros no usan cinturón de seguridad
+Multa de Tránsito - Cod. 4.9.1 Menor de 12 años en asiento delantero
+Multa de Tránsito - Cod. 4.9.2 Menor de 12 años sin silla infantil
+Multa de Tránsito - Cod. 4.10 Transportar pasajeros de pie
+Multa de Tránsito - Cod. 4.11 Circular sin inspección técnica vehicular
+Multa de Tránsito - Cod. 5.2a Circular con vehículo sin empadronar
+Multa de Tránsito - Cod. 5.2b No declarar transferencia o cambios del vehículo
+Multa de Tránsito - Cod. 6.1 Ancho de los vehículos antirreglamentario
+Multa de Tránsito - Cod. 6.2 Altura del vehículo antirreglamentario
+Multa de Tránsito - Cod. 6.3 Longitud del vehículo antirreglamentario
+Multa de Tránsito - Cod. 6.4 Vehículos con salientes
+Multa de Tránsito - Cod. 7.1 Carecer de faros delanteros reglamentarios
+Multa de Tránsito - Cod. 7.1a Carecer de luz baja o no funciona
+Multa de Tránsito - Cod. 7.1b Carecer de luz alta o no funciona
+Multa de Tránsito - Cod. 7.3.1 Luz de posición delantera ausente o rota
+Multa de Tránsito - Cod. 7.3.2 Luz de posición trasera ausente o rota
+Multa de Tránsito - Cod. 7.3.4 Altura inadecuada de focos delanteros o traseros
+Multa de Tránsito - Cod. 7.3.5 Carecer de luz de matrícula o no funciona
+Multa de Tránsito - Cod. 7.4 Carecer de reflectantes traseros
+Multa de Tránsito - Cod. 7.5 Carecer de luz de frenado o no funciona
+Multa de Tránsito - Cod. 7.6 Carecer de luz de giro o no funciona
+Multa de Tránsito - Cod. 7.7a Luz de gálibo delantera ausente o rota
+Multa de Tránsito - Cod. 7.7b Luz de gálibo trasera ausente o rota
+Multa de Tránsito - Cod. 7.7c Luces demarcadoras laterales rotas o ausentes
+Multa de Tránsito - Cod. 7.7d Carecer de reflectantes laterales
+Multa de Tránsito - Cod. 7.7e Carecer de reflectantes de gálibo posteriores
+Multa de Tránsito - Cod. 7.8 Luces de identificación no reglamentarias
+Multa de Tránsito - Cod. 7.9 Color de luces o reflectantes antirreglamentario
+Multa de Tránsito - Cod. 7.10 Instalación incorrecta de luces y reflectantes
+Multa de Tránsito - Cod. 7.11 Luces y reflectantes antirreglamentarios
+Multa de Tránsito - Cod. 7.14a Señalización incorrecta de carga saliente
+Multa de Tránsito - Cod. 7.14b Sin reflectivos o luces en carga nocturna
+Multa de Tránsito - Cod. 7.15a Faros antiniebla incorrectos o mal usados
+Multa de Tránsito - Cod. 7.15b Uso indebido de faros complementarios
+Multa de Tránsito - Cod. 7.15c Usar lámpara de cortesía no reglamentaria
+Multa de Tránsito - Cod. 7.15d Usar luces de reversa no reglamentaria
+Multa de Tránsito - Cod. 7.15e Carecer de luces de advertencia o no funcionan
+Multa de Tránsito - Cod. 7.16a Falta de luz o giro delantero en moto
+Multa de Tránsito - Cod. 7.16b Falta de luces traseras en moto
+Multa de Tránsito - Cod. 7.19 Mala señalización en transporte peligroso
+Multa de Tránsito - Cod. 7.20b Usar luces altas en calles y avenidas.
+Multa de Tránsito - Cod. 7.21 No utilizar luces de estacionamiento
+Multa de Tránsito - Cod. 7.22 Falta de balizas reglamentarias
+Multa de Tránsito - Cod. 7.23b No utilizar balizas en detención de emergencia
+Multa de Tránsito - Cod. 7.25 Vehículo de emergencia sin luces de alerta
+Multa de Tránsito - Cod. 7.26 Maquinaria sin luces de advertencia
+Multa de Tránsito - Cod. 7.Artículo 30 No usar luces cortas permanentemente
+Multa de Tránsito - Cod. 8.1 Frenos deficientes o mal conservados
+Multa de Tránsito - Cod. 8.2a Falta de frenos de servicio o mal estado
+Multa de Tránsito - Cod. 8.2b Freno de mano ausente o no funciona
+Multa de Tránsito - Cod. 8.3a Frenos de servicio de remolque deficientes
+Multa de Tránsito - Cod. 8.3b Freno de mano de remolque deficiente
+Multa de Tránsito - Cod. 8.4 Frenos de servicio de remolque ausentes
+Multa de Tránsito - Cod. 8.5 Trenes de vehículos sin frenos adecuados
+Multa de Tránsito - Cod. 8.6 Falta de frenos en ambas ruedas de moto
+Multa de Tránsito - Cod. 8.7 Carecer de sistema de frenos (otros vehículos)
+Multa de Tránsito - Cod. 8.68.10.- Frenos Bicicleta
+Multa de Tránsito - Cod. 8.8 Manómetro o advertencia de freno de aire roto
+Multa de Tránsito - Cod. 9.1.1 Carecer de bocina o no funciona
+Multa de Tránsito - Cod. 9.1.2 Usar indebidamente aparatos sonoros
+Multa de Tránsito - Cod. 9.2 Usar indebidamente la bocina
+Multa de Tránsito - Cod. 10.2 Carecer de silenciador o no funciona
+Multa de Tránsito - Cod. 10.3 Emitir contaminantes en forma excesiva
+Multa de Tránsito - Cod. 10.6 Carecer de amortiguadores o son defectuosos
+Multa de Tránsito - Cod. 10.7 Carecer de guardabarros
+Multa de Tránsito - Cod. 10.8.1 Cubiertas en mal estado o desgastada
+Multa de Tránsito - Cod. 10.8.2 Falta de cubierta auxiliar
+Multa de Tránsito - Cod. 10.10.1 Bandas de rodamiento metálico con puntas
+Multa de Tránsito - Cod. 10.10.2 Vehículo con rodamiento metálico no permitido
+Multa de Tránsito - Cod. 10.11 Cierre inseguro de tapa de motor y maletero
+Multa de Tránsito - Cod. 10.12 Falta de para golpe trasero o delantero
+Multa de Tránsito - Cod. 10.13.1 Falta placa matrícula o ilegible
+Multa de Tránsito - Cod. 10.13.2 Placa matrícula deteriorada
+Multa de Tránsito - Cod. 10.14 Elementos exteriores o internos salientes
+Multa de Tránsito - Cod. 10.15 Dirección deficiente o no funciona
+Multa de Tránsito - Cod. 10.16.1 Falta espejo retrovisor plano
+Multa de Tránsito - Cod. 10.16.2 Carecer de ambos espejos reglamentarios
+Multa de Tránsito - Cod. 10.17 Letreros/adhesivos perjudican la visión
+Multa de Tránsito - Cod. 10.18 Carecer de limpiaparabrisas o no funciona
+Multa de Tránsito - Cod. 10.20a Asientos no anclados o sin respaldo
+Multa de Tránsito - Cod. 10.20b Carecer de visera rebatible
+Multa de Tránsito - Cod. 10.20c Carecer de luz interior o no funciona
+Multa de Tránsito - Cod. 10.20d Falta de cinturón o apoyacabeza reglamentario
+Multa de Tránsito - Cod. 10.21 Carecer de tablero de comando o no funciona.
+Multa de Tránsito - Cod. 10.22 Carecer de extintor en condiciones
+Multa de Tránsito - Cod. 10.24 Circular sin botiquín de primeros auxilios
+Multa de Tránsito - Cod. 10.68.9.- Birrodado sin luces o espejos obligatorios
+Multa de Tránsito - Cod. 10.68.11.- Bicicleta sin Timbre
+Multa de Tránsito - Cod. 12.1 No circular por la derecha
+Multa de Tránsito - Cod. 12.2 Uso incorrecto de sendas de circulación
+Multa de Tránsito - Cod. 12.3.1 Uso más de una senda de circulación
+Multa de Tránsito - Cod. 12.3.2 Ir lento por la senda izquierda
+Multa de Tránsito - Cod. 12.5 No mantener la derecha al cruzarse
+Multa de Tránsito - Cod. 12.7 Circulación incorrecta en rotondas
+Multa de Tránsito - Cod. 12.8 Circular sobre marcas delimitadoras o isletas
+Multa de Tránsito - Cod. 12.9 No mantener distancia de circulación
+Multa de Tránsito - Cod. 12.1 Seguir vehículos de emergencia
+Multa de Tránsito - Cod. 12.11 Circular en caravana
+Multa de Tránsito - Cod. 12.68.13.- Bicicletas de carrera en vía no autorizada
+Multa de Tránsito - Cod. 13.1 Conducción imprudente o desatenta
+Multa de Tránsito - Cod. 13.3 Superar las velocidades máximas permitidas
+Multa de Tránsito - Cod. 13.6 Conducir a velocidades inferiores a la mínima
+Multa de Tránsito - Cod. 13.7 Reducción brusca e innecesaria de velocidad
+Multa de Tránsito - Cod. 14.1.1 Adelantar por la derecha
+Multa de Tránsito - Cod. 14.1.2 No señalizar maniobra de adelantamiento
+Multa de Tránsito - Cod. 14.1.3 Adelantar en zona no permitida
+Multa de Tránsito - Cod. 14.2 No ceder paso al ser adelantado
+Multa de Tránsito - Cod. 14.3 No ceder mitad de camino al que adelanta
+Multa de Tránsito - Cod. 14.4 Vehículo pesado obstaculiza adelantamiento
+Multa de Tránsito - Cod. 14.5 Adelantar en banquinas
+Multa de Tránsito - Cod. 14.6 Adelantamiento no permitido en vías de 2 sentidos
+Multa de Tránsito - Cod. 14.7 Adelantar en intersecciones
+Multa de Tránsito - Cod. 14.8 Adelantar invadiendo senda contraria
+Multa de Tránsito - Cod. 14.9 Adelantar en cruce peatonal
+Multa de Tránsito - Cod. 15.2 No respetar preferencia de la derecha
+Multa de Tránsito - Cod. 15.3.1 No respetar cartel de Pare
+Multa de Tránsito - Cod. 15.3.2 No respetar cartel Ceda el Paso
+Multa de Tránsito - Cod. 15.4 No respetar señales luminosas
+Multa de Tránsito - Cod. 15.5 No respetar preferencia en vía rural principal
+Multa de Tránsito - Cod. 15.6 No respetar prioridad del vehículo en cruce
+Multa de Tránsito - Cod. 15.7 No dar preferencia en cambio dirección o sentido
+Multa de Tránsito - Cod. 15.8 No dar preferencia al ingreso o egreso vía pública
+Multa de Tránsito - Cod. 15.9.1 No dar preferencia a peatón en cruce señalizado
+Multa de Tránsito - Cod. 15.9.2 No dar preferencia a peatón en intersección
+Multa de Tránsito - Cod. 15.1 No dar preferencia al salir de rotonda
+Multa de Tránsito - Cod. 15.11 No dar preferencia a vehículo de emergencia
+Multa de Tránsito - Cod. 16.1 No señalizar o ubicarse para giro izquierdo
+Multa de Tránsito - Cod. 16.2 No señalizar o ubicarse para giro derecho
+Multa de Tránsito - Cod. 16.3 No respetar sendas especiales para giros
+Multa de Tránsito - Cod. 16.4 Inversión de sentido de marcha en forma imprudente
+Multa de Tránsito - Cod. 16.5 No respetar giros o inversiones circunstanciales
+Multa de Tránsito - Cod. 16.6 No señalizar cambio de senda o giro
+Multa de Tránsito - Cod. 16.7 Utilización incorrecta de señales
+Multa de Tránsito - Cod. 17.1 Vehículo especial circula sin autorización
+Multa de Tránsito - Cod. 17.2 Circular marcha atrás innecesariamente
+Multa de Tránsito - Cod. 17.3 Remolque inadecuado de vehículos
+Multa de Tránsito - Cod. 17.4 Circular con personas en remolques
+Multa de Tránsito - Cod. 17.5 No dar preferencia a tropas
+Multa de Tránsito - Cod. 17.6 Circulación incorrecta de máquina agrícola
+Multa de Tránsito - Cod. 18.1.1 Estacionar a contramano
+Multa de Tránsito - Cod. 18.1.2 Estacionar muy lejos del cordón
+Multa de Tránsito - Cod. 18.1.3 No estacionar en paralelo
+Multa de Tránsito - Cod. 18.2.1 Estacionar en doble fila
+Multa de Tránsito - Cod. 18.2.2 Estacionar en intersección
+Multa de Tránsito - Cod. 18.2.3 Estacionar en cruce peatonal
+Multa de Tránsito - Cod. 18.2.4 Estacionar en puente, viaducto o paso nivel
+Multa de Tránsito - Cod. 18.2.5 Estacionar en curva o rasante poca visibilidad
+Multa de Tránsito - Cod. 18.2.6 Estacionar a menos de 10m de señales de Pare
+Multa de Tránsito - Cod. 18.2.7 Estacionar en parada de transporte colectivo
+Multa de Tránsito - Cod. 18.2.8 Estacionar en entrada a inmueble
+Multa de Tránsito - Cod. 18.2.9 Estacionar junto a canteros o islas
+Multa de Tránsito - Cod. 18.3 Estacionar carreteras y caminos
+Multa de Tránsito - Cod. 18.4 Arrancar de forma insegura o sin señal
+Multa de Tránsito - Cod. 18.5 Apertura indebida de puertas
+Multa de Tránsito - Cod. 18.6 Estacionar ómnibus en sitio prohibido
+Multa de Tránsito - Cod. 18.7 Estacionar en condiciones inadecuadas
+Multa de Tránsito - Cod. 18.8 Carga y descarga obstruyendo el tránsito
+Multa de Tránsito - Cod. 18.9.1 Estacionar en lugar prohibido o regulado
+Multa de Tránsito - Cod. 18.9.2 Estacionado sin abonar tarifa
+Multa de Tránsito - Cod. 18.9.3 Estacionado con tiempo abonado excedido
+Multa de Tránsito - Cod. 19.1 Cruzar paso a nivel sin barreras precauciones
+Multa de Tránsito - Cod. 19.2 Cruzar paso a nivel con barreras bajas
+Multa de Tránsito - Cod. 19.3 Realizar cambio de marcha al cruzar vía férrea
+Multa de Tránsito - Cod. 20.2 Conducir vehículos de emergencia sin precaución
+Multa de Tránsito - Cod. 21.2.1 Conducir birrodados sin pleno dominio
+Multa de Tránsito - Cod. 21.2.2 Llevar acompañante en birrodado no habilitado
+Multa de Tránsito - Cod. 21.2.3 Llevar carga molesta en birrodado
+Multa de Tránsito - Cod. 21.2.4 Llevar remolque en birrodado no habilitado
+Multa de Tránsito - Cod. 21.2.5 Birrodado agarrado a otro vehículo en marcha
+Multa de Tránsito - Cod. 21.3.1 Circular sin casco en moto o bicicleta
+Multa de Tránsito - Cod. 21.3.2 Motos circulando entre filas de autos
+Multa de Tránsito - Cod. 21.4 Ciclistas deportivos sin lentes protectores
+Multa de Tránsito - Cod. 21.7 Menor no alcanza posa pie
+Multa de Tránsito - Cod. 21.8 No usar prendas retroreflectivas obligatorias
+Multa de Tránsito - Cod. 21.68.8.- Ciclista sin casco de seguridad
+Multa de Tránsito - Cod. 22.2 Circular con carga acondicionada indebidamente
+Multa de Tránsito - Cod. 22.3 Circular con carga saliente en exceso
+Multa de Tránsito - Cod. 22.4 Llevar pasajeros en la caja del vehículo
+Multa de Tránsito - Cod. 22.5.3 Mala señalización de carga peligrosa
+Multa de Tránsito - Cod. 22.5.4 Falta de descarga a tierra en camión tanque
+Multa de Tránsito - Cod. 22.6 Fumar o llevar objetos sueltos con explosivos
+Multa de Tránsito - Cod. 22.7 Transporte inflamable/explosivo con acoplado
+Multa de Tránsito - Cod. 22.8 Transporte de cargas peligrosas no autorizada
+Multa de Tránsito - Cod. 22.9 Aparcar transporte explosivo en zona poblada
+Multa de Tránsito - Cod. 22.1 Transporte animal inadecuado o derrame
+Multa de Tránsito - Cod. 22.11 Transporte sucio o contaminante no hermético
+Multa de Tránsito - Cod. 22.12 Cargar ganado o bultos sin permiso en la vía
+Multa de Tránsito - Cod. 22.13 Vehículo de carga sin matrícula lateral
+Multa de Tránsito - Cod. 22.14 Circular con acoplado demasiado ancho
+Multa de Tránsito - Cod. 22.15 Enganche de acoplado no reglamentario
+Multa de Tránsito - Cod. 22.16 Cantidad inapropiada ejes en acoplado
+Multa de Tránsito - Cod. 22.17 Tren de vehículos circular sin autorización
+Multa de Tránsito - Cod. 24.3 Dañar o alterar señales tránsito
+Multa de Tránsito - Cod. 25.1 No retirar rápido obstáculos de la vía
+Multa de Tránsito - Cod. 25.2 Tirar objetos dañinos en la vía pública
+Multa de Tránsito - Cod. 25.8 Instalar carteles o señales sin permiso
+Multa de Tránsito - Cod. 26.1 No cooperar o huir en siniestro de tránsito
+Multa de Tránsito - Cod. 27.1 Circular sin seguro obligatorio SOA vigente
+Multa de Tránsito - Cod. 28.1 Dejar animales sueltos en la vía pública

@@ -5,24 +5,6 @@
         <span>Tesorería</span>
     </a>
     <div class="dropdown-menu">
-        <!-- Cajas -->
-        <div class="dropdown-submenu">
-            <a class="dropdown-item dropdown-toggle" href="#" data-toggle="dropdown">
-                <i class="fas fa-cash-register"></i> Cajas
-            </a>
-            <div class="dropdown-menu">
-                <a class="dropdown-item" href="{{ route('cajas.apertura-cierre') }}">
-                    <i class="fas fa-door-open"></i> Apertura/Cierre
-                </a>
-                <a class="dropdown-item" href="{{ route('cajas.movimientos') }}">
-                    <i class="fas fa-exchange-alt"></i> Movimientos
-                </a>
-                <a class="dropdown-item" href="{{ route('cajas.arqueo') }}">
-                    <i class="fas fa-balance-scale"></i> Arqueo
-                </a>
-            </div>
-        </div>
-
         <!-- Caja Chica -->
         <a class="dropdown-item" href="{{ route('caja-chica.index') }}">
             <i class="fas fa-box"></i> Caja Chica

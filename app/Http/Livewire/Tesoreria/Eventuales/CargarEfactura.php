@@ -35,10 +35,12 @@ class CargarEfactura extends Component
                 'titular' => $data['titular'] ?? ($data['receptor_nombre'] ?? ''),
                 'fecha' => $data['fecha'] ?? '',
                 'monto' => $data['monto'] ?? 0.0,
-                'medio_de_pago' => $data['medio_de_pago'] ?? '',
+                'medio_de_pago' => $this->normalizarMedioPago($data['medio_de_pago'] ?? ''),
                 'detalle' => $data['detalle'] ?? '',
                 'orden_cobro' => $data['orden_cobro'] ?? '',
                 'recibo' => $data['recibo'] ?? (($data['serie'] ?? '') . ($data['numero'] ?? '')),
+                'ingreso' => $data['ingreso'] ?? '',
+                'institucion' => $data['institucion'] ?? $this->detectarInstitucion($data['titular'] ?? ($data['receptor_nombre'] ?? '')),
             ];
 
             \Illuminate\Support\Facades\Cache::forget('cfe_prefill_' . $prefillId);
@@ -51,13 +53,15 @@ class CargarEfactura extends Component
 
             // Mapear campos genéricos a lo que espera este Livewire
             $this->datosExtraidos = [
-                'titular' => $data['receptor_nombre'] ?? '',
+                'titular' => $data['receptor_nombre'] ?? $data['titular'] ?? '',
                 'fecha' => $data['fecha'] ?? '',
                 'monto' => $data['monto'] ?? 0.0,
-                'medio_de_pago' => '',
+                'medio_de_pago' => $this->normalizarMedioPago($data['medio_de_pago'] ?? ''),
                 'detalle' => $data['detalle'] ?? '',
-                'orden_cobro' => '',
-                'recibo' => ($data['serie'] ?? '') . ($data['numero'] ?? ''),
+                'orden_cobro' => $data['orden_cobro'] ?? '',
+                'recibo' => $data['recibo'] ?? (($data['serie'] ?? '') . ($data['numero'] ?? '')),
+                'ingreso' => $data['ingreso'] ?? '',
+                'institucion' => $data['institucion'] ?? $this->detectarInstitucion($data['receptor_nombre'] ?? $data['titular'] ?? ''),
             ];
 
             // Limpiar sesión después de cargar
@@ -81,151 +85,112 @@ class CargarEfactura extends Component
             $pdf = $parser->parseFile($this->archivo->getRealPath());
             $text = $pdf->getText();
 
-            // Análisis del texto para extraer datos de eFactura
-            $this->datosExtraidos = $this->parsearTextoEfactura($text);
+            // Usar el extractor especializado para obtener datos robustos
+            $extractor = new \App\Services\CfeExtractor\EventualesExtractor();
+            $data = $extractor->extraer($text);
 
-            if (empty($this->datosExtraidos)) {
-                $this->mensajeError = "No se pudieron extraer datos del archivo. Asegúrate de que es una eFactura válida.";
+            if (empty($data['recibo']) && empty($data['titular'])) {
+                $this->mensajeError = "No se pudieron extraer datos del archivo. Asegúrate de que es una eFactura válida de eventuales.";
+                return;
             }
+
+            $this->datosExtraidos = [
+                'titular' => $data['titular'] ?? '',
+                'fecha' => $data['fecha'] ?? '',
+                'monto' => $data['monto'] ?? 0.0,
+                'medio_de_pago' => $this->normalizarMedioPago($data['medio_de_pago'] ?? ''),
+                'detalle' => $data['detalle'] ?? '',
+                'orden_cobro' => $data['orden_cobro'] ?? '',
+                'recibo' => $data['recibo'] ?? '',
+                'ingreso' => $data['ingreso'] ?? '',
+                'institucion' => $this->detectarInstitucion($data['titular'] ?? ''),
+            ];
         } catch (\Exception $e) {
             $this->mensajeError = "Error al procesar el PDF: " . $e->getMessage();
         }
     }
 
-    private function parsearTextoEfactura($text)
+    /**
+     * Normaliza el medio de pago asociándolo con un registro activo de la base de datos.
+     */
+    private function normalizarMedioPago(string $medioTexto): string
     {
-        $datos = [
-            'titular' => '',
-            'fecha' => '',
-            'monto' => 0.0,
-            'medio_de_pago' => '',
-            'detalle' => '',
-            'orden_cobro' => '',
-            'recibo' => '',
-        ];
-
-        // 1. Serie y Número (Recibo)
-        // Ejemplo: SERIENÚMERO ... \n A 2688
-        if (preg_match('/SERIENÚMERO[^\n]*\n\s*([A-Z]+)\s+(\d+)/i', $text, $matches)) {
-            $datos['recibo'] = $matches[1] . $matches[2];
+        $texto = mb_strtoupper(trim($medioTexto), 'UTF-8');
+        if (empty($texto)) {
+            $predeterminado = MedioDePago::activos()->where('nombre', 'like', '%Transferencia%')->first();
+            return $predeterminado ? mb_strtoupper($predeterminado->nombre, 'UTF-8') : 'TRANSFERENCIA';
         }
 
-        // 2. Fecha
-        if (preg_match('/FECHA\s+MONEDA\s*\n\s*(\d{2}\/\d{2}\/\d{4})/i', $text, $matches)) {
-            $datos['fecha'] = $matches[1];
-        }
+        $medios = MedioDePago::activos()->get();
 
-        // 3. Titular (Nombre o Denominación)
-        // Captura líneas entre "NOMBRE O DENOMINACIÓN DOMICILIO FISCAL" y "PERIODO" o "FECHA"
-        if (preg_match('/NOMBRE O DENOMINACIÓN DOMICILIO FISCAL\s*\n\s*(.*?)(?=\s*\n\s*(?:PERIODO|FECHA|DETALLE DESCRIPCIÓN|$))/is', $text, $matches)) {
-            $lines = explode("\n", trim($matches[1]));
-            // Generalmente el nombre está en las primeras 2 líneas, luego sigue la dirección
-            // Intentamos limpiar: si una línea empieza con calle/número o algo similar, paramos.
-            // Para ser simple y efectivo, tomamos las 2 primeras líneas si existen y no lucen como dirección.
-            $nombreLines = [];
-            foreach ($lines as $line) {
-                $line = trim($line);
-                if (empty($line)) continue;
-                // Si la línea parece dirección (números al final o palabras como Apto, Esq, etc), paramos de capturar para el nombre
-                if (preg_match('/\d+/', $line) && !preg_match('/[A-Z]{3,}/', $line)) break;
-                if (count($nombreLines) >= 2) break;
-                $nombreLines[] = $line;
-            }
-            $datos['titular'] = implode(' ', $nombreLines);
-        }
-
-        // 4. Medio de Pago y Monto
-        // medio de pago será igual al texto que aparece debajo de TOTAL A PAGAR (sin los dos puntos finales) si existe
-        if (preg_match('/TOTAL A PAGAR:\s*[\d\.,]+\s*\n\s*([^:]+):\s*([\d\.,]+)/i', $text, $matches)) {
-            $datos['medio_de_pago'] = trim($matches[1]);
-            $datos['monto'] = $matches[2];
-        } else {
-            // Si no existe texto específico debajo con monto, buscamos TOTAL A PAGAR
-            if (preg_match('/TOTAL A PAGAR:\s*([\d\.,]+)/i', $text, $matches)) {
-                $datos['monto'] = $matches[1];
-            }
-
-            // Y buscamos cualquier texto con "Transferencia" para medio_de_pago
-            if (preg_match('/(Transferencia[^\n:]*)/i', $text, $matches)) {
-                $datos['medio_de_pago'] = trim($matches[1]);
+        // 1. Coincidencia exacta con nombre
+        foreach ($medios as $medio) {
+            $nombreUpper = mb_strtoupper($medio->nombre, 'UTF-8');
+            if ($texto === $nombreUpper) {
+                return $nombreUpper;
             }
         }
 
-        // 5. Orden de Cobro
-        // Referencia luego del texto eFactura, hasta el siguiente espacio en blanco
-        // Buscamos específicamente debajo de REFERENCIAS
-        if (preg_match('/REFERENCIAS:.*?(?:e-?Factura|eFactura)\s+([A-Z0-9]+)/is', $text, $matches)) {
-            $datos['orden_cobro'] = $matches[1];
+        // 2. Coincidencia por subcadena de nombre
+        foreach ($medios as $medio) {
+            $nombreUpper = mb_strtoupper($medio->nombre, 'UTF-8');
+            if (str_contains($texto, $nombreUpper) || str_contains($nombreUpper, $texto)) {
+                return $nombreUpper;
+            }
         }
 
-        // 6. Detalle
-        // Concatenación de ítems: detalle (descripción). Separado por /
-        if (preg_match('/DETALLE DESCRIPCIÓN CANT\. PRECIO DESC\. REC\. IMPORTE\s*\n\s*(.*?)(?=\s*\n\s*(?:MONTO NO FACTURABLE|MONTO TOTAL|TOTAL A PAGAR|IVA|$))/is', $text, $matches)) {
-            $detalleBlock = $matches[1];
-            $lines = explode("\n", $detalleBlock);
-            $items = [];
-            $currentItem = "";
-            $currentDesc = [];
-
-            foreach ($lines as $line) {
-                $line = trim($line);
-                if (empty($line)) continue;
-
-                // Patrón para detectar la línea que contiene los montos (CANT, PRECIO, IMPORTE)
-                // Ejemplo: 32,000 (Hora) 72,74 2.327,68 o Aguinaldo Policias Eventuales 1,000 (Func) 6.387,65 25.550,60
-                if (preg_match('/^(.*?)\s*([\d\.,]+\s*\([^\)]+\)\s*[\d\.,]+\s*[\d\.,]+)$/i', $line, $itemMatches)) {
-                    $textBefore = trim($itemMatches[1]);
-
-                    // Si hay texto en la misma línea que los montos, intentamos separar Detalle de Descripción
-                    // Usualmente por tabulación o múltiples espacios
-                    if (preg_match('/^(.*?)(?:\s{2,}|\t)(.*)$/', $textBefore, $parts)) {
-                        $detalle = trim($parts[1]);
-                        $descripcion = trim($parts[2]);
-                    } else {
-                        $detalle = $textBefore;
-                        $descripcion = "";
-                    }
-
-                    if (empty($currentItem)) {
-                        // Caso: Todo está en una sola línea
-                        $itemFinal = $detalle . ($descripcion ? " ($descripcion)" : "");
-                    } else {
-                        // Caso: El ítem comenzó en líneas anteriores
-                        $descAcumulada = implode(' ', $currentDesc);
-
-                        // Combinamos lo recolectado
-                        // Si hay $detalle, se suma a la descripción o se trata como parte del ítem
-                        $descFull = trim($descAcumulada . " " . $detalle . " " . $descripcion);
-                        $itemFinal = $currentItem . ($descFull ? " ($descFull)" : "");
-                    }
-
-                    if (!empty($itemFinal)) {
-                        $items[] = trim($itemFinal);
-                    }
-
-                    // Resetear para el próximo ítem
-                    $currentItem = "";
-                    $currentDesc = [];
-                } else {
-                    // Texto que no contiene montos (puede ser el nombre del ítem o parte de la descripción)
-                    if (empty($currentItem)) {
-                        $currentItem = $line;
-                    } else {
-                        $currentDesc[] = $line;
-                    }
-                }
+        // 3. Coincidencia por descripción
+        foreach ($medios as $medio) {
+            $descUpper = mb_strtoupper($medio->descripcion ?? '', 'UTF-8');
+            if (!empty($descUpper) && (str_contains($texto, $descUpper) || str_contains($descUpper, $texto))) {
+                return mb_strtoupper($medio->nombre, 'UTF-8');
             }
-
-            // Si quedó algo pendiente por procesar (raro pero posible)
-            if (!empty($currentItem)) {
-                $descFull = implode(' ', $currentDesc);
-                $items[] = trim($currentItem . ($descFull ? " ($descFull)" : ""));
-            }
-
-            $datos['detalle'] = implode(' / ', $items);
         }
 
-        return $datos;
+        // Fallback predeterminado
+        $predeterminado = MedioDePago::activos()->where('nombre', 'like', '%Transferencia%')->first();
+        return $predeterminado ? mb_strtoupper($predeterminado->nombre, 'UTF-8') : 'TRANSFERENCIA';
+    }
+
+    /**
+     * Detecta la institución activa asociada a partir del nombre del titular.
+     */
+    private function detectarInstitucion(string $titular): ?string
+    {
+        $titularUpper = mb_strtoupper($titular, 'UTF-8');
+        if (empty($titularUpper)) {
+            return null;
+        }
+
+        if (str_contains($titularUpper, 'ESPAÑOL') || str_contains($titularUpper, 'ASSE') || str_contains($titularUpper, 'SERVICIOS DE SALUD DEL ESTADO')) {
+            return 'ASSE';
+        }
+        if (str_contains($titularUpper, 'INISA') || str_contains($titularUpper, 'INAU') || str_contains($titularUpper, 'NIÑO Y ADOLESCENTE')) {
+            return 'INAU';
+        }
+        if (str_contains($titularUpper, 'MIDES') || str_contains($titularUpper, 'DESARROLLO SOCIAL')) {
+            return 'MIDES';
+        }
+        if (str_contains($titularUpper, 'CLINICAS') || str_contains($titularUpper, 'CLÍNICAS')) {
+            return 'HOSPITAL CLÍNICAS';
+        }
+        if (str_contains($titularUpper, 'IMM') || str_contains($titularUpper, 'INTENDENCIA') || str_contains($titularUpper, 'MONTEVIDEO')) {
+            return 'IMM';
+        }
+        if (str_contains($titularUpper, 'MGAP') || str_contains($titularUpper, 'GANADERIA') || str_contains($titularUpper, 'GANADERÍA')) {
+            return 'MGAP';
+        }
+
+        // Intentar buscar coincidencia general con nombres de instituciones activas
+        $instituciones = EventualInstitucion::activas()->get();
+        foreach ($instituciones as $inst) {
+            $nombreUpper = mb_strtoupper($inst->nombre, 'UTF-8');
+            if (str_contains($titularUpper, $nombreUpper) || str_contains($nombreUpper, $titularUpper)) {
+                return $nombreUpper;
+            }
+        }
+
+        return null;
     }
 
     public function guardar()
@@ -235,7 +200,7 @@ class CargarEfactura extends Component
         try {
             DB::beginTransaction();
 
-            $monto = (float)str_replace(['.', ','], ['', '.'], $this->datosExtraidos['monto']);
+            $monto = (float)$this->datosExtraidos['monto'];
             $fecha = Carbon::createFromFormat('d/m/Y', $this->datosExtraidos['fecha'])->format('Y-m-d');
 
             // Verificar si ya existe el recibo en esa fecha
@@ -251,24 +216,16 @@ class CargarEfactura extends Component
                 return;
             }
 
-            // Normalizar medio de pago
-            $medioPago = mb_strtoupper($this->datosExtraidos['medio_de_pago'], 'UTF-8');
-            if (empty($medioPago) || !str_contains($medioPago, 'TRANSFERENCIA')) {
-                // Buscar predeterminado si es necesario
-                $predeterminado = MedioDePago::activos()->where('nombre', 'like', '%TRANSFERENCIA%')->first();
-                $medioPago = $predeterminado ? $predeterminado->nombre : 'TRANSFERENCIA BANCARIA';
-            }
-
             $nuevoEventual = Eventual::create([
                 'fecha' => $fecha,
-                'ingreso' => null,
-                'institucion' => null,
+                'ingreso' => !empty($this->datosExtraidos['ingreso']) ? (int)$this->datosExtraidos['ingreso'] : null,
+                'institucion' => !empty($this->datosExtraidos['institucion']) ? mb_strtoupper($this->datosExtraidos['institucion'], 'UTF-8') : null,
                 'titular' => mb_strtoupper($this->datosExtraidos['titular'], 'UTF-8'),
                 'monto' => $monto,
-                'medio_de_pago' => $medioPago,
+                'medio_de_pago' => mb_strtoupper($this->datosExtraidos['medio_de_pago'], 'UTF-8'),
                 'detalle' => mb_strtoupper($this->datosExtraidos['detalle'], 'UTF-8'),
-                'orden_cobro' => $this->datosExtraidos['orden_cobro'],
-                'recibo' => $this->datosExtraidos['recibo'],
+                'orden_cobro' => !empty($this->datosExtraidos['orden_cobro']) ? mb_strtoupper($this->datosExtraidos['orden_cobro'], 'UTF-8') : null,
+                'recibo' => mb_strtoupper($this->datosExtraidos['recibo'], 'UTF-8'),
                 'confirmado' => false,
             ]);
 

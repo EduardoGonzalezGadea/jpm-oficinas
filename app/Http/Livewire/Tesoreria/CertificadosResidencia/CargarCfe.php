@@ -168,9 +168,10 @@ class CargarCfe extends Component
             }
         }
 
-        // Teléfono (de info adicional)
-        if (preg_match('/(?:TEL\.?|TEL(?:E|É)FONO|CEL\.?)[\s:]*([\d][\d\s\-\/\.]{5,})/iu', $text, $matches)) {
-            $datos['telefono'] = trim($matches[1]);
+        // Teléfono: Buscar solo en INFORMACION ADICIONAL
+        if (preg_match('/INFORMACION ADICIONAL\s*(.*?)(?=\s*(?:PERIODO|FECHA|DETALLE|$))/isu', $text, $matchesInfo) &&
+            preg_match('/(?:TEL\.?|TEL(?:E|É)FONO|CEL\.?)[\s:]*([\d][\d\s\-\/\.]{5,})/iu', $matchesInfo[1], $matchesTel)) {
+            $datos['telefono'] = trim($matchesTel[1]);
         }
 
         // Extracción de Items (Detalle + Descripción)
@@ -195,7 +196,6 @@ class CargarCfe extends Component
                     $fullText = trim(preg_replace('/\s+/', ' ', $fullText));
 
                     // Buscar separador entre detalle y descripción
-                    // Los separadores pueden ser: tab, "CORRESPONDE A", o varios espacios
                     if (preg_match('/^(.*?)\t+(.*?)$/u', $fullText, $parts)) {
                         $datos['detalle'] = trim($parts[1]);
                         $datos['descripcion'] = trim($parts[2]);
@@ -224,12 +224,11 @@ class CargarCfe extends Component
         }
 
         // Detectar si la descripción contiene una cédula (del titular del certificado)
-        // Esto indica que otra persona retira el certificado
         if (!empty($datos['descripcion'])) {
             if (preg_match('/([\d][\d\.]{4,}[\d])/u', $datos['descripcion'], $ciMatch)) {
                 $ciLimpia = preg_replace('/[^0-9]/', '', $ciMatch[1]);
                 if (strlen($ciLimpia) >= 6 && strlen($ciLimpia) <= 10) {
-                    $datos['cedula_titular'] = $ciMatch[1]; // Mantener formato original
+                    $datos['cedula_titular'] = $ciMatch[1];
                     $datos['retira_es_titular'] = false;
                 }
             }
@@ -253,12 +252,10 @@ class CargarCfe extends Component
             return;
         }
 
-        // Limpiar la CI para búsqueda (remover puntos y guiones)
         $ciLimpia = preg_replace('/[^0-9]/', '', $this->datosExtraidos['cedula_titular']);
 
         $certificados = CertificadoResidencia::where('estado', 'Recibido')
             ->where(function ($q) use ($ciLimpia) {
-                // Buscar CI con o sin puntos/guiones
                 $q->whereRaw("REPLACE(REPLACE(titular_nro_documento, '.', ''), '-', '') LIKE ?", ["%{$ciLimpia}%"]);
             })
             ->orderBy('fecha_recibido', 'desc')
@@ -267,7 +264,6 @@ class CargarCfe extends Component
 
         $this->certificadosEncontrados = $certificados;
 
-        // Si hay exactamente uno, seleccionarlo automáticamente
         if (count($this->certificadosEncontrados) === 1) {
             $this->certificadoSeleccionadoId = $this->certificadosEncontrados[0]['id'];
         }
@@ -328,6 +324,7 @@ class CargarCfe extends Component
                 'retira_nro_documento' => $this->datosExtraidos['cedula_receptor'],
                 'retira_telefono' => $this->datosExtraidos['telefono'] ?? '',
                 'numero_recibo' => $recibo,
+                'monto' => $this->parsearMontoCfe($this->datosExtraidos['monto_total']),
                 'estado' => 'Entregado',
             ];
 
@@ -347,8 +344,20 @@ class CargarCfe extends Component
     }
 
     /**
+     * Parsea el monto extraído del CFE a float
+     */
+    private function parsearMontoCfe($monto): ?float
+    {
+        if (empty($monto)) {
+            return null;
+        }
+        $monto = str_replace('.', '', $monto);
+        $monto = str_replace(',', '.', $monto);
+        return (float) $monto;
+    }
+
+    /**
      * Intenta separar un nombre completo en nombre y apellido.
-     * Asume formato "APELLIDO1 APELLIDO2 NOMBRE1..." o "NOMBRE APELLIDO" (2 palabras)
      */
     private function separarNombreApellido(string $nombreCompleto): array
     {
@@ -362,11 +371,7 @@ class CargarCfe extends Component
             return ['nombre' => $partes[0], 'apellido' => $partes[1]];
         }
 
-        // 3+ palabras: últimas como nombre, primeras como apellido
-        // Patrón típico uruguayo: APELLIDO1 APELLIDO2 NOMBRE
-        // Pero también puede ser NOMBRE APELLIDO1 APELLIDO2
-        // Dificil de determinar automáticamente, dejamos apellido=primera palabra, nombre=resto
-        // ya que el formato del CFE de Jefatura suele ser "APELLIDO NOMBRE"
+        // Formato del CFE de Jefatura suele ser "APELLIDO NOMBRE"
         $apellido = array_shift($partes);
         $nombre = implode(' ', $partes);
 

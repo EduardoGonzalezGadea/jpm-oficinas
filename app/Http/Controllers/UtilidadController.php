@@ -2,149 +2,31 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Cache;
+use App\Services\ValorUrService;
+use App\Traits\WithHttpProxy;
 use Illuminate\Support\Facades\Log;
 use DOMDocument;
 use DOMXPath;
-use Illuminate\Support\Str;
 use Smalot\PdfParser\Parser;
 
 class UtilidadController extends Controller
 {
+    use WithHttpProxy;
+
     /**
      * Obtiene el valor de la Unidad Reajustable (UR) desde el sitio del BPS.
-     * Almacena el valor en caché durante 4 horas para evitar múltiples solicitudes.
      */
-    public function getValorUr()
+    public function getValorUr(ValorUrService $valorUrService)
     {
-        $resultado = Cache::remember('valor_ur_completo', 60 * 4, function () {
-            // Intentar primero sin proxy
-            Log::info('Intentando obtener valor UR sin proxy');
-            $headers = [
-                'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-            ];
-            try {
-                $response = Http::withOptions([
-                    'proxy' => false,
-                    'verify' => false,
-                    'timeout' => 30,
-                    'headers' => $headers
-                ])->get('https://www.bps.gub.uy/bps/valores.jsp?contentid=5478');
-            } catch (\Exception $e) {
-                Log::info('Conexión sin proxy falló: ' . $e->getMessage() . '. Intentando con proxy...');
-                try {
-                    $options = ['timeout' => 30, 'verify' => false, 'headers' => $headers];
-                    if (env('HTTP_PROXY')) {
-                        $options['proxy'] = env('HTTP_PROXY');
-                    }
-                    $response = Http::withOptions($options)->get('https://www.bps.gub.uy/bps/valores.jsp?contentid=5478');
-                } catch (\Exception $e2) {
-                    Log::error('Error al obtener valor UR con proxy: ' . $e2->getMessage());
-                    return null;
-                }
-            }
-
-            if ($response->successful()) {
-                $html = $response->body();
-
-                // Usar DOMDocument para parsear el HTML
-                $dom = new DOMDocument();
-                @$dom->loadHTML(mb_convert_encoding($html, 'HTML-ENTITIES', 'UTF-8'));
-                $xpath = new DOMXPath($dom);
-
-                // Buscar la tabla de valores
-                $tables = $dom->getElementsByTagName('table');
-                if ($tables->length > 0) {
-                    $table = $tables->item(0);
-
-                    // Obtener encabezados (meses)
-                    $headers = [];
-                    $thList = $xpath->query('.//thead//th | .//thead//td', $table);
-                    if ($thList->length === 0) {
-                        // Si no hay thead, buscar en la primera fila del tbody
-                        $thList = $xpath->query('.//tr[1]//td', $table);
-                    }
-
-                    foreach ($thList as $th) {
-                        $headers[] = trim($th->nodeValue);
-                    }
-
-                    // headers logic kept same...
-
-                    // Buscar la fila de "Unidad Reajustable"
-                    // Nota: BPS a veces no usa tbody, buscar tr directamente
-                    $rows = $xpath->query('.//tr', $table);
-                    foreach ($rows as $row) {
-                        $cells = $xpath->query('.//td', $row);
-                        if ($cells->length > 0) {
-                            $indicador = trim($cells->item(0)->nodeValue);
-                            if (stripos($indicador, 'Unidad Reajustable') !== false) {
-                                // Seleccionar directamente la última columna (suponiendo que es la del mes actual)
-                                // y verificar si tiene valor. Si no, retroceder una.
-                                for ($i = $cells->length - 1; $i >= 1; $i--) {
-                                    // Limpiar caracteres invisibles (NBSP, etc)
-                                    $valorUr = null;
-                                    $mesUr = null;
-                                    $cellValue = trim(str_replace(["\xC2\xA0", "&nbsp;"], ' ', $cells->item($i)->nodeValue));
-
-                                    // Log para depuración
-                                    Log::info("Revisando celda UR índice $i: '$cellValue'");
-
-                                    if (!empty($cellValue) && preg_match('/[\d\.,]+/', $cellValue) && preg_match('/\d/', $cellValue)) {
-                                        $valorUr = (strpos($cellValue, '$') === false) ? '$ ' . $cellValue : $cellValue;
-
-                                        // Mapeo header
-                                        if (isset($headers[$i])) {
-                                            $mesUr = $headers[$i];
-                                        } elseif ($i == $cells->length - 1 && count($headers) > 0) {
-                                            // Fallback: si es la última celda, asumir último header
-                                            $mesUr = end($headers);
-                                        } else {
-                                            $mesUr = null;
-                                        }
-                                        break;
-                                    }
-                                }
-
-                                if ($valorUr) {
-                                    Log::info("UR encontrada vía DOM: $valorUr - Mes: $mesUr");
-                                    return ['valorUr' => $valorUr, 'mesUr' => $mesUr];
-                                }
-                            }
-                        }
-                    }
-                }
-
-                // Fallback a regex si falla DOM
-                if (preg_match('/Unidad Reajustable[^$]*\$[^$]*\$[^$]*\$[^>]*(\d+\.\d+,\d+)/i', $html, $matches)) {
-                    return ['valorUr' => '$ ' . $matches[1], 'mesUr' => null];
-                }
-            }
-            return null;
-        });
-
-        if ($resultado) {
-            return response()->json($resultado);
-        }
-
-        // Fallback final
-        return response()->json([
-            'valorUr' => '$ 1.839,08',
-            'mesUr' => 'Noviembre'
-        ]);
+        return response()->json($valorUrService->obtener());
     }
 
     /**
      * Obtiene la hora actual de Uruguay desde WorldTimeAPI.
-     * Maneja proxy para entornos de producción.
+     * Maneja proxy para entornos de producción usando el mismo patrón probado de ValorUrService.
      */
     public function getHoraUruguay()
     {
-        $headers = [
-            'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-        ];
-
         $apiUrls = [
             'https://worldtimeapi.org/api/timezone/America/Montevideo',
             'https://timeapi.io/api/Time/current/zone?timeZone=America/Montevideo',
@@ -152,47 +34,21 @@ class UtilidadController extends Controller
         ];
 
         foreach ($apiUrls as $index => $apiUrl) {
-            // Intentar primero sin proxy
             try {
-                $response = Http::withOptions([
-                    'proxy' => false,
-                    'verify' => false,
-                    'timeout' => 5,
-                    'headers' => $headers
-                ])->get($apiUrl);
+                // Usar el mismo patrón probado de ValorUrService: retry + proxy array
+                $response = $this->httpGetWithRetry($apiUrl, 15, 2, 10);
 
                 if ($response->successful()) {
                     return $this->processTimeResponse($response, $index);
                 }
-            } catch (\Exception $e) {
-                Log::info('Hora Uruguay sin proxy falló en ' . $apiUrl . ': ' . $e->getMessage());
-
-                // Intentar con proxy configurado
-                try {
-                    $options = ['timeout' => 10, 'verify' => false, 'headers' => $headers];
-                    if (env('HTTP_PROXY') || env('HTTPS_PROXY')) {
-                        $options['proxy'] = [
-                            'http' => env('HTTP_PROXY'),
-                            'https' => env('HTTPS_PROXY', env('HTTP_PROXY')),
-                        ];
-                        if (env('NO_PROXY')) {
-                            $options['proxy']['no'] = array_map('trim', explode(',', env('NO_PROXY')));
-                        }
-                    }
-
-                    $response = Http::withOptions($options)->get($apiUrl);
-
-                    if ($response->successful()) {
-                        return $this->processTimeResponse($response, $index);
-                    }
-                } catch (\Exception $e2) {
-                    Log::warning('Hora Uruguay con proxy falló en ' . $apiUrl . ': ' . $e2->getMessage());
-                }
+            } catch (\Throwable $e) {
+                Log::info('Hora Uruguay falló en ' . $apiUrl . ': ' . $e->getMessage());
+                // Continuar con la siguiente URL
             }
         }
 
         // Fallback: usar hora del servidor
-        Log::info('Usando hora local del servidor como fallback');
+        Log::info('Usando hora local del servidor como fallback tras fallar todas las APIs');
         return response()->json([
             'success' => true,
             'datetime' => now()->toIso8601String(),
@@ -366,74 +222,4 @@ class UtilidadController extends Controller
         }
     }
 
-    /**
-     * Realiza una petición HTTP GET con retry, backoff exponencial y manejo de proxy.
-     * Similar a la lógica usada en getValorUr para BPS.
-     */
-    private function httpGetWithRetry($url, $timeout = 60, $maxRetries = 3)
-    {
-        $headers = [
-            'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-        ];
-
-        $attempt = 0;
-        $lastException = null;
-
-        while ($attempt < $maxRetries) {
-            try {
-                // Intentar primero sin proxy
-                Log::info("Intento {$attempt} para {$url} sin proxy");
-                $response = Http::withOptions([
-                    'proxy' => false,
-                    'verify' => false,
-                    'timeout' => $timeout,
-                    'connect_timeout' => 10,
-                    'headers' => $headers
-                ])->get($url);
-
-                if ($response->successful()) {
-                    return $response;
-                } else {
-                    throw new \Exception("Respuesta no exitosa: " . $response->status());
-                }
-            } catch (\Exception $e) {
-                Log::info("Conexión sin proxy falló para {$url}: " . $e->getMessage() . ". Intentando con proxy...");
-
-                try {
-                    // Intentar con proxy configurado
-                    $options = [
-                        'timeout' => $timeout,
-                        'connect_timeout' => 10,
-                        'verify' => false,
-                        'headers' => $headers
-                    ];
-
-                    if (env('HTTP_PROXY')) {
-                        $options['proxy'] = env('HTTP_PROXY');
-                    }
-
-                    $response = Http::withOptions($options)->get($url);
-
-                    if ($response->successful()) {
-                        return $response;
-                    } else {
-                        throw new \Exception("Respuesta no exitosa con proxy: " . $response->status());
-                    }
-                } catch (\Exception $e2) {
-                    $lastException = $e2;
-                    Log::warning("Conexión con proxy también falló para {$url}: " . $e2->getMessage());
-                }
-            }
-
-            $attempt++;
-
-            if ($attempt < $maxRetries) {
-                $waitTime = pow(2, $attempt) * 1000000; // Microsegundos: 2^1 = 2s, 2^2 = 4s, etc.
-                Log::info("Todos los intentos fallaron para {$url}. Reintentando en " . ($waitTime / 1000000) . " segundos...");
-                usleep($waitTime);
-            }
-        }
-
-        throw new \Exception("Fallaron todos los intentos para {$url}. Último error: " . $lastException->getMessage());
-    }
 }

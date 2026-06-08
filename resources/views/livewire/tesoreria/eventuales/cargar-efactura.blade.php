@@ -168,12 +168,20 @@
                                 <td><strong>{{ $datosExtraidos['titular'] }}</strong></td>
                             </tr>
                             <tr>
+                                <th>Institución:</th>
+                                <td><strong>{{ $datosExtraidos['institucion'] ?: 'NO DETECTADA' }}</strong></td>
+                            </tr>
+                            <tr>
                                 <th>Fecha:</th>
                                 <td>{{ $datosExtraidos['fecha'] }}</td>
                             </tr>
                             <tr>
                                 <th>O/C:</th>
                                 <td><strong>{{ $datosExtraidos['orden_cobro'] ?: '-' }}</strong></td>
+                            </tr>
+                            <tr>
+                                <th>Ingreso:</th>
+                                <td><strong>{{ $datosExtraidos['ingreso'] ?: '-' }}</strong></td>
                             </tr>
                         </tbody>
                     </table>
@@ -187,7 +195,7 @@
                             </tr>
                             <tr>
                                 <th>Monto:</th>
-                                <td><strong class="text-success" style="font-size: 0.9rem;">$ {{ number_format((float)str_replace(['.', ','], ['', '.'], $datosExtraidos['monto']), 2, ',', '.') }}</strong></td>
+                                <td><strong class="text-success" style="font-size: 0.9rem;">$ {{ number_format((float)$datosExtraidos['monto'], 2, ',', '.') }}</strong></td>
                             </tr>
                         </tbody>
                     </table>

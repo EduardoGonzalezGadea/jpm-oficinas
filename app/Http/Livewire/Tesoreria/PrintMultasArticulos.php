@@ -3,7 +3,7 @@
 namespace App\Http\Livewire\Tesoreria;
 
 use App\Models\Tesoreria\Multa;
-use App\Http\Controllers\UtilidadController;
+use App\Services\ValorUrService;
 use Livewire\Component;
 
 class PrintMultasArticulos extends Component
@@ -11,6 +11,7 @@ class PrintMultasArticulos extends Component
     public $multas;
     public $valorUr;
     public $mesUr;
+    public $urVencida = false;
 
     public function mount()
     {
@@ -19,12 +20,11 @@ class PrintMultasArticulos extends Component
             ->orderBy('apartado', 'asc')
             ->get();
 
-        // Obtener valor de la UR para el encabezado
-        $utilidad = new UtilidadController();
-        $urData = $utilidad->getValorUr()->getData();
+        $urData = app(ValorUrService::class)->obtener();
 
-        $this->valorUr = $urData->valorUr ?? 'N/A';
-        $this->mesUr = $urData->mesUr ?? '';
+        $this->valorUr = $urData['valorUr'] ?? 'N/A';
+        $this->mesUr = $urData['mesUr'] ?? '';
+        $this->urVencida = (bool) ($urData['vencido'] ?? false);
     }
 
     public function render()

@@ -134,9 +134,14 @@
                     body: JSON.stringify({ theme: themeName }),
                 })
                     .then(response => {
-                        if (response.status === 419) {
-                            // Si la sesión expiró justo ahora, recargamos para limpiar todo
-                            window.location.reload();
+                        if (response.status === 419 || response.status === 401) {
+                            if (window.handleSessionExpired) {
+                                response.clone().json().then(function (payload) {
+                                    window.handleSessionExpired({ message: payload.message || payload.error, redirect: payload.redirect });
+                                }).catch(function () { window.handleSessionExpired(); });
+                            } else {
+                                window.location.href = '/login';
+                            }
                             return;
                         }
                         if (!response.ok) {

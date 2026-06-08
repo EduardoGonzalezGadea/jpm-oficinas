@@ -92,7 +92,7 @@
         <div class="header-info">
             <span>Listado de Artículos de Multas de Tránsito</span>
             <span>
-                UR: {{ $valorUr }} @if($mesUr) ({{ $mesUr }}) @endif -
+                UR: {{ $valorUr }} @if($mesUr) ({{ $mesUr }}@if($urVencida) - VENCIDO @endif) @endif -
                 Fecha: {{ date('d/m/Y') }}
             </span>
         </div>

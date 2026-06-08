@@ -459,30 +459,7 @@
                 timer: 1500
             });
         });
-
-        // Manejar redirección cuando el JWT expire
-        window.addEventListener('redirect-to-login', event => {
-            Swal.fire({
-                icon: 'warning',
-                title: 'Sesión Expirada',
-                text: event.detail.message,
-                showConfirmButton: true,
-                confirmButtonText: 'Ir al Login',
-                allowOutsideClick: false,
-                allowEscapeKey: false
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    // Limpiar tokens locales si existieran
-                    try {
-                        localStorage.removeItem('jwt_token');
-                        sessionStorage.removeItem('jwt_token');
-                    } catch (e) {}
-
-                    // Redirigir al login
-                    window.location.href = '{{ route("login") }}';
-                }
-            });
-        });
+});
 
         window.livewire.on('arrendamientoStore', () => {
             $('#arrendamientoModal').modal('hide');

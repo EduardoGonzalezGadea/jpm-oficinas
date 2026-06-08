@@ -19,5 +19,16 @@
             ],
             "run_at": "document_idle"
         }
-    ]
+    ],
+    "browser_specific_settings": {
+        "gecko": {
+            "id": "text-replacer-pro-v3@jpm-oficinas-gadea.local",
+            "strict_min_version": "139.0",
+            "data_collection_permissions": {
+                "required": [
+                    "none"
+                ]
+            }
+        }
+    }
 }

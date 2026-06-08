@@ -1,6 +1,7 @@
 <div x-data="{
     valorUr: '',
     mesUr: '',
+    urVencida: false,
     loading: true,
     async fetchUr() {
         try {
@@ -8,6 +9,7 @@
             const data = await response.json();
             this.valorUr = data.valorUr;
             this.mesUr = data.mesUr;
+            this.urVencida = Boolean(data.vencido);
         } catch (error) {
             console.error('Error fetching UR:', error);
         } finally {
@@ -15,8 +17,8 @@
         }
     }
 }" x-init="fetchUr()">
-    <div class="card">
-        <div class="card-header bg-info text-white card-header-gradient py-2 px-3">
+    <div class="card shadow-sm">
+        <div class="card-header py-2 px-3">
             <div class="d-flex justify-content-between align-items-center flex-wrap">
                 <div class="text-nowrap">
                     <h4 class="mb-0">
@@ -27,7 +29,7 @@
                     <span id="ur-value-container-public" class="text-white font-weight-bold" style="font-size: 1.1rem;">
                         <template x-if="!loading && valorUr">
                             <span>
-                                (UR = <span x-text="valorUr"></span> <template x-if="mesUr"><span> - <span x-text="mesUr"></span></span></template>)
+                                (UR = <span x-text="valorUr"></span> <template x-if="mesUr"><span> - <span x-text="mesUr"></span><template x-if="urVencida"><span class="text-warning"> - VENCIDO</span></template></span></template>)
                             </span>
                         </template>
                         <template x-if="loading">
@@ -60,8 +62,10 @@
                         </div>
                     </div>
                 </div>
-                <div class="col">
-                    <em class="text-info font-weight-bold small">* Unificado = a partir de Octubre/2024</em>
+                <div class="col text-left">
+                    <span class="badge badge-info py-1 px-2 shadow-sm">
+                        <i class="fas fa-info-circle mr-1"></i> * Unificado = a partir de Octubre/2024
+                    </span>
                 </div>
                 <div class="col-auto">
                     <select wire:model="perPage" class="form-control form-control-sm">
@@ -72,9 +76,9 @@
                 </div>
             </div>
 
-            <div class="table-responsive">
-                <table class="table table-sm table-striped table-hover mb-2">
-                    <thead class="thead-dark">
+            <div class="table-responsive" wire:loading.class="loading-overlay">
+                <table class="table table-sm table-striped table-hover table-compact mb-2">
+                    <thead>
                         <tr>
                             <th class="align-middle py-1 px-2">
                                 <button class="btn btn-link text-white p-0 text-nowrap" wire:click="sortBy('articulo')">

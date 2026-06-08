@@ -17,19 +17,39 @@
     </div>
     @endif
 
+    {{-- Fila mes anterior ahora gestionada globalmente o mantenida aquí si es única --}}
     <style>
         .fila-mes-anterior {
-            background-color: rgba(255, 193, 7, 0.15) !important;
+            background-color: rgba(253, 126, 20, 0.08) !important; /* Ahora usa el color de acento (naranja) suave */
+            border-left: 3px solid var(--color-accent) !important;
+        }
+
+        /* Mejoras de densidad y Sticky Headers */
+        .table-container {
+            /* Permitir que la tabla se expanda infinitamente */
+        }
+        .table-container thead th {
+            position: sticky;
+            top: 0;
+            background-color: #f4f6f9; /* Color adminLTE/Bootstrap */
+            z-index: 1;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+        /* Ajuste para Dark Mode */
+        @media (prefers-color-scheme: dark) {
+            .table-container thead th {
+                background-color: #343a40;
+                color: #ffffff;
+            }
         }
     </style>
 
     <!-- Cabecera de Caja Chica -->
-    <div class="card mb-3">
+    <div class="card mb-3 shadow-sm">
         <div class="card-header bg-info text-white card-header-gradient py-2 px-3 d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">
-                <i class="fas fa-coins mr-2"></i>
-                Caja Chica
-            </h5>
+            <h4 class="mb-0">
+                <strong><i class="fas fa-coins mr-2"></i>Caja Chica</strong>
+            </h4>
             <div class="d-flex align-items-center">
                 <!-- Selectores de Mes y Año -->
                 <div class="form-inline mr-3">
@@ -66,9 +86,9 @@
 
     <!-- Tabla Caja Chica (Fondo Permanente) -->
     <h4 class="mt-1 mb-0">Fondo Permanente</h4>
-    <div class="table-responsive">
-        <table class="table table-sm table-striped table-bordered" id="tablaCajaChica">
-            <thead class="thead-dark">
+    <div class="table-responsive" wire:loading.class="loading-overlay">
+        <table class="table table-sm table-striped table-bordered table-hover table-compact" id="tablaCajaChica">
+            <thead>
                 <tr>
                     <th class="text-center">Mes</th>
                     <th class="text-center">Año</th>
@@ -78,15 +98,15 @@
             </thead>
             <tbody>
                 @forelse ($tablaCajaChica as $item)
-                <tr wire:key="cajachica-{{ $item->idCajaChica }}">
-                    <td class="text-center font-weight-bold">{{ mb_strtoupper($item->mes, 'UTF-8') }}</td>
-                    <td class="text-center font-weight-bold">{{ $item->anio }}</td>
+                <tr wire:key="cajachica-{{ $item['idCajaChica'] }}">
+                    <td class="text-center font-weight-bold">{{ mb_strtoupper($item['mes'], 'UTF-8') }}</td>
+                    <td class="text-center font-weight-bold">{{ $item['anio'] }}</td>
                     <td class="text-center font-weight-bold classCajaChicaActual">
-                        {{ number_format($item->montoCajaChica, 2, ',', '.') }}
+                        {{ number_format($item['montoCajaChica'], 2, ',', '.') }}
                     </td>
                     <td class="text-center d-print-none">
                         <button class="btn btn-sm btn-success"
-                            wire:click="editarFondo({{ $item->idCajaChica }}, {{ $item->montoCajaChica }})">
+                            wire:click="$emitTo('tesoreria.caja-chica.modales.modal-editar-fondo', 'abrirModalEditarFondo', {{ $item['idCajaChica'] }}, {{ $item['montoCajaChica'] }})">
                             <i class="fas fa-pencil-alt"></i> Editar
                         </button>
                     </td>
@@ -101,179 +121,9 @@
         </table>
     </div>
 
-    <!-- Modal de Edición de Fondo -->
-    @if ($showEditFondoModal)
-    <div class="modal fade show" id="modalEditarFondo" tabindex="-1" role="dialog"
-        aria-labelledby="modalEditarFondoLabel" style="display: block;" aria-modal="true">
-        <div class="modal-dialog modal-dialog-centered" role="document">
-            <div class="modal-content">
-                <div class="modal-header bg-success text-white">
-                    <h5 class="modal-title" id="modalEditarFondoLabel">
-                        <i class="fas fa-pencil-alt mr-2"></i>Editar Fondo Permanente
-                    </h5>
-                    <button type="button" class="close" wire:click="cerrarModalEditFondo" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <form wire:submit.prevent="actualizarFondo">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <label for="editMes" class="form-label">Mes:</label>
-                                <input type="text" class="form-control" id="editMes"
-                                    value="{{ $editandoFondo['mes'] }}" readonly>
-                            </div>
-                            <div class="col-md-6">
-                                <label for="editAnio" class="form-label">Año:</label>
-                                <input type="text" class="form-control" id="editAnio"
-                                    value="{{ $editandoFondo['anio'] }}" readonly>
-                            </div>
-                        </div>
-                        <div class="row mt-3">
-                            <div class="col-md-12">
-                                <label for="editMonto" class="form-label">Monto: <span
-                                        class="text-danger">*</span></label>
-                                <div class="input-group">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">$</span>
-                                    </div>
-                                    <input type="number"
-                                        class="form-control @error('editandoFondo.monto') is-invalid @enderror"
-                                        id="editMonto" wire:model="editandoFondo.monto" step="0.01"
-                                        min="0" max="99999999.99" placeholder="Ingrese el nuevo monto">
-                                </div>
-                                @error('editandoFondo.monto')
-                                <div class="invalid-feedback d-block">{{ $message }}</div>
-                                @enderror
-                                <small class="form-text text-muted">
-                                    Monto original:
-                                    ${{ number_format($editandoFondo['montoOriginal'], 2, ',', '.') }}
-                                </small>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" wire:click="cerrarModalEditFondo">
-                        <i class="fas fa-times mr-1"></i>Cancelar
-                    </button>
-                    <button type="button" class="btn btn-success" wire:click="actualizarFondo">
-                        <i class="fas fa-save mr-1"></i>Actualizar Fondo
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="modal-backdrop fade show"></div>
-    @endif
+    <livewire:tesoreria.caja-chica.modales.modal-editar-fondo />
 
-    <!-- Modal de Recuperación -->
-    @if ($showRecuperarModal)
-    <div class="modal fade show" id="modalRecuperar" tabindex="-1" role="dialog" style="display: block;"
-        aria-modal="true">
-        <div class="modal-dialog modal-lg" role="document">
-            <div class="modal-content">
-                <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title">Recuperar Saldos Pendientes</h5>
-                    <button type="button" class="close" wire:click="closeRecuperarModal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
-                    <div class="row">
-                        <div class="col-md-4 form-group">
-                            <label for="recuperacion_fecha">Fecha de Recuperación *</label>
-                            <input type="date" id="recuperacion_fecha"
-                                class="form-control @error('recuperacion.fecha') is-invalid @enderror"
-                                wire:model.defer="recuperacion.fecha">
-                            @error('recuperacion.fecha')
-                            <span class="invalid-feedback">{{ $message }}</span>
-                            @enderror
-                        </div>
-                        <div class="col-md-4 form-group">
-                            <label for="recuperacion_numero_ingreso">Número de Ingreso *</label>
-                            <input type="text" id="recuperacion_numero_ingreso"
-                                class="form-control @error('recuperacion.numero_ingreso') is-invalid @enderror"
-                                wire:model.defer="recuperacion.numero_ingreso" placeholder="Ej: 12345">
-                            @error('recuperacion.numero_ingreso')
-                            <span class="invalid-feedback">{{ $message }}</span>
-                            @enderror
-                        </div>
-                        <div class="col-md-4 form-group">
-                            <label for="total_a_recuperar">Total a Recuperar</label>
-                            <div class="input-group">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text">$</span>
-                                </div>
-                                <input type="text" id="total_a_recuperar"
-                                    class="form-control font-weight-bold text-right bg-light"
-                                    value="{{ number_format($totalARecuperar, 2, ',', '.') }}"
-                                    readonly>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="table-responsive">
-                        <table class="table table-sm table-bordered">
-                            <thead class="thead-light">
-                                <tr>
-                                    <th width="5%" class="align-middle"><input type="checkbox" wire:model="seleccionarTodos">
-                                    </th>
-                                    <th class="align-middle">Tipo</th>
-                                    <th class="align-middle">Detalle</th>
-                                    <th class="text-right align-middle">Saldo</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse ($itemsParaRecuperar as $item)
-                                <tr wire:key="rec-item-{{ $item['id'] }}">
-                                    <td><input type="checkbox" wire:model="itemsSeleccionados"
-                                            value="{{ $item['id'] }}"></td>
-                                    <td><span
-                                            class="badge badge-{{ $item['tipo'] == 'Pendiente' ? 'info' : 'warning' }}">{{ $item['tipo'] }}</span>
-                                    </td>
-                                    <td>{{ $item['detalle'] }}</td>
-                                    <td class="text-right">
-                                        {{ number_format($item['saldo'], 2, ',', '.') }}
-                                    </td>
-                                </tr>
-                                @empty
-                                <tr>
-                                    <td colspan="4" class="text-center">No hay ítems para recuperar.
-                                    </td>
-                                </tr>
-                                @endforelse
-                            </tbody>
-                            <tfoot>
-                                <tr>
-                                    <th colspan="3" class="text-right">Total a Recuperar:</th>
-                                    <th class="text-right font-weight-bold">
-                                        {{ number_format($totalARecuperar, 2, ',', '.') }}
-                                    </th>
-                                </tr>
-                            </tfoot>
-                        </table>
-                        @error('itemsSeleccionados')
-                        <div class="text-danger small mt-2">{{ $message }}</div>
-                        @enderror
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary"
-                        wire:click="closeRecuperarModal">Cancelar</button>
-                    <button type="button" class="btn btn-primary" wire:click="guardarRecuperacion"
-                        wire:loading.attr="disabled">
-                        <span wire:loading.class="d-none" wire:target="guardarRecuperacion">Guardar Recuperación</span>
-                        <span wire:loading wire:target="guardarRecuperacion" class="d-none">
-                            <i class="fas fa-spinner fa-spin mr-1"></i>Procesando...
-                        </span>
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="modal-backdrop fade show"></div>
-    @endif
+    <livewire:tesoreria.caja-chica.modales.modal-recuperar-saldos />
 
     <div class="d-flex justify-content-between align-items-center mt-1 mb-0">
         <h4 class="mb-0">Totales</h4>
@@ -282,7 +132,7 @@
             @if (isset($tablaTotales['Total Rendido Sin Docs']) && $tablaTotales['Total Rendido Sin Docs'] > 0)
             <span class="badge badge-danger text-white shadow-sm animated pulse infinite" style="font-size: 0.9rem;">
                 <i class="fas fa-exclamation-triangle mr-1"></i>
-                Rendido sin documentos: ${{ number_format($tablaTotales['Total Rendido Sin Docs'], 2, ',', '.') }}
+                Rendido sin Egr.: ${{ number_format($tablaTotales['Total Rendido Sin Docs'], 2, ',', '.') }} (restar al cierre)
             </span>
             @endif
         </div>
@@ -293,17 +143,21 @@
             <button class="btn btn-secondary btn-sm mr-2" wire:click="establecerFechaHoy">
                 <i class="fas fa-calendar-day"></i> Hoy
             </button>
+            <button class="btn btn-success btn-sm" wire:click="exportarExcel" onclick="setTimeout(() => { document.getElementById('loader').style.display = 'none'; }, 2000)">
+                <i class="fas fa-file-excel"></i> Excel
+            </button>
         </div>
     </div>
 
-    <div class="table-responsive">
-        <table class="table table-sm table-bordered mb-1" id="tablaTotales">
-            <thead class="thead-dark">
+    <div class="table-responsive" wire:loading.class="loading-overlay">
+        <table class="table table-sm table-bordered mb-1 table-compact" id="tablaTotales">
+            <thead>
                 <tr>
                     <th class="text-center align-middle">Pendientes</th>
                     <th class="text-center align-middle">Rendidos</th>
                     <th class="text-center align-middle">Extras</th>
                     <th class="text-center align-middle">Pagos s/eg.</th>
+                    <th class="text-center align-middle">Pent.+Pag.</th>
                     <th class="text-center align-middle">Pend.+Pag.s/eg.</th>
                     <th class="text-center align-middle">Pagos</th>
                     <th class="text-center align-middle">Recuperar</th>
@@ -311,6 +165,7 @@
                 </tr>
             </thead>
             <tbody>
+                @if (!empty($tablaTotales))
                 <tr>
                     <td class="text-center align-middle font-weight-bold">
                         {{ isset($tablaTotales['Total Pendientes']) ? number_format($tablaTotales['Total Pendientes'], 2, ',', '.') : '0,00' }}
@@ -326,8 +181,11 @@
                     </td>
                     <td class="text-center align-middle font-weight-bold">
                         <h5 class="m-0 font-weight-bold">
-                            {{ number_format((isset($tablaTotales['Total Pendientes']) ? floatval($tablaTotales['Total Pendientes']) : 0) + (isset($tablaTotales['Pagos Sin Egreso']) ? floatval($tablaTotales['Pagos Sin Egreso']) : 0), 2, ',', '.') }}
+                            {{ isset($tablaTotales['Pendientes y Pagos Sin Rendir']) ? number_format($tablaTotales['Pendientes y Pagos Sin Rendir'], 2, ',', '.') : '0,00' }}
                         </h5>
+                    </td>
+                    <td class="text-center align-middle font-weight-bold">
+                        {{ number_format((isset($tablaTotales['Total Pendientes']) ? floatval($tablaTotales['Total Pendientes']) : 0) + (isset($tablaTotales['Pagos Sin Egreso']) ? floatval($tablaTotales['Pagos Sin Egreso']) : 0), 2, ',', '.') }}
                     </td>
                     <td class="text-center align-middle font-weight-bold">
                         {{ isset($tablaTotales['Saldo Pagos Directos']) ? number_format($tablaTotales['Saldo Pagos Directos'], 2, ',', '.') : '0,00' }}
@@ -348,9 +206,9 @@
                         </h5>
                     </td>
                 </tr>
-                @if (empty($tablaTotales))
+                @else
                 <tr>
-                    <td colspan="7" class="text-center align-middle">No hay datos de totales.</td>
+                    <td colspan="9" class="text-center align-middle">No hay datos de totales.</td>
                 </tr>
                 @endif
             </tbody>
@@ -389,9 +247,9 @@
     <!-- Título solo para impresión -->
     <h4 class="mt-4 d-none d-print-block">Pendientes</h4>
 
-    <div class="table-responsive">
-        <table class="table table-sm table-striped table-bordered" id="tablaPendientesDetalle">
-            <thead class="thead-light">
+    <div class="table-responsive table-container" wire:loading.class="loading-overlay">
+        <table class="table table-sm table-striped table-bordered table-hover table-compact" id="tablaPendientesDetalle">
+            <thead>
                 <tr>
                     <th class="text-center align-middle">N&deg;</th>
                     <th class="text-center align-middle">FECHA</th>
@@ -458,7 +316,7 @@
                             @if (($item['tot_recuperado'] ?? 0) < ($item['tot_rendido'] ?? 0) && ($item['tot_rendido'] ?? 0)> 0)
                                 <button type="button" class="btn btn-sm btn-info mr-1"
                                     title="Recuperar Dinero Rendido"
-                                    wire:click="openRecuperarRendidoModal({{ $item['idPendientes'] }})">
+                                    wire:click="$emitTo('tesoreria.caja-chica.modales.modal-recuperar-rendido', 'abrirModalRecuperarRendido', {{ $item['idPendientes'] }}, '{{ $fechaHasta }}')">
                                     <i class="fas fa-hand-holding-usd"></i>
                                 </button>
                                 @endif
@@ -606,15 +464,18 @@
     <!-- Título solo para impresión -->
     <h4 class="mt-4 d-none d-print-block">Pagos Directos</h4>
 
-    <div class="table-responsive">
-        <table class="table table-sm table-striped table-bordered" id="tablaPagos">
-            <thead class="thead-light">
+    <div class="table-responsive table-container" wire:loading.class="loading-overlay">
+        <table class="table table-sm table-striped table-bordered table-hover table-compact" id="tablaPagos">
+            <thead>
                 <tr>
                     <th class="text-center align-middle">FCH.EG.</th>
                     <th class="text-center align-middle">EGRESO</th>
                     <th class="text-center align-middle">ACREEDOR</th>
                     <th class="text-center align-middle">CONCEPTO</th>
                     <th class="text-center align-middle">MONTO</th>
+                    <th class="text-center align-middle">RENDIDO</th>
+                    <th class="text-center align-middle">EXTRA</th>
+                    <th class="text-center align-middle">REINTEG.</th>
                     <th class="text-center align-middle">RECUPER.</th>
                     <th class="text-center align-middle">SALDO</th>
                     <th class="text-center align-middle d-print-none">ACCIONES</th>
@@ -633,6 +494,15 @@
                     <td>{{ $item['conceptoPagos'] }}</td>
                     <td class="text-right align-middle">{{ number_format($item['montoPagos'], 2, ',', '.') }}</td>
                     <td class="text-right align-middle">
+                        {{ !is_null($item['rendido_en_periodo'] ?? null) ? number_format($item['rendido_en_periodo'], 2, ',', '.') : '-' }}
+                    </td>
+                    <td class="text-right align-middle {{ ($item['extra_pagos'] ?? 0) > 0 ? 'text-warning font-weight-bold' : '' }}">
+                        {{ ($item['extra_pagos'] ?? 0) > 0 ? number_format($item['extra_pagos'], 2, ',', '.') : '-' }}
+                    </td>
+                    <td class="text-right align-middle">
+                        {{ !is_null($item['reintegrado_en_periodo'] ?? null) ? number_format($item['reintegrado_en_periodo'], 2, ',', '.') : '-' }}
+                    </td>
+                    <td class="text-right align-middle">
                         {{ number_format($item['recuperado_en_periodo'] ?? 0, 2, ',', '.') }}
                     </td>
                     <td
@@ -647,29 +517,33 @@
                     <td class="text-center align-middle d-print-none">
                         <input type='hidden' name='selIdPagos' value='{{ $item['idPagos'] }}'>
                         <div class='btn-group' role='group'>
-                            <button type="button" class="btn btn-sm btn-dark mr-1"
+                            <button type="button" class="btn btn-sm btn-dark"
                                 wire:click="$emit('mostrarModalEditarPago', {{ $item['idPagos'] }})" title="Editar">
                                 <i class="fas fa-pencil-alt"></i>
                             </button>
-                            @if (
-                            ($item['recuperado_en_periodo'] ?? 0) < ($item['montoPagos'] ?? 0) &&
-                                ($item['montoPagos'] ?? 0)> 0 &&
-                                isset($item['egresoPagos']) &&
-                                strlen(trim($item['egresoPagos'])) > 0)
-                                <button type="button" class="btn btn-sm btn-info mr-1"
+                            @if (!($item['tiene_datos_rendicion'] ?? false))
+                            <button type="button" class="btn btn-sm btn-success"
+                                wire:click="$emitTo('tesoreria.caja-chica.modales.modal-rendir-pago', 'abrirModalRendirPago', {{ $item['idPagos'] }})" title="Rendir Pago">
+                                <i class="fas fa-file-invoice-dollar"></i>
+                            </button>
+                            @endif
+                            @if ($item['puede_recuperar'] ?? false)
+                                <button type="button" class="btn btn-sm btn-info"
                                     title="Recuperar Pago Directo"
-                                    wire:click="openRecuperarPagoModal({{ $item['idPagos'] }})">
+                                    wire:click="$emitTo('tesoreria.caja-chica.modales.modal-recuperar-pago', 'abrirModalRecuperarPago', {{ $item['idPagos'] }})">
                                     <i class="fas fa-hand-holding-usd"></i>
                                 </button>
-                                @endif
+                            @endif
                                 <a href="{{ route('tesoreria.caja-chica.imprimir.pago', $item['idPagos']) }}"
-                                    target="_blank" class="btn btn-sm btn-dark mr-1" title="Imprimir Pago Directo">
+                                    target="_blank" class="btn btn-sm btn-dark" title="Imprimir Pago Directo">
                                     <i class="fas fa-print"></i>
                                 </a>
-                                </a>
                                 @if(auth()->user()->hasRole(['administrador', 'gerente_tesoreria', 'supervisor_tesoreria']))
-                                @if(empty($item['ingresoPagos']) && ($item['recuperadoPagos'] ?? 0) == 0)
-                                <button type="button" class="btn btn-sm btn-danger ml-1"
+                                @if(
+                                    !($item['tiene_datos_rendicion'] ?? false) &&
+                                    !($item['tiene_datos_recuperacion'] ?? false)
+                                )
+                                <button type="button" class="btn btn-sm btn-danger"
                                     title="Eliminar Pago"
                                     wire:click="confirmarEliminarPago({{ $item['idPagos'] }})">
                                     <i class="fas fa-trash"></i>
@@ -681,7 +555,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="8" class="text-center">No hay datos de Pagos Directos para el mes y año
+                    <td colspan="11" class="text-center">No hay datos de Pagos Directos para el mes y año
                         seleccionados hasta la fecha
                         {{ \Carbon\Carbon::createFromFormat('Y-m-d', $fechaHasta)->format('d/m/Y') }}.
                     </td>
@@ -694,164 +568,18 @@
     <!-- Espacio inferior extra para no tapar contenido con botones flotantes -->
     <div style="height: 100px;"></div>
 
-    <!-- Modal de Recuperación de Dinero Rendido de Pendiente -->
-    @if ($showRecuperarRendidoModal)
-    <div class="modal fade show" id="modalRecuperarRendido" tabindex="-1" role="dialog"
-        aria-labelledby="modalRecuperarRendidoLabel" style="display: block;" aria-modal="true">
-        <div class="modal-dialog modal-dialog-centered" role="document">
-            <div class="modal-content">
-                <div class="modal-header bg-info text-white">
-                    <h5 class="modal-title" id="modalRecuperarRendidoLabel">
-                        <i class="fas fa-hand-holding-usd mr-2"></i>Recuperar Dinero Rendido de Pendiente
-                    </h5>
-                    <button type="button" class="close" wire:click="closeRecuperarRendidoModal"
-                        aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
-                    <form wire:submit.prevent="saveRecuperarRendido">
-                        <div class="form-group">
-                            <label for="recuperarRendidoFecha">Fecha:</label>
-                            <input type="date" id="recuperarRendidoFecha"
-                                class="form-control @error('recuperarRendidoData.fecha') is-invalid @enderror"
-                                wire:model.defer="recuperarRendidoData.fecha">
-                            @error('recuperarRendidoData.fecha')
-                            <span class="invalid-feedback">{{ $message }}</span>
-                            @enderror
-                        </div>
-                        <div class="form-group">
-                            <label for="recuperarRendidoDocumentos">Documentos:</label>
-                            <input type="text" id="recuperarRendidoDocumentos"
-                                class="form-control @error('recuperarRendidoData.documentos') is-invalid @enderror"
-                                wire:model.defer="recuperarRendidoData.documentos"
-                                placeholder="Ingrese documentos">
-                            @error('recuperarRendidoData.documentos')
-                            <span class="invalid-feedback">{{ $message }}</span>
-                            @enderror
-                        </div>
-                        <div class="form-group">
-                            <label for="recuperarRendidoMontoRecuperado">Monto Recuperado:</label>
-                            <input type="number" id="recuperarRendidoMontoRecuperado"
-                                class="form-control @error('recuperarRendidoData.monto_recuperado') is-invalid @enderror"
-                                wire:model.defer="recuperarRendidoData.monto_recuperado" step="0.01">
-                            @error('recuperarRendidoData.monto_recuperado')
-                            <span class="invalid-feedback">{{ $message }}</span>
-                            @enderror
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" wire:click="closeRecuperarRendidoModal">
-                        <i class="fas fa-times mr-1"></i>Cancelar
-                    </button>
-                    <button type="button" class="btn btn-info" wire:click="saveRecuperarRendido">
-                        <i class="fas fa-save mr-1"></i>Guardar Recuperación
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="modal-backdrop fade show"></div>
-    @endif
+    <livewire:tesoreria.caja-chica.modales.modal-recuperar-rendido />
 
-    <!-- Modal de Recuperación de Pago Directo -->
-    @if ($showRecuperarPagoModal)
-    <div class="modal fade show" id="modalRecuperarPago" tabindex="-1" role="dialog"
-        aria-labelledby="modalRecuperarPagoLabel" style="display: block;" aria-modal="true">
-        <div class="modal-dialog modal-dialog-centered" role="document">
-            <div class="modal-content">
-                <div class="modal-header bg-info text-white">
-                    <h5 class="modal-title" id="modalRecuperarPagoLabel">
-                        <i class="fas fa-hand-holding-usd mr-2"></i>Recuperar Pago Directo
-                    </h5>
-                    <button type="button" class="close" wire:click="closeRecuperarPagoModal"
-                        aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
-                    <form wire:submit.prevent="saveRecuperarPago">
-                        <div class="form-group">
-                            <label for="recuperarPagoFecha">Fecha de Recuperación:</label>
-                            <input type="date" id="recuperarPagoFecha"
-                                class="form-control @error('recuperarPagoData.fecha') is-invalid @enderror"
-                                wire:model.defer="recuperarPagoData.fecha">
-                            @error('recuperarPagoData.fecha')
-                            <span class="invalid-feedback">{{ $message }}</span>
-                            @enderror
-                        </div>
-                        <div class="form-group">
-                            <label for="recuperarPagoNumeroIngreso">Número de Ingreso:</label>
-                            <input type="text" id="recuperarPagoNumeroIngreso"
-                                class="form-control @error('recuperarPagoData.numero_ingreso') is-invalid @enderror"
-                                wire:model.defer="recuperarPagoData.numero_ingreso"
-                                placeholder="Ingrese número de ingreso">
-                            @error('recuperarPagoData.numero_ingreso')
-                            <span class="invalid-feedback">{{ $message }}</span>
-                            @enderror
-                        </div>
-                        @if ($recuperarPagoData['es_banco_bse'] ?? false)
-                        <div class="form-group">
-                            <label for="recuperarPagoNumeroIngresoBSE">Número de Ingreso BSE:</label>
-                            <input type="text" id="recuperarPagoNumeroIngresoBSE"
-                                class="form-control @error('recuperarPagoData.numero_ingreso_bse') is-invalid @enderror"
-                                wire:model.defer="recuperarPagoData.numero_ingreso_bse"
-                                placeholder="Ingrese número de ingreso BSE">
-                            @error('recuperarPagoData.numero_ingreso_bse')
-                            <span class="invalid-feedback">{{ $message }}</span>
-                            @enderror
-                        </div>
-                        @endif
-                        <div class="form-group">
-                            <label for="recuperarPagoMontoRecuperado">Monto Recuperado:</label>
-                            <input type="number" id="recuperarPagoMontoRecuperado"
-                                class="form-control @error('recuperarPagoData.monto_recuperado') is-invalid @enderror"
-                                wire:model.defer="recuperarPagoData.monto_recuperado" step="0.01">
-                            @error('recuperarPagoData.monto_recuperado')
-                            <span class="invalid-feedback">{{ $message }}</span>
-                            @enderror
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" wire:click="closeRecuperarPagoModal">
-                        <i class="fas fa-times mr-1"></i>Cancelar
-                    </button>
-                    <button type="button" class="btn btn-info" wire:click="saveRecuperarPago">
-                        <i class="fas fa-save mr-1"></i>Guardar Recuperación
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="modal-backdrop fade show"></div>
-    @endif
+    <livewire:tesoreria.caja-chica.modales.modal-recuperar-pago />
+    <livewire:tesoreria.caja-chica.modales.modal-rendir-pago />
 
-    <!-- Alertas para recuperación de pagos -->
-    @if ($modalRecuperarPagoError)
-    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-        {{ $modalRecuperarPagoError }}
-        <button type="button" class="close" wire:click="$set('modalRecuperarPagoError', null)">
-            <span aria-hidden="true">&times;</span>
-        </button>
-    </div>
-    @endif
 
-    @if ($modalRecuperarPagoMessage)
-    <div class="alert alert-success alert-dismissible fade show" role="alert">
-        {{ $modalRecuperarPagoMessage }}
-        <button type="button" class="close" wire:click="$set('modalRecuperarPagoMessage', null)">
-            <span aria-hidden="true">&times;</span>
-        </button>
-    </div>
-    @endif
 
     <!-- Incluir los componentes de modales -->
-    <livewire:tesoreria.caja-chica.modal-nuevo-fondo />
-    <livewire:tesoreria.caja-chica.modal-nuevo-pendiente />
-    <livewire:tesoreria.caja-chica.modal-nuevo-pago />
-    <livewire:tesoreria.caja-chica.modal-editar-pago />
+    <livewire:tesoreria.caja-chica.modales.modal-nuevo-fondo />
+    <livewire:tesoreria.caja-chica.modales.modal-nuevo-pendiente />
+    <livewire:tesoreria.caja-chica.modales.modal-nuevo-pago />
+    <livewire:tesoreria.caja-chica.modales.modal-editar-pago />
 
     <!-- Modal Dependencias -->
     <div class="modal fade" id="modalDependencias" tabindex="-1" role="dialog"
@@ -947,20 +675,7 @@
             }
         });
 
-        // Focus automático en el campo monto cuando se abre el modal
-        Livewire.on('modal-edit-fondo-opened', function() {
-            setTimeout(() => {
-                document.getElementById('editMonto').focus();
-                document.getElementById('editMonto').select();
-            }, 300);
-        });
 
-        // Prevenir cierre del modal con Escape o click fuera
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape' && document.getElementById('modalEditarFondo')) {
-                Livewire.find('{{ $this->id }}').cerrarModalEditFondo();
-            }
-        });
 
         // --- Listener para mostrar el modal de nuevo fondo ---
         Livewire.on('mostrar-modal-nuevo-fondo', function() {

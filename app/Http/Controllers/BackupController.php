@@ -120,29 +120,22 @@ class BackupController extends Controller
             }
 
             $sqlFile = null;
-
-            // Buscar el archivo SQL en el zip
             for ($i = 0; $i < $zip->numFiles; $i++) {
                 $filename = $zip->getNameIndex($i);
-                if (str_ends_with($filename, '.sql') && strpos($filename, 'db-dumps/') !== false) {
-                    $sqlFile = $filename;
-                    break;
-                }
-            }
-
-            if (!$sqlFile) {
-                for ($i = 0; $i < $zip->numFiles; $i++) {
-                    $filename = $zip->getNameIndex($i);
-                    if (str_ends_with($filename, '.sql')) {
+                $normalizedName = str_replace('\\', '/', $filename);
+                if (str_ends_with(strtolower($filename), '.sql')) {
+                    if (strpos($normalizedName, 'db-dumps/') !== false) {
                         $sqlFile = $filename;
                         break;
+                    }
+                    if (!$sqlFile) {
+                        $sqlFile = $filename;
                     }
                 }
             }
 
             if (!$sqlFile) {
-                $zip->close();
-                throw new \Exception('No se encontró el archivo SQL en el respaldo');
+                throw new \Exception('No se encontró el archivo SQL en el respaldo ZIP.');
             }
 
             // Extraer el archivo SQL

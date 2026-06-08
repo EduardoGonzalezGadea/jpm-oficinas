@@ -2,46 +2,46 @@
 
 namespace App\Exceptions;
 
+use App\Http\Responses\SessionExpiredResponse;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
-use Throwable;
+use Illuminate\Session\TokenMismatchException;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class Handler extends ExceptionHandler
 {
-    /**
-     * A list of the exception types that are not reported.
-     *
-     * @var array<int, class-string<Throwable>>
-     */
-    protected $dontReport = [
-        //
-    ];
+    protected $dontReport = [];
 
-    /**
-     * A list of the inputs that are never flashed for validation exceptions.
-     *
-     * @var array<int, string>
-     */
     protected $dontFlash = [
         'current_password',
         'password',
         'password_confirmation',
     ];
 
-    /**
-     * Register the exception handling callbacks for the application.
-     *
-     * @return void
-     */
     public function register()
     {
         $this->renderable(function (AuthenticationException $e, $request) {
-            if ($request->expectsJson() || $request->is('livewire/*')) {
-                return response()->json([
-                    'message' => 'Tu sesión ha expirado. Por favor, inicia sesión nuevamente.',
-                    'redirect' => route('login')
-                ], 401);
+            if ($request->expectsJson() || $request->is('livewire/*') || $request->ajax()) {
+                return SessionExpiredResponse::make($request, SessionExpiredResponse::DEFAULT_MESSAGE);
             }
         });
+
+        $this->renderable(function (TokenMismatchException $e, $request) {
+            return SessionExpiredResponse::make(
+                $request,
+                SessionExpiredResponse::DEFAULT_MESSAGE
+            );
+        });
+
+        $this->renderable(function (HttpException $e, $request) {
+            if ($e->getStatusCode() === 500 && SessionExpiredResponse::isSessionExpiredMessage($e->getMessage())) {
+                return SessionExpiredResponse::make($request, $e->getMessage());
+            }
+        });
+    }
+
+    protected function unauthenticated($request, AuthenticationException $exception)
+    {
+        return SessionExpiredResponse::make($request, SessionExpiredResponse::DEFAULT_MESSAGE);
     }
 }

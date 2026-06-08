@@ -51,6 +51,11 @@
                             <input type="text" wire:model.defer="numero_recibo" class="form-control" id="numero_recibo">
                             @error('numero_recibo') <span class="text-danger">{{ $message }}</span> @enderror
                         </div>
+                        <div class="form-group">
+                            <label for="monto">Monto ($)</label>
+                            <input type="number" step="0.01" min="0" wire:model.defer="monto" class="form-control" id="monto" placeholder="Ej: 55.00">
+                            @error('monto') <span class="text-danger">{{ $message }}</span> @enderror
+                        </div>
                     </form>
                 </div>
                 <div class="modal-footer">

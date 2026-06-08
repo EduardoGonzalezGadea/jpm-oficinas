@@ -16,9 +16,11 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::table('tes_eventuales_instituciones', function (Blueprint $table) {
-            $table->softDeletes();
-        });
+        if (!Schema::hasColumn('tes_eventuales_instituciones', 'deleted_at')) {
+            Schema::table('tes_eventuales_instituciones', function (Blueprint $table) {
+                $table->softDeletes();
+            });
+        }
     }
 
     /**
@@ -28,8 +30,10 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::table('tes_eventuales_instituciones', function (Blueprint $table) {
-            $table->dropSoftDeletes();
-        });
+        if (Schema::hasColumn('tes_eventuales_instituciones', 'deleted_at')) {
+            Schema::table('tes_eventuales_instituciones', function (Blueprint $table) {
+                $table->dropSoftDeletes();
+            });
+        }
     }
 };

@@ -6,6 +6,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const rulesCount = document.getElementById('rulesCount');
     const searchInput = document.getElementById('searchInput');
     const masterToggle = document.getElementById('masterToggle');
+    const emptyState = document.getElementById('emptyState');
+    const emptyStateText = document.getElementById('emptyStateText');
 
     const exportBtn = document.getElementById('exportBtn');
     const importBtn = document.getElementById('importBtn');
@@ -69,31 +71,76 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function renderList(rules, isFiltering = false) {
-        replacementsList.innerHTML = '';
+        replacementsList.textContent = '';
         rulesCount.textContent = `${rules.length} regla${rules.length !== 1 ? 's' : ''}`;
 
         if (rules.length === 0) {
-            replacementsList.innerHTML = `
-                <div class="empty-state">
-                    <i>empty</i>
-                    <p>${isFiltering ? 'No se encontraron reglas.' : 'No hay reglas configuradas.'}</p>
-                </div>
-            `;
+            emptyStateText.textContent = isFiltering ? 'No se encontraron reglas.' : 'No hay reglas configuradas.';
+            emptyState.style.display = 'block';
             return;
         }
 
-        rules.forEach((item, index) => {
+        emptyState.style.display = 'none';
+
+        rules.forEach((item) => {
             const card = document.createElement('div');
             card.className = 'rule-card';
-            card.innerHTML = `
-                <div class="rule-content">
-                    <span class="rule-trigger">${escapeHtml(item.trigger)}</span>
-                    <span class="rule-replacement">${escapeHtml(item.replacement)}</span>
-                </div>
-                <button class="btn-icon btn-delete" data-trigger="${escapeHtml(item.trigger)}" title="Eliminar">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
-                </button>
-            `;
+
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'rule-content';
+
+            const triggerSpan = document.createElement('span');
+            triggerSpan.className = 'rule-trigger';
+            triggerSpan.textContent = item.trigger;
+
+            const replacementSpan = document.createElement('span');
+            replacementSpan.className = 'rule-replacement';
+            replacementSpan.textContent = item.replacement;
+
+            contentDiv.appendChild(triggerSpan);
+            contentDiv.appendChild(replacementSpan);
+
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'btn-icon btn-delete';
+            deleteBtn.setAttribute('data-trigger', item.trigger);
+            deleteBtn.setAttribute('title', 'Eliminar');
+
+            const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+            svg.setAttribute("width", "16");
+            svg.setAttribute("height", "16");
+            svg.setAttribute("viewBox", "0 0 24 24");
+            svg.setAttribute("fill", "none");
+            svg.setAttribute("stroke", "currentColor");
+            svg.setAttribute("stroke-width", "2");
+            svg.setAttribute("stroke-linecap", "round");
+            svg.setAttribute("stroke-linejoin", "round");
+
+            const polyline = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
+            polyline.setAttribute("points", "3 6 5 6 21 6");
+            svg.appendChild(polyline);
+
+            const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+            path.setAttribute("d", "M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2");
+            svg.appendChild(path);
+
+            const line1 = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            line1.setAttribute("x1", "10");
+            line1.setAttribute("y1", "11");
+            line1.setAttribute("x2", "10");
+            line1.setAttribute("y2", "17");
+            svg.appendChild(line1);
+
+            const line2 = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            line2.setAttribute("x1", "14");
+            line2.setAttribute("y1", "11");
+            line2.setAttribute("x2", "14");
+            line2.setAttribute("y2", "17");
+            svg.appendChild(line2);
+
+            deleteBtn.appendChild(svg);
+            
+            card.appendChild(contentDiv);
+            card.appendChild(deleteBtn);
             replacementsList.appendChild(card);
         });
 
@@ -167,12 +214,6 @@ document.addEventListener('DOMContentLoaded', () => {
         reader.readAsText(file);
         importFile.value = '';
     });
-
-    function escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-    }
 
     function showToast(msg, type) {
         // Implementación básica para no romper flujo, el usuario pidió impacto visual

@@ -1,0 +1,232 @@
+<?php
+
+namespace App\Services;
+
+use App\Models\Tesoreria\CajaDiaria;
+use App\Models\Tesoreria\CertificadoResidencia;
+use App\Models\Tesoreria\Cheque;
+use App\Models\Tesoreria\CuentaBancaria;
+use App\Models\Tesoreria\LibretaValor;
+use App\Models\Tesoreria\Pago;
+use App\Models\Tesoreria\Pendiente;
+use App\Models\Tesoreria\TipoLibreta;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Collection;
+
+class AlertService
+{
+    /**
+     * Obtiene todas las alertas organizadas por categorías
+     * Cache TTL: 5 minutos (300 segundos)
+     */
+    public function getAllAlerts(): array
+    {
+        return Cache::remember('dashboard_alerts', 300, function () {
+            $criticas = $this->getAlertasCriticas();
+            $colapsables = $this->getAlertasColapsables();
+            
+            return [
+                'criticas' => $criticas,
+                'colapsables' => $colapsables,
+                'total_colapsables' => collect($colapsables)->sum('contador'),
+                'last_updated' => Carbon::now()->format('d/m/Y H:i'),
+            ];
+        });
+    }
+
+    /**
+     * Obtiene alertas críticas - SIEMPRE visibles
+     */
+    private function getAlertasCriticas(): array
+    {
+        $alertas = [];
+        
+        // Alertas de Caja sin cerrar (cualquier fecha anterior)
+        $cajasSinCerrar = $this->getCajasSinCerrar();
+        foreach ($cajasSinCerrar as $caja) {
+            $alertas[] = [
+                'id' => 'caja_' . $caja->id,
+                'tipo' => 'danger',
+                'categoria' => 'caja',
+                'prioridad' => 1,
+                'icono' => 'fa-cash-register',
+                'titulo' => 'Caja Sin Cerrar',
+                'mensaje' => "La caja del {$caja->fecha->format('d/m/Y')} se encuentra {$caja->estado->nombre}.",
+                'accion' => [
+                    'route' => 'tesoreria.caja-diaria.index',
+                    'label' => 'Gestionar',
+                ],
+            ];
+        }
+        
+        return [
+            'alertas' => $alertas,
+            'contador' => count($alertas),
+            'prioridad_maxima' => !empty($alertas) ? 1 : null,
+        ];
+    }
+
+    /**
+     * Obtiene alertas colapsables organizadas por categorías
+     */
+    private function getAlertasColapsables(): array
+    {
+        $alertas = [];
+        
+        // Stock de Valores
+        $alertas['stock_valores'] = $this->getAlertasStockValores();
+        
+        // Stock de Cheques
+        $alertas['stock_cheques'] = $this->getAlertasStockCheques();
+        
+        // Certificados
+        $alertas['certificados'] = $this->getAlertasCertificados();
+        
+        // Caja Chica
+        $alertas['caja_chica'] = $this->getAlertasCajaChica();
+        
+        return $alertas;
+    }
+
+    /**
+     * Alertas de Stock de Valores
+     */
+    private function getAlertasStockValores(): array
+    {
+        $todosTipos = TipoLibreta::all();
+        $libretasEnStock = LibretaValor::with('tipoLibreta')
+            ->where('estado', 'en_stock')
+            ->get();
+        
+        $stockPorTipo = [];
+        foreach ($todosTipos as $tipo) {
+            $stockPorTipo[$tipo->id] = [
+                'tipo' => $tipo,
+                'stock_total' => 0,
+            ];
+        }
+        
+        foreach ($libretasEnStock as $libreta) {
+            if ($libreta->tipoLibreta) {
+                $tipoId = $libreta->tipoLibreta->id;
+                $proximoRecibo = $libreta->proximo_recibo_disponible ?? $libreta->numero_inicial;
+                if ($proximoRecibo == 0) {
+                    $proximoRecibo = $libreta->numero_inicial;
+                }
+                $stockLibreta = $libreta->numero_final - $proximoRecibo + 1;
+                if (isset($stockPorTipo[$tipoId])) {
+                    $stockPorTipo[$tipoId]['stock_total'] += max(0, $stockLibreta);
+                }
+            }
+        }
+        
+        $alertas = [];
+        foreach ($stockPorTipo as $info) {
+            $stockTotal = $info['stock_total'];
+            $stockMinimo = $info['tipo']->stock_minimo_recibos ?? 0;
+            $nombreTipo = $info['tipo']->nombre;
+            
+            if ($stockTotal <= 0) {
+                $alertas[] = [
+                    'id' => 'stock_valor_' . $info['tipo']->id,
+                    'tipo' => 'danger',
+                    'categoria' => 'stock',
+                    'prioridad' => 1,
+                    'icono' => 'fa-barcode',
+                    'titulo' => 'Sin Stock',
+                    'mensaje' => "Las libretas de {$nombreTipo} se han quedado sin stock.",
+                    'accion' => [
+                        'route' => 'tesoreria.valores.index',
+                        'label' => 'Ver',
+                    ],
+                ];
+            } elseif ($stockMinimo > 0 && $stockTotal <= $stockMinimo) {
+                $alertas[] = [
+                    'id' => 'stock_valor_' . $info['tipo']->id,
+                    'tipo' => 'warning',
+                    'categoria' => 'stock',
+                    'prioridad' => 2,
+                    'icono' => 'fa-barcode',
+                    'titulo' => 'Stock Bajo',
+                    'mensaje' => "Las libretas de {$nombreTipo} tienen stock bajo ({$stockTotal} recibos disponibles). Mínimo: {$stockMinimo}.",
+                    'accion' => [
+                        'route' => 'tesoreria.valores.index',
+                        'label' => 'Ver',
+                    ],
+                ];
+            }
+        }
+        
+        return [
+            'alertas' => $alertas,
+            'contador' => count($alertas),
+            'prioridad_maxima' => !empty($alertas) ? min(array_column($alertas, 'prioridad')) : null,
+        ];
+    }
+
+    /**
+     * Alertas de Stock de Cheques
+     */
+    private function getAlertasStockCheques(): array
+    {
+        $cuentasBancarias = CuentaBancaria::where('activa', true)
+            ->with('banco')
+            ->get();
+        
+        $alertas = [];
+        
+        foreach ($cuentasBancarias as $cuenta) {
+            $stockCheques = Cheque::where('cuenta_bancaria_id', $cuenta->id)
+                ->where('estado', 'disponible')
+                ->whereNull('deleted_at')
+                ->count();
+            
+            $nombreCuenta = $cuenta->banco ? $cuenta->banco->nombre . ' - ' . $cuenta->numero_cuenta : 'Cuenta ' . $cuenta->numero_cuenta;
+            
+            if ($stockCheques <= 0) {
+                $alertas[] = [
+                    'id' => 'cheque_' . $cuenta->id,
+                    'tipo' => 'danger',
+                    'categoria' => 'cheques',
+                    'prioridad' => 1,
+                    'icono' => 'fa-money-check',
+                    'titulo' => 'Sin Cheques',
+                    'mensaje' => "La cuenta bancaria {$nombreCuenta} no tiene cheques disponibles.",
+                    'accion' => [
+                        'route' => 'tesoreria.cheques.index',
+                        'label' => 'Ver',
+                    ],
+                ];
+            } elseif ($stockCheques < 50) {
+                $alertas[] = [
+                    'id' => 'cheque_' . $cuenta->id,
+                    'tipo' => 'warning',
+                    'categoria' => 'cheques',
+                    'prioridad' => 2,
+                    'icono' => 'fa-money-check',
+                    'titulo' => 'Stock Bajo',
+                    'mensaje' => "La cuenta bancaria {$nombreCuenta} tiene stock bajo de cheques ({$stockCheques} disponibles). Mínimo recomendado: 50.",
+                    'accion' => [
+                        'route' => 'tesoreria.cheques.index',
+                        'label' => 'Ver',
+                    ],
+                ];
+            }
+        }
+        
+        return [
+            'alertas' => $alertas,
+            'contador' => count($alertas),
+            'prioridad_maxima' => !empty($alertas) ? min(array_column($alertas, 'prioridad')) : null,
+        ];
+    }
+
+    /**
+     * Alertas de Certificados de Residencia
+     */
+    private function getAlertasCertificados(): array
+    {
+        $fechaLimite = Carbon::now()->subDays(45);
+        
+    

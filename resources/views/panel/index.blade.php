@@ -8,8 +8,8 @@
     <!-- 1. Encabezado Moderno y Compacto -->
     <div class="d-sm-flex align-items-center justify-content-between mb-4">
         <div>
-            <h1 class="h3 mb-0">Panel Principal</h1>
-            <p class="mb-0 small">
+            <h1 class="h3 mb-0 text-premium-header">Panel Principal</h1>
+            <p class="mb-0 text-premium-muted">
                 Bienvenid@, <strong>{{ $usuario->nombre }} {{ $usuario->apellido }}</strong> |
                 Rol: <strong>{{ ucfirst(str_replace('_', ' ', $usuario->getRoleNames()->first())) }}</strong>
                 @if ($usuario->modulo)
@@ -21,21 +21,35 @@
         <div class="d-none d-sm-inline-block text-right">
             <div class="d-flex align-items-center">
                 <span id="sync-indicator" class="mr-2" title="Cargando...">
-                    <i class="fas fa-sync-alt fa-spin text-muted"></i>
+                    <i class="fas fa-sync-alt fa-spin text-premium-muted"></i>
                 </span>
                 <div>
-                    <span class="small font-weight-bold" id="fecha-hora">
+                    <span class="font-weight-bold text-premium-header" style="font-size: 0.95rem;" id="fecha-hora">
                         <i class="far fa-calendar-alt mr-1"></i>{{ now()->format('d/m/Y') }} - {{ now()->format('H:i:s') }}
                     </span>
                     <br>
-                    <small id="sync-status" class="text-muted">Sincronizando...</small>
+                    <small id="sync-status" class="text-premium-muted">Sincronizando...</small>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- 2. Alertas del Sistema (Acordeón Compacto y Contrastado) -->
-    @if($alertasStock->isNotEmpty() || $alertasCheques->isNotEmpty() || $pendientesAnteriores->isNotEmpty() || $pagosAnteriores->isNotEmpty())
+    @php
+        $todasLasAlertas = collect();
+        if (isset($alertas['criticas']['alertas'])) {
+            $todasLasAlertas = $todasLasAlertas->merge($alertas['criticas']['alertas']);
+        }
+        if (isset($alertas['colapsables'])) {
+            foreach ($alertas['colapsables'] as $colapsable) {
+                if (isset($colapsable['alertas'])) {
+                    $todasLasAlertas = $todasLasAlertas->merge($colapsable['alertas']);
+                }
+            }
+        }
+    @endphp
+
+    @if($todasLasAlertas->isNotEmpty())
     <div class="accordion mb-4 shadow-sm" id="alertasAccordion">
         <div class="card border-0">
             <div class="card-header p-0 bg-warning" id="headingAlertas">
@@ -43,7 +57,7 @@
                     <button class="btn btn-block text-left d-flex align-items-center justify-content-between text-decoration-none py-2 px-3 collapsed" type="button" data-toggle="collapse" data-target="#collapseAlertas" aria-expanded="false" aria-controls="collapseAlertas" style="color: #FFFFFF !important; text-shadow: 1px 1px 2px rgba(0,0,0,0.7), 0 0 3px rgba(0,0,0,0.5);">
                         <span class="font-weight-bold" style="font-size: 0.9rem;">
                             <i class="fas fa-exclamation-triangle mr-2"></i>ALERTAS DEL SISTEMA
-                            <span class="badge badge-dark badge-pill ml-2">{{ $alertasStock->count() + $alertasCheques->count() + $pendientesAnteriores->count() + $pagosAnteriores->count() }}</span>
+                            <span class="badge badge-dark badge-pill ml-2">{{ $todasLasAlertas->count() }}</span>
                         </span>
                         <i class="fas fa-chevron-down"></i>
                     </button>
@@ -53,28 +67,16 @@
             <div id="collapseAlertas" class="collapse" aria-labelledby="headingAlertas" data-parent="#alertasAccordion">
                 <div class="card-body p-0 border-left border-right border-bottom border-warning">
                     <ul class="list-group list-group-flush">
-                        @foreach($alertasStock as $alerta)
+                        @foreach($todasLasAlertas as $alerta)
                         <li class="list-group-item list-group-item-warning d-flex justify-content-between align-items-center py-1 px-3" style="font-size: 0.85rem;">
-                            <span class=""><i class="fas fa-circle text-danger mr-2" style="font-size: 0.5rem;"></i>{!! $alerta['mensaje'] !!}</span>
-                            <a href="{{ route('tesoreria.valores.index') }}" class="font-weight-bold text-decoration-none">Ver <i class="fas fa-arrow-right ml-1"></i></a>
-                        </li>
-                        @endforeach
-                        @foreach($alertasCheques as $alerta)
-                        <li class="list-group-item list-group-item-warning d-flex justify-content-between align-items-center py-1 px-3" style="font-size: 0.85rem;">
-                            <span class=""><i class="fas fa-circle text-danger mr-2" style="font-size: 0.5rem;"></i>{!! $alerta['mensaje'] !!}</span>
-                            <a href="{{ route('tesoreria.cheques.index') }}" class="font-weight-bold text-decoration-none">Ver <i class="fas fa-arrow-right ml-1"></i></a>
-                        </li>
-                        @endforeach
-                        @foreach($pendientesAnteriores as $pendiente)
-                        <li class="list-group-item list-group-item-warning d-flex justify-content-between align-items-center py-1 px-3" style="font-size: 0.85rem;">
-                            <span class=""><i class="fas fa-circle text-warning mr-2" style="font-size: 0.5rem;"></i><strong>Caja Chica:</strong> Pendiente "{{ $pendiente->pendiente }}" ({{ $pendiente->dependencia->dependencia ?? 'S/D' }}) mes anterior.</span>
-                            <a href="{{ route('tesoreria.caja-chica.index') }}" class="font-weight-bold text-decoration-none">Ver <i class="fas fa-arrow-right ml-1"></i></a>
-                        </li>
-                        @endforeach
-                        @foreach($pagosAnteriores as $pago)
-                        <li class="list-group-item list-group-item-warning d-flex justify-content-between align-items-center py-1 px-3" style="font-size: 0.85rem;">
-                            <span class=""><i class="fas fa-circle text-warning mr-2" style="font-size: 0.5rem;"></i><strong>Caja Chica:</strong> Pago del {{ $pago->fechaEgresoPagos->format('d/m/Y') }} ({{ $pago->acreedor->nombre ?? 'S/D' }}) mes anterior.</span>
-                            <a href="{{ route('tesoreria.caja-chica.index') }}" class="font-weight-bold text-decoration-none">Ver <i class="fas fa-arrow-right ml-1"></i></a>
+                            <span class="">
+                                <i class="fas fa-circle text-{{ $alerta['tipo'] ?? 'warning' }} mr-2" style="font-size: 0.5rem;"></i>
+                                @if(isset($alerta['titulo'])) <strong>{{ $alerta['titulo'] }}:</strong> @endif 
+                                {!! $alerta['mensaje'] !!}
+                            </span>
+                            @if(isset($alerta['accion']) && isset($alerta['accion']['route']))
+                                <a href="{{ route($alerta['accion']['route']) }}" class="font-weight-bold text-decoration-none">{{ $alerta['accion']['label'] ?? 'Ver' }} <i class="fas fa-arrow-right ml-1"></i></a>
+                            @endif
                         </li>
                         @endforeach
                     </ul>
@@ -85,31 +87,17 @@
     @endif
 
     <!-- 3. Accesos Rápidos (Widgets Compactos) -->
-    <h6 class="mb-3 font-weight-bold ml-1">Accesos Directos</h6>
+    <h5 class="mb-3 text-premium-header ml-1">
+        <i class="fas fa-th-large mr-2"></i>Accesos Directos
+    </h5>
     <div class="row">
         @can('operador_tesoreria')
-        <!-- Art. Multas CPT (siempre al inicio) -->
-        <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 mb-3">
-            <a href="{{ route('tesoreria.multas-transito') }}" class="text-decoration-none">
-                <div class="card shadow-sm h-100 widget-card border-left-info">
-                    <div class="card-body p-2 d-flex align-items-center">
-                        <div class="mr-3 text-info">
-                            <i class="fas fa-list fa-2x"></i>
-                        </div>
-                        <div>
-                            <div class="font-weight-bold text-body small">Art. Multas CPT</div>
-                        </div>
-                    </div>
-                </div>
-            </a>
-        </div>
-
         <!-- Arrendamientos -->
         <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 mb-3">
             <a href="{{ route('tesoreria.arrendamientos.index') }}" class="text-decoration-none">
-                <div class="card shadow-sm h-100 widget-card border-left-info">
+                <div class="card shadow-sm h-100 widget-card border-left-financial">
                     <div class="card-body p-2 d-flex align-items-center">
-                        <div class="mr-3 text-info">
+                        <div class="mr-3 text-financial">
                             <i class="fas fa-file-signature fa-2x"></i>
                         </div>
                         <div>
@@ -120,12 +108,44 @@
             </a>
         </div>
 
+        <!-- Art. Multas CPT -->
+        <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 mb-3">
+            <a href="{{ route('tesoreria.multas-transito') }}" class="text-decoration-none">
+                <div class="card shadow-sm h-100 widget-card border-left-operational">
+                    <div class="card-body p-2 d-flex align-items-center">
+                        <div class="mr-3 text-operational">
+                            <i class="fas fa-list fa-2x"></i>
+                        </div>
+                        <div>
+                            <div class="font-weight-bold text-body small">Art. Multas CPT</div>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <!-- Multas CPT Dec. 303 -->
+        <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 mb-3">
+            <a href="{{ route('tesoreria.multas-303-2023') }}" class="text-decoration-none">
+                <div class="card shadow-sm h-100 widget-card border-left-operational">
+                    <div class="card-body p-2 d-flex align-items-center">
+                        <div class="mr-3 text-operational">
+                            <i class="fas fa-list-alt fa-2x"></i>
+                        </div>
+                        <div>
+                            <div class="font-weight-bold text-body small">Multas Dec. 303</div>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+
         <!-- Caja Chica -->
         <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 mb-3">
             <a href="{{ route('tesoreria.caja-chica.index') }}" class="text-decoration-none">
-                <div class="card shadow-sm h-100 widget-card border-left-info">
+                <div class="card shadow-sm h-100 widget-card border-left-financial">
                     <div class="card-body p-2 d-flex align-items-center">
-                        <div class="mr-3 text-info">
+                        <div class="mr-3 text-financial">
                             <i class="fas fa-coins fa-2x"></i>
                         </div>
                         <div>
@@ -136,12 +156,13 @@
             </a>
         </div>
 
+    
         <!-- Cert. Residencia -->
         <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 mb-3">
             <a href="{{ route('tesoreria.certificados-residencia.index') }}" class="text-decoration-none">
-                <div class="card shadow-sm h-100 widget-card border-left-info">
+                <div class="card shadow-sm h-100 widget-card border-left-documentary">
                     <div class="card-body p-2 d-flex align-items-center">
-                        <div class="mr-3 text-info">
+                        <div class="mr-3 text-documentary">
                             <i class="fas fa-file-alt fa-2x"></i>
                         </div>
                         <div>
@@ -155,9 +176,9 @@
         <!-- Cheques -->
         <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 mb-3">
             <a href="{{ route('tesoreria.cheques.index') }}" class="text-decoration-none">
-                <div class="card shadow-sm h-100 widget-card border-left-info">
+                <div class="card shadow-sm h-100 widget-card border-left-financial">
                     <div class="card-body p-2 d-flex align-items-center">
-                        <div class="mr-3 text-info">
+                        <div class="mr-3 text-financial">
                             <i class="fas fa-money-check fa-2x"></i>
                         </div>
                         <div>
@@ -168,12 +189,16 @@
             </a>
         </div>
 
+        @can('administrar_sistema')
+
+        @endcan
+
         <!-- Depósito Vehículos -->
         <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 mb-3">
             <a href="{{ route('tesoreria.deposito-vehiculos.index') }}" class="text-decoration-none">
-                <div class="card shadow-sm h-100 widget-card border-left-info">
+                <div class="card shadow-sm h-100 widget-card border-left-operational">
                     <div class="card-body p-2 d-flex align-items-center">
-                        <div class="mr-3 text-info">
+                        <div class="mr-3 text-operational">
                             <i class="fas fa-car fa-2x"></i>
                         </div>
                         <div>
@@ -187,9 +212,9 @@
         <!-- Eventuales -->
         <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 mb-3">
             <a href="{{ route('tesoreria.eventuales.index') }}" class="text-decoration-none">
-                <div class="card shadow-sm h-100 widget-card border-left-info">
+                <div class="card shadow-sm h-100 widget-card border-left-financial">
                     <div class="card-body p-2 d-flex align-items-center">
-                        <div class="mr-3 text-info">
+                        <div class="mr-3 text-financial">
                             <i class="fas fa-hand-holding-usd fa-2x"></i>
                         </div>
                         <div>
@@ -203,9 +228,9 @@
         <!-- Multas Cobradas -->
         <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 mb-3">
             <a href="{{ route('tesoreria.multas-cobradas.index') }}" class="text-decoration-none">
-                <div class="card shadow-sm h-100 widget-card border-left-info">
+                <div class="card shadow-sm h-100 widget-card border-left-operational">
                     <div class="card-body p-2 d-flex align-items-center">
-                        <div class="mr-3 text-info">
+                        <div class="mr-3 text-operational">
                             <i class="fas fa-receipt fa-2x"></i>
                         </div>
                         <div>
@@ -219,9 +244,9 @@
         <!-- Porte de Armas -->
         <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 mb-3">
             <a href="{{ route('tesoreria.armas.porte') }}" class="text-decoration-none">
-                <div class="card shadow-sm h-100 widget-card border-left-info">
+                <div class="card shadow-sm h-100 widget-card border-left-operational">
                     <div class="card-body p-2 d-flex align-items-center">
-                        <div class="mr-3 text-info">
+                        <div class="mr-3 text-operational">
                             <i class="fas fa-shield-alt fa-2x"></i>
                         </div>
                         <div>
@@ -235,9 +260,9 @@
         <!-- Prendas -->
         <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 mb-3">
             <a href="{{ route('tesoreria.prendas.index') }}" class="text-decoration-none">
-                <div class="card shadow-sm h-100 widget-card border-left-info">
+                <div class="card shadow-sm h-100 widget-card border-left-documentary">
                     <div class="card-body p-2 d-flex align-items-center">
-                        <div class="mr-3 text-info">
+                        <div class="mr-3 text-documentary">
                             <i class="fas fa-file-invoice-dollar fa-2x"></i>
                         </div>
                         <div>
@@ -251,9 +276,9 @@
         <!-- Valores -->
         <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 mb-3">
             <a href="{{ route('tesoreria.valores.index') }}" class="text-decoration-none">
-                <div class="card shadow-sm h-100 widget-card border-left-info">
+                <div class="card shadow-sm h-100 widget-card border-left-financial">
                     <div class="card-body p-2 d-flex align-items-center">
-                        <div class="mr-3 text-info">
+                        <div class="mr-3 text-financial">
                             <i class="fas fa-barcode fa-2x"></i>
                         </div>
                         <div>
@@ -263,15 +288,34 @@
                 </div>
             </a>
         </div>
+
+        @if(auth()->user()->hasAnyRole(['administrador', 'gerente_tesoreria', 'supervisor_tesoreria']))
+        <!-- Reporte de Recibos (Contabilidad) -->
+        <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 mb-3">
+            <a href="{{ route('tesoreria.reporte-recibos.index') }}" class="text-decoration-none">
+                <div class="card shadow-sm h-100 widget-card border-left-danger">
+                    <div class="card-body p-2 d-flex align-items-center">
+                        <div class="mr-3 text-danger">
+                            <i class="fas fa-clipboard-list fa-2x"></i>
+                        </div>
+                        <div>
+                            <div class="font-weight-bold text-body small">Reporte Recibos</div>
+                            <div class="text-muted" style="font-size: 0.65rem;">Para Contabilidad</div>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+        @endif
         @endcan
 
         @can('ver_usuarios')
         <!-- Usuarios -->
         <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 mb-3">
             <a href="{{ route('usuarios.index') }}" class="text-decoration-none">
-                <div class="card shadow-sm h-100 widget-card border-left-success">
+                <div class="card shadow-sm h-100 widget-card border-left-system">
                     <div class="card-body p-2 d-flex align-items-center">
-                        <div class="mr-3 text-success">
+                        <div class="mr-3 text-system">
                             <i class="fas fa-users fa-2x"></i>
                         </div>
                         <div>
@@ -286,9 +330,9 @@
         <!-- Mi Perfil (siempre al final) -->
         <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 mb-3">
             <a href="{{ route('usuarios.miPerfil') }}" class="text-decoration-none">
-                <div class="card shadow-sm h-100 widget-card border-left-primary">
+                <div class="card shadow-sm h-100 widget-card border-left-system">
                     <div class="card-body p-2 d-flex align-items-center">
-                        <div class="mr-3 text-primary">
+                        <div class="mr-3 text-system">
                             <i class="fas fa-user-edit fa-2x"></i>
                         </div>
                         <div>
@@ -312,46 +356,19 @@
 
 </div>
 
-<!-- Estilos Personalizados -->
+<!-- Estilos y Scripts (Fase 3: Se asume que los estilos comunes residen en app.css) -->
 <style>
-    /* Bordes de colores */
-    .border-left-primary {
-        border-left: 4px solid #4e73df !important;
-    }
-
-    .border-left-success {
-        border-left: 4px solid #1cc88a !important;
-    }
-
-    .border-left-info {
-        border-left: 4px solid #36b9cc !important;
-    }
-
-    .border-left-warning {
-        border-left: 4px solid #f6c23e !important;
-    }
-
-    .border-bottom-warning {
-        border-bottom: 4px solid #f6c23e !important;
-    }
-
-    /* Efectos Hover */
-    .widget-card {
-        transition: all 0.2s ease;
-        border: 1px solid rgba(0, 0, 0, .125);
-    }
-
-    .widget-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1) !important;
-        border-color: #4e73df;
-    }
-
-    /* Footer */
+    /* Footer aclarado para resaltar sobre el degradado inferior */
     .sticky-footer {
-        padding: 2rem 0;
-        flex-shrink: 0;
-        background-color: rgba(255, 255, 255, 0.05);
+        padding: 1.5rem 0;
+        background-color: rgba(255, 255, 255, 0.4) !important;
+        backdrop-filter: blur(5px);
+        border-top: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .dark-theme .sticky-footer {
+        background-color: rgba(0, 0, 0, 0.4) !important;
+        color: rgba(255, 255, 255, 0.7);
     }
 </style>
 
@@ -390,7 +407,7 @@
                 syncIndicatorEl.innerHTML = '<i class="fas fa-check-circle text-success" title="Sincronizado con Internet"></i>';
                 syncIndicatorEl.title = 'Sincronizado con Internet (Uruguay) - ' + syncSource;
             } else {
-                syncIndicatorEl.innerHTML = '<i class="fas fa-clock text-info" title="Hora local del servidor"></i>';
+                syncIndicatorEl.innerHTML = '<i class="fas fa-clock text-light" title="Hora local del servidor"></i>';
                 syncIndicatorEl.title = 'Hora local del servidor';
             }
         }
@@ -459,8 +476,8 @@
                         console.log('Hora sincronizada con', data.source, '. Offset:', offsetMs, 'ms');
                     } else {
                         updateSyncIndicator(false);
-                        syncStatusEl.innerHTML = '<i class="fas fa-server text-info mr-1"></i>Hora del servidor';
-                        syncStatusEl.className = 'text-info';
+                        syncStatusEl.innerHTML = '<i class="fas fa-server text-light mr-1"></i>Hora del servidor';
+                        syncStatusEl.className = 'text-light';
                         console.log('Usando hora del servidor. Offset:', offsetMs, 'ms');
                     }
                 } else {

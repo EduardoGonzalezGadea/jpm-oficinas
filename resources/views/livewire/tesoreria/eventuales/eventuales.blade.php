@@ -328,7 +328,7 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
                     <button type="button" wire:click.prevent="{{ $eventual_id ? 'update()' : 'store()' }}"
-                        class="btn btn-primary">{{ $eventual_id ? 'Actualizar' : 'Guardar' }}</button>
+                        class="btn btn-primary">Guardar</button>
                 </div>
             </div>
         </div>

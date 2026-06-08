@@ -12,3 +12,4 @@ Route::post('/cfe/analizar', [CfeController::class, 'analizarCfe']);
 Route::post('/cfe/analizar-archivo', [CfeController::class, 'analizarCfeConArchivo']);
 Route::post('/cfe/crear-registro', [CfeController::class, 'crearRegistro']);
 Route::post('/cfe/registrar-multa-auto', [CfeController::class, 'registrarMultaAuto']);
+

@@ -19,7 +19,7 @@ class UserSeeder extends Seeder
         $admin = User::create([
             'nombre' => 'Administrador',
             'apellido' => 'del Sistema',
-            'email' => 'jefatura.montevideo@minterior.gub.uy',
+            'email' => 'tesoreria.montevideo@minterior.gub.uy',
             'cedula' => null,
             'telefono' => '2030 2000',
             'password' => Hash::make('inciSo-04'),
@@ -45,11 +45,11 @@ class UserSeeder extends Seeder
 
         // Supervisor Tesorería
         $supervisor_tes = User::create([
-            'nombre' => 'Claudia',
-            'apellido' => 'Vázquez',
-            'email' => 'claudia.vazquez@minterior.gub.uy',
+            'nombre' => 'Mónica',
+            'apellido' => 'Pintos',
+            'email' => 'monica.pintos@minterior.gub.uy',
             'cedula' => null,
-            'telefono' => '094267508',
+            'telefono' => '099113188',
             'password' => Hash::make('123456'),
             'activo' => true,
             'modulo_id' => $tesoreria->id,

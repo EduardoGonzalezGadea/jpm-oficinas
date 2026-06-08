@@ -19,6 +19,7 @@ class Edit extends Component
     public $retira_tipo_documento;
     public $retira_nro_documento;
     public $numero_recibo;
+    public $monto;
     public $estado;
 
     protected $listeners = ['showEditModal'];
@@ -38,6 +39,7 @@ class Edit extends Component
         $this->retira_tipo_documento = $certificado->retira_tipo_documento;
         $this->retira_nro_documento = $certificado->retira_nro_documento;
         $this->numero_recibo = $certificado->numero_recibo;
+        $this->monto = $certificado->monto;
         $this->estado = $certificado->estado;
         $this->dispatchBrowserEvent('show-modal', ['id' => 'editModal']);
     }
@@ -66,6 +68,7 @@ class Edit extends Component
             'retira_tipo_documento' => 'nullable|in:Cédula,Cédula Extranjera,Pasaporte,Otro',
             'retira_nro_documento' => 'nullable|string|max:255',
             'numero_recibo' => 'nullable|string|max:255',
+            'monto' => 'nullable|numeric|min:0',
         ]);
 
         // Si no hay fecha de entrega, todos los datos de entrega deben ser nulos
@@ -75,6 +78,7 @@ class Edit extends Component
             $this->retira_tipo_documento = null;
             $this->retira_nro_documento = null;
             $this->numero_recibo = null;
+            $this->monto = null;
         }
 
         $certificado = CertificadoResidencia::find($this->certificado_id);
@@ -92,6 +96,7 @@ class Edit extends Component
             'retira_tipo_documento' => $this->retira_tipo_documento,
             'retira_nro_documento' => $this->retira_nro_documento,
             'numero_recibo' => $this->numero_recibo,
+            'monto' => $this->monto,
         ];
         
         // Si no hay fecha de entrega, cambiar estado a 'Recibido'

@@ -94,6 +94,8 @@ chrome.downloads.onChanged.addListener(function (delta) {
                         })
                         .catch(function (err) {
                             console.error("Error identifying PDF content:", err);
+                            // Fallback: abrir la pestaña de análisis para que el usuario pueda usar Drag & Drop en Firefox
+                            openAnalyzeWindow(delta.id, filename, filepath, null);
                         });
                 });
             } else {
@@ -212,6 +214,7 @@ function openAnalyzeWindow(downloadId, filename, filepath, data) {
 function registrarMultaAuto(datos, serverUrl) {
     return fetch(serverUrl + "/api/cfe/registrar-multa-auto", {
         method: "POST",
+        credentials: "include",
         headers: {
             "Content-Type": "application/json",
             "Accept": "application/json"

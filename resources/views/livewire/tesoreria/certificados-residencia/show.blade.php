@@ -44,6 +44,11 @@
                                 <p><strong>Número de Recibo:</strong> {{ $certificado->numero_recibo ?? 'SIN DATO' }}</p>
                             </div>
                         </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Monto:</strong> {{ $certificado->monto_formateado ?? 'SIN DATO' }}</p>
+                            </div>
+                        </div>
                     @elseif($certificado->estado == 'Devuelto')
                         <hr>
                         <h5>Datos de Devolución</h5>

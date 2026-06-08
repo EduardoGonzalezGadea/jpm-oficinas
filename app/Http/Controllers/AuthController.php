@@ -11,6 +11,7 @@ use PHPOpenSourceSaver\JWTAuth\Exceptions\JWTException;
 use PHPOpenSourceSaver\JWTAuth\Exceptions\TokenExpiredException;
 use PHPOpenSourceSaver\JWTAuth\Exceptions\TokenInvalidException;
 use App\Models\User;
+use App\Http\Responses\SessionExpiredResponse;
 use Illuminate\Support\Facades\Auth;
 
 class AuthController extends Controller
@@ -101,8 +102,8 @@ class AuthController extends Controller
         }
 
         // Para peticiones web, guardar token en cookie y redirigir
-        $minutes = config('jwt.ttl', 60);
-        $cookie = cookie('jwt_token', $token, 0, '/', null, false, true); // httpOnly = true
+        $minutes = (int) config('jwt.ttl', config('auth_session.lifetime_minutes', 1440));
+        $cookie = cookie('jwt_token', $token, $minutes, '/', null, false, true); // httpOnly = true
 
         // Establecer el token en JWTAuth para la sesión actual
         JWTAuth::setToken($token);
@@ -169,8 +170,8 @@ class AuthController extends Controller
         }
 
         // Para peticiones web
-        $minutes = config('jwt.ttl', 60);
-        $cookie = cookie('jwt_token', $token, 0, '/', null, false, true);
+        $minutes = (int) config('jwt.ttl', config('auth_session.lifetime_minutes', 1440));
+        $cookie = cookie('jwt_token', $token, $minutes, '/', null, false, true);
 
         // Iniciar sesión al registrarse
         Auth::login($user, false);
@@ -317,6 +318,47 @@ class AuthController extends Controller
                 ->with('error', 'Error del servidor');
         }
     }
+    /**
+     * Renovar sesión web y JWT durante actividad del usuario.
+     */
+    public function keepAlive(Request $request)
+    {
+        if (!Auth::check()) {
+            return SessionExpiredResponse::make($request);
+        }
+
+        $minutes = (int) config('jwt.ttl', config('auth_session.lifetime_minutes', 1440));
+        $cookie = null;
+
+        try {
+            $token = $request->cookie('jwt_token');
+
+            if ($token) {
+                $newToken = JWTAuth::setToken($token)->refresh();
+                $cookie = cookie('jwt_token', $newToken, $minutes, '/', null, false, true);
+                JWTAuth::setToken($newToken);
+            }
+        } catch (TokenExpiredException | TokenInvalidException | JWTException $e) {
+            if (Auth::check()) {
+                $newToken = JWTAuth::fromUser(Auth::user());
+                $cookie = cookie('jwt_token', $newToken, $minutes, '/', null, false, true);
+                JWTAuth::setToken($newToken);
+            } else {
+                return SessionExpiredResponse::make($request);
+            }
+        }
+
+        $request->session()->put('auth.password_confirmed_at', time());
+
+        $response = response()->json([
+            'success' => true,
+            'expires_in' => $minutes * 60,
+        ]);
+
+        return $cookie ? $response->withCookie($cookie) : $response;
+    }
+
+
 
     /**
      * Mostrar formulario de recuperación de contraseña
@@ -361,22 +403,18 @@ class AuthController extends Controller
      */
     protected function handleSessionError(Request $request, string $message, string $type = 'expired')
     {
-        // Limpiar sesión
+        if ($type === 'expired') {
+            return SessionExpiredResponse::make($request, $message);
+        }
+
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
         if ($request->expectsJson()) {
-            $statusCode = $type === 'expired' ? 401 : 500;
-            return response()->json(['error' => $message], $statusCode);
+            return response()->json(['error' => $message], 500);
         }
 
-        // Para errores de sesión expirada, mostrar pantalla 500
-        if ($type === 'expired') {
-            abort(500, $message);
-        }
-
-        // Para otros errores, redirigir al login
         return redirect()->route('login')->with('error', $message);
     }
 }

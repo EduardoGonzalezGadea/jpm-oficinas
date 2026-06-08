@@ -216,11 +216,6 @@ class CargarCfe extends Component
             $datos['tramite'] = $matches[1];
         }
 
-        // Teléfono
-        if (preg_match('/(?:TEL\.?|TEL(?:E|É)FONO|CEL\.?)[\s:]*([\d][\d\s\-\/\.]{5,})/iu', $text, $matches)) {
-            $datos['telefono'] = trim($matches[1]);
-        }
-
         // Adenda
         if (preg_match('/ADENDA\s*\n(.*?)(?=\s*(?:Fecha\s+de|Puede\s+verificar|I\.V\.A\.|NÚMERO\s+DE\s+CAE|$))/isu', $text, $matches)) {
             $adendaRaw = trim($matches[1]);
@@ -234,6 +229,16 @@ class CargarCfe extends Component
                 return !empty($linea) && $linea !== '1';
             });
             $datos['adenda'] = implode("\n", $lineasLimpias);
+        }
+
+        // Teléfono: Buscar solo en INFORMACION ADICIONAL o ADENDA
+        if (preg_match('/INFORMACION ADICIONAL\s*(.*?)(?=\s*(?:PERIODO|FECHA|DETALLE|$))/isu', $text, $matchesInfo) &&
+            preg_match('/(?:TEL\.?|TEL(?:E|É)FONO|CEL\.?)[\s:]*([\d][\d\s\-\/\.]{5,})/iu', $matchesInfo[1], $matchesTel)) {
+            $datos['telefono'] = trim($matchesTel[1]);
+        } elseif (!empty($datos['adenda']) && preg_match('/(?:TEL\.?|TEL(?:E|É)FONO|CEL\.?)[\s:]*([\d][\d\s\-\/\.]{5,})/iu', $datos['adenda'], $matchesTel)) {
+            $datos['telefono'] = trim($matchesTel[1]);
+        } else {
+            $datos['telefono'] = '';
         }
 
         // Orden de Cobro y otros de la adenda

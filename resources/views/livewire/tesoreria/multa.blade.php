@@ -1,6 +1,7 @@
 <div x-data="{
     valorUr: '',
     mesUr: '',
+    urVencida: false,
     loading: true,
     soaLoading: false,
     async fetchUr() {
@@ -9,6 +10,7 @@
             const data = await response.json();
             this.valorUr = data.valorUr;
             this.mesUr = data.mesUr;
+            this.urVencida = Boolean(data.vencido);
         } catch (error) {
             console.error('Error fetching UR:', error);
         } finally {
@@ -62,7 +64,7 @@
                     <span id="ur-value-container" class="text-white font-weight-bold" style="font-size: 1.1rem;">
                         <template x-if="!loading && valorUr">
                             <span>
-                                (UR = <span x-text="valorUr"></span> <template x-if="mesUr"><span> - <span x-text="mesUr"></span></span></template>)
+                                (UR = <span x-text="valorUr"></span> <template x-if="mesUr"><span> - <span x-text="mesUr"></span><template x-if="urVencida"><span class="text-warning"> - VENCIDO</span></template></span></template>)
                             </span>
                         </template>
                         <template x-if="loading">
@@ -97,8 +99,10 @@
                         </div>
                     </div>
                 </div>
-                <div class="col d-print-none">
-                    <em class="text-muted">* Unificado = a partir de Octubre/2024</em>
+                <div class="col d-print-none text-left">
+                    <span class="badge badge-info py-1 px-2 shadow-sm">
+                        <i class="fas fa-info-circle mr-1"></i> * Unificado = a partir de Octubre/2024
+                    </span>
                 </div>
                 <div class="col-auto d-print-none text-right">
                     <button @click="actualizarSoa()" :disabled="soaLoading" class="btn btn-warning btn-sm mr-2 text-white" title="Actualizar valores SOA desde BCU">

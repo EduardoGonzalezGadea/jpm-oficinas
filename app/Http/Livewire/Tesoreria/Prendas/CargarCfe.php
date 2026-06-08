@@ -142,9 +142,10 @@ class CargarCfe extends Component
             $datos['nombre'] = trim(preg_replace('/\s+/', ' ', $matches[1]));
         }
 
-        // Teléfono (de info adicional)
-        if (preg_match('/(?:TEL\.?|TEL(?:E|É)FONO|CEL\.?)[\s:]*([\d][\d\s\-\/\.]{5,})/iu', $text, $matches)) {
-            $datos['telefono'] = trim($matches[1]);
+        // Teléfono: Buscar solo en INFORMACION ADICIONAL o ADENDA
+        if (preg_match('/INFORMACION ADICIONAL\s*(.*?)(?=\s*(?:PERIODO|FECHA|DETALLE|$))/isu', $text, $matchesInfo) &&
+            preg_match('/(?:TEL\.?|TEL(?:E|É)FONO|CEL\.?)[\s:]*([\d][\d\s\-\/\.]{5,})/iu', $matchesInfo[1], $matchesTel)) {
+            $datos['telefono'] = trim($matchesTel[1]);
         }
 
         // Monto Total
@@ -228,6 +229,11 @@ class CargarCfe extends Component
         // Extraer Orden de Cobro de la adenda
         if (!empty($datos['adenda'])) {
             $adendaSinAcentos = $this->quitarAcentos(mb_strtolower($datos['adenda'], 'UTF-8'));
+
+            // Teléfono: Buscar en ADENDA (si no se halló ya en info adicional)
+            if (preg_match('/(?:TEL\.?|TEL(?:E|É)FONO|CEL\.?)[\s:]*([\d][\d\s\-\/\.]{5,})/iu', $datos['adenda'], $matchesTel)) {
+                $datos['telefono'] = trim($matchesTel[1]);
+            }
 
             // Patrones: ORDEN DE COBRO, ORDEN COBRO, O.C., O/C, O.(C.
             if (preg_match('/(?:orden\s+de\s+cobro|orden\s+cobro|o\.\s*\(?c\.?|o\/c)\s*(\d+)/iu', $adendaSinAcentos, $ocMatch)) {

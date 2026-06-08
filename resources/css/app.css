@@ -1,560 +1,464 @@
-.btn-quick-access:hover {
-    box-shadow: rgb(81, 124, 170) 0px 20px 30px -10px !important;
+/* ==========================================================================
+   VARIABLES DE DISEÑO (SISTEMA DE DISEÑO)
+   ========================================================================== */
+:root {
+    /* Paleta Institucional */
+    --color-brand-dark: #1e3a5f;
+    --color-brand-mid: #3b6b9a;
+    --color-brand-light: #7ba3c9;
+    --color-brand-pale: #a8d4f5;
+    --color-accent: #fd7e14;
+    --color-accent-hover: #e56b0a;
+    
+    /* Categorías Dashboard (Fase 3) */
+    --color-financial: #1e3a5f;
+    --color-documentary: #3b6b9a;
+    --color-operational: #28a745;
+    --color-system: #6c757d;
+    
+    /* Superficies y Texto (Solo como referencia, no forzados en reglas base) */
+    --text-muted: #6c757d;
+    
+    /* Sombras Premium */
+    --shadow-sm: 0 2px 4px rgba(0,0,0,0.05);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+    --shadow-lg: 0 8px 24px rgba(0,0,0,0.12);
+    --shadow-hover: 0 10px 25px rgba(30, 58, 95, 0.15);
+    
+    /* Transiciones */
+    --transition-fast: 150ms ease;
+    --transition-base: 250ms ease;
+    --transition-slow: 400ms cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-.card-quick-access {
-    transition: transform 0.5s ease-in-out;
+/* ==========================================================================
+   ESTILOS BASE E INTERFAZ GLOBAL
+   ========================================================================== */
+body {
+    font-family: 'Nunito', sans-serif !important;
 }
 
-.card-quick-access:hover {
-    transform: translateY(-1px);
-    box-shadow: rgb(40, 60, 82) 0px 20px 30px -10px !important;
+[x-cloak] { display: none !important; }
+
+/* Cards Globales */
+.card {
+    border-radius: 6px !important;
+    border: 1px solid rgba(0,0,0,0.28) !important;
+    box-shadow: var(--shadow-sm);
+    transition: transform var(--transition-base), box-shadow var(--transition-base);
 }
 
-/* Botones con gradientes */
-.btn {
-    background-image: linear-gradient(to bottom, rgba(255, 255, 255, 0.371), rgba(255, 255, 255, 0.086) 49%, rgba(0, 0, 0, 0.075) 51%, rgba(0, 0, 0, 0.05));
-    background-repeat: repeat-x;
-    border: 1px solid #343a40;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-    border-radius: 5px !important;
-}
-
-.btn:hover,
-.btn:active,
-.btn.active {
-    border-color: #ffc107 !important;
-}
-
-/* The switch - the box around the slider */
-.switch {
-    position: relative;
-    display: inline-block;
-    width: 60px;
-    height: 34px;
-}
-
-/* Hide default HTML checkbox */
-.switch input {
-    opacity: 0;
-    width: 0;
-    height: 0;
-}
-
-/* The slider */
-.slider {
-    position: absolute;
-    cursor: pointer;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: #ccc;
-    -webkit-transition: .4s;
-    transition: .4s;
-}
-
-.slider:before {
-    position: absolute;
-    content: "";
-    height: 26px;
-    width: 26px;
-    left: 4px;
-    bottom: 4px;
-    background-color: white;
-    -webkit-transition: .4s;
-    transition: .4s;
-}
-
-input:checked+.slider {
-    background-color: #2196F3;
-}
-
-input:focus+.slider {
-    box-shadow: 0 0 1px #2196F3;
-}
-
-input:checked+.slider:before {
-    -webkit-transform: translateX(26px);
-    -ms-transform: translateX(26px);
-    transform: translateX(26px);
-}
-
-/* Rounded sliders */
-.slider.round {
-    border-radius: 34px;
-}
-
-.slider.round:before {
-    border-radius: 50%;
-}
-
-/* Botones flotantes fijos */
-.btn-float-base {
-    position: fixed;
-    bottom: 10px;
-    right: 5px;
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    border: none;
-    color: white;
-    font-size: 12px;
-    cursor: pointer;
-    z-index: 9999 !important;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-    transition: all 0.3s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.btn-float-base:hover {
-    transform: scale(1.1);
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
-}
-
-.btn-home-float {
-    background-color: #007bff;
-    bottom: 42px;
-}
-
-.btn-home-float:hover {
-    background-color: #0056b3;
-    color: white !important;
-}
-
-.btn-scroll-top-float {
-    background-color: #28a745;
-    bottom: 74px;
-}
-
-.btn-scroll-top-float:hover {
-    background-color: #1e7e34;
-}
-
-.btn-scroll-bottom-float {
-    background-color: #28a745;
-    bottom: 10px;
-}
-
-.btn-scroll-bottom-float:hover {
-    background-color: #1e7e34;
-}
-
-/* Gradiente horizontal para encabezados de tarjetas */
-.card-header-gradient {
-    background-image: linear-gradient(90deg, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.3) 25%, rgba(0, 0, 0, 0.15) 50%, rgba(255, 255, 255, 0.2) 75%, rgba(255, 255, 255, 0.8) 100%);
-}
-
-/* Efecto hover opcional para interacción */
-.card-header-gradient:hover {
-    background-position: right center;
-}
-
-/* Variante para texto blanco en encabezados */
-.text-white.card-header-gradient {
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-}
-
-/* Efecto de transición suave para mejor UX */
 .card-header {
-    transition: all 0.3s ease;
+    border-bottom: 1px solid rgba(0,0,0,0.2);
+    font-weight: 700;
+    /* Eliminado color forzado para compatibilidad con temas oscuros */
 }
 
-/* Estilos personalizados para SweetAlert2 - Compatibilidad con navegadores antiguos */
-
-/* Override hover para botones de confirmación (Aceptar) */
-div:where(.swal2-container) button:where(.swal2-styled):where(.swal2-confirm):hover {
-    background-color: #5a4cce !important;
-    /* Morado más oscuro compatible */
+/* Transición suave para todos los elementos interactivos */
+.btn, .nav-link, .dropdown-item, .card {
+    transition: all var(--transition-fast);
 }
 
-/* Override hover para botones de deny (Eliminar) */
-div:where(.swal2-container) button:where(.swal2-styled):where(.swal2-deny):hover {
-    background-color: #c62f37 !important;
-    /* Rojo más oscuro compatible */
+/* ==========================================================================
+   TABLAS PREMIUM (FASE 4)
+   ========================================================================== */
+.table {
+    border-collapse: separate !important;
+    border-spacing: 0;
 }
 
-/* Override hover para botones de cancel (Cancelar) */
-div:where(.swal2-container) button:where(.swal2-styled):where(.swal2-cancel):hover {
-    background-color: #5d6470 !important;
-    /* Gris más oscuro compatible */
-}
-
-/* Asegurar que los botones permanezcan visibles y sin transformaciones problemáticas */
-div:where(.swal2-container) button:where(.swal2-styled) {
-    opacity: 1 !important;
-    transform: none !important;
-    transition: none !important;
-}
-
-/* ==================== */
-/* PANEL PRINCIPAL - FONDO GRADIENTE AZUL */
-/* ==================== */
-
-/* Contenedor del panel principal con gradiente */
-.panel-gradient-bg {
-    background: linear-gradient(180deg, #1e3a5f 0%, #3b6b9a 40%, #7ba3c9 70%, #a8d4f5 100%) !important;
-    min-height: 100vh;
-    margin: -0.75rem -0.5rem -1rem -0.5rem !important;
-    /* Compensar el mt-1 y p-2 del main y el padding del container-fluid */
-    padding: 0.75rem 15px 1rem 15px;
-    width: auto !important;
-    box-sizing: border-box;
-    overflow-x: hidden;
-}
-
-/* Variante para tema oscuro - gradiente azul oscuro a azul claro oscuro */
-.panel-gradient-bg.dark-theme {
-    background: linear-gradient(180deg, #0a1929 0%, #1a3a5f 40%, #2a5a8a 70%, #3a7ab0 100%) !important;
-}
-
-/* Íconos más claros y brillantes en tema oscuro */
-.panel-gradient-bg.dark-theme i,
-.panel-gradient-bg.dark-theme .fas,
-.panel-gradient-bg.dark-theme .far,
-.panel-gradient-bg.dark-theme .fab,
-.panel-gradient-bg.dark-theme .fa {
-    color: #7dd3fc !important;
-    text-shadow: 0 0 8px rgba(125, 211, 252, 0.4);
-}
-
-/* Íconos de colores específicos más brillantes en tema oscuro */
-.panel-gradient-bg.dark-theme .text-success i,
-.panel-gradient-bg.dark-theme i.text-success {
-    color: #86efac !important;
-    text-shadow: 0 0 8px rgba(134, 239, 172, 0.4);
-}
-
-.panel-gradient-bg.dark-theme .text-info i,
-.panel-gradient-bg.dark-theme i.text-info {
-    color: #93c5fd !important;
-    text-shadow: 0 0 8px rgba(147, 197, 253, 0.4);
-}
-
-.panel-gradient-bg.dark-theme .text-warning i,
-.panel-gradient-bg.dark-theme i.text-warning {
-    color: #fcd34d !important;
-    text-shadow: 0 0 8px rgba(252, 211, 77, 0.4);
-}
-
-.panel-gradient-bg.dark-theme .text-danger i,
-.panel-gradient-bg.dark-theme i.text-danger {
-    color: #fca5a5 !important;
-    text-shadow: 0 0 8px rgba(252, 165, 165, 0.4);
-}
-
-.panel-gradient-bg.dark-theme .text-primary i,
-.panel-gradient-bg.dark-theme i.text-primary {
-    color: #93c5fd !important;
-    text-shadow: 0 0 8px rgba(147, 197, 253, 0.4);
-}
-
-/* Asegurar que los textos sean legibles en el gradiente */
-.panel-gradient-bg h1,
-.panel-gradient-bg .h3,
-.panel-gradient-bg p,
-.panel-gradient-bg span,
-.panel-gradient-bg small,
-.panel-gradient-bg strong {
+.table thead th {
+    background-color: var(--color-brand-dark) !important;
     color: #ffffff !important;
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    padding: 0.75rem 0.6rem !important;
+    vertical-align: middle !important;
+    border: 1px solid rgba(255,255,255,0.4) !important; /* Borde visible pero sutil en cabecera */
 }
 
-/* Enlaces dentro del panel */
-.panel-gradient-bg a:not(.btn) {
-    color: #e3f2fd !important;
+/* Bordes para celdas de cuerpo (Fase 4 Refinamiento) */
+.table td, .table th {
+    border: 1px solid rgba(0,0,0,0.4) !important;
 }
 
-.panel-gradient-bg a:not(.btn):hover {
-    color: #ffffff !important;
+/* Ajuste de color de borde para mayor visibilidad en temas de modo oscuro */
+[data-theme="darkly"] .table td, [data-theme="darkly"] .table th,
+[data-theme="cyborg"] .table td, [data-theme="cyborg"] .table th {
+    border-color: rgba(255, 255, 255, 0.4) !important;
 }
 
-/* Títulos de secciones */
-.panel-gradient-bg h6.font-weight-bold {
-    color: #ffffff !important;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+.table-compact td,
+.table-compact th {
+    padding: 0.4rem 0.6rem !important;
+    vertical-align: middle !important;
+    font-size: 0.85rem;
 }
 
-/* Tarjetas widget - mantener su estilo pero con sombra mejorada */
-.panel-gradient-bg .widget-card {
-    background-color: rgba(255, 255, 255, 0.95) !important;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2) !important;
+.table-striped tbody tr:nth-of-type(odd) {
+    background-color: rgba(0, 0, 0, 0.02);
 }
 
-.panel-gradient-bg.dark-theme .widget-card {
-    background-color: rgba(40, 44, 52, 0.95) !important;
-    border-color: rgba(255, 255, 255, 0.1) !important;
+.table-hover tbody tr:hover {
+    background-color: rgba(30, 58, 95, 0.05) !important;
+    transition: background-color var(--transition-fast);
 }
 
-.panel-gradient-bg.dark-theme .widget-card .text-body {
-    color: #e0e0e0 !important;
+/* ==========================================================================
+   FORMULARIOS Y CONTROLES (FASE 4)
+   ========================================================================== */
+.form-control, .custom-select, .custom-file-label {
+    border: 1px solid rgba(0,0,0,0.4) !important;
 }
 
-/* Footer del panel */
-.panel-gradient-bg .sticky-footer {
-    background-color: rgba(0, 0, 0, 0.2) !important;
-    color: #ffffff !important;
+/* Visibilidad de inputs en modo oscuro */
+[data-theme="darkly"] .form-control, [data-theme="darkly"] .custom-select,
+[data-theme="cyborg"] .form-control, [data-theme="cyborg"] .custom-select {
+    border-color: rgba(255, 255, 255, 0.4) !important;
 }
 
-.panel-gradient-bg .sticky-footer span,
-.panel-gradient-bg .sticky-footer small {
-    color: rgba(255, 255, 255, 0.9) !important;
+.form-control:focus {
+    border-color: var(--color-brand-light);
+    box-shadow: 0 0 0 0.2rem rgba(30, 58, 95, 0.15);
 }
 
-/* Acordeón de alertas */
-.panel-gradient-bg .accordion .card {
-    background-color: transparent !important;
+select.form-control {
+    cursor: pointer;
 }
 
-/* Texto interior del acordeón en negro */
-.panel-gradient-bg .accordion .card-body,
-.panel-gradient-bg .accordion .list-group-item,
-.panel-gradient-bg .accordion .list-group-item span,
-.panel-gradient-bg .accordion .list-group-item strong,
-.panel-gradient-bg .accordion .list-group-item a {
-    color: #212529 !important;
-    text-shadow: none !important;
+label {
+    font-weight: 600;
+    font-size: 0.85rem;
+    margin-bottom: 0.4rem;
+    /* Eliminado color brand-dark para visibilidad en modo oscuro */
 }
 
-/* Corregir hover en tema oscuro (cyborg) - mantener fondo claro y texto visible */
-.panel-gradient-bg .accordion .list-group-item:hover,
-.panel-gradient-bg .accordion .list-group-item:focus,
-.panel-gradient-bg .accordion .list-group-item-warning:hover,
-.panel-gradient-bg .accordion .list-group-item-warning:focus {
-    background-color: #fff3cd !important;
-    color: #212529 !important;
+/* ==========================================================================
+   LIVEWIRE FEEDBACK (FASE 4)
+   ========================================================================== */
+[wire\:loading] {
+    pointer-events: none;
 }
 
-.panel-gradient-bg .accordion .list-group-item:hover span,
-.panel-gradient-bg .accordion .list-group-item:hover strong,
-.panel-gradient-bg .accordion .list-group-item:hover a,
-.panel-gradient-bg .accordion .list-group-item-warning:hover span,
-.panel-gradient-bg .accordion .list-group-item-warning:hover strong,
-.panel-gradient-bg .accordion .list-group-item-warning:hover a {
-    color: #212529 !important;
+.loading-overlay {
+    position: relative;
+    min-height: 100px;
 }
 
-/* Espaciado para reportes avanzados para no solapar botones flotantes */
-.reporte-avanzado-container {
-    padding-bottom: 150px !important;
+.loading-overlay::after {
+    content: '\f110';
+    font-family: 'Font Awesome 5 Free';
+    font-weight: 900;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 2rem;
+    color: var(--color-brand-mid);
+    z-index: 1001;
+    animation: fa-spin 1s infinite linear;
 }
 
-/* ==================== */
-/* BARRA DE NAVEGACIÓN Y SUBMENÚS */
-/* ==================== */
+.loading-overlay::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.1); /* Overlay neutral para modo claro/oscuro */
+    backdrop-filter: blur(2px);
+    z-index: 1000;
+    border-radius: inherit;
+}
 
+/* ==========================================================================
+   BARRA DE NAVEGACIÓN (FASE 2)
+   ========================================================================== */
 .barra-oscura {
+    background-color: var(--color-brand-dark) !important;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    border-bottom: 2px solid var(--color-brand-mid) !important;
     position: sticky;
     top: 0;
     z-index: 1030;
 }
 
-.barra-oscura::before {
+.navbar .nav-link,
+.navbar .dropdown-item {
+    border: 1px solid transparent !important;
+}
+
+.navbar .nav-link:hover,
+.navbar .dropdown-item:hover,
+.navbar .dropdown-item.active {
+    border: 1px solid var(--color-accent) !important;
+    border-radius: 4px;
+}
+
+.navbar-dark .navbar-nav .nav-link {
+    color: rgba(255, 255, 255, 0.9) !important;
+    font-weight: 600;
+}
+
+.navbar-dark .navbar-nav .nav-link:hover {
+    color: #fff !important;
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.navbar .dropdown-menu {
+    border: none;
+    border-radius: 12px !important;
+    box-shadow: var(--shadow-lg);
+    padding: 0.75rem;
+    overflow: visible !important;
+}
+
+/* Diseño Premium en Dos Columnas (Solución Opción 2) */
+.dropdown-menu-columns {
+    display: none !important; /* Oculto por defecto */
+    grid-template-columns: repeat(2, 250px);
+    gap: 0px 10px;
+    min-width: 520px !important;
+}
+
+/* Mostrar solo cuando el padre tiene la clase .show (Estándar Bootstrap) */
+.dropdown.show > .dropdown-menu-columns {
+    display: grid !important;
+}
+
+/* Alineación forzada para menús a la derecha */
+.dropdown-menu-columns.dropdown-menu-right {
+    right: 0 !important;
+    left: auto !important;
+}
+
+.dropdown-menu-columns .dropdown-divider {
+    grid-column: span 2;
+    margin: 0.5rem 0;
+}
+
+.dropdown-menu-columns .dropdown-header {
+    grid-column: span 2;
+    font-weight: 800;
+    text-transform: uppercase;
+    font-size: 0.7rem;
+    color: var(--color-brand-light); /* Mejorado para contraste en modo oscuro */
+    padding: 0.5rem 1rem;
+}
+
+/* Mostrar submenú al hover (Independiente al lado) */
+.dropdown-submenu:hover > .dropdown-menu {
+    display: block;
+    opacity: 1;
+    visibility: visible;
+}
+
+.navbar .dropdown-item {
+    padding: 0.6rem 1rem !important;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    margin-bottom: 2px;
+}
+
+.navbar .dropdown-menu .dropdown-item:hover,
+.navbar .dropdown-menu .dropdown-item.active {
+    background-color: var(--color-brand-dark) !important;
+    color: #ffffff !important;
+    text-decoration: underline !important;
+}
+
+/* Forzar que el menú de segundo nivel sea independiente y absoluto */
+.dropdown-submenu .dropdown-menu {
+    position: absolute !important;
+    top: 0 !important;
+    display: none;
+    z-index: 1060 !important;
+    min-width: 220px;
+    grid-template-columns: 1fr;
+    min-width: 200px !important;
+    border: 2px solid var(--color-brand-mid) !important;
+    border-radius: 8px !important;
+    margin-top: 0 !important;
+    box-shadow: var(--shadow-lg);
+}
+
+/* EFECTO PUENTE: Evita que se cierre el menú al mover el mouse */
+.dropdown-submenu .dropdown-menu::before {
     content: '';
     position: absolute;
     top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: black;
-    mix-blend-mode: multiply;
-    opacity: 0.5;
+    bottom: 0;
+    width: 20px; /* Área de amortiguación */
     z-index: -1;
 }
 
-.barra-oscura .navbar-nav .nav-link {
-    color: white;
-    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+.submenu-right .dropdown-menu::before { left: -15px; }
+.submenu-left .dropdown-menu::before { right: -15px; }
+
+.dropdown-submenu { 
+    position: relative; 
+    overflow: visible !important;
 }
 
-.barra-oscura .navbar-nav .nav-link:hover,
-.barra-oscura .navbar-brand:hover {
-    color: yellow;
+.submenu-right .dropdown-menu { 
+    left: 100% !important; 
+    margin-left: -2px !important; /* Superposición ligera para no perder el foco */
+}
+.submenu-left .dropdown-menu { 
+    right: 100% !important; 
+    margin-right: -2px !important; /* Superposición ligera para no perder el foco */
 }
 
-/* Estilos para submenús */
-.dropdown-submenu {
-    position: relative;
+.dropdown-submenu > .dropdown-item::after {
+    content: "\f054"; /* fa-chevron-right */
+    font-family: "Font Awesome 5 Free";
+    font-weight: 900;
+    font-size: 0.7rem;
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    opacity: 0.5;
 }
 
-.submenu-right .dropdown-menu {
-    top: 0;
-    left: 100%;
+/* Ajuste específico para submenús que abren a la izquierda (Sistema) */
+.submenu-left > .dropdown-item::after {
+    content: "\f053" !important; /* fa-chevron-left */
+    left: 1rem;
     right: auto;
-    margin-top: -1px;
+}
+
+.submenu-left > .dropdown-item {
+    padding-left: 2.5rem !important;
 }
 
 .submenu-left .dropdown-menu {
-    top: 0;
-    left: auto;
-    right: 100%;
-    margin-top: -1px;
+    left: auto !important;
+    right: 100% !important;
+    margin-right: 5px !important;
 }
 
-/* Mostrar submenú al hover */
-.dropdown-submenu:hover>.dropdown-menu {
-    display: block;
+/* ==========================================================================
+   MODALES (PREMIUM ZOOM - FASE 5)
+   ========================================================================== */
+.modal-content {
+    border: none !important;
+    border-radius: 12px !important;
+    box-shadow: var(--shadow-lg);
+    overflow: hidden;
 }
 
-/* Agregar flecha al submenu */
-.dropdown-submenu>.dropdown-item::after {
-    margin-left: auto;
-    content: "";
-    border-top: 0.3em solid transparent;
-    border-right: 0;
-    border-bottom: 0.3em solid transparent;
-    border-left: 0.3em solid;
-    float: right;
-    margin-top: 0.5em;
+.modal-header-premium {
+    background-color: var(--color-brand-dark) !important;
+    color: #ffffff !important;
+    border-bottom: 2px solid var(--color-brand-mid);
+    padding: 1rem 1.5rem !important;
 }
 
-/* ==================== */
-/* ESTILOS PARA FORMULARIOS COMPACTOS */
-/* ==================== */
-
-/* Inputs reducidos para mayor densidad de datos (Basado en form-control-sm) */
-.form-control-compact {
-    height: calc(1.5em + 0.5rem + 2px) !important;
-    /* Altura estándar de form-control-sm (aprox 31px) */
-    font-size: 0.875rem !important;
-    padding: 0.25rem 0.5rem !important;
+.modal-header-premium .modal-title {
+    font-weight: 700;
+    font-size: 1.15rem;
+    display: flex;
+    align-items: center;
 }
 
-/* Ajustes para input-groups compactos */
-.input-group-compact .input-group-text {
-    padding: 0 0.5rem !important;
-    height: calc(1.5em + 0.5rem + 2px) !important;
-    font-size: 0.875rem !important;
+.modal-header-premium .close {
+    color: #ffffff;
+    opacity: 0.8;
+    text-shadow: none;
+    transition: all var(--transition-fast);
 }
 
-.input-group-compact .form-control,
-.input-group-compact .btn {
-    height: calc(1.5em + 0.5rem + 2px) !important;
+.modal-header-premium .close:hover {
+    opacity: 1;
+    transform: rotate(90deg);
 }
 
-.input-group-compact .btn {
+.modal-animate-in {
+    animation: modal-zoom-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes modal-zoom-in {
+    from { opacity: 0; transform: scale(0.95) translateY(-10px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* Efecto Blur para el fondo del modal */
+.modal-backdrop.show {
+    backdrop-filter: blur(4px);
+    background-color: rgba(30, 58, 95, 0.4) !important;
+}
+
+.modal-footer {
+    background-color: #f8f9fa;
+    border-top: 1px solid rgba(0,0,0,0.05);
+    padding: 1rem 1.5rem !important;
+}
+
+/* ==========================================================================
+   WIDGETS Y PANEL (FASE 3)
+   ========================================================================== */
+.widget-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-hover) !important;
+}
+
+.border-left-financial { border-left: 4px solid var(--color-financial) !important; }
+.border-left-documentary { border-left: 4px solid var(--color-documentary) !important; }
+.border-left-operational { border-left: 4px solid var(--color-operational) !important; }
+.border-left-system { border-left: 4px solid var(--color-system) !important; }
+
+.text-financial { color: var(--color-financial) !important; }
+.text-documentary { color: var(--color-documentary) !important; }
+.text-operational { color: var(--color-operational) !important; }
+.text-system { color: var(--color-system) !important; }
+
+/* Switch dinámico */
+.switch { position: relative; display: inline-block; width: 50px; height: 26px; }
+.switch input { opacity: 0; width: 0; height: 0; }
+.slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
+.slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+input:checked + .slider { background-color: var(--color-brand-mid); }
+input:checked + .slider:before { transform: translateX(24px); }
+
+/* Botones flotantes */
+.btn-float-base {
+    position: fixed;
+    right: 15px;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    border: none;
+    color: white !important;
+    z-index: 9999 !important;
+    box-shadow: var(--shadow-md);
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 0 0.75rem !important;
+    transition: all var(--transition-base);
+}
+
+.btn-home-float { background-color: var(--color-brand-dark) !important; bottom: 120px; }
+.btn-scroll-top-float { background-color: #28a745 !important; bottom: 70px; }
+.btn-scroll-bottom-float { background-color: #28a745 !important; bottom: 20px; }
+
+.btn-float-base:hover {
+    transform: scale(1.15);
+    box-shadow: var(--shadow-lg);
+    text-decoration: none !important;
 }
 
 /* Etiquetas minimalistas */
 .label-compact {
-    font-size: 0.65rem !important;
-    font-weight: bold !important;
+    font-size: 0.75rem !important;
+    font-weight: 700 !important;
     text-transform: uppercase;
-    margin-bottom: 0 !important;
+    color: var(--text-secondary);
+    margin-bottom: 2px !important;
     display: block;
 }
 
-/* Tablas densas */
-.table-compact td,
-.table-compact th {
-    padding: 0.25rem 0.5rem !important;
-    vertical-align: middle !important;
-}
-
-/* ANIMACIONES PARA MODALES (PREMIUM) */
-
-.modal-animate-in {
-    animation: modal-zoom-in 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-}
-
-@keyframes modal-zoom-in {
-    from {
-        opacity: 0;
-        transform: scale(0.92) translateY(-20px);
-    }
-
-    to {
-        opacity: 1;
-        transform: scale(1) translateY(0);
-    }
-}
-
-.modal-animate-out {
-    animation: modal-zoom-out 0.2s ease-in forwards;
-}
-
-@keyframes modal-zoom-out {
-    from {
-        opacity: 1;
-        transform: scale(1);
-    }
-
-    to {
-        opacity: 0;
-        transform: scale(0.95);
-    }
-}
-
-.backdrop-animate-in {
-    animation: backdrop-fade-in 0.3s ease-out forwards;
-}
-
-@keyframes backdrop-fade-in {
-    from {
-        opacity: 0;
-    }
-
-    to {
-        opacity: 0.5;
-    }
-}
-
-/* ==================== */
-/* FLATPICKR COMPACTO */
-/* ==================== */
-.flatpickr-calendar {
-    width: 265px !important;
-    transform: scale(0.95);
-    transform-origin: top left;
-}
-
-.flatpickr-days {
-    width: 265px !important;
-}
-
-.dayContainer {
-    width: 265px !important;
-    min-width: 265px !important;
-    max-width: 265px !important;
-}
-
-.flatpickr-day {
-    max-width: 35px !important;
-    height: 35px !important;
-    line-height: 35px !important;
-    font-size: 0.8rem !important;
-}
-
-.flatpickr-month {
-    height: 35px !important;
-}
-
-.flatpickr-current-month {
-    padding-top: 5px !important;
-    font-size: 1rem !important;
-}
-
-.flatpickr-current-month .flatpickr-monthDropdown-months {
-    padding: 0 !important;
-}
-
-.flatpickr-weekday {
-    font-size: 0.75rem !important;
-    font-weight: bold !important;
-}
-
-.flatpickr-calendar.arrowTop:before,
-.flatpickr-calendar.arrowTop:after {
-    display: none !important;
-    /* Quitar flechas para ahorrar espacio */
-}
-
-.flatpickr-innerContainer {
-    padding-bottom: 5px !important;
+/* SweetAlert2 */
+div:where(.swal2-container) button:where(.swal2-styled):where(.swal2-confirm):hover {
+    background-color: var(--color-brand-mid) !important;
 }

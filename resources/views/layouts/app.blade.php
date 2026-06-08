@@ -5,11 +5,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="login-url" content="{{ route('login') }}">
     <meta name="user-authenticated" content="{{ auth()->check() ? 'true' : 'false' }}">
 
     <link rel="icon" type="image/x-icon" href="{{ asset('images/icons/jpm.png') }}">
 
     <title>@yield('title', 'Tesorería | Oficinas')</title>
+
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
 
     <!-- Bootstrap 4 CSS -->
     <link href="{{ asset('libs/bootstrap-4.6.2-dist/css/bootstrap.min.css') }}" rel="stylesheet">
@@ -59,81 +63,19 @@
     @yield('styles')
 
     <style>
-        .spinner-border {
-            display: inline-block;
-            width: 2rem;
-            height: 2rem;
-            vertical-align: text-bottom;
-            border: .25em solid currentColor;
-            border-right-color: transparent;
-            border-radius: 50%;
-            -webkit-animation: spinner-border .75s linear infinite;
-            animation: spinner-border .75s linear infinite;
-        }
+        /* Estilos esenciales que dependen de variables dinámicas o estados de Blade */
+        body.modal-open { overflow: hidden; }
 
-        @-webkit-keyframes spinner-border {
-            to {
-                -webkit-transform: rotate(360deg);
-            }
-        }
-
-        @keyframes spinner-border {
-            to {
-                transform: rotate(360deg);
-            }
-        }
-
-        [x-cloak] {
-            display: none !important;
-        }
-
-        body.modal-open {
-            overflow: hidden;
-        }
-
-        /* Estilos para modales Alpine */
-        .fixed.inset-0 {
-            position: fixed;
-            top: 0;
-            right: 0;
-            bottom: 0;
-            left: 0;
-        }
-
-        .z-50 {
-            z-index: 50;
-        }
-
-        .bg-black {
-            background-color: #000;
-        }
-
-        .opacity-50 {
-            opacity: 0.5;
-        }
-
-        .bg-white {
-            background-color: #fff;
-        }
-
-        .rounded-lg {
-            border-radius: 0.5rem;
-        }
-
-        .shadow-xl {
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-        }
-
-        .overflow-y-auto {
-            overflow-y: auto;
-        }
-
+        /* Estilos para modales Alpine (Ligeros) */
         .modal-alpine {
             display: flex;
             align-items: center;
             justify-content: center;
             min-height: 100vh;
             padding: 1rem;
+            position: fixed;
+            inset: 0;
+            z-index: 1050;
         }
 
         .modal-alpine-content {
@@ -141,110 +83,93 @@
             max-width: 32rem;
             margin: auto;
             background: white;
-            border-radius: 0.5rem;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            box-shadow: var(--shadow-lg);
+            z-index: 1051;
+            position: relative;
         }
 
-        /* Contenedor para apilar banners si faltan varias extensiones */
+        /* Contenedor de banners de extensión */
         #extension-banners-container {
             position: fixed;
-            bottom: 15px;
-            left: 15px;
-            right: 15px;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
             z-index: 10000;
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 12px;
             pointer-events: none;
-            /* Permitir clics a través del contenedor, pero no de sus hijos */
         }
 
         .extension-banner {
             display: none;
-            /* Se activa vía JS con flex */
             pointer-events: auto;
             background: white;
             color: white;
-            padding: 12px 20px;
-            border-radius: 10px;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+            padding: 14px 24px;
+            border-radius: 12px;
+            box-shadow: var(--shadow-lg);
             align-items: center;
             justify-content: space-between;
-            animation: slideUp 0.5s ease-out;
-            font-size: 14px;
+            animation: slideUp 0.5s var(--transition-slow);
+            font-size: 0.9rem;
         }
 
-        #cfe-extension-banner {
-            background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
-        }
-
-        #text-replacer-banner {
-            background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
-        }
+        #cfe-extension-banner { background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%); }
+        #text-replacer-banner { background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%); }
 
         .extension-banner .btn-install {
             background: white;
             border: none;
-            padding: 6px 12px;
-            border-radius: 6px;
-            font-weight: bold;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: 700;
             text-decoration: none;
-            margin-left: 10px;
+            margin-left: 12px;
             white-space: nowrap;
             display: inline-block;
+            transition: transform var(--transition-fast);
         }
 
-        #cfe-extension-banner .btn-install {
-            color: #f57c00;
-        }
-
-        #text-replacer-banner .btn-install {
-            color: #1e7e34;
-        }
+        .extension-banner .btn-install:hover { transform: scale(1.05); }
+        #cfe-extension-banner .btn-install { color: #f57c00; }
+        #text-replacer-banner .btn-install { color: #1e7e34; }
 
         @keyframes slideUp {
-            from {
-                transform: translateY(20px);
-                opacity: 0;
-            }
-
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
+            from { transform: translateY(30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
         }
 
-        /* Ajustes para pantallas pequeñas */
+        /* Fondos degradados premium para Paneles */
+        .panel-gradient-bg {
+            background: linear-gradient(180deg, #1e3a5f 0%, #3b6b9a 40%, #7ba3c9 70%, #a8d4f5 100%) !important;
+            min-height: calc(100vh - 56px);
+            margin: -0.25rem;
+            width: auto !important;
+            padding: 25px;
+        }
+
+        .text-premium-header {
+            color: #e0f0ff !important;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.4);
+            font-weight: 800;
+            letter-spacing: -0.01em;
+        }
+
+        .text-premium-muted {
+            color: #d1e9ff !important;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+        }
+
         @media (max-width: 600px) {
-            #extension-banners-container {
-                bottom: 10px;
-                left: 10px;
-                right: 10px;
-            }
-
-            .extension-banner {
-                flex-direction: column;
-                text-align: center;
-                padding: 15px;
-            }
-
-            .extension-banner>div:first-child {
-                margin-bottom: 10px;
-            }
-
-            .extension-banner .btn-install {
-                margin-left: 0;
-                margin-bottom: 8px;
-                width: 100%;
-            }
-
-            .extension-banner .close {
-                position: absolute;
-                top: 5px;
-                right: 10px;
-            }
+            .extension-banner { flex-direction: column; text-align: center; padding: 20px; }
+            .extension-banner > div:first-child { margin-bottom: 12px; }
+            #extension-banners-container { bottom: 10px; left: 10px; right: 10px; }
+            .extension-banner .btn-install { margin-left: 0; margin-bottom: 8px; width: 100%; }
         }
     </style>
+
 
     @auth
     @if(auth()->user()->hasRole('admin') || auth()->user()->esAdministrador())
@@ -371,7 +296,8 @@
         @yield('content')
     </main>
 
-    <!-- Botón flotante para ir al panel principal -->
+    <!-- Botones Flotantes de Navegación (Comentados por solicitud: los usuarios no se han acostumbrado) -->
+    {{-- 
     @auth
     <a href="{{ route('panel') }}" class="btn-float-base btn-home-float" title="Ir al Panel Principal">
         <i class="fas fa-home"></i>
@@ -387,6 +313,7 @@
         <i class="fas fa-arrow-down"></i>
     </button>
     @endauth
+    --}}
 
     <!-- Bootstrap 4 JS -->
     <script src="{{ asset('libs/jquery/js/jquery-3.6.0.min.js') }}"></script>
@@ -403,6 +330,7 @@
     @stack('scripts')
 
     <!-- Lógica para el tema dinámico -->
+    <script src="{{ asset('js/session-expired.js') }}"></script>
     <script src="{{ asset('js/theme-change.js') }}"></script>
 
     {{-- Loader --}}
@@ -414,7 +342,7 @@
     </div>
 
     <script>
-        // Función para desplazamiento suave (ya que los botones flotantes las necesitan)
+        /* Funciones de desplazamiento suave (Comentadas: dependencias de botones flotantes)
         function scrollToTop() {
             window.scrollTo({
                 top: 0,
@@ -428,6 +356,7 @@
                 behavior: 'smooth'
             });
         }
+        */
 
         document.addEventListener('DOMContentLoaded', function() {
             const loader = document.getElementById('loader');
@@ -456,42 +385,19 @@
                         loader.style.display = 'none';
                     }
 
-                    // 419 (Page Expired) o 401 (Unauthorized) indican que la sesión terminó
-                    if (statusCode === 419 || statusCode === 401) {
-                        // Verificar si la respuesta JSON contiene el mensaje de sesión expirada del Handler
-                        if (response && response.message && response.message.includes('sesión')) {
-                            Swal.fire({
-                                title: 'Sesión expirada',
-                                text: response.message,
-                                icon: 'warning',
-                                confirmButtonText: 'Ir al Login',
-                                allowOutsideClick: false,
-                                allowEscapeKey: false
-                            }).then((result) => {
-                                if (result.isConfirmed) {
-                                    window.location.href = response.redirect || '{{ route("login") }}';
-                                }
-                            });
-                        } else {
-                            Swal.fire({
-                                title: 'Sesión expirada',
-                                text: 'Tu sesión ha terminado por inactividad o tu token de seguridad ha caducado. Debes ingresar nuevamente.',
-                                icon: 'warning',
-                                confirmButtonText: 'Ir al Login',
-                                allowOutsideClick: false,
-                                allowEscapeKey: false
-                            }).then((result) => {
-                                if (result.isConfirmed) {
-                                    window.location.href = '{{ route("login") }}';
-                                }
-                            });
-                        }
+                    if (window.isSessionExpiredResponse && window.isSessionExpiredResponse(statusCode, response)) {
+                        const payload = typeof response === 'string' ? (function () {
+                            try { return JSON.parse(response); } catch (e) { return {}; }
+                        })() : (response || {});
 
-                        // Retornamos false para suprimir el mensaje de error por defecto de Livewire
+                        window.handleSessionExpired({
+                            message: payload.message || payload.error || undefined,
+                            redirect: payload.redirect || '{{ route("login") }}',
+                        });
+
                         return false;
                     }
 
-                    // Manejo opcional para errores internos del servidor (500)
                     if (statusCode === 500) {
                         Swal.fire({
                             title: 'Error en el servidor',
@@ -501,9 +407,6 @@
                         });
                         return false;
                     }
-
-                    // Para cualquier otro error no especificado, permitimos que Livewire use su logica por defecto o simplemente lo ignoramos si preferimos
-                    // return false;
                 });
             }
 
@@ -828,6 +731,136 @@
             });
         }
     </script>
+
+    @auth
+    <script>
+        // Sistema de Cierre Automático de Sesión por Inactividad
+        (function() {
+            let inactivityTime = function () {
+                // Obtiene la duración de la sesión del servidor en milisegundos (alineado con config/session.php)
+                const sessionLifetime = {{ config('session.lifetime', 1440) }} * 60 * 1000;
+                const warningTime = sessionLifetime - (5 * 60 * 1000);
+                const keepAliveInterval = Math.max(5 * 60 * 1000, sessionLifetime - (10 * 60 * 1000));
+
+                let warningTimeout;
+                let logoutTimeout;
+                let keepAliveTimeout;
+                let lastKeepAliveAt = 0;
+
+                // Eventos que indican actividad del usuario
+                window.onload = resetTimer;
+                document.onmousemove = resetTimer;
+                document.onkeypress = resetTimer;
+                document.onclick = resetTimer;
+                document.onscroll = resetTimer;
+
+                function showWarning() {
+                    if (window.Swal) {
+                        Swal.fire({
+                            title: 'Sesión por expirar',
+                            text: 'Tu sesión se cerrará automáticamente en 5 minutos debido a inactividad. ¿Deseas mantenerla activa?',
+                            icon: 'warning',
+                            showCancelButton: true,
+                            confirmButtonColor: '#3085d6',
+                            cancelButtonColor: '#d33',
+                            confirmButtonText: 'Sí, mantener activa',
+                            cancelButtonText: 'Cerrar sesión ahora',
+                            timer: 5 * 60 * 1000,
+                            timerProgressBar: true
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                renewSession();
+                                resetTimer();
+                            } else if (result.dismiss === Swal.DismissReason.cancel) {
+                                forceLogout();
+                            } else if (result.dismiss === Swal.DismissReason.timer) {
+                                // Si el modal se cierra por el timer, ya se ejecutó forceLogout por el logoutTimeout
+                            }
+                        });
+                    }
+                }
+
+                function forceLogout() {
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = '{{ route("logout") }}';
+                    
+                    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                    const csrfInput = document.createElement('input');
+                    csrfInput.type = 'hidden';
+                    csrfInput.name = '_token';
+                    csrfInput.value = csrfToken;
+                    
+                    form.appendChild(csrfInput);
+                    document.body.appendChild(form);
+                    form.submit();
+                }
+
+                function renewSession() {
+                    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+                    fetch('{{ route("session.keep-alive") }}', {
+                        method: 'POST',
+                        credentials: 'include',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-CSRF-TOKEN': csrfToken,
+                        },
+                        body: JSON.stringify({}),
+                    }).catch(function () {
+                        // Ignorar errores de red puntuales
+                    });
+                }
+
+                function scheduleKeepAlive() {
+                    clearTimeout(keepAliveTimeout);
+                    keepAliveTimeout = setTimeout(function () {
+                        const now = Date.now();
+                        if (now - lastKeepAliveAt >= keepAliveInterval) {
+                            lastKeepAliveAt = now;
+                            renewSession();
+                        }
+                        scheduleKeepAlive();
+                    }, keepAliveInterval);
+                }
+
+                function resetTimer() {
+                    clearTimeout(warningTimeout);
+                    clearTimeout(logoutTimeout);
+                    
+                    warningTimeout = setTimeout(showWarning, warningTime);
+                    logoutTimeout = setTimeout(forceLogout, sessionLifetime);
+                    
+                    // Sincronizar actividad en múltiples pestañas
+                    localStorage.setItem('lastActivity', Date.now().toString());
+
+                    const now = Date.now();
+                    if (now - lastKeepAliveAt >= keepAliveInterval) {
+                        lastKeepAliveAt = now;
+                        renewSession();
+                    }
+                }
+
+                // Revisar actividad periódicamente para detectar si otra pestaña expiró la sesión
+                setInterval(function() {
+                    let lastActivity = localStorage.getItem('lastActivity');
+                    if (lastActivity) {
+                        let diff = Date.now() - parseInt(lastActivity);
+                        if (diff >= sessionLifetime) {
+                            forceLogout();
+                        }
+                    }
+                }, 30000); // Revisar cada 30 segundos
+
+                scheduleKeepAlive();
+            };
+
+            inactivityTime();
+        })();
+    </script>
+    @endauth
 </body>
 
 </html>

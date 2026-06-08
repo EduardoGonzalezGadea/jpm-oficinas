@@ -77,6 +77,7 @@
                             <th class="align-middle">Estado</th>
                             <th class="align-middle">Entr./Dev.</th>
                             <th class="align-middle">Recibo</th>
+                            <th class="align-middle">Monto</th>
                             <th class="align-middle d-print-none">Acciones</th>
                             </th>
                         </tr>
@@ -104,6 +105,7 @@
                                 @endif
                             </td>
                             <td class="align-middle">{{ $certificado->numero_recibo ?? '' }}</td>
+                            <td class="align-middle">{{ $certificado->monto_formateado ?? '' }}</td>
                             <td class="align-middle text-center d-print-none">
                                 <div class="btn-group" role="group" aria-label="Acciones">
                                     @if($certificado->estado == 'Recibido')
@@ -128,7 +130,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="7" class="text-center">No hay certificados para el año seleccionado.</td>
+                            <td colspan="8" class="text-center">No hay certificados para el año seleccionado.</td>
                         </tr>
                         @endforelse
                     </tbody>

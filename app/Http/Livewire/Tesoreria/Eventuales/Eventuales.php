@@ -40,7 +40,7 @@ class Eventuales extends Component
     {
         // Verificar autenticación antes de procesar cualquier lógica
         if (!auth()->check()) {
-            abort(500, 'La sesión ha expirado. Por favor, inicie sesión de nuevo.');
+            return redirect()->route('login')->with('error', 'La sesión ha expirado. Por favor, inicie sesión de nuevo.');
         }
 
         $this->mes = Carbon::now()->month;

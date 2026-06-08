@@ -33,7 +33,7 @@ class Kernel extends HttpKernel
             \App\Http\Middleware\EncryptCookies::class,
             \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
             \Illuminate\Session\Middleware\StartSession::class,
-            // \Illuminate\Session\Middleware\AuthenticateSession::class,
+            \Illuminate\Session\Middleware\AuthenticateSession::class,
             \Illuminate\View\Middleware\ShareErrorsFromSession::class,
             \App\Http\Middleware\VerifyCsrfToken::class,
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
@@ -78,7 +78,7 @@ class Kernel extends HttpKernel
         // Middleware personalizado para verificar rol de administrador
         'admin.only' => \App\Http\Middleware\CheckAdminRole::class,
 
-        // Middleware de autenticación de dos factores
+        // Middleware de autenticaciÃ³n de dos factores
         'two-factor' => \App\Http\Middleware\TwoFactorMiddleware::class,
     ];
 }

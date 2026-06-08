@@ -19,6 +19,7 @@ class DatabaseSeeder extends Seeder
             UserSeeder::class,
             Tesoreria\MedioDePagoSeeder::class,
             Tesoreria\MultaSeeder::class,
+            Tesoreria\Multas303Seeder::class,
             Tesoreria\TesDenominacionMonedaSeeder::class,
             Tesoreria\TesTipoMonedaSeeder::class,
         ]);

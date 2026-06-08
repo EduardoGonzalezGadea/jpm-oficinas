@@ -31,6 +31,7 @@ class CertificadoResidencia extends Model
         'retira_nro_documento',
         'retira_telefono',
         'numero_recibo',
+        'monto',
         'fecha_devuelto',
         'devolucion_user_id',
         'estado',
@@ -106,6 +107,18 @@ class CertificadoResidencia extends Model
     public function updatedBy()
     {
         return $this->belongsTo(User::class, 'updated_by');
+    }
+
+    protected $casts = [
+        'monto' => 'decimal:2',
+    ];
+
+    public function getMontoFormateadoAttribute()
+    {
+        if ($this->monto === null) {
+            return null;
+        }
+        return '$' . "\u{00A0}" . number_format($this->monto, 2, ',', '.');
     }
 
     public function deletedBy()
