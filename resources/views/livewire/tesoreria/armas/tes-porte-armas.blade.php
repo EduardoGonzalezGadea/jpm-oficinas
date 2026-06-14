@@ -1,6 +1,6 @@
 <div wire:init="checkEditId">
     <div class="card">
-        <div class="card-header bg-info text-white card-header-gradient py-2 px-3 d-flex justify-content-between align-items-center">
+        <div class="card-header card-header-section card-header-gradient py-2 px-3">
             <h4 class="mb-0"><strong><i class="fas fa-id-badge mr-2"></i>Listado de Porte de Armas</strong></h4>
             <div class="btn-group d-print-none">
                 <a href="{{ route('tesoreria.armas.porte.reportes') }}" class="btn btn-secondary border mr-2">

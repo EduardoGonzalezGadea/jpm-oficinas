@@ -1,8 +1,8 @@
 /* ==========================================================================
-   VARIABLES DE DISEÑO (SISTEMA DE DISEÑO)
+   VARIABLES DE DISEÑO (SISTEMA DE DISEÑO MULTI-TEMA)
    ========================================================================== */
 :root {
-    /* Paleta Institucional */
+    /* Paleta Institucional (se mantiene como base visible en modo claro) */
     --color-brand-dark: #1e3a5f;
     --color-brand-mid: #3b6b9a;
     --color-brand-light: #7ba3c9;
@@ -16,8 +16,34 @@
     --color-operational: #28a745;
     --color-system: #6c757d;
     
-    /* Superficies y Texto (Solo como referencia, no forzados en reglas base) */
-    --text-muted: #6c757d;
+    /* Superficies y Texto (adaptables al tema) */
+    --surface-body: #ffffff;
+    --surface-card: #ffffff;
+    --surface-header-table: var(--color-brand-dark);
+    --surface-header-section: var(--color-brand-dark);
+    --surface-footer-modal: #f8f9fa;
+    --surface-striped-row: rgba(0, 0, 0, 0.02);
+    --surface-hover-row: rgba(30, 58, 95, 0.05);
+    --surface-panel-bg-start: #1e3a5f;
+    --surface-panel-bg-mid: #3b6b9a;
+    --surface-panel-bg-end: #a8d4f5;
+    --surface-footer-panel: rgba(255, 255, 255, 0.4);
+    --surface-alert-acordion: #ffffff;
+    --surface-alert-body: #ffffff;
+    
+    /* Texto adaptable */
+    --text-body: #212529;
+    --text-muted-themeable: #6c757d;
+    --text-header-section: #ffffff;
+    --text-header-premium: #e0f0ff;
+    --text-premium-muted: #d1e9ff;
+    --text-table-header: #ffffff;
+    --text-alert-accordion: #ffffff;
+    
+    /* Bordes adaptables */
+    --border-default: rgba(0, 0, 0, 0.28);
+    --border-table: rgba(0, 0, 0, 0.4);
+    --border-table-header: rgba(255, 255, 255, 0.4);
     
     /* Sombras Premium */
     --shadow-sm: 0 2px 4px rgba(0,0,0,0.05);
@@ -32,10 +58,90 @@
 }
 
 /* ==========================================================================
+   VARIABLES PARA TEMAS OSCUROS (clase .dark-theme aplicada por JS)
+   ========================================================================== */
+.dark-theme {
+    --surface-body: #1a1a1a;
+    --surface-card: #2b2b2b;
+    --surface-header-table: #3a3a3a;
+    --surface-header-section: #2b2b2b;
+    --surface-footer-modal: #2b2b2b;
+    --surface-striped-row: rgba(255, 255, 255, 0.03);
+    --surface-hover-row: rgba(255, 255, 255, 0.08);
+    --surface-panel-bg-start: #111111;
+    --surface-panel-bg-mid: #222222;
+    --surface-panel-bg-end: #333333;
+    --surface-footer-panel: rgba(0, 0, 0, 0.5);
+    --surface-alert-acordion: #2b2b2b;
+    --surface-alert-body: #2b2b2b;
+    
+    --text-body: #e0e0e0;
+    --text-muted-themeable: #adb5bd;
+    --text-header-section: #ffffff;
+    --text-header-premium: #e0f0ff;
+    --text-premium-muted: #adb5bd;
+    --text-table-header: #ffffff;
+    --text-alert-accordion: #ffffff;
+    
+    --border-default: rgba(255, 255, 255, 0.2);
+    --border-table: rgba(255, 255, 255, 0.25);
+    --border-table-header: rgba(255, 255, 255, 0.3);
+}
+
+/* Compatibilidad con data-theme legacy (atributo directo) */
+[data-theme="darkly"],
+[data-theme="cyborg"] {
+    --surface-body: #1a1a1a;
+    --surface-card: #2b2b2b;
+    --surface-header-table: #3a3a3a;
+    --surface-header-section: #2b2b2b;
+    --surface-footer-modal: #2b2b2b;
+    --surface-striped-row: rgba(255, 255, 255, 0.03);
+    --surface-hover-row: rgba(255, 255, 255, 0.08);
+    --surface-panel-bg-start: #111111;
+    --surface-panel-bg-mid: #222222;
+    --surface-panel-bg-end: #333333;
+    --surface-footer-panel: rgba(0, 0, 0, 0.5);
+    --surface-alert-acordion: #2b2b2b;
+    --surface-alert-body: #2b2b2b;
+    
+    --text-body: #e0e0e0;
+    --text-muted-themeable: #adb5bd;
+    --text-header-section: #ffffff;
+    --text-header-premium: #e0f0ff;
+    --text-premium-muted: #adb5bd;
+    --text-table-header: #ffffff;
+    --text-alert-accordion: #ffffff;
+    
+    --border-default: rgba(255, 255, 255, 0.2);
+    --border-table: rgba(255, 255, 255, 0.25);
+    --border-table-header: rgba(255, 255, 255, 0.3);
+}
+
+/* ==========================================================================
+   TIMBRE DE AGENCIA (Sello de Agua Institucional para Fondo del Panel)
+   ========================================================================== */
+.panel-gradient-bg {
+    background: linear-gradient(
+        180deg,
+        var(--surface-panel-bg-start) 0%,
+        var(--surface-panel-bg-mid) 40%,
+        var(--surface-panel-bg-end) 70%,
+        var(--surface-panel-bg-end) 100%
+    ) !important;
+    min-height: calc(100vh - 56px);
+    margin: -0.25rem;
+    width: auto !important;
+    padding: 25px;
+}
+
+/* ==========================================================================
    ESTILOS BASE E INTERFAZ GLOBAL
    ========================================================================== */
 body {
     font-family: 'Nunito', sans-serif !important;
+    background-color: var(--surface-body);
+    color: var(--text-body);
 }
 
 [x-cloak] { display: none !important; }
@@ -43,15 +149,15 @@ body {
 /* Cards Globales */
 .card {
     border-radius: 6px !important;
-    border: 1px solid rgba(0,0,0,0.28) !important;
+    border: 1px solid var(--border-default);
     box-shadow: var(--shadow-sm);
     transition: transform var(--transition-base), box-shadow var(--transition-base);
+    background-color: var(--surface-card);
 }
 
 .card-header {
-    border-bottom: 1px solid rgba(0,0,0,0.2);
+    border-bottom: 1px solid var(--border-default);
     font-weight: 700;
-    /* Eliminado color forzado para compatibilidad con temas oscuros */
 }
 
 /* Transición suave para todos los elementos interactivos */
@@ -65,29 +171,32 @@ body {
 .table {
     border-collapse: separate !important;
     border-spacing: 0;
+    color: var(--text-body);
 }
 
 .table thead th {
-    background-color: var(--color-brand-dark) !important;
-    color: #ffffff !important;
+    background-color: var(--surface-header-table);
+    color: var(--text-table-header);
     text-transform: uppercase;
     font-size: 0.75rem;
     font-weight: 700;
     letter-spacing: 0.05em;
-    padding: 0.75rem 0.6rem !important;
-    vertical-align: middle !important;
-    border: 1px solid rgba(255,255,255,0.4) !important; /* Borde visible pero sutil en cabecera */
+    padding: 0.75rem 0.6rem;
+    vertical-align: middle;
+    border: 1px solid var(--border-table-header);
 }
 
-/* Bordes para celdas de cuerpo (Fase 4 Refinamiento) */
 .table td, .table th {
-    border: 1px solid rgba(0,0,0,0.4) !important;
+    border: 1px solid var(--border-table);
 }
 
-/* Ajuste de color de borde para mayor visibilidad en temas de modo oscuro */
-[data-theme="darkly"] .table td, [data-theme="darkly"] .table th,
-[data-theme="cyborg"] .table td, [data-theme="cyborg"] .table th {
-    border-color: rgba(255, 255, 255, 0.4) !important;
+.table-striped tbody tr:nth-of-type(odd) {
+    background-color: var(--surface-striped-row);
+}
+
+.table-hover tbody tr:hover {
+    background-color: var(--surface-hover-row);
+    transition: background-color var(--transition-fast);
 }
 
 .table-compact td,
@@ -97,26 +206,11 @@ body {
     font-size: 0.85rem;
 }
 
-.table-striped tbody tr:nth-of-type(odd) {
-    background-color: rgba(0, 0, 0, 0.02);
-}
-
-.table-hover tbody tr:hover {
-    background-color: rgba(30, 58, 95, 0.05) !important;
-    transition: background-color var(--transition-fast);
-}
-
 /* ==========================================================================
    FORMULARIOS Y CONTROLES (FASE 4)
    ========================================================================== */
 .form-control, .custom-select, .custom-file-label {
-    border: 1px solid rgba(0,0,0,0.4) !important;
-}
-
-/* Visibilidad de inputs en modo oscuro */
-[data-theme="darkly"] .form-control, [data-theme="darkly"] .custom-select,
-[data-theme="cyborg"] .form-control, [data-theme="cyborg"] .custom-select {
-    border-color: rgba(255, 255, 255, 0.4) !important;
+    border: 1px solid var(--border-default);
 }
 
 .form-control:focus {
@@ -132,7 +226,6 @@ label {
     font-weight: 600;
     font-size: 0.85rem;
     margin-bottom: 0.4rem;
-    /* Eliminado color brand-dark para visibilidad en modo oscuro */
 }
 
 /* ==========================================================================
@@ -165,7 +258,7 @@ label {
     content: '';
     position: absolute;
     top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(0, 0, 0, 0.1); /* Overlay neutral para modo claro/oscuro */
+    background: rgba(0, 0, 0, 0.1);
     backdrop-filter: blur(2px);
     z-index: 1000;
     border-radius: inherit;
@@ -181,6 +274,19 @@ label {
     position: sticky;
     top: 0;
     z-index: 1030;
+}
+
+/* Oscurecer significativamente la barra de navegación manteniendo los colores del tema */
+.barra-oscura::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    pointer-events: none;
+    z-index: -1;
 }
 
 .navbar .nav-link,
@@ -215,18 +321,16 @@ label {
 
 /* Diseño Premium en Dos Columnas (Solución Opción 2) */
 .dropdown-menu-columns {
-    display: none !important; /* Oculto por defecto */
+    display: none !important;
     grid-template-columns: repeat(2, 250px);
     gap: 0px 10px;
     min-width: 520px !important;
 }
 
-/* Mostrar solo cuando el padre tiene la clase .show (Estándar Bootstrap) */
 .dropdown.show > .dropdown-menu-columns {
     display: grid !important;
 }
 
-/* Alineación forzada para menús a la derecha */
 .dropdown-menu-columns.dropdown-menu-right {
     right: 0 !important;
     left: auto !important;
@@ -242,11 +346,10 @@ label {
     font-weight: 800;
     text-transform: uppercase;
     font-size: 0.7rem;
-    color: var(--color-brand-light); /* Mejorado para contraste en modo oscuro */
+    color: var(--color-brand-light);
     padding: 0.5rem 1rem;
 }
 
-/* Mostrar submenú al hover (Independiente al lado) */
 .dropdown-submenu:hover > .dropdown-menu {
     display: block;
     opacity: 1;
@@ -267,7 +370,6 @@ label {
     text-decoration: underline !important;
 }
 
-/* Forzar que el menú de segundo nivel sea independiente y absoluto */
 .dropdown-submenu .dropdown-menu {
     position: absolute !important;
     top: 0 !important;
@@ -282,13 +384,12 @@ label {
     box-shadow: var(--shadow-lg);
 }
 
-/* EFECTO PUENTE: Evita que se cierre el menú al mover el mouse */
 .dropdown-submenu .dropdown-menu::before {
     content: '';
     position: absolute;
     top: 0;
     bottom: 0;
-    width: 20px; /* Área de amortiguación */
+    width: 20px;
     z-index: -1;
 }
 
@@ -302,28 +403,30 @@ label {
 
 .submenu-right .dropdown-menu { 
     left: 100% !important; 
-    margin-left: -2px !important; /* Superposición ligera para no perder el foco */
+    margin-left: -2px !important;
 }
 .submenu-left .dropdown-menu { 
     right: 100% !important; 
-    margin-right: -2px !important; /* Superposición ligera para no perder el foco */
+    margin-right: -2px !important;
 }
 
-.dropdown-submenu > .dropdown-item::after {
-    content: "\f054"; /* fa-chevron-right */
-    font-family: "Font Awesome 5 Free";
-    font-weight: 900;
-    font-size: 0.7rem;
+/* Reemplazar el caret nativo de Bootstrap en submenús por caret personalizado (▸ / ◂) */
+.dropdown-submenu > .dropdown-item.dropdown-toggle::after {
+    content: "\f0da" !important;
+    font-family: "Font Awesome 5 Free" !important;
+    font-weight: 900 !important;
+    border: none !important;
+    vertical-align: unset;
+    font-size: 0.85rem;
     position: absolute;
-    right: 1rem;
+    right: 0.9rem;
     top: 50%;
     transform: translateY(-50%);
-    opacity: 0.5;
+    opacity: 0.85;
 }
 
-/* Ajuste específico para submenús que abren a la izquierda (Sistema) */
-.submenu-left > .dropdown-item::after {
-    content: "\f053" !important; /* fa-chevron-left */
+.submenu-left > .dropdown-item.dropdown-toggle::after {
+    content: "\f0d9" !important;
     left: 1rem;
     right: auto;
 }
@@ -346,6 +449,7 @@ label {
     border-radius: 12px !important;
     box-shadow: var(--shadow-lg);
     overflow: hidden;
+    background-color: var(--surface-card);
 }
 
 .modal-header-premium {
@@ -383,15 +487,14 @@ label {
     to { opacity: 1; transform: scale(1) translateY(0); }
 }
 
-/* Efecto Blur para el fondo del modal */
 .modal-backdrop.show {
     backdrop-filter: blur(4px);
     background-color: rgba(30, 58, 95, 0.4) !important;
 }
 
 .modal-footer {
-    background-color: #f8f9fa;
-    border-top: 1px solid rgba(0,0,0,0.05);
+    background-color: var(--surface-footer-modal);
+    border-top: 1px solid var(--border-default);
     padding: 1rem 1.5rem !important;
 }
 
@@ -453,7 +556,7 @@ input:checked + .slider:before { transform: translateX(24px); }
     font-size: 0.75rem !important;
     font-weight: 700 !important;
     text-transform: uppercase;
-    color: var(--text-secondary);
+    color: var(--text-muted-themeable);
     margin-bottom: 2px !important;
     display: block;
 }
@@ -461,4 +564,112 @@ input:checked + .slider:before { transform: translateX(24px); }
 /* SweetAlert2 */
 div:where(.swal2-container) button:where(.swal2-styled):where(.swal2-confirm):hover {
     background-color: var(--color-brand-mid) !important;
+}
+
+/* ==========================================================================
+   HEADER UNIFICADO PARA SECCIONES/BLOQUES (NUEVO)
+   ========================================================================== */
+.card-header-section {
+    background-color: var(--surface-header-section);
+    color: var(--text-header-section);
+    border-bottom: 2px solid var(--color-brand-mid);
+    padding: 0.6rem 1rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.card-header-section h4,
+.card-header-section h5,
+.card-header-section h6 {
+    color: var(--text-header-section);
+    margin-bottom: 0;
+}
+
+/* ==========================================================================
+   GRADIENTE DE CABECERA (efecto visual sutil)
+   ========================================================================== */
+.card-header-gradient {
+    background: linear-gradient(135deg, var(--surface-header-section), var(--color-brand-mid)) !important;
+    border-bottom: 2px solid var(--color-brand-light);
+}
+
+/* ==========================================================================
+   TEXTO PREMIUM PARA PANELES
+   ========================================================================== */
+.text-premium-header {
+    color: var(--text-header-premium);
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.4);
+    font-weight: 800;
+    letter-spacing: -0.01em;
+}
+
+.text-premium-muted {
+    color: var(--text-premium-muted);
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* ==========================================================================
+   FOOTER DEL PANEL (adaptable al tema)
+   ========================================================================== */
+.sticky-footer {
+    padding: 1.5rem 0;
+    background-color: var(--surface-footer-panel);
+    backdrop-filter: blur(5px);
+    border-top: 1px solid var(--border-default);
+}
+
+/* ==========================================================================
+   ALERTAS Y ACORDEONES ADAPTABLES
+   ========================================================================== */
+.card-body.bg-white {
+    background-color: var(--surface-alert-body) !important;
+    color: var(--text-body);
+}
+
+.card-body.text-dark {
+    color: var(--text-body) !important;
+}
+
+/* Btn de acordeón con texto que debe verse sobre fondo amarillo */
+.btn-block.text-left .text-premium-header-acordion {
+    color: var(--text-alert-accordion);
+}
+
+/* ==========================================================================
+   FONDO DE TABLA EN STICKY HEADERS (Livewire)
+   ========================================================================== */
+.table-container thead th {
+    position: sticky;
+    top: 0;
+    background-color: var(--surface-header-table);
+    z-index: 1;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+/* ==========================================================================
+   ESTILOS PARA DARK THEME (adicionales)
+   ========================================================================== */
+.dark-theme .card-header {
+    border-bottom-color: rgba(255, 255, 255, 0.1);
+}
+
+.dark-theme .modal-header .close {
+    color: #ffffff;
+}
+
+/* Asegura que el texto sobre bg-warning tenga contraste suficiente en modo claro y oscuro */
+.dark-theme .bg-warning,
+.dark-theme [class*="bg-warning"] {
+    color: #212529 !important;
+}
+
+.dark-theme .bg-warning .text-premium-header-acordion,
+.dark-theme [class*="bg-warning"] .text-premium-header-acordion {
+    color: #212529 !important;
+}
+
+.dark-theme .btn-warning {
+    color: #212529 !important;
 }

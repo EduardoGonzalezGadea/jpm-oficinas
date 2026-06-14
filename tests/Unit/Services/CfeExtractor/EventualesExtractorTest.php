@@ -144,10 +144,12 @@ TEXT;
     public function test_validar_datos_completos(): void
     {
         $datos = [
-            'fecha'  => '12/03/2026',
-            'serie'  => 'H',
-            'numero' => '55001',
-            'monto'  => 7000.0,
+            'fecha'        => '12/03/2026',
+            'serie'        => 'H',
+            'numero'       => '55001',
+            'monto'        => 7000.0,
+            'ruc_receptor' => '216079910016',
+            'ingreso'      => '3020',
         ];
         $resultado = $this->extractor->validar($datos);
         $this->assertTrue($resultado['valid']);

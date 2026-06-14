@@ -23,7 +23,7 @@
                         <i class="fas fa-list"></i> Artículos de Multas de Tránsito
                     </a>
                     <a class="dropdown-item" href="{{ route('tesoreria.multas-303-2023') }}">
-                        <i class="fas fa-list-alt mr-2"></i> Multas CPT Dec. 303/2023
+                        <i class="fas fa-list-alt mr-2"></i> Cod. Multas Dec.303/2023
                     </a>
                     {{-- Link Multas Cobradas (segunda opción) --}}
                     <a class="dropdown-item" href="{{ route('tesoreria.multas-cobradas.index') }}">
@@ -60,6 +60,10 @@
                     <a class="dropdown-item" href="{{ route('tesoreria.certificados-residencia.index') }}" wire:navigate>
                         <i class="fas fa-file-alt mr-2"></i> Certificados de Residencia
                     </a>
+                    {{-- Link Tarjetas de Cobro BROU --}}
+                    <a class="dropdown-item" href="{{ route('tesoreria.tarjetas-cobro-brou.index') }}" wire:navigate>
+                        <i class="fas fa-credit-card mr-2"></i> Tarjetas de Cobro BROU
+                    </a>
                     {{-- Link Cheques --}}
                     <a class="dropdown-item" href="{{ route('tesoreria.cheques.index') }}" wire:navigate>
                         <i class="fas fa-money-check mr-2"></i>Cheques
@@ -71,6 +75,10 @@
                     {{-- Link Eventuales --}}
                     <a class="dropdown-item" href="{{ route('tesoreria.eventuales.index') }}">
                         <i class="fas fa-hand-holding-usd mr-2"></i> Eventuales
+                    </a>
+                    {{-- Link Gestión de CFEs --}}
+                    <a class="dropdown-item" href="{{ route('tesoreria.gestion-cfe.index') }}" wire:navigate>
+                        <i class="fas fa-file-invoice mr-2"></i> Gestión de CFEs
                     </a>
                     {{-- Link Prendas --}}
                     <a class="dropdown-item" href="{{ route('tesoreria.prendas.index') }}" wire:navigate>
@@ -125,7 +133,7 @@
                     </a>
                     <div class="dropdown-submenu submenu-left">
                         <a class="dropdown-item dropdown-toggle" href="#">
-                            <i class="fas fa-cog mr-2"></i>Configuración
+                            <i class="fas fa-cog mr-2"></i>Opciones
                         </a>
                         <div class="dropdown-menu">
                             <a class="dropdown-item" href="{{ route('tesoreria.configuracion.medios-de-pago.index') }}">
@@ -142,6 +150,15 @@
                             </a>
                             <a class="dropdown-item" href="{{ route('tesoreria.cuentas-bancarias.index') }}">
                                 <i class="fas fa-money-check mr-2"></i>Cuentas Bancarias
+                            </a>
+                            <a class="dropdown-item" href="{{ route('tesoreria.configuracion.caja-conceptos.index') }}">
+                                <i class="fas fa-tags mr-2"></i>Conceptos de Caja
+                            </a>
+                            <a class="dropdown-item" href="{{ route('tesoreria.configuracion.siif-distribucion-dependencias.index') }}">
+                                <i class="fas fa-sitemap mr-2"></i>Dist. SIIF Dependencias
+                            </a>
+                            <a class="dropdown-item" href="{{ route('tesoreria.configuracion.siif-distribucion-tipos.index') }}">
+                                <i class="fas fa-list-ol mr-2"></i>Dist. SIIF Tipos
                             </a>
 
                         </div>

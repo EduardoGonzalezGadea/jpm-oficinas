@@ -133,7 +133,7 @@
                             <i class="fas fa-list-alt fa-2x"></i>
                         </div>
                         <div>
-                            <div class="font-weight-bold text-body small">Multas Dec. 303</div>
+                            <div class="font-weight-bold text-body small">Cod. Multas Dec.303</div>
                         </div>
                     </div>
                 </div>
@@ -167,6 +167,38 @@
                         </div>
                         <div>
                             <div class="font-weight-bold text-body small">Cert. Residencia</div>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <!-- Tarjetas BROU -->
+        <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 mb-3">
+            <a href="{{ route('tesoreria.tarjetas-cobro-brou.index') }}" class="text-decoration-none">
+                <div class="card shadow-sm h-100 widget-card border-left-documentary">
+                    <div class="card-body p-2 d-flex align-items-center">
+                        <div class="mr-3 text-documentary">
+                            <i class="fas fa-credit-card fa-2x"></i>
+                        </div>
+                        <div>
+                            <div class="font-weight-bold text-body small">Tarjetas BROU</div>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <!-- Gestión de CFEs -->
+        <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 mb-3">
+            <a href="{{ route('tesoreria.gestion-cfe.index') }}" class="text-decoration-none">
+                <div class="card shadow-sm h-100 widget-card border-left-documentary">
+                    <div class="card-body p-2 d-flex align-items-center">
+                        <div class="mr-3 text-documentary">
+                            <i class="fas fa-file-invoice fa-2x"></i>
+                        </div>
+                        <div>
+                            <div class="font-weight-bold text-body small">Gestión de CFEs</div>
                         </div>
                     </div>
                 </div>
@@ -356,21 +388,9 @@
 
 </div>
 
-<!-- Estilos y Scripts (Fase 3: Se asume que los estilos comunes residen en app.css) -->
-<style>
-    /* Footer aclarado para resaltar sobre el degradado inferior */
-    .sticky-footer {
-        padding: 1.5rem 0;
-        background-color: rgba(255, 255, 255, 0.4) !important;
-        backdrop-filter: blur(5px);
-        border-top: 1px solid rgba(255, 255, 255, 0.2);
-    }
-    
-    .dark-theme .sticky-footer {
-        background-color: rgba(0, 0, 0, 0.4) !important;
-        color: rgba(255, 255, 255, 0.7);
-    }
-</style>
+<!-- Los estilos de .sticky-footer, .panel-gradient-bg, .text-premium-header y
+     .text-premium-muted ahora residen en resources/css/app.css y usan variables CSS
+     que se adaptan automáticamente al tema (claro/oscuro). -->
 
 <!-- Script para Reloj Sincronizado con Internet -->
 <script>

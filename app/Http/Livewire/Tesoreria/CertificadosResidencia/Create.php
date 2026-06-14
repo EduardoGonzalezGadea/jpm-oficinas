@@ -39,7 +39,16 @@ class Create extends Component
             'titular_nombre' => 'required|string|max:255',
             'titular_apellido' => 'required|string|max:255',
             'titular_tipo_documento' => 'required|in:Cédula,Cédula Extranjera,Pasaporte,Otro',
-            'titular_nro_documento' => 'required|string|max:255',
+            'titular_nro_documento' => [
+                'required',
+                'string',
+                'max:255',
+                \Illuminate\Validation\Rule::unique('tes_certificados_residencia', 'titular_nro_documento')
+                    ->where('fecha_recibido', $this->fecha_recibido)
+                    ->whereNull('deleted_at')
+            ],
+        ], [
+            'titular_nro_documento.unique' => 'Ya existe un certificado de residencia recibido para este documento en la fecha seleccionada.',
         ]);
 
         CertificadoResidencia::create([

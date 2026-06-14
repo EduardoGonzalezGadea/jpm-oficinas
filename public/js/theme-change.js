@@ -51,6 +51,24 @@
         document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
     };
 
+    // Lista de temas oscuros conocidos de Bootswatch
+    const DARK_THEMES = ["darkly", "slate", "cyborg", "superhero", "vapor", "materia"];
+
+    /**
+     * Aplica o remueve la clase .dark-theme en el elemento <html>
+     * según si el nombre del tema está en la lista de oscuros
+     */
+    function applyDarkThemeClass(themeName) {
+        const isDark = DARK_THEMES.includes(themeName);
+        if (isDark) {
+            document.documentElement.classList.add('dark-theme');
+        } else {
+            document.documentElement.classList.remove('dark-theme');
+        }
+        // También establecer atributo data-theme como respaldo legacy
+        document.documentElement.setAttribute('data-theme', themeName);
+    }
+
     const setupTheme = () => {
         const themeStylesheet = document.getElementById("bootswatch-theme");
         const defaultThemePath = "/libs/bootswatch@4.6.2/dist/cosmo/bootstrap.min.css";
@@ -94,6 +112,9 @@
         if (themeStylesheet) {
             themeStylesheet.setAttribute("href", savedThemePath);
         }
+
+        // Aplicar la clase dark-theme según el tema guardado
+        applyDarkThemeClass(savedThemeName);
 
         // Actualizar el indicador de activo en el menú al cargar la página
         updateActiveThemeIndicator(savedThemeName);
@@ -175,6 +196,9 @@
             ? "#222222"
             : "#ffffff";
         document.body.style.backgroundColor = isDark ? "#222222" : "#ffffff";
+
+        // Aplicar la clase dark-theme según el tema
+        applyDarkThemeClass(themeName);
 
         // Guardar la elección en LocalStorage y cookies (doble respaldo)
         try {

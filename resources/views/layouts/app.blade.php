@@ -141,27 +141,6 @@
             to { transform: translateY(0); opacity: 1; }
         }
 
-        /* Fondos degradados premium para Paneles */
-        .panel-gradient-bg {
-            background: linear-gradient(180deg, #1e3a5f 0%, #3b6b9a 40%, #7ba3c9 70%, #a8d4f5 100%) !important;
-            min-height: calc(100vh - 56px);
-            margin: -0.25rem;
-            width: auto !important;
-            padding: 25px;
-        }
-
-        .text-premium-header {
-            color: #e0f0ff !important;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.4);
-            font-weight: 800;
-            letter-spacing: -0.01em;
-        }
-
-        .text-premium-muted {
-            color: #d1e9ff !important;
-            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
-        }
-
         @media (max-width: 600px) {
             .extension-banner { flex-direction: column; text-align: center; padding: 20px; }
             .extension-banner > div:first-child { margin-bottom: 12px; }

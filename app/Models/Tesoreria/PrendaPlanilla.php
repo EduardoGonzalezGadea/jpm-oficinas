@@ -2,6 +2,7 @@
 
 namespace App\Models\Tesoreria;
 
+use App\Traits\Auditable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -26,7 +27,7 @@ use App\Models\User;
  */
 class PrendaPlanilla extends Model
 {
-    use HasFactory, SoftDeletes, LogsActivityTrait;
+    use HasFactory, SoftDeletes, Auditable, LogsActivityTrait;
 
     /**
      * Nombre de la tabla en la base de datos

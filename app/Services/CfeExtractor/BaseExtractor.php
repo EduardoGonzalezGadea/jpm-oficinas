@@ -246,13 +246,16 @@ abstract class BaseExtractor implements CfeExtractorInterface
             if (!empty($bloque)) {
                 $lineas = explode("\n", $bloque);
                 $pagos = [];
+                $lastLabel = '';
                 foreach ($lineas as $linea) {
                     $linea = trim($linea);
                     if (empty($linea)) continue;
-                    if (preg_match('/^(.*?):[\s\t]*([\d\.,]+)$/u', $linea, $mpm)) {
-                        $pagos[] = trim($mpm[1]) . ": " . trim($mpm[2]);
-                    } elseif (!empty($linea)) {
-                        $pagos[] = $linea;
+                    if (preg_match('/^(?:([^:]+):)?\s*(?:UYU|USD|\$)?\s*([\d\.,]+)$/ui', $linea, $mpm)) {
+                        $tipo = !empty($mpm[1]) ? trim($mpm[1]) : (!empty($lastLabel) ? $lastLabel : 'Medio de pago');
+                        $pagos[] = $tipo . ": " . trim($mpm[2]);
+                        $lastLabel = '';
+                    } else {
+                        $lastLabel = rtrim($linea, ': ');
                     }
                 }
                 if (!empty($pagos)) {

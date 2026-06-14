@@ -5,9 +5,11 @@ namespace App\Http\Livewire\Tesoreria\DepositoVehiculos;
 use App\Models\Tesoreria\DepositoVehiculo;
 use App\Models\Tesoreria\MedioDePago;
 use Livewire\Component;
+use App\Traits\WithOrdenCobroValidation;
 
 class Create extends Component
 {
+    use WithOrdenCobroValidation;
     public $recibo_serie;
     public $recibo_numero;
     public $recibo_fecha;
@@ -62,6 +64,11 @@ class Create extends Component
                 'title' => 'Error de Validación',
                 'text' => 'La combinación de Serie y Número de Recibo ya existe.',
             ]);
+            return;
+        }
+
+        // Validar que la orden de cobro no esté duplicada
+        if (!$this->validarOrdenCobroUnica(DepositoVehiculo::class, $this->orden_cobro, null, 'recibo_serie|recibo_numero')) {
             return;
         }
 

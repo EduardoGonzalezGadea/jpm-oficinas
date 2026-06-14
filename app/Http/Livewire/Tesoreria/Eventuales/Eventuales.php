@@ -11,10 +11,11 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
 use Carbon\Carbon;
 use App\Traits\ConvertirMayusculas;
+use App\Traits\WithOrdenCobroValidation;
 
 class Eventuales extends Component
 {
-    use WithPagination, ConvertirMayusculas;
+    use WithPagination, ConvertirMayusculas, WithOrdenCobroValidation;
 
     protected $listeners = ['resetForm', 'destroy' => 'destroy', 'refreshComponent' => '$refresh', 'planillaCreated' => 'refreshData', 'planillaDeleted' => 'refreshData'];
 
@@ -180,6 +181,11 @@ class Eventuales extends Component
             ]
         );
 
+        // Validar que la orden de cobro no esté duplicada
+        if (!$this->validarOrdenCobroUnica(Model::class, $this->orden_cobro, null, 'recibo')) {
+            return;
+        }
+
         try {
             DB::beginTransaction();
             Model::create($datos);
@@ -253,6 +259,11 @@ class Eventuales extends Component
                 ['institucion', 'titular', 'detalle', 'orden_cobro', 'recibo', 'medio_de_pago'],
                 $validatedData
             );
+
+            // Validar que la orden de cobro no esté duplicada (excluyendo el registro actual)
+            if (!$this->validarOrdenCobroUnica(Model::class, $this->orden_cobro, $this->eventual_id, 'recibo')) {
+                return;
+            }
 
             try {
                 DB::beginTransaction();

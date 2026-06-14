@@ -12,7 +12,7 @@
     {{-- Estadísticas Generales --}}
     <div class="row mb-4">
         <div class="col-md-3">
-            <div class="card bg-primary text-white">
+            <div class="card card-header-section">
                 <div class="card-body text-center">
                     <h3 class="mb-1">{{ number_format($estadisticasGenerales['total_valores']) }}</h3>
                     <small>Valores Activos</small>

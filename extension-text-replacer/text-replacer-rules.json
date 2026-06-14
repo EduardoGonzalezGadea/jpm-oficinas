@@ -668,6 +668,10 @@
     "trigger": "--12.5--"
   },
   {
+    "replacement": "Multa de Tránsito - Cod. 12.6 Circular a contramano",
+    "trigger": "--12.6--"
+  },
+  {
     "replacement": "Multa de Tránsito - Cod. 12.7 Circulación incorrecta en rotondas",
     "trigger": "--12.7--"
   },

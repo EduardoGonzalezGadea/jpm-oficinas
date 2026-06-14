@@ -23,7 +23,86 @@ class PendriveController extends Controller
     public function upload(Request $request)
     {
         $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
-            'file' => 'required|file|max:102400', // Tamaño máximo: 100MB por archivo
+            'file' => [
+                'required',
+                'file',
+                'max:102400', // Tamaño máximo: 100MB por archivo
+                function ($attribute, $value, $fail) {
+                    // Lista de MIME types prohibidos (ejecutables y scripts)
+                    $forbiddenMimes = [
+                        'application/x-executable',
+                        'application/x-msdownload',
+                        'application/x-msdos-program',
+                        'application/x-msi',
+                        'application/x-sh',
+                        'application/x-shar',
+                        'application/x-csh',
+                        'application/x-ksh',
+                        'application/x-bash',
+                        'application/x-httpd-php',
+                        'application/x-httpd-php3',
+                        'application/x-httpd-php4',
+                        'application/x-httpd-php5',
+                        'application/x-php',
+                        'text/x-php',
+                        'application/x-python',
+                        'text/x-python',
+                        'application/x-perl',
+                        'text/x-perl',
+                        'application/x-js',
+                        'text/javascript',
+                        'application/javascript',
+                        'application/java-archive',
+                        'application/x-java-applet',
+                        'application/x-java-jnlp-file',
+                        'application/vnd.microsoft.portable-executable',
+                        'application/x-dosexec',
+                        'application/x-mach-binary',
+                        'application/x-elf',
+                    ];
+
+                    // Extensiones prohibidas (ejecutables)
+                    $forbiddenExtensions = [
+                        'exe', 'msi', 'bat', 'cmd', 'com', 'scr', 'pif',
+                        'sh', 'bash', 'csh', 'ksh', 'zsh',
+                        'php', 'php3', 'php4', 'php5', 'phtml',
+                        'pl', 'pm', 'py', 'pyc', 'pyo',
+                        'rb', 'rhtml',
+                        'asp', 'aspx', 'asax', 'ascx', 'ashx', 'asmx',
+                        'jsp', 'jspx',
+                        'cgi', 'fcgi',
+                        'dll', 'ocx', 'ax', 'sys', 'drv',
+                        'app', 'gadget',
+                        'hta', 'wsf', 'wsh', 'vbs', 'vbe', 'ps1', 'psm1', 'psd1', 'ps1xml',
+                    ];
+
+                    $mimeType = $value->getMimeType();
+                    $extension = strtolower($value->getClientOriginalExtension());
+                    $originalName = strtolower($value->getClientOriginalName());
+
+                    // Verificar MIME type
+                    if (in_array($mimeType, $forbiddenMimes)) {
+                        $fail('No se permiten archivos ejecutables.');
+                        return;
+                    }
+
+                    // Verificar extensión
+                    if (in_array($extension, $forbiddenExtensions)) {
+                        $fail('No se permiten archivos ejecutables.');
+                        return;
+                    }
+
+                    // Verificar doble extensión (ej: "documento.pdf.exe")
+                    $parts = explode('.', $originalName);
+                    if (count($parts) >= 3) {
+                        $lastExtension = end($parts);
+                        if (in_array($lastExtension, $forbiddenExtensions)) {
+                            $fail('No se permiten archivos ejecutables.');
+                            return;
+                        }
+                    }
+                },
+            ],
         ]);
 
         if ($validator->fails()) {

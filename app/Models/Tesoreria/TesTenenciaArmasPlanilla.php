@@ -3,6 +3,7 @@
 namespace App\Models\Tesoreria;
 
 use App\Models\User;
+use App\Traits\Auditable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -13,7 +14,7 @@ use App\Traits\LogsActivityTrait;
 
 class TesTenenciaArmasPlanilla extends Model
 {
-    use HasFactory, SoftDeletes, LogsActivityTrait;
+    use HasFactory, SoftDeletes, Auditable, LogsActivityTrait;
 
     protected $table = 'tes_tenencia_armas_planillas';
 
@@ -24,6 +25,7 @@ class TesTenenciaArmasPlanilla extends Model
         'anulada_user_id',
         'created_by',
         'updated_by',
+        'deleted_by',
     ];
 
     protected $casts = [

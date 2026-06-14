@@ -2,13 +2,14 @@
 
 namespace App\Models\Tesoreria;
 
+use App\Traits\Auditable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Traits\LogsActivityTrait;
 
 class PlanillaCheque extends Model
 {
-    use SoftDeletes, LogsActivityTrait;
+    use SoftDeletes, Auditable, LogsActivityTrait;
 
     protected $table = 'tes_planillas_cheques';
     protected $fillable = [

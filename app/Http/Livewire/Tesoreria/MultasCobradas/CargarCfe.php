@@ -56,9 +56,7 @@ class CargarCfe extends Component
         $this->sugerenciaItem = null;
 
         try {
-            $parser = new Parser();
-            $pdf = $parser->parseFile($this->archivo->getRealPath());
-            $text = $pdf->getText();
+            $text = app(\App\Services\CfeProcessorService::class)->parsearPdf($this->archivo->getRealPath());
 
             // Análisis básico del texto para extraer datos de CFE
             $datos = $this->parsearTextoCfe($text);

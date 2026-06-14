@@ -61,7 +61,15 @@ class Edit extends Component
             'titular_nombre' => 'required|string|max:255',
             'titular_apellido' => 'required|string|max:255',
             'titular_tipo_documento' => 'required|in:Cédula,Cédula Extranjera,Pasaporte,Otro',
-            'titular_nro_documento' => 'required|string|max:255',
+            'titular_nro_documento' => [
+                'required',
+                'string',
+                'max:255',
+                \Illuminate\Validation\Rule::unique('tes_certificados_residencia', 'titular_nro_documento')
+                    ->ignore($this->certificado_id)
+                    ->where('fecha_recibido', $this->fecha_recibido)
+                    ->whereNull('deleted_at')
+            ],
             'fecha_entregado' => 'nullable|date',
             'retira_nombre' => 'nullable|string|max:255',
             'retira_apellido' => 'nullable|string|max:255',
@@ -69,6 +77,8 @@ class Edit extends Component
             'retira_nro_documento' => 'nullable|string|max:255',
             'numero_recibo' => 'nullable|string|max:255',
             'monto' => 'nullable|numeric|min:0',
+        ], [
+            'titular_nro_documento.unique' => 'Ya existe un certificado de residencia recibido para este documento en la fecha seleccionada.',
         ]);
 
         // Si no hay fecha de entrega, todos los datos de entrega deben ser nulos

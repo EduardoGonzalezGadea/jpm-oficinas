@@ -10,10 +10,11 @@ use App\Models\Tesoreria\MedioDePago;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use App\Traits\WithOrdenCobroValidation;
 
 class CargarEfactura extends Component
 {
-    use WithFileUploads;
+    use WithFileUploads, WithOrdenCobroValidation;
 
     public $archivo;
     public $datosExtraidos = null;
@@ -81,9 +82,7 @@ class CargarEfactura extends Component
         $this->mensajeError = null;
 
         try {
-            $parser = new Parser();
-            $pdf = $parser->parseFile($this->archivo->getRealPath());
-            $text = $pdf->getText();
+            $text = app(\App\Services\CfeProcessorService::class)->parsearPdf($this->archivo->getRealPath());
 
             // Usar el extractor especializado para obtener datos robustos
             $extractor = new \App\Services\CfeExtractor\EventualesExtractor();
@@ -212,6 +211,13 @@ class CargarEfactura extends Component
                 $this->dispatchBrowserEvent('swal:toast-error', [
                     'text' => "El recibo {$this->datosExtraidos['recibo']} ya fue cargado el día {$this->datosExtraidos['fecha']}."
                 ]);
+                DB::rollBack();
+                return;
+            }
+
+            // Validar que la orden de cobro no esté duplicada
+            $ordenCobro = $this->datosExtraidos['orden_cobro'] ?? '';
+            if (!empty($ordenCobro) && !$this->validarOrdenCobroUnica(Eventual::class, $ordenCobro, null, 'recibo')) {
                 DB::rollBack();
                 return;
             }

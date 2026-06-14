@@ -5,9 +5,11 @@ namespace App\Http\Livewire\Tesoreria\DepositoVehiculos;
 use App\Models\Tesoreria\DepositoVehiculo;
 use App\Models\Tesoreria\MedioDePago;
 use Livewire\Component;
+use App\Traits\WithOrdenCobroValidation;
 
 class Edit extends Component
 {
+    use WithOrdenCobroValidation;
     public $deposito_id;
     public $recibo_serie;
     public $recibo_numero;
@@ -87,6 +89,11 @@ class Edit extends Component
 
         if (!$deposito) {
             $this->dispatchBrowserEvent('swal:error', ['text' => 'Error: No se encontró el registro.']);
+            return;
+        }
+
+        // Validar que la orden de cobro no esté duplicada (excluyendo el registro actual)
+        if (!$this->validarOrdenCobroUnica(DepositoVehiculo::class, $this->orden_cobro, $this->deposito_id, 'recibo_serie|recibo_numero')) {
             return;
         }
 

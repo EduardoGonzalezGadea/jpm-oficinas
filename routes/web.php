@@ -15,6 +15,7 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BackupController;
 use App\Http\Controllers\ExtensionController;
+use App\Http\Controllers\HealthCheckController;
 use App\Http\Controllers\PanelController;
 use App\Http\Controllers\PendriveController;
 use App\Http\Controllers\ThemeController;
@@ -35,6 +36,9 @@ Route::get('/download-text-replacer-extension', [ExtensionController::class, 'do
 // Vista pública de multas de tránsito
 Route::get('/multas-transito-publico', fn () => view('tesoreria.multas-publico'))->name('multas-transito-publico');
 
+// Vista pública de códigos de multas CPT Dec. 303/2023
+Route::get('/multas-303-publico', fn () => view('tesoreria.multas-303-publico'))->name('multas-303-publico');
+
 // Tema (debe funcionar sin autenticar para el formulario de login)
 Route::post('/tema/cambiar', [ThemeController::class, 'switchTheme'])->name('theme.switch');
 
@@ -46,6 +50,12 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::get('/valor-ur',                        [UtilidadController::class, 'getValorUr'])          ->name('utilidad.valor_ur');
 Route::get('/hora-uruguay',                    [UtilidadController::class, 'getHoraUruguay'])       ->name('utilidad.hora-uruguay');
 Route::get('/utilidad/actualizar-soa-art-184', [UtilidadController::class, 'actualizarValoresSoa']) ->name('utilidad.actualizar-soa');
+
+// Health check endpoints
+Route::prefix('health')->name('health.')->group(function () {
+    Route::get('/external-downloads',        [HealthCheckController::class, 'externalDownloads']) ->name('external-downloads');
+    Route::get('/external-downloads-stats',  [HealthCheckController::class, 'externalDownloadsStats']) ->name('external-downloads-stats');
+});
 
 // ============================================================================
 // RUTAS PROTEGIDAS POR JWT

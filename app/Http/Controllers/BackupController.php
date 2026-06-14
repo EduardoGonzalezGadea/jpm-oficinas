@@ -154,21 +154,24 @@ class BackupController extends Controller
             $mysqlPath = config('database.connections.mysql.dump.mysql_binary_path');
             if ($mysqlPath) {
                 $mysqlPath = rtrim($mysqlPath, '/\\') . DIRECTORY_SEPARATOR;
+            } else {
+                $mysqlPath = '';
             }
 
-            // Construir el comando mysql
-            $command = sprintf(
-                '"%smysql" -h %s -u %s -p%s %s < %s',
-                $mysqlPath,
-                escapeshellarg($host),
-                escapeshellarg($username),
-                escapeshellarg($password),
-                escapeshellarg($database),
-                escapeshellarg($sqlFilePath)
-            );
+            // Obtener la ruta absoluta del binario mysql
+            $mysqlBinary = $mysqlPath . 'mysql';
 
-            // Ejecutar el comando
-            $process = Process::fromShellCommandline($command);
+            // Construir el comando usando argumentos separados para evitar inyección
+            $process = new Process([
+                $mysqlBinary,
+                '-h', $host,
+                '-u', $username,
+                sprintf('--password=%s', $password),
+                $database,
+            ]);
+
+            // Redirigir el contenido del archivo SQL como entrada estándar
+            $process->setInput(file_get_contents($sqlFilePath));
             $process->run();
 
             if (!$process->isSuccessful()) {

@@ -208,6 +208,29 @@ Route::prefix('certificados-residencia')->name('certificados-residencia.')->grou
 });
 
 // ============================================================================
+// TARJETAS DE COBRO BROU
+// ============================================================================
+
+Route::prefix('tarjetas-cobro-brou')->name('tarjetas-cobro-brou.')->group(function () {
+    Route::get('/', \App\Http\Livewire\Tesoreria\TarjetasCobroBrou\Index::class)->name('index');
+
+    Route::get('reportes',
+        \App\Http\Livewire\Tesoreria\TarjetasCobroBrou\TarjetasReporte::class
+    )->name('reportes');
+
+    Route::get('imprimir-avanzado',
+        \App\Http\Livewire\Tesoreria\TarjetasCobroBrou\PrintTarjetasAdvanced::class
+    )->name('imprimir-avanzado');
+});
+// ============================================================================
+// GESTIÓN DE CFES
+// ============================================================================
+
+Route::prefix('gestion-cfe')->name('gestion-cfe.')->group(function () {
+    Route::get('/', \App\Http\Livewire\Tesoreria\GestionCfe\Index::class)->name('index');
+});
+
+// ============================================================================
 // PRENDAS
 // ============================================================================
 
@@ -270,6 +293,18 @@ Route::prefix('configuracion')->name('configuracion.')->group(function () {
     Route::get('denominaciones-monedas',
         fn () => view('tesoreria.configuracion.tes-denominaciones-monedas.index-livewire')
     )->name('tes-denominaciones-monedas.index');
+
+    Route::get('caja-conceptos',
+        fn () => view('tesoreria.configuracion.caja-conceptos.index-livewire')
+    )->name('caja-conceptos.index');
+
+    Route::get('siif-distribucion-dependencias',
+        fn () => view('tesoreria.configuracion.siif-distribucion-dependencias.index-livewire')
+    )->name('siif-distribucion-dependencias.index');
+
+    Route::get('siif-distribucion-tipos',
+        fn () => view('tesoreria.configuracion.siif-distribucion-tipos.index-livewire')
+    )->name('siif-distribucion-tipos.index');
 });
 // ============================================================================
 // CAJA CHICA

@@ -2,7 +2,7 @@
     @section('title', 'Historial de Auditoría')
 
     <div class="card">
-        <div class="card-header bg-dark text-white card-header-gradient p-2">
+        <div class="card-header card-header-section card-header-gradient p-2">
             <div class="d-flex justify-content-between align-items-center">
                 <h4 class="card-title px-1 m-0">
                     <strong><i class="fas fa-history mr-2"></i>Historial de Auditoría</strong>

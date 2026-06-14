@@ -46,7 +46,7 @@
 
     <!-- Cabecera de Caja Chica -->
     <div class="card mb-3 shadow-sm">
-        <div class="card-header bg-info text-white card-header-gradient py-2 px-3 d-flex justify-content-between align-items-center">
+        <div class="card-header card-header-section card-header-gradient py-2 px-3">
             <h4 class="mb-0">
                 <strong><i class="fas fa-coins mr-2"></i>Caja Chica</strong>
             </h4>

@@ -145,8 +145,24 @@ class CfeProcessorService
      */
     public function parsearPdf(string $rutaAbsoluta): string
     {
-        $parser = new Parser();
-        $pdf    = $parser->parseFile($rutaAbsoluta);
+        $parser  = new Parser();
+        $content = file_get_contents($rutaAbsoluta);
+
+        // Algunos PDFs de CFE comienzan con BOM UTF-8 (\xEF\xBB\xBF) antes de %PDF,
+        // lo que desplaza los offsets internos y causa "Unable to find startxref".
+        if (str_starts_with($content, "\xEF\xBB\xBF")) {
+            $content = substr($content, 3);
+        }
+
+        // Reparar fin de archivo si el PDF está truncado y termina en %%E o %%EO en lugar de %%EOF
+        $trimmedContent = rtrim($content);
+        if (str_ends_with($trimmedContent, '%%E')) {
+            $content = $trimmedContent . 'OF';
+        } elseif (str_ends_with($trimmedContent, '%%EO')) {
+            $content = $trimmedContent . 'F';
+        }
+
+        $pdf = $parser->parseContent($content);
         return $pdf->getText();
     }
 

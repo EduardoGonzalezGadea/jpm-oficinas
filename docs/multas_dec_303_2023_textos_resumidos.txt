@@ -109,6 +109,7 @@ Multa de Tránsito - Cod. 12.2 Uso incorrecto de sendas de circulación
 Multa de Tránsito - Cod. 12.3.1 Uso más de una senda de circulación
 Multa de Tránsito - Cod. 12.3.2 Ir lento por la senda izquierda
 Multa de Tránsito - Cod. 12.5 No mantener la derecha al cruzarse
+Multa de Tránsito - Cod. 12.6 Circular a contramano
 Multa de Tránsito - Cod. 12.7 Circulación incorrecta en rotondas
 Multa de Tránsito - Cod. 12.8 Circular sobre marcas delimitadoras o isletas
 Multa de Tránsito - Cod. 12.9 No mantener distancia de circulación

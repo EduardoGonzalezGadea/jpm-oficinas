@@ -2,17 +2,15 @@
 
 namespace App\Services;
 
+use App\Services\Http\HttpClientService;
 use Carbon\Carbon;
 use DOMDocument;
 use DOMXPath;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class ValorUrService
 {
-    private const BPS_URL = 'https://www.bps.gub.uy/bps/valores.jsp?contentid=5478';
-
     private const CACHE_KEY = 'valor_ur_completo';
 
     private const CACHE_KEY_ULTIMO_VALIDO = 'valor_ur_ultimo_valido';
@@ -33,6 +31,13 @@ class ValorUrService
         'noviembre' => 11,
         'diciembre' => 12,
     ];
+
+    private HttpClientService $httpClient;
+
+    public function __construct(HttpClientService $httpClient = null)
+    {
+        $this->httpClient = $httpClient ?? app(HttpClientService::class);
+    }
 
     /**
      * Obtiene el valor de la UR desde BPS con caché, reintentos y detección de vencimiento.
@@ -73,8 +78,19 @@ class ValorUrService
      */
     public function fetchFromBps(): ?array
     {
+        $config = config('external_downloads.valor_ur', []);
+        $url = $config['url'] ?? 'https://www.bps.gub.uy/bps/valores.jsp?contentid=5478';
+        $timeout = $config['timeout'] ?? 45;
+        $maxRetries = $config['max_retries'] ?? 3;
+
         try {
-            $response = $this->httpGetWithRetry(self::BPS_URL, 45, 3);
+            $response = $this->httpClient->getWithRetry(
+                $url,
+                ['timeout' => $timeout],
+                $maxRetries,
+                $config['retry_delay_ms'] ?? 1000,
+                'valor_ur'
+            );
         } catch (\Throwable $e) {
             Log::error('No se pudo obtener valor UR desde BPS: ' . $e->getMessage());
 
@@ -87,7 +103,14 @@ class ValorUrService
             return null;
         }
 
-        return $this->parseBpsHtml($response->body());
+        $parsed = $this->parseBpsHtml($response->body());
+
+        // Validar valor extraído
+        if ($parsed && $this->isValidUrValue($parsed['valorUr'])) {
+            return $parsed;
+        }
+
+        return null;
     }
 
     /**
@@ -214,93 +237,31 @@ class ValorUrService
         return self::MESES_ES[$mesNormalizado] ?? null;
     }
 
-    private function httpGetWithRetry(string $url, int $timeout = 45, int $maxRetries = 3)
-    {
-        $headers = [
-            'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            'Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-            'Accept-Language' => 'es-UY,es;q=0.9',
-        ];
-
-        $lastException = null;
-
-        for ($attempt = 1; $attempt <= $maxRetries; $attempt++) {
-            foreach ([false, true] as $useProxy) {
-                try {
-                    $options = [
-                        'timeout' => $timeout,
-                        'connect_timeout' => 15,
-                        'verify' => false,
-                        'headers' => $headers,
-                    ];
-
-                    if ($useProxy) {
-                        $options['proxy'] = $this->buildProxyOptions();
-                        if ($options['proxy'] === null) {
-                            continue;
-                        }
-                    } else {
-                        $options['proxy'] = false;
-                    }
-
-                    Log::info(sprintf(
-                        'Intento %d/%d para UR (%s proxy): %s',
-                        $attempt,
-                        $maxRetries,
-                        $useProxy ? 'con' : 'sin',
-                        $url
-                    ));
-
-                    $response = Http::withOptions($options)->get($url);
-
-                    if ($response->successful()) {
-                        return $response;
-                    }
-
-                    throw new \RuntimeException('Respuesta HTTP ' . $response->status());
-                } catch (\Throwable $e) {
-                    $lastException = $e;
-                    Log::warning(sprintf(
-                        'Fallo al obtener UR (%s proxy, intento %d): %s',
-                        $useProxy ? 'con' : 'sin',
-                        $attempt,
-                        $e->getMessage()
-                    ));
-                }
-            }
-
-            if ($attempt < $maxRetries) {
-                usleep((int) pow(2, $attempt) * 500000);
-            }
-        }
-
-        throw new \RuntimeException(
-            'Fallaron todos los intentos para obtener UR. Último error: ' . ($lastException?->getMessage() ?? 'desconocido')
-        );
-    }
-
     /**
-     * @return array<string, mixed>|string|null
+     * Valida que el valor de UR sea razonable
+     *
+     * @param string $valorUr Valor en formato "$ 1.839,08"
+     * @return bool
      */
-    private function buildProxyOptions()
+    private function isValidUrValue(string $valorUr): bool
     {
-        $httpProxy = env('HTTP_PROXY') ?: env('http_proxy');
-        $httpsProxy = env('HTTPS_PROXY') ?: env('https_proxy') ?: $httpProxy;
+        $config = config('external_downloads.valor_ur.validation', []);
+        $minValue = $config['min_value'] ?? 100;
+        $maxValue = $config['max_value'] ?? 10000;
 
-        if (!$httpProxy && !$httpsProxy) {
-            return null;
+        // Extraer número del valor
+        if (!preg_match('/[\d\.]+[,.]?\d{2}/', $valorUr, $matches)) {
+            return false;
         }
 
-        $proxy = [
-            'http' => $httpProxy ?: $httpsProxy,
-            'https' => $httpsProxy ?: $httpProxy,
-        ];
+        $numericValue = (float) str_replace(['.', ','], ['' , '.'], $matches[0]);
 
-        $noProxy = env('NO_PROXY') ?: env('no_proxy');
-        if ($noProxy) {
-            $proxy['no'] = array_map('trim', explode(',', $noProxy));
+        // Validar rango
+        if ($numericValue < $minValue || $numericValue > $maxValue) {
+            Log::warning("Valor UR fuera de rango: {$valorUr} (rango: {$minValue}-{$maxValue})");
+            return false;
         }
 
-        return $proxy;
+        return true;
     }
 }

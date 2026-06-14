@@ -10,10 +10,11 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use App\Traits\ConvertirMayusculas;
+use App\Traits\WithOrdenCobroValidation;
 
 class Arrendamiento extends Component
 {
-    use WithPagination, ConvertirMayusculas;
+    use WithPagination, ConvertirMayusculas, WithOrdenCobroValidation;
 
     protected $listeners = ['resetForm', 'destroy' => 'destroy', 'refreshComponent' => '$refresh', 'planillaCreated' => 'refreshData', 'planillaDeleted' => 'refreshData'];
 
@@ -93,10 +94,18 @@ class Arrendamiento extends Component
 
     public function store()
     {
-
-
         if (!$this->fecha) {
             $this->fecha = Carbon::now()->format('Y-m-d');
+        }
+
+        if (empty($this->ingreso)) {
+            $this->ingreso = null;
+        }
+        if (empty($this->orden_cobro)) {
+            $this->orden_cobro = null;
+        }
+        if (empty($this->recibo)) {
+            $this->recibo = null;
         }
 
         $validated = $this->validate([
@@ -116,6 +125,11 @@ class Arrendamiento extends Component
             ['nombre', 'cedula', 'telefono', 'detalle', 'orden_cobro', 'recibo', 'medio_de_pago'],
             $validated
         );
+
+        // Validar que la orden de cobro no esté duplicada
+        if (!$this->validarOrdenCobroUnica(Model::class, $this->orden_cobro, null, 'recibo')) {
+            return;
+        }
 
         try {
             DB::beginTransaction();
@@ -181,7 +195,9 @@ class Arrendamiento extends Component
 
     public function updateIngreso()
     {
-
+        if (empty($this->ingreso)) {
+            $this->ingreso = null;
+        }
 
         $this->validate(['ingreso' => 'nullable|integer']);
 
@@ -207,7 +223,15 @@ class Arrendamiento extends Component
 
     public function update()
     {
-
+        if (empty($this->ingreso)) {
+            $this->ingreso = null;
+        }
+        if (empty($this->orden_cobro)) {
+            $this->orden_cobro = null;
+        }
+        if (empty($this->recibo)) {
+            $this->recibo = null;
+        }
 
         $validated = $this->validate([
             'fecha' => 'required|date',
@@ -229,7 +253,12 @@ class Arrendamiento extends Component
                 $validated
             );
 
-            try {
+            // Validar que la orden de cobro no esté duplicada (excluyendo el registro actual)
+        if (!$this->validarOrdenCobroUnica(Model::class, $this->orden_cobro, $this->arrendamiento_id, 'recibo')) {
+            return;
+        }
+
+        try {
                 DB::beginTransaction();
                 $arrendamiento->update($datos);
                 $this->clearCache();
@@ -256,6 +285,14 @@ class Arrendamiento extends Component
             $this->dispatchBrowserEvent('alert', [
                 'type' => 'error',
                 'message' => 'El arrendamiento está incluido en una planilla y no puede ser eliminado.'
+            ]);
+            return;
+        }
+
+        if ($arrendamiento->confirmado) {
+            $this->dispatchBrowserEvent('alert', [
+                'type' => 'error',
+                'message' => 'El arrendamiento ya ha sido confirmado y no puede ser eliminado.'
             ]);
             return;
         }

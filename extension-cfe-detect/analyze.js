@@ -172,7 +172,6 @@ function handleSelectedFile(file) {
 
     fetch(analyzeUrl, {
         method: "POST",
-        credentials: "include",
         body: formData
     })
     .then(function (response) {
@@ -208,10 +207,10 @@ chrome.storage.local.get(["serverUrl"], function (result) {
     analyzePdf();
 });
 
-// Analizar el PDF automáticamente (Chrome) o preparar Dropzone (Firefox)
+// Analizar el PDF - detectar si hay datos pre-analizados o pedir análisis al servidor
 function analyzePdf() {
     if (isFirefox) {
-        console.log("Firefox detectado. Mostrando zona de arrastre debido a políticas de seguridad local.");
+        console.log("Firefox detectado. Mostrando zona de arrastre.");
         statusDiv.style.display = "none";
         dropzone.style.display = "flex";
         
@@ -231,50 +230,75 @@ function analyzePdf() {
     // Revisar si el background ya lo analizó y guardó el resultado
     var storageKey = 'cfe_analysis_' + downloadId;
     chrome.storage.local.get([storageKey], function (result) {
-        if (result[storageKey]) {
-            console.log("Usando resultado pre-analizado del almacenamiento local");
-            var data = result[storageKey];
+        var stored = result[storageKey];
+        // Limpiar el storage inmediatamente
+        chrome.storage.local.remove([storageKey]);
 
-            // Limpiar el storage para no acumular basura
-            chrome.storage.local.remove([storageKey]);
-
-            if (data.es_cfe) {
-                showCfeData(data);
-            } else {
-                showNotCfe(data.mensaje || "Este PDF no contiene un CFE válido.");
-            }
+        if (stored && stored.requireManual) {
+            console.log("[CFE] Se requiere subida manual. Mostrando dropzone.");
+            statusDiv.style.display = "none";
+            dropzone.style.display = "flex";
+            showSingleActionButton("Cancelar", "close-btn", closeWindow);
+            actionsDiv.style.display = "flex";
+        } else if (stored && stored.es_cfe) {
+            console.log("[CFE] Usando resultado pre-analizado del storage.");
+            showCfeData(stored);
+        } else if (stored && stored.es_cfe === false) {
+            // El background analizó y confirmó que NO es un CFE
+            showNotCfe(stored.mensaje || "Este PDF no contiene un CFE válido.");
         } else {
-            // Fallback: Analizar normalmente si no estaba en storage
-            requestNewAnalysis();
+            // Sin datos pre-analizados: pedir análisis al servidor directamente
+            requestAnalysisFromServer();
         }
     });
 }
 
-// Solicitar un nuevo análisis al background (Chrome)
-function requestNewAnalysis() {
-    chrome.runtime.sendMessage({
-        action: "analyzePdf",
-        downloadId: downloadId,
-        filename: filename,
-        serverUrl: SERVER_URL
-    }, function (response) {
-        if (chrome.runtime.lastError) {
-            showError("Error de comunicación: " + chrome.runtime.lastError.message);
-            return;
+// Solicitar análisis al servidor usando el filepath (sin intentar leer file:// localmente)
+function requestAnalysisFromServer() {
+    if (!filepath) {
+        // Sin filepath: mostrar zona de carga manual
+        showError("No se encontró ruta del archivo. Por favor, sube el PDF manualmente.");
+        return;
+    }
+
+    showLoading("Analizando archivo en el servidor...");
+
+    var formData = new FormData();
+    formData.append("filepath", filepath);
+    formData.append("filename", filename);
+
+    fetch(SERVER_URL + "/api/cfe/analizar-archivo", {
+        method: "POST",
+        body: formData
+        // Sin credentials para evitar problemas CORS
+    })
+    .then(function (response) {
+        if (!response.ok) {
+            throw new Error("HTTP " + response.status);
         }
-
-        if (response && response.success) {
-            var data = response.data;
-            console.log("Respuesta del servidor:", data);
-
-            if (data.es_cfe) {
-                showCfeData(data);
-            } else {
-                showNotCfe(data.mensaje || "Este PDF no contiene un CFE válido.");
-            }
+        return response.json();
+    })
+    .then(function (data) {
+        console.log("[CFE] Respuesta del servidor:", data);
+        if (data && data.es_cfe) {
+            showCfeData(data);
         } else {
-            showError(response && response.error ? response.error : "Error al analizar el PDF");
+            var msg = data && data.mensaje ? data.mensaje : "Este PDF no contiene un CFE válido.";
+            // Si el servidor no pudo acceder al archivo, mostrar dropzone para subida manual
+            if (msg.indexOf("No se pudo acceder") !== -1 || msg.indexOf("El archivo no existe") !== -1) {
+                console.log("[CFE] Se requiere subida manual. Mostrando dropzone.");
+                statusDiv.style.display = "none";
+                dropzone.style.display = "flex";
+                showSingleActionButton("Cancelar", "close-btn", closeWindow);
+                actionsDiv.style.display = "flex";
+            } else {
+                showNotCfe(msg);
+            }
         }
+    })
+    .catch(function (err) {
+        console.error("[CFE] Error de red al analizar:", err);
+        showError("No se pudo conectar al servidor: " + err.message);
     });
 }
 
@@ -486,7 +510,6 @@ function submitCfeRecord() {
 
     fetch(SERVER_URL + "/api/cfe/crear-registro", {
         method: "POST",
-        credentials: "include",
         headers: {
             "Content-Type": "application/json",
             "Accept": "application/json"

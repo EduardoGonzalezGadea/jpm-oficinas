@@ -63,12 +63,68 @@ class ArrendamientosExtractor extends BaseExtractor
         // Fecha
         $datos['fecha'] = $this->extraerFecha($texto);
 
-        // Receptor
+        // Receptor y Domicilio
         $datos['cedula'] = $this->extraerReceptorDocumento($texto);
-        $datos['nombre'] = $this->extraerReceptorNombre($texto);
+        
+        $bloqueNombre = '';
+        if (preg_match('/NOMBRE O DENOMINACIÓN DOMICILIO FISCAL\s*\n\s*(.*?)(?=\s*\n\s*(?:INFORMACION ADICIONAL|DETALLE DESCRIPCIÓN|PERIODO|FECHA|$))/isu', $texto, $matches)) {
+            $bloqueNombre = $matches[1];
+        } elseif (preg_match('/FISCAL\s*(.*?)(?=\s*(?:INFORMACION|DETALLE|FECHA|\d{2}\/\d{2}\/\d{4}|$))/isu', $texto, $matches)) {
+            $bloqueNombre = $matches[1];
+        }
+
+        $domicilio = '';
+        if (!empty($bloqueNombre)) {
+            $lineas = array_values(array_filter(array_map('trim', explode("\n", $bloqueNombre))));
+            $nombreLines = [];
+            $domicilioLines = [];
+            $domicilioEmpezado = false;
+
+            foreach ($lineas as $k => $linea) {
+                if ($domicilioEmpezado) {
+                    $domicilioLines[] = $linea;
+                } else {
+                    $esDomicilio = false;
+                    
+                    // Si la línea contiene dígitos o palabras clave de dirección
+                    if (preg_match('/\d/', $linea) || preg_match('/\b(s\/n|cno|ruta|calle|av\.?|avda|blvr|bvar|apto|block|esq\.?|piso|of\.?)\b/iu', $linea)) {
+                        $esDomicilio = true;
+                    } 
+                    // Si no tiene números, pero la SIGUIENTE línea empieza con números (ej: calle en una línea, número en la otra)
+                    elseif (isset($lineas[$k + 1]) && preg_match('/^\d+/u', trim($lineas[$k + 1]))) {
+                        // Evitar tomar la primera línea como domicilio si es la única antes del número
+                        if ($k > 0) {
+                            $esDomicilio = true;
+                        }
+                    }
+
+                    if ($esDomicilio) {
+                        // Si es la primera línea y ya tiene números (todo en una sola línea)
+                        if ($k === 0 && count($lineas) === 1) {
+                            if (preg_match('/^(.*?)\s+(\d.*)$/u', $linea, $m)) {
+                                $nombreLines[] = trim($m[1]);
+                                $domicilioLines[] = trim($m[2]);
+                            } else {
+                                $nombreLines[] = $linea; // Fallback, dejar todo en el nombre
+                            }
+                        } else {
+                            $domicilioLines[] = $linea;
+                        }
+                        $domicilioEmpezado = true;
+                    } else {
+                        $nombreLines[] = $linea;
+                    }
+                }
+            }
+
+            $datos['nombre'] = implode(' ', $nombreLines);
+            $domicilio = trim(preg_replace('/\s+/', ' ', implode(' ', $domicilioLines)));
+        } else {
+            $datos['nombre'] = $this->extraerReceptorNombre($texto);
+        }
 
         // Telefono
-        $datos['telefono'] = $this->extraerTelefono($texto);
+        $datos['telefono'] = $this->extraerTelefonoArrendamiento($texto);
 
         // Monto Total
         $datos['monto'] = $this->extraerMonto($texto);
@@ -86,10 +142,10 @@ class ArrendamientosExtractor extends BaseExtractor
         // Adenda
         $datos['adenda'] = $this->extraerAdenda($texto);
 
-        // Orden de Cobro desde adenda
-        $datos['orden_cobro'] = $this->extraerOrdenCobro($datos['adenda']);
+        // Orden de Cobro: buscar en detalle y adenda
+        $datos['orden_cobro'] = $this->extraerOrdenCobro($datos['detalle'], $datos['adenda']);
 
-        // Validacion de tipo
+        // Validacion de tipo (basada en el detalle original)
         $detalleNorm = $this->quitarAcentos(mb_strtolower($datos['detalle'], 'UTF-8'));
         if (strpos($detalleNorm, 'arrendamiento') === false && strpos($detalleNorm, 'arrendamientos') === false) {
             return [
@@ -97,9 +153,51 @@ class ArrendamientosExtractor extends BaseExtractor
             ];
         }
 
-        // Si se pago por transferencia, concatenar al detalle
-        if (stripos($datos['forma_pago'], 'Transferencia') !== false) {
-            $datos['detalle'] .= ' - ' . $datos['forma_pago'];
+        // Quitar palabra ARRENDAMIENTO(S) del detalle ya que esta implícito
+        $datos['detalle'] = preg_replace('/ARRENDAMIENTOS?/iu', '', $datos['detalle']);
+
+        // Quitar O/C del detalle (se almacena en su propio campo orden_cobro)
+        if (!empty($datos['orden_cobro'])) {
+            $datos['detalle'] = preg_replace(
+                '/[-\x{2013}\x{2014}]?\s*(?:O\.?\s*\(?C\.?\)?|O\/C|ORDEN\s+DE\s+COBRO)\s*' . preg_quote($datos['orden_cobro'], '/') . '/iu',
+                '',
+                $datos['detalle']
+            );
+        }
+
+        $datos['detalle'] = trim(preg_replace('/\s+/', ' ', $datos['detalle']), " -.,:");
+
+        // Agregar datos adicionales del CFE no almacenados en otros campos
+        $datosExtra = [];
+
+        $referencias = $this->extraerReferencias($texto);
+        if (!empty($referencias)) {
+            $refNorm = $this->quitarAcentos(mb_strtolower(trim($referencias)));
+            if ($refNorm !== 'cancelacion de factura') {
+                $datosExtra[] = 'REF: ' . $referencias;
+            }
+        }
+
+        if (!empty($datos['adenda'])) {
+            $adendaSinOC = preg_replace(
+                '/(?:ORDEN\s+DE\s+COBRO|ORDEN\s+COBRO|O\.\s*\(?C\.?\)?|O\/C)\s*\d+/iu',
+                '',
+                $datos['adenda']
+            );
+            $adendaSinOC = trim(preg_replace('/\s+/', ' ', $adendaSinOC), " -.,:");
+            if (!empty($adendaSinOC)) {
+                $datosExtra[] = $adendaSinOC;
+            }
+        }
+
+        if (!empty($datosExtra)) {
+            $extra = implode(' - ', $datosExtra);
+            $datos['detalle'] = empty($datos['detalle']) ? $extra : $datos['detalle'] . ' - ' . $extra;
+        }
+
+        // Colocar el domicilio al principio del detalle
+        if (!empty($domicilio)) {
+            $datos['detalle'] = empty($datos['detalle']) ? $domicilio : $domicilio . ' - ' . $datos['detalle'];
         }
 
         return $datos;
@@ -113,7 +211,7 @@ class ArrendamientosExtractor extends BaseExtractor
      */
     private function extraerDetalle(string $texto): string
     {
-        if (!preg_match('/DETALLE\s+DESCRIPCI.N.*?IMPORTE\s*(.*?)(?=\s*MONTO\s+NO\s+FACTURABLE)/isu', $texto, $matches)) {
+        if (!preg_match('/DETALLE\s+DESCRIPCI.N.*?IMPORTE\s*(.*?)(?=\s*(?:TOTAL\s+A\s+PAGAR|MONTO\s+NO\s+FACTURABLE))/isu', $texto, $matches)) {
             return '';
         }
 
@@ -143,25 +241,36 @@ class ArrendamientosExtractor extends BaseExtractor
     }
 
     /**
-     * Extrae la orden de cobro de la adenda.
+     * Extrae la orden de cobro del detalle y/o adenda.
      *
+     * @param string $detalle
      * @param string $adenda
      * @return string
      */
-    private function extraerOrdenCobro(string $adenda): string
+    private function extraerOrdenCobro(string $detalle, string $adenda): string
     {
+        $patronOC = '/(?:orden\s+de\s+cobro|orden\s+cobro|o\.\s*\(?c\.?\)?|o\/c)\s*(\d+)/iu';
+
+        // 1. Buscar en el detalle
+        if (!empty($detalle)) {
+            $detalleSinAcentos = $this->quitarAcentos(mb_strtolower($detalle, 'UTF-8'));
+            if (preg_match($patronOC, $detalleSinAcentos, $ocMatch)) {
+                return $ocMatch[1];
+            }
+        }
+
+        // 2. Buscar en la adenda
         if (empty($adenda)) {
             return '';
         }
 
         $adendaSinAcentos = $this->quitarAcentos(mb_strtolower($adenda, 'UTF-8'));
 
-        // Patrones para orden de cobro
-        if (preg_match('/(?:orden\s+de\s+cobro|orden\s+cobro|o\.\s*\(?c\.?|o\/c)\s*(\d+)/iu', $adendaSinAcentos, $ocMatch)) {
+        if (preg_match($patronOC, $adendaSinAcentos, $ocMatch)) {
             return $ocMatch[1];
         }
 
-        // Si hay solo un numero en la adenda
+        // 3. Si hay solo un numero en la adenda, asumir que es la orden de cobro
         $numerosEncontrados = [];
         if (preg_match_all('/\b(\d{3,})\b/', $adenda, $numMatches)) {
             $numerosEncontrados = $numMatches[1];
@@ -172,6 +281,73 @@ class ArrendamientosExtractor extends BaseExtractor
         }
 
         return '';
+    }
+
+    /**
+     * Extrae el contenido de REFERENCIAS del CFE.
+     *
+     * @param string $texto
+     * @return string
+     */
+    private function extraerReferencias(string $texto): string
+    {
+        if (!preg_match('/REFERENCIAS:\s*(.*)/isu', $texto, $matches)) {
+            return '';
+        }
+
+        $bloque = $matches[1];
+        $lineas = explode("\n", $bloque);
+        $resultado = [];
+
+        foreach ($lineas as $linea) {
+            $linea = trim($linea);
+            if (empty($linea)) continue;
+            if (preg_match('/^\d{1,2}$/', $linea)) break;
+            if (preg_match('/^Fecha\s+de/iu', $linea)) break;
+            if (preg_match('/^Puede\s+verificar/iu', $linea)) break;
+            if (preg_match('/^I\.V\.A\./iu', $linea)) break;
+            if (preg_match('/^N[\x{00DA}U]MERO\s+DE\s+CAE/iu', $linea)) break;
+            if (preg_match('/^ADENDA/iu', $linea)) break;
+
+            $resultado[] = $linea;
+        }
+
+        return trim(implode(' ', $resultado));
+    }
+
+    /**
+     * Extrae el telefono flexibilizando el prefijo.
+     *
+     * @param string $texto
+     * @return string
+     */
+    private function extraerTelefonoArrendamiento(string $texto): string
+    {
+        // 1. Buscar en INFORMACION ADICIONAL
+        if (preg_match('/INFORMACION ADICIONAL\s*(.*?)(?=\s*(?:PERIODO|FECHA|DETALLE|$))/isu', $texto, $matchesInfo)) {
+            $info = $matchesInfo[1];
+            if (preg_match('/(?:TEL\.?|TEL(?:E|É)FONO|CEL\.?)?[\s:]*(\d[\d\s\-]{7,})/iu', $info, $matchesTel)) {
+                $numero = trim($matchesTel[1]);
+                $digitos = preg_replace('/[^\d]/', '', $numero);
+                if (strlen($digitos) >= 8) {
+                    return $numero;
+                }
+            }
+        }
+
+        // 2. Buscar en ADENDA
+        $adenda = $this->extraerAdenda($texto);
+        if (!empty($adenda)) {
+            if (preg_match('/(?:TEL\.?|TEL(?:E|É)FONO|CEL\.?)?[\s:]*(\d[\d\s\-]{7,})/iu', $adenda, $matchesTel)) {
+                $numero = trim($matchesTel[1]);
+                $digitos = preg_replace('/[^\d]/', '', $numero);
+                if (strlen($digitos) >= 8) {
+                    return $numero;
+                }
+            }
+        }
+
+        return $this->extraerTelefono($texto);
     }
 
     /**

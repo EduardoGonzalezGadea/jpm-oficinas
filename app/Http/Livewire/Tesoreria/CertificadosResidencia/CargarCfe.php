@@ -8,6 +8,7 @@ use Smalot\PdfParser\Parser;
 use App\Models\Tesoreria\CertificadoResidencia;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 
 class CargarCfe extends Component
 {
@@ -25,29 +26,6 @@ class CargarCfe extends Component
         'archivo' => 'required|mimes:pdf|max:10240',
     ];
 
-    public function mount()
-    {
-        // 1. Intentar cargar desde Caché (método de la extensión del navegador)
-        $prefillId = request()->query('prefill_id');
-        if ($prefillId && Cache::has('cfe_prefill_' . $prefillId)) {
-            $cacheData = Cache::get('cfe_prefill_' . $prefillId);
-            $tipo = $cacheData['tipo'] ?? '';
-            if (in_array($tipo, ['certificado_residencia', 'Certificado de Residencia', 'certificados_residencia'])) {
-                $this->datosExtraidos = $cacheData['datos'];
-                Cache::forget('cfe_prefill_' . $prefillId);
-                $this->buscarCertificadoCoincidente();
-                return;
-            }
-        }
-
-        // 2. Fallback: sesión
-        if (session()->has('cfe_datos_precargados') && session('cfe_tipo') === 'certificados_residencia') {
-            $this->datosExtraidos = session('cfe_datos_precargados');
-            session()->forget(['cfe_datos_precargados', 'cfe_tipo', 'cfe_filepath']);
-            $this->buscarCertificadoCoincidente();
-        }
-    }
-
     public function updatedArchivo()
     {
         $this->validate();
@@ -62,9 +40,7 @@ class CargarCfe extends Component
         $this->certificadoSeleccionadoId = null;
 
         try {
-            $parser = new Parser();
-            $pdf = $parser->parseFile($this->archivo->getRealPath());
-            $text = $pdf->getText();
+            $text = app(\App\Services\CfeProcessorService::class)->parsearPdf($this->archivo->getRealPath());
 
             $datos = $this->parsearTextoCfe($text);
 
@@ -84,6 +60,7 @@ class CargarCfe extends Component
 
             $this->datosExtraidos = $datos;
             $this->buscarCertificadoCoincidente();
+            $this->prefilarNuevoCertificado();
         } catch (\Exception $e) {
             $this->mensajeError = "Error al procesar el PDF: " . $e->getMessage();
         }
@@ -106,7 +83,9 @@ class CargarCfe extends Component
             'forma_pago' => 'SIN DATOS',
             'detalle' => '',
             'descripcion' => '',
-            'cedula_titular' => '',     // CI del titular del certificado (de la descripción)
+            // Titular extraído de la descripción del CFE
+            'cedula_titular' => '',
+            'nombre_titular' => '',
             'retira_es_titular' => true, // Por defecto se asume que es el mismo titular
         ];
 
@@ -223,20 +202,49 @@ class CargarCfe extends Component
             ];
         }
 
-        // Detectar si la descripción contiene una cédula (del titular del certificado)
+        // --- Extraer TITULAR de la descripción (CÉDULA + NOMBRE) ---
+        // Puede venir en formatos como:
+        //   "CORRESPONDE A: C.I. 1234567-8 NOMBRE: JUAN PEREZ"
+        //   "C.I. 1234567-8 TITULAR: JUAN PEREZ"
+        //   "C.I. 1234567-8 - JUAN PEREZ"
+        //   "CÉDULA: 1234567-8 NOMBRE: JUAN PEREZ"
         if (!empty($datos['descripcion'])) {
-            if (preg_match('/([\d][\d\.]{4,}[\d])/u', $datos['descripcion'], $ciMatch)) {
+            $descripcion = $datos['descripcion'];
+
+            // Intentar extraer CÉDULA del titular desde la descripción
+            $ciTitularDesc = null;
+            if (preg_match('/(?:C\.I\.|CI|CÉDULA|CEDULA|DOCUMENTO)\s*[:\-\s]*([\d][\d\.\-]{4,}[\d])/iu', $descripcion, $ciMatch)) {
                 $ciLimpia = preg_replace('/[^0-9]/', '', $ciMatch[1]);
                 if (strlen($ciLimpia) >= 6 && strlen($ciLimpia) <= 10) {
-                    $datos['cedula_titular'] = $ciMatch[1];
-                    $datos['retira_es_titular'] = false;
+                    $ciTitularDesc = $ciMatch[1];
+                }
+            }
+
+            if ($ciTitularDesc) {
+                $datos['cedula_titular'] = $ciTitularDesc;
+                $datos['retira_es_titular'] = false;
+
+                // Intentar extraer el NOMBRE del titular desde la descripción
+                // Buscar patrones como: NOMBRE: X, TITULAR: X, - NOMBRE X
+                $nombreTitularDesc = null;
+                if (preg_match('/(?:NOMBRE|TITULAR)\s*[:\-\s]+([A-Za-zÀ-ÿÑñ\s\.]+?)(?=(?:\s*(?:C\.I\.|CI|CÉDULA|CEDULA|TEL|$)))/iu', $descripcion, $nomMatch)) {
+                    $nombreTitularDesc = trim(preg_replace('/\s+/', ' ', $nomMatch[1]));
+                }
+                // Fallback: buscar texto después de la CI hasta el final
+                elseif (preg_match('/' . preg_quote($ciMatch[1], '/') . '\s*[:\-\s]*([A-Za-zÀ-ÿÑñ\s\.]+?)(?=(?:\s*(?:CORRESPONDE|$)))/iu', $descripcion, $nomFallback)) {
+                    $nombreTitularDesc = trim(preg_replace('/\s+/', ' ', $nomFallback[1]));
+                }
+
+                if ($nombreTitularDesc && strlen($nombreTitularDesc) > 2) {
+                    $datos['nombre_titular'] = mb_strtoupper($nombreTitularDesc, 'UTF-8');
                 }
             }
         }
 
-        // Si no se detectó CI en la descripción, el receptor del CFE es el titular
+        // Si no se detectó titular en la descripción, el receptor del CFE es el titular
         if ($datos['retira_es_titular']) {
             $datos['cedula_titular'] = $datos['cedula_receptor'];
+            $datos['nombre_titular'] = $datos['nombre_receptor'];
         }
 
         return $datos;
@@ -310,7 +318,7 @@ class CargarCfe extends Component
             // Parsear fecha del CFE
             $fechaEntrega = \Carbon\Carbon::createFromFormat('d/m/Y', $this->datosExtraidos['fecha']);
 
-            // Separar nombre del receptor del CFE en nombre y apellido
+            // Separar nombre del receptor del CFE en nombre y apellido (quien retira)
             $nombreCompleto = mb_strtoupper($this->datosExtraidos['nombre_receptor'], 'UTF-8');
             $partesNombre = $this->separarNombreApellido($nombreCompleto);
 
@@ -385,6 +393,165 @@ class CargarCfe extends Component
         $this->mensajeError = null;
         $this->certificadosEncontrados = [];
         $this->certificadoSeleccionadoId = null;
+    }
+
+    /**
+     * Datos del certificado a crear (cuando no se encuentra uno existente)
+     */
+    public $nuevoCertificado = [
+        'fecha_recibido' => '',
+        'titular_nombre' => '',
+        'titular_apellido' => '',
+        'titular_tipo_documento' => 'Cédula',
+        'titular_nro_documento' => '',
+    ];
+
+    public function mount()
+    {
+        $this->nuevoCertificado['fecha_recibido'] = date('Y-m-d');
+
+        // 1. Intentar cargar desde Caché (método de la extensión del navegador)
+        $prefillId = request()->query('prefill_id');
+        if ($prefillId && Cache::has('cfe_prefill_' . $prefillId)) {
+            $cacheData = Cache::get('cfe_prefill_' . $prefillId);
+            $tipo = $cacheData['tipo'] ?? '';
+            if (in_array($tipo, ['certificado_residencia', 'Certificado de Residencia', 'certificados_residencia'])) {
+                $this->datosExtraidos = $cacheData['datos'];
+                Cache::forget('cfe_prefill_' . $prefillId);
+                $this->buscarCertificadoCoincidente();
+                $this->prefilarNuevoCertificado();
+                return;
+            }
+        }
+
+        // 2. Fallback: sesión
+        if (session()->has('cfe_datos_precargados') && session('cfe_tipo') === 'certificados_residencia') {
+            $this->datosExtraidos = session('cfe_datos_precargados');
+            session()->forget(['cfe_datos_precargados', 'cfe_tipo', 'cfe_filepath']);
+            $this->buscarCertificadoCoincidente();
+            $this->prefilarNuevoCertificado();
+        }
+    }
+
+    /**
+     * Pre-fill the new certificate form fields from the extracted CFE data.
+     * - Si la descripción tenía C.I. + NOMBRE del titular, se usan esos.
+     * - Si no, se usan los datos del receptor del CFE como titular.
+     */
+    private function prefilarNuevoCertificado()
+    {
+        if (!$this->datosExtraidos) {
+            return;
+        }
+
+        $this->nuevoCertificado['titular_nro_documento'] = $this->datosExtraidos['cedula_titular'] ?? '';
+        $this->nuevoCertificado['titular_tipo_documento'] = 'Cédula';
+
+        // Si hay nombre_titular extraído de la descripción, usarlo
+        if (!empty($this->datosExtraidos['nombre_titular']) && !$this->datosExtraidos['retira_es_titular']) {
+            $nombreCompleto = mb_strtoupper($this->datosExtraidos['nombre_titular'], 'UTF-8');
+            $partes = $this->separarNombreApellido($nombreCompleto);
+            $this->nuevoCertificado['titular_nombre'] = $partes['nombre'];
+            $this->nuevoCertificado['titular_apellido'] = $partes['apellido'];
+        } else {
+            // Si es el mismo titular, usar el nombre del receptor del CFE
+            $nombreCompleto = mb_strtoupper($this->datosExtraidos['nombre_receptor'] ?? '', 'UTF-8');
+            $partes = $this->separarNombreApellido($nombreCompleto);
+            $this->nuevoCertificado['titular_nombre'] = $partes['nombre'];
+            $this->nuevoCertificado['titular_apellido'] = $partes['apellido'];
+        }
+    }
+
+    /**
+     * Crea un nuevo certificado en estado "Recibido" y lo marca como entregado en un solo paso.
+     */
+    public function guardarNuevoCertificadoYEntrega()
+    {
+        if (!$this->datosExtraidos) {
+            $this->mensajeError = "No hay datos del CFE para procesar.";
+            return;
+        }
+
+        $this->validate([
+            'nuevoCertificado.fecha_recibido' => 'required|date',
+            'nuevoCertificado.titular_nombre' => 'required|string|max:255',
+            'nuevoCertificado.titular_apellido' => 'required|string|max:255',
+            'nuevoCertificado.titular_tipo_documento' => 'required|in:Cédula,Cédula Extranjera,Pasaporte,Otro',
+            'nuevoCertificado.titular_nro_documento' => [
+                'required',
+                'string',
+                'max:255',
+                \Illuminate\Validation\Rule::unique('tes_certificados_residencia', 'titular_nro_documento')
+                    ->where('fecha_recibido', $this->nuevoCertificado['fecha_recibido'])
+                    ->whereNull('deleted_at')
+            ],
+        ], [
+            'nuevoCertificado.titular_nombre.required' => 'El nombre del titular es obligatorio.',
+            'nuevoCertificado.titular_apellido.required' => 'El apellido del titular es obligatorio.',
+            'nuevoCertificado.titular_nro_documento.required' => 'El documento del titular es obligatorio.',
+            'nuevoCertificado.titular_nro_documento.unique' => 'Ya existe un certificado de residencia recibido para este documento en la fecha seleccionada.',
+        ]);
+
+        try {
+            // Parsear fecha del CFE
+            $fechaEntrega = \Carbon\Carbon::createFromFormat('d/m/Y', $this->datosExtraidos['fecha']);
+
+            // Separar nombre del receptor del CFE en nombre y apellido (quien retira)
+            $nombreCompleto = mb_strtoupper($this->datosExtraidos['nombre_receptor'], 'UTF-8');
+            $partesNombre = $this->separarNombreApellido($nombreCompleto);
+
+            $recibo = $this->datosExtraidos['serie'] . '-' . $this->datosExtraidos['numero'];
+
+            // Verificar duplicado por número de recibo
+            $existeRecibo = CertificadoResidencia::where('numero_recibo', $recibo)->exists();
+            if ($existeRecibo) {
+                $this->dispatchBrowserEvent('swal:toast-error', [
+                    'text' => "El recibo {$recibo} ya fue utilizado en otro certificado."
+                ]);
+                return;
+            }
+
+            DB::beginTransaction();
+
+            // 1. Crear el certificado en estado Recibido
+            $certificado = CertificadoResidencia::create([
+                'fecha_recibido' => $this->nuevoCertificado['fecha_recibido'],
+                'receptor_id' => Auth::id(),
+                'titular_nombre' => $this->nuevoCertificado['titular_nombre'],
+                'titular_apellido' => $this->nuevoCertificado['titular_apellido'],
+                'titular_tipo_documento' => $this->nuevoCertificado['titular_tipo_documento'],
+                'titular_nro_documento' => $this->nuevoCertificado['titular_nro_documento'],
+                'estado' => 'Recibido',
+            ]);
+
+            // 2. Marcar como entregado inmediatamente con los datos del CFE
+            $certificado->update([
+                'fecha_entregado' => $fechaEntrega->format('Y-m-d'),
+                'entregador_id' => Auth::id(),
+                'retira_nombre' => $partesNombre['nombre'],
+                'retira_apellido' => $partesNombre['apellido'],
+                'retira_tipo_documento' => 'Cédula',
+                'retira_nro_documento' => $this->datosExtraidos['cedula_receptor'],
+                'retira_telefono' => $this->datosExtraidos['telefono'] ?? '',
+                'numero_recibo' => $recibo,
+                'monto' => $this->parsearMontoCfe($this->datosExtraidos['monto_total']),
+                'estado' => 'Entregado',
+            ]);
+
+            DB::commit();
+
+            Cache::flush();
+            $this->datosExtraidos = null;
+            $this->archivo = null;
+            $this->certificadosEncontrados = [];
+            $this->certificadoSeleccionadoId = null;
+
+            session()->flash('message', 'Certificado de Residencia creado y entregado exitosamente.');
+            return redirect()->route('tesoreria.certificados-residencia.index');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            $this->mensajeError = "Error al crear y entregar el certificado: " . $e->getMessage();
+        }
     }
 
     public function render()

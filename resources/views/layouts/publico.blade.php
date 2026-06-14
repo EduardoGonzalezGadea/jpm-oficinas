@@ -61,15 +61,38 @@
                 <i class="fas fa-building mr-2"></i>
                 Tesorería | Oficinas
             </a>
-            <div class="navbar-nav ml-auto">
-                <a class="nav-item nav-link" href="{{ url('/') }}">
-                    <i class="fas fa-home mr-1"></i>
-                    Inicio
-                </a>
-                <a class="nav-item nav-link" href="{{ route('login') }}">
-                    <i class="fas fa-sign-in-alt mr-1"></i>
-                    Iniciar Sesión
-                </a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarPublico" aria-controls="navbarPublico" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarPublico">
+                <ul class="navbar-nav mr-auto">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownConsultas" role="button"
+                            data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <i class="fas fa-search mr-1"></i>Consultas Públicas
+                        </a>
+                        <div class="dropdown-menu" aria-labelledby="navbarDropdownConsultas">
+                            <a class="dropdown-item" href="{{ route('multas-transito-publico') }}">
+                                <i class="fas fa-list mr-2"></i>Artículos de Multas CPT
+                            </a>
+                            <a class="dropdown-item" href="{{ route('multas-303-publico') }}">
+                                <i class="fas fa-list-alt mr-2"></i>Cód. Multas CPT (Dec. 303/2023)
+                            </a>
+                        </div>
+                    </li>
+                </ul>
+                <ul class="navbar-nav ml-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url('/') }}">
+                            <i class="fas fa-home mr-1"></i>Inicio
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ route('login') }}">
+                            <i class="fas fa-sign-in-alt mr-1"></i>Iniciar Sesión
+                        </a>
+                    </li>
+                </ul>
             </div>
         </div>
     </nav>

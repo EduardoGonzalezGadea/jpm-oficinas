@@ -149,7 +149,9 @@
                                                 <i class="fas fa-edit"></i>
                                             </button>
                                             <button
-                                                x-on:click="$dispatch('swal:confirm', { title: '¿Estás seguro?', text: '¡No podrás revertir esto!', method: 'destroy', id: {{ $arrendamiento->id }}, confirmButtonText: 'Sí, elimínalo' })"
+                                                data-swal-confirm="true"
+                                                data-swal-method="destroy"
+                                                data-swal-id="{{ $arrendamiento->id }}"
                                                 class="btn btn-sm btn-outline-danger btn-action-fixed" title="Eliminar">
                                                 <i class="fas fa-trash-alt"></i>
                                             </button>
@@ -417,26 +419,6 @@
 
     @push('scripts')
     <script>
-        window.addEventListener('swal:confirm', event => {
-            // Livewire $dispatch envía datos en event.detail como array
-            const detail = Array.isArray(event.detail) ? event.detail[0] : event.detail;
-            Swal.fire({
-                title: detail.title,
-                text: detail.text,
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
-                confirmButtonText: detail.confirmButtonText,
-                cancelButtonText: 'Cancelar',
-                focusConfirm: true
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    $wire.call(detail.method, detail.id);
-                }
-            });
-        });
-
         window.addEventListener('revertCheckbox', event => {
             const checkbox = document.getElementById('confirmado-' + event.detail.id);
             if (checkbox) {
@@ -459,7 +441,6 @@
                 timer: 1500
             });
         });
-});
 
         window.livewire.on('arrendamientoStore', () => {
             $('#arrendamientoModal').modal('hide');

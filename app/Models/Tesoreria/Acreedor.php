@@ -2,14 +2,15 @@
 
 namespace App\Models\Tesoreria;
 
+use App\Traits\Auditable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes; // <-- Importado
+use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Traits\LogsActivityTrait;
 
 class Acreedor extends Model
 {
-    use HasFactory, SoftDeletes, LogsActivityTrait; // <-- Agregado SoftDeletes
+    use HasFactory, SoftDeletes, Auditable, LogsActivityTrait;
 
     protected $table = 'tes_cch_acreedores';
     protected $primaryKey = 'idAcreedores';

@@ -6,12 +6,13 @@ use Livewire\Component;
 use Livewire\WithPagination;
 use App\Models\Tesoreria\TesTenenciaArmas as TesTenenciaArmasModel;
 use App\Traits\ConvertirMayusculas;
+use App\Traits\WithOrdenCobroValidation;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 class TesTenenciaArmas extends Component
 {
-    use WithPagination, ConvertirMayusculas;
+    use WithPagination, ConvertirMayusculas, WithOrdenCobroValidation;
 
     protected $paginationTheme = 'bootstrap';
 
@@ -252,7 +253,6 @@ class TesTenenciaArmas extends Component
         $this->showModal = true;
         $this->emit('modalOpened');
     }
-
     public function save()
     {
         $this->validate();
@@ -261,16 +261,22 @@ class TesTenenciaArmas extends Component
             ['titular', 'cedula', 'telefono', 'orden_cobro', 'numero_tramite', 'ingreso_contabilidad', 'recibo'],
             [
                 'fecha' => $this->fecha,
-                'orden_cobro' => $this->orden_cobro,
-                'numero_tramite' => $this->numero_tramite,
-                'ingreso_contabilidad' => $this->ingreso_contabilidad,
-                'recibo' => $this->recibo,
+                'orden_cobro' => $this->orden_cobro ?: null,
+                'numero_tramite' => $this->numero_tramite ?: null,
+                'ingreso_contabilidad' => $this->ingreso_contabilidad ?: null,
+                'recibo' => $this->recibo ?: null,
                 'monto' => $this->monto,
                 'titular' => $this->titular,
                 'cedula' => $this->cedula,
-                'telefono' => $this->telefono,
+                'telefono' => $this->telefono ?: null,
             ]
         );
+
+        // Validar que la orden de cobro no esté duplicada
+        $excludeId = $this->editMode ? $this->registro_id : null;
+        if (!$this->validarOrdenCobroUnica(TesTenenciaArmasModel::class, $this->orden_cobro, $excludeId, 'recibo')) {
+            return;
+        }
 
         DB::transaction(function () use ($data) {
             if ($this->editMode) {

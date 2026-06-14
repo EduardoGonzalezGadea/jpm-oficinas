@@ -3,10 +3,12 @@
 namespace Tests\Unit\Services\Tesoreria;
 
 use App\Services\Tesoreria\MedioPagoService;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class MedioPagoServiceSimpleTest extends TestCase
 {
+    use RefreshDatabase;
     /**
      * Test que verifica que los medios de pago combinados se normalizan alfabéticamente
      */

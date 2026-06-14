@@ -2,13 +2,15 @@
 
 namespace App\Models\Tesoreria;
 
+use App\Traits\Auditable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Traits\LogsActivityTrait;
 
 class DepositoVehiculoPlanilla extends Model
 {
-    use HasFactory, LogsActivityTrait;
+    use HasFactory, SoftDeletes, Auditable, LogsActivityTrait;
 
     protected $table = 'tes_deposito_vehiculo_planillas';
 
@@ -20,6 +22,7 @@ class DepositoVehiculoPlanilla extends Model
         'anulada_by',
         'created_by',
         'updated_by',
+        'deleted_by',
     ];
 
     protected $casts = [

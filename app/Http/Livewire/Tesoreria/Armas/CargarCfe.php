@@ -5,10 +5,11 @@ namespace App\Http\Livewire\Tesoreria\Armas;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use Smalot\PdfParser\Parser;
+use App\Traits\WithOrdenCobroValidation;
 
 class CargarCfe extends Component
 {
-    use WithFileUploads;
+    use WithFileUploads, WithOrdenCobroValidation;
 
     public $archivo;
     public $datosExtraidos = null;
@@ -92,9 +93,7 @@ class CargarCfe extends Component
         $this->mensajeError = null;
 
         try {
-            $parser = new Parser();
-            $pdf = $parser->parseFile($this->archivo->getRealPath());
-            $text = $pdf->getText();
+            $text = app(\App\Services\CfeProcessorService::class)->parsearPdf($this->archivo->getRealPath());
 
             // Análisis básico del texto para extraer datos de CFE
             $datos = $this->parsearTextoCfe($text);
@@ -357,15 +356,28 @@ class CargarCfe extends Component
 
             $data = [
                 'fecha' => $fecha->format('Y-m-d'),
-                'orden_cobro' => $this->datosExtraidos['orden_cobro'] ?: '',
-                'numero_tramite' => $this->datosExtraidos['tramite'] ?: '',
-                'ingreso_contabilidad' => $this->datosExtraidos['ingreso_contabilidad'] ?: '',
+                'orden_cobro' => $this->datosExtraidos['orden_cobro'] ?: null,
+                'numero_tramite' => $this->datosExtraidos['tramite'] ?: null,
+                'ingreso_contabilidad' => $this->datosExtraidos['ingreso_contabilidad'] ?: null,
                 'recibo' => $recibo,
                 'monto' => $monto,
                 'titular' => mb_strtoupper($this->datosExtraidos['razon_social_receptor'], 'UTF-8'),
                 'cedula' => $this->datosExtraidos['rut_receptor'],
-                'telefono' => $this->datosExtraidos['telefono'] ?: '',
+                'telefono' => $this->datosExtraidos['telefono'] ?: null,
             ];
+
+            // Validar que la orden de cobro no esté duplicada
+            $ordenCobro = $this->datosExtraidos['orden_cobro'] ?? '';
+            if (!empty($ordenCobro)) {
+                // Verificar en ambas tablas de armas
+                $modelClass = $tipoMódulo === 'tenencia'
+                    ? \App\Models\Tesoreria\TesTenenciaArmas::class
+                    : \App\Models\Tesoreria\TesPorteArmas::class;
+
+                if (!$this->validarOrdenCobroUnica($modelClass, $ordenCobro, null, 'recibo')) {
+                    return;
+                }
+            }
 
             $nuevoRegistro = \Illuminate\Support\Facades\DB::transaction(function () use ($tipoMódulo, $data) {
                 if ($tipoMódulo === 'tenencia') {

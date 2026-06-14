@@ -5,6 +5,7 @@ namespace App\Http\Livewire\Tesoreria\Prendas;
 use Livewire\Component;
 use App\Models\Tesoreria\MedioDePago;
 use App\Models\Tesoreria\Prenda;
+use App\Traits\WithOrdenCobroValidation;
 
 /**
  * Componente Livewire: Editar Prenda
@@ -13,6 +14,7 @@ use App\Models\Tesoreria\Prenda;
  */
 class Edit extends Component
 {
+    use WithOrdenCobroValidation;
     public $prenda_id;
     public $recibo_serie;
     public $recibo_numero;
@@ -123,6 +125,11 @@ class Edit extends Component
                 ]);
                 return;
             }
+        }
+
+        // Validar que la orden de cobro no esté duplicada (excluyendo el registro actual)
+        if (!$this->validarOrdenCobroUnica(Prenda::class, $this->orden_cobro, $this->prenda_id, 'recibo_serie|recibo_numero')) {
+            return;
         }
 
         $this->confirmUpdate();

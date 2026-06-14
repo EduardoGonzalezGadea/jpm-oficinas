@@ -158,27 +158,26 @@
                             <label class="text-muted small font-weight-bold mb-0">Fecha</label>
                             <div class="font-weight-bold">{{ $datosExtraidos['fecha'] }}</div>
                         </div>
-                        <div class="col-md-5">
-                            <label class="text-muted small font-weight-bold mb-0">
-                                @if($datosExtraidos['retira_es_titular'])
-                                Titular / Quien Retira
-                                @else
-                                Quien Retira (No es el titular)
-                                @endif
-                            </label>
+                        <div class="col-md-4">
+                            <label class="text-muted small font-weight-bold mb-0">Quien Retira (del CFE)</label>
                             <div class="font-weight-bold">{{ $datosExtraidos['nombre_receptor'] }}</div>
                             <small class="text-muted">C.I.: {{ $datosExtraidos['cedula_receptor'] }}</small>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-5">
                             @if(!$datosExtraidos['retira_es_titular'])
                             <label class="text-muted small font-weight-bold mb-0">
-                                <i class="fas fa-user-tag text-warning mr-1"></i>CI Titular (del certificado)
+                                <i class="fas fa-user-tag text-warning mr-1"></i>Titular (desde la descripción)
                             </label>
-                            <div class="font-weight-bold text-warning">{{ $datosExtraidos['cedula_titular'] }}</div>
-                            <small class="text-muted font-italic">Detectada en descripción</small>
+                            <div class="font-weight-bold text-warning">
+                                {{ $datosExtraidos['nombre_titular'] ?: 'Nombre no detectado' }}
+                            </div>
+                            <small class="text-muted">C.I.: {{ $datosExtraidos['cedula_titular'] }}</small>
                             @else
-                            <label class="text-muted small font-weight-bold mb-0">Teléfono</label>
-                            <div class="font-weight-bold">{{ $datosExtraidos['telefono'] ?: '-' }}</div>
+                            <label class="text-muted small font-weight-bold mb-0">
+                                <i class="fas fa-check-circle text-success mr-1"></i>Titular = Quien Retira
+                            </label>
+                            <div class="font-weight-bold text-success">Es la misma persona</div>
+                            <small class="text-muted">C.I.: {{ $datosExtraidos['cedula_titular'] }}</small>
                             @endif
                         </div>
                     </div>
@@ -203,6 +202,18 @@
                     <div class="font-weight-bold">{{ $datosExtraidos['forma_pago'] ?: 'SIN DATOS' }}</div>
                 </div>
             </div>
+
+            @if(!$datosExtraidos['retira_es_titular'] && !empty($datosExtraidos['nombre_titular']))
+            {{-- Mostrar información de que el titular se extrajo de la descripción --}}
+            <div class="alert alert-info py-1 px-2 mt-2 mb-0 small">
+                <i class="fas fa-info-circle mr-1"></i>
+                Se detectó en la descripción del CFE que el titular del certificado es
+                <strong>{{ $datosExtraidos['nombre_titular'] }}</strong>
+                (C.I. {{ $datosExtraidos['cedula_titular'] }}),
+                y quien retira es <strong>{{ $datosExtraidos['nombre_receptor'] }}</strong>
+                (C.I. {{ $datosExtraidos['cedula_receptor'] }}).
+            </div>
+            @endif
         </div>
     </div>
 
@@ -255,15 +266,110 @@
             </div>
         </div>
         @else
-        <div class="card-body py-4 text-center">
-            <i class="fas fa-folder-open fa-3x text-muted mb-3 opacity-50"></i>
-            <p class="text-muted mb-0">No hay certificados en estado <strong>"Recibido"</strong> que coincidan con la cédula <strong>{{ $datosExtraidos['cedula_titular'] }}</strong>.</p>
-            <p class="text-muted small">Verifica que el certificado haya sido registrado previamente como recibido.</p>
+        <div class="card-body pt-3 pb-2">
+            <div class="text-center mb-3">
+                <i class="fas fa-folder-open fa-3x text-muted mb-3 opacity-50"></i>
+                <p class="text-muted mb-0">No hay certificados en estado <strong>"Recibido"</strong> que coincidan con la cédula <strong>{{ $datosExtraidos['cedula_titular'] }}</strong>.</p>
+                <p class="text-muted small mb-0">Puedes registrar un nuevo certificado y marcarlo como entregado con los datos extraídos del CFE.</p>
+            </div>
+
+            {{-- Formulario para crear nuevo certificado + entrega --}}
+            <div class="card border-primary shadow-sm">
+                <div class="card-header bg-primary text-white py-2 px-3">
+                    <h6 class="mb-0 font-weight-bold"><i class="fas fa-plus-circle mr-2"></i>Registrar Nuevo Certificado y Entregar</h6>
+                </div>
+                <div class="card-body p-3">
+                    <div class="row">
+                        <div class="col-md-4 form-group">
+                            <label class="small font-weight-bold">Fecha Recibido <span class="text-danger">*</span></label>
+                            <input type="date" wire:model="nuevoCertificado.fecha_recibido" class="form-control form-control-sm @error('nuevoCertificado.fecha_recibido') is-invalid @enderror">
+                            @error('nuevoCertificado.fecha_recibido') <span class="invalid-feedback d-block small">{{ $message }}</span> @enderror
+                        </div>
+                        <div class="col-md-4 form-group">
+                            <label class="small font-weight-bold">Nombre Titular <span class="text-danger">*</span></label>
+                            <input type="text" wire:model="nuevoCertificado.titular_nombre" class="form-control form-control-sm @error('nuevoCertificado.titular_nombre') is-invalid @enderror" placeholder="Nombre del titular">
+                            @error('nuevoCertificado.titular_nombre') <span class="invalid-feedback d-block small">{{ $message }}</span> @enderror
+                        </div>
+                        <div class="col-md-4 form-group">
+                            <label class="small font-weight-bold">Apellido Titular <span class="text-danger">*</span></label>
+                            <input type="text" wire:model="nuevoCertificado.titular_apellido" class="form-control form-control-sm @error('nuevoCertificado.titular_apellido') is-invalid @enderror" placeholder="Apellido del titular">
+                            @error('nuevoCertificado.titular_apellido') <span class="invalid-feedback d-block small">{{ $message }}</span> @enderror
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 form-group">
+                            <label class="small font-weight-bold">Tipo Documento <span class="text-danger">*</span></label>
+                            <select wire:model="nuevoCertificado.titular_tipo_documento" class="form-control form-control-sm @error('nuevoCertificado.titular_tipo_documento') is-invalid @enderror">
+                                <option value="Cédula">Cédula</option>
+                                <option value="Cédula Extranjera">Cédula Extranjera</option>
+                                <option value="Pasaporte">Pasaporte</option>
+                                <option value="Otro">Otro</option>
+                            </select>
+                            @error('nuevoCertificado.titular_tipo_documento') <span class="invalid-feedback d-block small">{{ $message }}</span> @enderror
+                        </div>
+                        <div class="col-md-4 form-group">
+                            <label class="small font-weight-bold">Nro. Documento Titular <span class="text-danger">*</span></label>
+                            <input type="text" wire:model="nuevoCertificado.titular_nro_documento" class="form-control form-control-sm @error('nuevoCertificado.titular_nro_documento') is-invalid @enderror" placeholder="Cédula del titular">
+                            @error('nuevoCertificado.titular_nro_documento') <span class="invalid-feedback d-block small">{{ $message }}</span> @enderror
+                        </div>
+                        <div class="col-md-4 d-flex align-items-end justify-content-center form-group">
+                            <div class="text-center w-100">
+                                <small class="text-muted d-block mb-1">
+                                    <i class="fas fa-info-circle mr-1"></i>Quien retira según CFE:
+                                </small>
+                                <span class="font-weight-bold">{{ $datosExtraidos['nombre_receptor'] }}</span>
+                                <small class="d-block text-muted">C.I.: {{ $datosExtraidos['cedula_receptor'] }}</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Si hay titular distinto al que retira, mostrar info extra --}}
+                    @if(!$datosExtraidos['retira_es_titular'] && !empty($datosExtraidos['nombre_titular']))
+                    <div class="alert alert-info py-1 px-2 small">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        Los datos del titular se han pre-cargado desde la descripción del CFE
+                        (<strong>{{ $datosExtraidos['nombre_titular'] }}</strong>).
+                        Quien retira (<strong>{{ $datosExtraidos['nombre_receptor'] }}</strong>)
+                        se registrará automáticamente en la entrega.
+                    </div>
+                    @endif
+
+                    {{-- Resumen de entrega --}}
+                    <div class="border-top pt-3 mt-1">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <small class="text-muted font-weight-bold d-block">Fecha Entrega</small>
+                                <span class="font-weight-bold">{{ $datosExtraidos['fecha'] }}</span>
+                            </div>
+                            <div class="col-md-3">
+                                <small class="text-muted font-weight-bold d-block">Recibo</small>
+                                <span class="font-weight-bold">{{ $datosExtraidos['serie'] }}-{{ $datosExtraidos['numero'] }}</span>
+                            </div>
+                            <div class="col-md-3">
+                                <small class="text-muted font-weight-bold d-block">Monto</small>
+                                <span class="font-weight-bold text-success">$ {{ $datosExtraidos['monto_total'] }}</span>
+                            </div>
+                            <div class="col-md-3">
+                                <small class="text-muted font-weight-bold d-block">Teléfono</small>
+                                <span class="font-weight-bold">{{ $datosExtraidos['telefono'] ?: '-' }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer py-2 d-flex justify-content-end align-items-center">
+                    <button wire:click="limpiar" class="btn btn-secondary btn-sm mr-2 px-3">
+                        <i class="fas fa-times mr-1"></i> Descartar
+                    </button>
+                    <button wire:click="guardarNuevoCertificadoYEntrega" wire:loading.attr="disabled" class="btn btn-primary btn-sm px-4 shadow-sm">
+                        <i class="fas fa-save mr-1"></i> Guardar Certificado y Entregar
+                    </button>
+                </div>
+            </div>
         </div>
         @endif
     </div>
 
-    {{-- Resumen de Entrega y Botones --}}
+    {{-- Resumen de Entrega y Botones (cuando hay certificados seleccionados) --}}
     @if($certificadoSeleccionadoId && count($certificadosEncontrados) > 0)
     @php
     $certSeleccionado = collect($certificadosEncontrados)->firstWhere('id', $certificadoSeleccionadoId);
@@ -323,15 +429,9 @@
         </div>
     </div>
     @elseif(count($certificadosEncontrados) > 0)
-    <div class="card-footer py-2 d-flex justify-content-end align-items-center">
-        <button wire:click="limpiar" class="btn btn-secondary btn-sm px-3">
-            <i class="fas fa-times mr-1"></i> Cancelar
-        </button>
-    </div>
-    @else
     <div class="d-flex justify-content-end mt-2">
         <button wire:click="limpiar" class="btn btn-secondary btn-sm px-3">
-            <i class="fas fa-times mr-1"></i> Cancelar y Volver
+            <i class="fas fa-times mr-1"></i> Cancelar
         </button>
     </div>
     @endif

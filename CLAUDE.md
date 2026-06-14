@@ -35,7 +35,12 @@ php artisan key:generate   # Generar clave de aplicacion
 - **`app/Http/Controllers/`** - Controladores clasicos para auth, admin y modulos de tesoreria
 - **`app/Http/Livewire/`** - Componentes UI reactivos; la mayor parte de la logica de negocio vive aqui
 - **`app/Models/Tesoreria/`** - Modelos Eloquent del dominio financiero
-- **`app/Services/`** - Servicios transversales (parser CFE, reportes)
+- **`app/Services/`** - Servicios transversales:
+  - `Http/HttpClientService.php` - Cliente HTTP centralizado con proxy auto-detect, reintentos, circuit breaker
+  - `ValorUrService.php` - Descarga de UR desde BPS (refactorizado v2)
+  - `SincronizacionHoraService.php` - Sincronización de hora desde APIs públicas
+  - `Tesoreria/DescargaValoresSoaService.php` - Descarga de valores SOA desde BCU
+  - Otros: parser CFE, reportes
 - **`app/Http/Middleware/`** - Verificacion JWT, 2FA, permisos
 
 ### Estructura Frontend
@@ -119,3 +124,43 @@ Ver `docs/` para documentacion funcional:
 - `PLAN_CAJA_DIARIA.md` - Plan de modulo caja diaria
 - `DOCUMENTACION_MULTAS_COBRADAS.md` - Documentacion de multas
 - `DOCUMENTACION_PRENDAS.md` - Documentacion de prendas
+- `EXTERNAL_DOWNLOADS_IMPLEMENTATION.md` - Arquitectura de descargas externas
+
+## Descargas de Datos Externos (UR, Hora, SOA)
+
+### Arquitectura
+
+Se utilizan tres servicios para descargar datos críticos desde URLs externas:
+
+#### 1. HttpClientService (centralizado)
+- **Ubicación**: `app/Services/Http/HttpClientService.php`
+- **Responsabilidad**: Manejar HTTP requests, reintentos, proxy, circuit breaker
+- **Proxy**: Auto-detecta desde `HTTP_PROXY`, `HTTPS_PROXY`, `NO_PROXY`
+- **Reintentos**: Exponential backoff (1s, 2s, 4s, 8s...)
+- **Circuit breaker**: Si 3 fallos → espera 5 min
+
+#### 2. ValorUrService (refactorizado)
+- **Ubicación**: `app/Services/ValorUrService.php`
+- **Descarga**: Valor de UR desde BPS
+- **Timeout**: 45 segundos | Caché: 4 horas | Fallback si falla.
+
+#### 3. SincronizacionHoraService (nuevo)
+- **Ubicación**: `app/Services/SincronizacionHoraService.php`
+- **Descarga**: Hora sincronizada desde APIs públicas
+- **Timeout**: 15 segundos | Caché: 5 minutos | Fallback si falla.
+
+#### 4. DescargaValoresSoaService (nuevo)
+- **Ubicación**: `app/Services/Tesoreria/DescargaValoresSoaService.php`
+- **Descarga**: Valores SOA del BCU, actualiza multas Art. 184
+- **Caché**: 7 días
+
+### Diagnostics & Monitoreo
+
+#### CLI: Test de conectividad
+```bash
+php artisan external:test-connectivity
+```
+
+#### Health Check Endpoints
+- `GET /health/external-downloads` - Status actual de cada servicio
+- `GET /health/external-downloads-stats` - Stats últimas 24h

@@ -22,6 +22,10 @@ class DatabaseSeeder extends Seeder
             Tesoreria\Multas303Seeder::class,
             Tesoreria\TesDenominacionMonedaSeeder::class,
             Tesoreria\TesTipoMonedaSeeder::class,
+            Tesoreria\SiifDistribucionTipoSeeder::class,
+            Tesoreria\CajaConceptoSeeder::class,
+            Tesoreria\SiifDistribucionDependenciaSeeder::class,
+            Tesoreria\SiifDistribucionSeeder::class,
         ]);
     }
 }

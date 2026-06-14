@@ -61,15 +61,18 @@ FECHA MONEDA
 10/02/2026 Peso uruguayo
 
 DETALLE DESCRIPCIÓN CANTIDAD PRECIO UNITARIO IMPORTE
-ARRENDAMIENTO MES FEBRERO 2026 1 8.500,00 8.500,00
+ARRENDAMIENTO MES FEBRERO 2026
+TRANSFERENCIA BROU DEL 05/02 - O/C 55678
+1 8.500,00 8.500,00
 
 MONTO NO FACTURABLE: 8.500,00
 TOTAL A PAGAR: 8.500,00
 Transferencia: 8.500,00
 REFERENCIAS:
-
+Aprobado por resolución
+1
 ADENDA
-ORDEN DE COBRO 55678
+Nota adicional
 TEXT;
     }
 
@@ -107,17 +110,40 @@ TEXT;
         $this->assertEquals(8500.0, $datos['monto']);
     }
 
-    public function test_extrae_orden_cobro_desde_adenda(): void
+    public function test_extrae_orden_cobro_desde_detalle_o_adenda(): void
     {
         $datos = $this->extractor->extraer($this->textoArrendamientoEjemplo());
         $this->assertEquals('55678', $datos['orden_cobro']);
     }
 
-    public function test_forma_pago_transferencia_se_agrega_al_detalle(): void
+    public function test_extrae_orden_cobro_solo_en_adenda(): void
+    {
+        $texto = <<<'TEXT'
+e-Factura Contado
+C 99001 Contado
+FECHA MONEDA
+10/02/2026 Peso uruguayo
+DETALLE DESCRIPCIÓN CANTIDAD PRECIO UNITARIO IMPORTE
+ARRENDAMIENTO MES FEBRERO 2026 1 8.500,00 8.500,00
+MONTO NO FACTURABLE: 8.500,00
+TOTAL A PAGAR: 8.500,00
+ADENDA
+ORDEN DE COBRO 998877
+TEXT;
+        $datos = $this->extractor->extraer($texto);
+        $this->assertEquals('998877', $datos['orden_cobro']);
+    }
+
+    public function test_forma_pago_transferencia_se_agrega_al_detalle_y_se_mantiene_info(): void
     {
         $datos = $this->extractor->extraer($this->textoArrendamientoEjemplo());
-        // Con pago por transferencia, debe quedar en el detalle
-        $this->assertStringContainsString('Transferencia', $datos['detalle']);
+        // Debe contener la info original de la transferencia en el detalle (sin O/C)
+        $this->assertStringContainsString('TRANSFERENCIA BROU DEL 05/02', $datos['detalle']);
+        // No debe contener la O/C en el detalle porque se extrajo
+        $this->assertStringNotContainsString('O/C 55678', $datos['detalle']);
+        // Debe contener las REFERENCIAS y la ADENDA (sin O/C)
+        $this->assertStringContainsString('REF: Aprobado por resolución', $datos['detalle']);
+        $this->assertStringContainsString('Nota adicional', $datos['detalle']);
     }
 
     // -------------------------------------------------------------------------
@@ -159,9 +185,19 @@ TEXT;
 
     public function test_orden_cobro_desde_numero_unico_en_adenda(): void
     {
-        $textoConNumeroUnico = $this->textoArrendamientoEjemplo();
-        $textoConNumeroUnico = str_replace('ORDEN DE COBRO 55678', '55678', $textoConNumeroUnico);
-        $datos = $this->extractor->extraer($textoConNumeroUnico);
-        $this->assertNotEmpty($datos['orden_cobro']);
+        $texto = <<<'TEXT'
+e-Factura Contado
+C 99001 Contado
+FECHA MONEDA
+10/02/2026 Peso uruguayo
+DETALLE DESCRIPCIÓN CANTIDAD PRECIO UNITARIO IMPORTE
+ARRENDAMIENTO MES FEBRERO 2026 1 8.500,00 8.500,00
+MONTO NO FACTURABLE: 8.500,00
+TOTAL A PAGAR: 8.500,00
+ADENDA
+12345
+TEXT;
+        $datos = $this->extractor->extraer($texto);
+        $this->assertEquals('12345', $datos['orden_cobro']);
     }
 }

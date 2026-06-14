@@ -9,10 +9,11 @@ use App\Models\Tesoreria\Prenda;
 use App\Models\Tesoreria\MedioDePago;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
+use App\Traits\WithOrdenCobroValidation;
 
 class CargarCfe extends Component
 {
-    use WithFileUploads;
+    use WithFileUploads, WithOrdenCobroValidation;
 
     public $archivo;
     public $datosExtraidos = null;
@@ -55,9 +56,7 @@ class CargarCfe extends Component
         $this->mensajeError = null;
 
         try {
-            $parser = new Parser();
-            $pdf = $parser->parseFile($this->archivo->getRealPath());
-            $text = $pdf->getText();
+            $text = app(\App\Services\CfeProcessorService::class)->parsearPdf($this->archivo->getRealPath());
 
             $datos = $this->parsearTextoCfe($text);
 
@@ -294,6 +293,13 @@ class CargarCfe extends Component
                 $this->dispatchBrowserEvent('swal:toast-error', [
                     'text' => "El recibo {$serie}-{$numero} ya fue cargado."
                 ]);
+                DB::rollBack();
+                return;
+            }
+
+            // Validar que la orden de cobro no esté duplicada
+            $ordenCobro = $this->datosExtraidos['orden_cobro'] ?? '';
+            if (!empty($ordenCobro) && !$this->validarOrdenCobroUnica(Prenda::class, $ordenCobro, null, 'recibo_serie|recibo_numero')) {
                 DB::rollBack();
                 return;
             }
