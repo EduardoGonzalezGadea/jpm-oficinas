@@ -66,10 +66,15 @@
             </button>
             <div class="collapse navbar-collapse" id="navbarPublico">
                 <ul class="navbar-nav mr-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ route('acceso-publico') }}">
+                            <i class="fas fa-globe mr-1"></i>Acceso Público
+                        </a>
+                    </li>
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownConsultas" role="button"
                             data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                            <i class="fas fa-search mr-1"></i>Consultas Públicas
+                            <i class="fas fa-search mr-1"></i>Consultas
                         </a>
                         <div class="dropdown-menu" aria-labelledby="navbarDropdownConsultas">
                             <a class="dropdown-item" href="{{ route('multas-transito-publico') }}">

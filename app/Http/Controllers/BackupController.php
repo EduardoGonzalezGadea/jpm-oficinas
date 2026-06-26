@@ -4,16 +4,12 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Spatie\Backup\Tasks\Backup\BackupJobFactory;
 use Symfony\Component\Process\Process;
 use Symfony\Component\Process\Exception\ProcessFailedException;
 
 class BackupController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware('can:administrar_sistema,web');
-    }
-
     public function download($file)
     {
         if (!Storage::disk('local')->exists($file)) {
@@ -45,12 +41,10 @@ class BackupController extends Controller
     public function create(Request $request)
     {
         try {
-            $process = new Process(['powershell.exe', '-ExecutionPolicy', 'Bypass', '-File', base_path('scripts/backup.ps1')]);
-            $process->run();
-
-            if (!$process->isSuccessful()) {
-                throw new ProcessFailedException($process);
-            }
+            $backupJob = BackupJobFactory::createFromArray(config('backup'));
+            $backupJob->disableNotifications();
+            $backupJob->disableSignals();
+            $backupJob->run();
 
             if ($request->ajax()) {
                 return response()->json(['message' => 'Respaldo creado exitosamente.']);

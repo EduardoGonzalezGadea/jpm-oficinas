@@ -82,7 +82,7 @@
                 <tr>
                     <th style="width: 110px;">Nro. Recibo</th>
                     <th style="width: 90px;">Fecha</th>
-                    <th style="width: 120px;">Cédula</th>
+                    <th style="width: 120px;">Cédula / RUC</th>
                     <th>Titular</th>
                     <th class="text-right" style="width: 120px;">Monto</th>
                 </tr>

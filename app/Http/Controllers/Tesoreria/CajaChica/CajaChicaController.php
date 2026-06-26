@@ -14,7 +14,7 @@ class CajaChicaController extends Controller
      */
     public function index()
     {
-        $this->authorize('operador_tesoreria');
+        $this->authorize('tesoreria.acceso');
         return view('tesoreria.caja-chica.index');
     }
 

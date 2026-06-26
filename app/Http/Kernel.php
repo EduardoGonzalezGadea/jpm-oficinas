@@ -80,5 +80,8 @@ class Kernel extends HttpKernel
 
         // Middleware de autenticaciÃ³n de dos factores
         'two-factor' => \App\Http\Middleware\TwoFactorMiddleware::class,
+
+        // Middleware unificado de mÃ³dulo y nivel
+        'modulo' => \App\Http\Middleware\ModuloAcceso::class,
     ];
 }

@@ -3,29 +3,31 @@
 namespace App\Services;
 
 
+use App\Models\User;
 use App\Models\Tesoreria\CertificadoResidencia;
 use App\Models\Tesoreria\Cheque;
 use App\Models\Tesoreria\CuentaBancaria;
 use App\Models\Tesoreria\LibretaValor;
 use App\Models\Tesoreria\Pago;
 use App\Models\Tesoreria\Pendiente;
+use App\Models\Tesoreria\TesPlanillaEr;
 use App\Models\Tesoreria\TipoLibreta;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Collection;
 
 class AlertService
 {
     /**
      * Obtiene todas las alertas organizadas por categorías
      * Cache TTL: 5 minutos (300 segundos)
+     * Si se pasa un usuario no-admin, filtra solo alertas de su módulo
      */
-    public function getAllAlerts(): array
+    public function getAllAlerts(?User $user = null): array
     {
-        return Cache::remember('dashboard_alerts', 300, function () {
+        $alertas = Cache::remember('dashboard_alerts', 300, function () {
             $criticas = $this->getAlertasCriticas();
             $colapsables = $this->getAlertasColapsables();
-            
+
             return [
                 'criticas' => $criticas,
                 'colapsables' => $colapsables,
@@ -33,6 +35,12 @@ class AlertService
                 'last_updated' => Carbon::now()->format('d/m/Y H:i'),
             ];
         });
+
+        if ($user && !$user->esAdministrador()) {
+            $alertas = $this->filtrarPorModulo($alertas, $user->moduloClave());
+        }
+
+        return $alertas;
     }
 
     /**
@@ -67,6 +75,12 @@ class AlertService
         
         // Caja Chica
         $alertas['caja_chica'] = $this->getAlertasCajaChica();
+        
+        // Planillas de Estados de Recaudación Incompletas
+        $alertas['planillas_incompletas'] = $this->getAlertasPlanillasIncompletas();
+        
+        // Planillas de Estados de Recaudación sin Confirmar
+        $alertas['planillas_no_confirmadas'] = $this->getAlertasPlanillasNoConfirmadas();
         
         return $alertas;
     }
@@ -155,17 +169,17 @@ class AlertService
         $cuentasBancarias = CuentaBancaria::where('activa', true)
             ->with('banco')
             ->get();
-        
+
         $alertas = [];
-        
+
         foreach ($cuentasBancarias as $cuenta) {
             $stockCheques = Cheque::where('cuenta_bancaria_id', $cuenta->id)
                 ->where('estado', 'disponible')
                 ->whereNull('deleted_at')
                 ->count();
-            
+
             $nombreCuenta = $cuenta->banco ? $cuenta->banco->nombre . ' - ' . $cuenta->numero_cuenta : 'Cuenta ' . $cuenta->numero_cuenta;
-            
+
             if ($stockCheques <= 0) {
                 $alertas[] = [
                     'id' => 'cheque_' . $cuenta->id,
@@ -196,7 +210,7 @@ class AlertService
                 ];
             }
         }
-        
+
         return [
             'alertas' => $alertas,
             'contador' => count($alertas),
@@ -210,13 +224,13 @@ class AlertService
     private function getAlertasCertificados(): array
     {
         $fechaLimite = Carbon::now()->subDays(45);
-        
+
         $certificadosVencidos = CertificadoResidencia::where('estado', 'emitido')
             ->where('fecha_recibido', '<', $fechaLimite)
             ->count();
-        
+
         $alertas = [];
-        
+
         if ($certificadosVencidos > 0) {
             $alertas[] = [
                 'id' => 'certificado_vencido',
@@ -232,7 +246,7 @@ class AlertService
                 ],
             ];
         }
-        
+
         return [
             'alertas' => $alertas,
             'contador' => count($alertas),
@@ -246,11 +260,9 @@ class AlertService
     private function getAlertasCajaChica(): array
     {
         $alertas = [];
-        
-        // Pendientes sin pagar
-        // Adaptado al modelo real tes_cch_pendientes
-        $pendientesSinPagar = Pendiente::whereNull('relDependencia')->count(); // Ajustar lógica según modelo real
-        
+
+        $pendientesSinPagar = Pendiente::whereNull('relDependencia')->count();
+
         if ($pendientesSinPagar > 0) {
             $alertas[] = [
                 'id' => 'pendiente_caja_chica',
@@ -266,11 +278,9 @@ class AlertService
                 ],
             ];
         }
-        
-        // Pagos sin comprobante
-        // Adaptado al modelo real tes_cch_pagos
+
         $pagosSinComprobante = Pago::whereNull('fechaIngresoPagos')->count();
-        
+
         if ($pagosSinComprobante > 0) {
             $alertas[] = [
                 'id' => 'pago_sin_comprobante',
@@ -286,7 +296,7 @@ class AlertService
                 ],
             ];
         }
-        
+
         return [
             'alertas' => $alertas,
             'contador' => count($alertas),
@@ -294,7 +304,108 @@ class AlertService
         ];
     }
 
+    /**
+     * Alertas de Planillas para Estados de Recaudación Incompletas
+     */
+    private function getAlertasPlanillasIncompletas(): array
+    {
+        $incompletas = TesPlanillaEr::where(function ($q) {
+            $q->whereNull('er_numero')
+                ->orWhereNull('transferencia_fecha')
+                ->orWhereNull('transferencia_confirmacion');
+        })->count();
 
+        $alertas = [];
+
+        if ($incompletas > 0) {
+            $alertas[] = [
+                'id' => 'planillas_incompletas',
+                'tipo' => 'warning',
+                'categoria' => 'planillas_incompletas',
+                'prioridad' => 2,
+                'icono' => 'fa-file-excel',
+                'titulo' => 'Planillas Incompletas',
+                'mensaje' => "Hay {$incompletas} planillas para estados de recaudación que aún no se han completado.",
+                'accion' => [
+                    'route' => 'asesoria-contable.planillas-no-completadas',
+                    'label' => 'Ver',
+                ],
+            ];
+        }
+
+        return [
+            'alertas' => $alertas,
+            'contador' => count($alertas),
+            'prioridad_maxima' => !empty($alertas) ? min(array_column($alertas, 'prioridad')) : null,
+        ];
+    }
+
+    /**
+     * Alertas de Planillas para Estados de Recaudación sin Confirmar
+     */
+    private function getAlertasPlanillasNoConfirmadas(): array
+    {
+        $noConfirmadas = TesPlanillaEr::where('confirmada', false)->count();
+
+        $alertas = [];
+
+        if ($noConfirmadas > 0) {
+            $alertas[] = [
+                'id' => 'planillas_no_confirmadas',
+                'tipo' => 'warning',
+                'categoria' => 'planillas_no_confirmadas',
+                'prioridad' => 2,
+                'icono' => 'fa-file-excel',
+                'titulo' => 'Planillas sin Confirmar',
+                'mensaje' => "Hay {$noConfirmadas} planilla(s) para estados de recaudación pendientes de confirmación.",
+                'accion' => [
+                    'route' => 'tesoreria.gestion-cfe.estados-recaudacion.no-confirmadas',
+                    'label' => 'Ver',
+                ],
+            ];
+        }
+
+        return [
+            'alertas' => $alertas,
+            'contador' => count($alertas),
+            'prioridad_maxima' => !empty($alertas) ? min(array_column($alertas, 'prioridad')) : null,
+        ];
+    }
+
+    /**
+     * Filtra las alertas para mostrar solo las del módulo del usuario
+     */
+    private function filtrarPorModulo(array $alertas, ?string $moduloClave): array
+    {
+        $categoriasPermitidas = $this->categoriasPorModulo($moduloClave);
+
+        $colapsablesFiltradas = [];
+        foreach ($alertas['colapsables'] as $key => $colapsable) {
+            if (in_array($key, $categoriasPermitidas)) {
+                $colapsablesFiltradas[$key] = $colapsable;
+            }
+        }
+
+        return [
+            'criticas' => $alertas['criticas'],
+            'colapsables' => $colapsablesFiltradas,
+            'total_colapsables' => collect($colapsablesFiltradas)->sum('contador'),
+            'last_updated' => $alertas['last_updated'],
+        ];
+    }
+
+    /**
+     * Mapea cada módulo a las categorías de alertas que le corresponden
+     */
+    private function categoriasPorModulo(?string $moduloClave): array
+    {
+        $map = [
+            'tesoreria' => ['stock_valores', 'stock_cheques', 'certificados', 'caja_chica', 'planillas_no_confirmadas'],
+            'asesoria_contable' => ['planillas_incompletas'],
+        ];
+
+        return $map[$moduloClave] ?? [];
+    }
 
     /**
      * Invalida el cache de alertas

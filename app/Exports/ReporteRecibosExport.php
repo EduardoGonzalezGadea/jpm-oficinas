@@ -26,7 +26,7 @@ class ReporteRecibosExport
         $this->sheet->setTitle('Reporte de Recibos');
 
         // Anchos de columna
-        $this->sheet->getColumnDimension('A')->setWidth(18);
+        $this->sheet->getColumnDimension('A')->setWidth(28);
         $this->sheet->getColumnDimension('B')->setWidth(14);
         $this->sheet->getColumnDimension('C')->setWidth(18);
         $this->sheet->getColumnDimension('D')->setWidth(40);
@@ -48,7 +48,7 @@ class ReporteRecibosExport
         // Gran total
         $this->escribirGranTotal($reporte);
 
-        $tempFile = tempnam(sys_get_temp_dir(), 'reporte_recibos_') . '.xlsx';
+        $tempFile = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'reporte_recibos_' . uniqid() . '.xlsx';
         $writer = new Xlsx($this->spreadsheet);
         $writer->save($tempFile);
 
@@ -146,7 +146,7 @@ class ReporteRecibosExport
         $this->row++;
 
         // Encabezados de detalle
-        $headers = ['Nro. Recibo', 'Fecha', 'Cédula', 'Titular', 'Monto'];
+        $headers = ['Nro. Recibo', 'Fecha', 'Cédula / RUC', 'Titular', 'Monto'];
         foreach (['A', 'B', 'C', 'D', 'E'] as $i => $col) {
             $this->cell($col, $headers[$i]);
         }

@@ -213,7 +213,7 @@
                                                                             </a>
                                                                         @endcan
 
-                                                                        @can('roles.assign')
+                                                                        @can('usuarios.asignar_roles')
                                                                             @if ($role->name !== 'administrador')
                                                                                 <form
                                                                                     action="{{ route('roles.remove.user', ['user_id' => $user->id, 'role_id' => $role->id]) }}"

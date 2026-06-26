@@ -550,14 +550,8 @@
                                         </a>
 
                                         <div class="mt-3">
-                                            <a href="{{ route('multas-transito-publico') }}" class="btn btn-info btn-lg mb-2">
-                                                <i class="fas fa-list mr-2"></i>Consultar Artículos de Multas CPT
-                                            </a>
-                                        </div>
-
-                                        <div class="mt-2">
-                                            <a href="{{ route('multas-303-publico') }}" class="btn btn-secondary btn-lg">
-                                                <i class="fas fa-list-alt mr-2"></i>Cód. Multas CPT (Dec. 303/2023)
+                                            <a href="{{ route('acceso-publico') }}" class="btn btn-success btn-lg">
+                                                <i class="fas fa-globe mr-2"></i>Consultas Públicas
                                             </a>
                                         </div>
 
@@ -589,6 +583,9 @@
                                     </p>
                                     <p class="small mb-2"><i class="fas fa-check-circle text-success mr-1"></i>
                                         Autorización y gestión de Usuarios
+                                    </p>
+                                    <p class="small mb-2"><i class="fas fa-check-circle text-success mr-1"></i>
+                                        Consultas públicas del Articulado y/o Codificación de Multas de Tránsito
                                     </p>
                                 </div>
                             </div>

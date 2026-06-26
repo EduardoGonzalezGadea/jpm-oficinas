@@ -124,15 +124,27 @@
 .panel-gradient-bg {
     background: linear-gradient(
         180deg,
-        var(--surface-panel-bg-start) 0%,
-        var(--surface-panel-bg-mid) 40%,
-        var(--surface-panel-bg-end) 70%,
-        var(--surface-panel-bg-end) 100%
+        #001a4d 0%,
+        #0d47a1 30%,
+        #42a5f5 65%,
+        #90caf9 100%
     ) !important;
     min-height: calc(100vh - 56px);
     margin: -0.25rem;
     width: auto !important;
     padding: 25px;
+}
+
+.dark-theme .panel-gradient-bg,
+[data-theme="darkly"] .panel-gradient-bg,
+[data-theme="cyborg"] .panel-gradient-bg {
+    background: linear-gradient(
+        180deg,
+        #0a1628 0%,
+        #0d2137 40%,
+        #0d2f52 70%,
+        #0a3d6b 100%
+    ) !important;
 }
 
 /* ==========================================================================
@@ -319,6 +331,35 @@ label {
     overflow: visible !important;
 }
 
+/* Distribución equitativa para menú Sistema (flex two-column) */
+.sistema-menu-columns {
+    display: none !important;
+    min-width: 520px !important;
+    padding: 0.5rem !important;
+}
+
+.dropdown.show > .sistema-menu-columns {
+    display: flex !important;
+}
+
+.sistema-menu-columns.dropdown-menu-right {
+    right: 0 !important;
+    left: auto !important;
+}
+
+.sistema-menu-columns .dropdown-menu-col {
+    flex: 1;
+    min-width: 0;
+}
+
+.sistema-menu-columns .dropdown-menu-col:first-child {
+    margin-right: 10px;
+}
+
+.sistema-menu-columns .dropdown-menu-col .dropdown-divider {
+    margin: 0.5rem 0;
+}
+
 /* Diseño Premium en Dos Columnas (Solución Opción 2) */
 .dropdown-menu-columns {
     display: none !important;
@@ -356,6 +397,10 @@ label {
     visibility: visible;
 }
 
+.dropdown-submenu:hover > .dropdown-menu-grid-2 {
+    display: flex;
+}
+
 .navbar .dropdown-item {
     padding: 0.6rem 1rem !important;
     border-radius: 4px;
@@ -365,9 +410,17 @@ label {
 
 .navbar .dropdown-menu .dropdown-item:hover,
 .navbar .dropdown-menu .dropdown-item.active {
-    background-color: var(--color-brand-dark) !important;
+    background: var(--color-brand-dark) !important;
     color: #ffffff !important;
     text-decoration: underline !important;
+}
+
+/* Fondo azul en hover para items de submenús anidados en cualquier tema */
+.dropdown-submenu .dropdown-menu .dropdown-item:hover,
+.dropdown-submenu .dropdown-menu .dropdown-item:focus,
+.dropdown-submenu .dropdown-menu .dropdown-item.active {
+    background: #1e3a5f !important;
+    color: #ffffff !important;
 }
 
 .dropdown-submenu .dropdown-menu {
@@ -391,6 +444,26 @@ label {
     bottom: 0;
     width: 20px;
     z-index: -1;
+}
+
+.dropdown-submenu .dropdown-menu-grid-2 {
+    display: none;
+    gap: 0;
+    min-width: 420px !important;
+    padding: 0.5rem !important;
+}
+
+.dropdown-submenu .dropdown-menu-grid-2 .dropdown-menu-col {
+    flex: 1;
+    min-width: 0;
+}
+
+.dropdown-submenu .dropdown-menu-grid-2 .dropdown-menu-col:first-child {
+    margin-right: 8px;
+}
+
+.dropdown-submenu .dropdown-menu-grid-2 .dropdown-menu-col .dropdown-item {
+    white-space: nowrap;
 }
 
 .submenu-right .dropdown-menu::before { left: -15px; }
@@ -501,9 +574,19 @@ label {
 /* ==========================================================================
    WIDGETS Y PANEL (FASE 3)
    ========================================================================== */
+.widget-card {
+    border: 2px solid transparent !important;
+    transition: transform var(--transition-base),
+                box-shadow var(--transition-base),
+                border-color var(--transition-base);
+}
+
+a:hover .widget-card,
 .widget-card:hover {
-    transform: translateY(-4px);
+    transform: scale(1.05);
     box-shadow: var(--shadow-hover) !important;
+    border: 2px solid var(--color-accent) !important;
+    border-left: 4px solid var(--color-accent) !important;
 }
 
 .border-left-financial { border-left: 4px solid var(--color-financial) !important; }

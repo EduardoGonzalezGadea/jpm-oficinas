@@ -60,6 +60,11 @@ class TesCfeItem extends Model
         return $this->belongsTo(SiifDistribucion::class, 'siif_distribucion_id');
     }
 
+    public function planillaEr()
+    {
+        return $this->belongsTo(TesPlanillaEr::class, 'planilla_er_id');
+    }
+
     public function createdBy()
     {
         return $this->belongsTo(User::class, 'created_by');

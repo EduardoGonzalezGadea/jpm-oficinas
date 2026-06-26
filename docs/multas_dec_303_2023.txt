@@ -1,28 +1,28 @@
 Multa de Tránsito - Cod. 2.2 Uso indebido de aceras por vehículos
 Multa de Tránsito - Cod. 2.3 Uso indebido de las banquinas
-Multa de Tránsito - Cod. 2.6 Participar en competencias vehiculares no autorizadas **(TEXTO SUPERA LOS 80 CARACTERES)**
-Multa de Tránsito - Cod. 3.1.1 No poseer licencia de conducir o tenerla suspendida **(TEXTO SUPERA LOS 80 CARACTERES)**
-Multa de Tránsito - Cod. 3.1.2 Conducir con licencia fuera de categoría o vencida **(TEXTO SUPERA LOS 80 CARACTERES)**
+Multa de Tránsito - Cod. 2.6 Participar en competencias vehiculares no autorizadas
+Multa de Tránsito - Cod. 3.1.1 No poseer licencia de conducir o tenerla suspendida
+Multa de Tránsito - Cod. 3.1.2 Conducir con licencia fuera de categoría o vencida
 Multa de Tránsito - Cod. 3.13 No comunicar cambio domicilio
-Multa de Tránsito - Cod. 3.3 Discapacitado conduciendo vehículo sin adaptación establecida en su permiso **(TEXTO SUPERA LOS 80 CARACTERES)**
-Multa de Tránsito - Cod. 4.1.1 No exhibir documentación del vehículo o el conductor **(TEXTO SUPERA LOS 80 CARACTERES)**
-Multa de Tránsito - Cod. 4.1.2 No portar documentación del vehículo o el conductor **(TEXTO SUPERA LOS 80 CARACTERES)**
-Multa de Tránsito - Cod. 4.2.1 Conducir bajo efectos de alcohol o rehusarse al examen (artículo 46 de la ley 18.191) **(TEXTO SUPERA LOS 80 CARACTERES)**
-Multa de Tránsito - Cod. 4.2.2 Conducir bajo efectos de drogas o rehusarse al examen (artículo 46 de la ley 18.191) **(TEXTO SUPERA LOS 80 CARACTERES)**
+Multa de Tránsito - Cod. 3.3 Discapacitado conduciendo vehículo sin adaptación establecida en su permiso
+Multa de Tránsito - Cod. 4.1.1 No exhibir documentación del vehículo o el conductor
+Multa de Tránsito - Cod. 4.1.2 No portar documentación del vehículo o el conductor
+Multa de Tránsito - Cod. 4.2.1 Conducir bajo efectos de alcohol o rehusarse al examen (artículo 46 de la ley 18.191)
+Multa de Tránsito - Cod. 4.2.2 Conducir bajo efectos de drogas o rehusarse al examen (artículo 46 de la ley 18.191)
 Multa de Tránsito - Cod. 4.3.1 No respetar señalamiento
 Multa de Tránsito - Cod. 4.3.2 No respetar indicaciones del personal inspectivo
 Multa de Tránsito - Cod. 4.4.1 Conducir con imprudencia
-Multa de Tránsito - Cod. 4.4.2 Conducir manipulando teléfono celular- decreto 81/014 **(TEXTO SUPERA LOS 80 CARACTERES)**
+Multa de Tránsito - Cod. 4.4.2 Conducir manipulando teléfono celular- decreto 81/014
 Multa de Tránsito - Cod. 4.5 Reparar vehículo en vía pública
 Multa de Tránsito - Cod. 4.6 Cargar combustible con motor encendido
 Multa de Tránsito - Cod. 4.7 Conducir sin cuidado o atención a los peatones
 Multa de Tránsito - Cod. 4.8 Conductor o pasajeros no usan cinturón de seguridad
 Multa de Tránsito - Cod. 4.9.1 Menor de 12 años en asiento delantero
-Multa de Tránsito - Cod. 4.9.2 Menor de 12 años sin Sistema de Retención Infantil reglamentario **(TEXTO SUPERA LOS 80 CARACTERES)**
+Multa de Tránsito - Cod. 4.9.2 Menor de 12 años sin Sistema de Retención Infantil reglamentario
 Multa de Tránsito - Cod. 4.10 Transportar pasajeros de pie
-Multa de Tránsito - Cod. 4.11 Circular sin Inspección Técnica Vehicular departamental reglamentaria **(TEXTO SUPERA LOS 80 CARACTERES)**
+Multa de Tránsito - Cod. 4.11 Circular sin Inspección Técnica Vehicular departamental reglamentaria
 Multa de Tránsito - Cod. 5.2a Circular con vehículo sin empadronar
-Multa de Tránsito - Cod. 5.2b Omisión de declarar transferencia de titularidad o cambios de características **(TEXTO SUPERA LOS 80 CARACTERES)**
+Multa de Tránsito - Cod. 5.2b Omisión de declarar transferencia de titularidad o cambios de características
 Multa de Tránsito - Cod. 6.1 Ancho de los vehículos antirreglamentario
 Multa de Tránsito - Cod. 6.2 Altura del vehículo antirreglamentario
 Multa de Tránsito - Cod. 6.3 Longitud del vehículo antirreglamentario
@@ -30,50 +30,50 @@ Multa de Tránsito - Cod. 6.4 Vehículos con salientes
 Multa de Tránsito - Cod. 7.1 Carecer de faros delanteros reglamentarios
 Multa de Tránsito - Cod. 7.1a Carecer de luz baja o no funciona
 Multa de Tránsito - Cod. 7.1b Carecer de luz alta o no funciona
-Multa de Tránsito - Cod. 7.3.1 Carecer de luz posición delantera carece o no funciona **(TEXTO SUPERA LOS 80 CARACTERES)**
-Multa de Tránsito - Cod. 7.3.2 Carecer de luz posición trasera carece o no funciona **(TEXTO SUPERA LOS 80 CARACTERES)**
+Multa de Tránsito - Cod. 7.3.1 Carecer de luz posición delantera carece o no funciona
+Multa de Tránsito - Cod. 7.3.2 Carecer de luz posición trasera carece o no funciona
 Multa de Tránsito - Cod. 7.3.4 Altura inadecuada de focos delanteros o traseros
 Multa de Tránsito - Cod. 7.3.5 Carecer de luz de matrícula o no funciona
 Multa de Tránsito - Cod. 7.4 Carecer de reflectantes traseros
 Multa de Tránsito - Cod. 7.5 Carecer de luz de frenado o no funciona
 Multa de Tránsito - Cod. 7.6 Carecer de luz de giro o no funciona
-Multa de Tránsito - Cod. 7.7a Carecer de luz de gálibo o identificación delantera o no funciona **(TEXTO SUPERA LOS 80 CARACTERES)**
-Multa de Tránsito - Cod. 7.7b Carecer de luz de gálibo o identificación trasera o no funciona **(TEXTO SUPERA LOS 80 CARACTERES)**
-Multa de Tránsito - Cod. 7.7c Carecer de luces demarcadoras laterales o no funcionan **(TEXTO SUPERA LOS 80 CARACTERES)**
+Multa de Tránsito - Cod. 7.7a Carecer de luz de gálibo o identificación delantera o no funciona
+Multa de Tránsito - Cod. 7.7b Carecer de luz de gálibo o identificación trasera o no funciona
+Multa de Tránsito - Cod. 7.7c Carecer de luces demarcadoras laterales o no funcionan
 Multa de Tránsito - Cod. 7.7d Carecer de reflectantes laterales
 Multa de Tránsito - Cod. 7.7e Carecer de reflectantes de gálibo posteriores
-Multa de Tránsito - Cod. 7.8 Luces de identificación colocadas en forma no reglamentaria **(TEXTO SUPERA LOS 80 CARACTERES)**
-Multa de Tránsito - Cod. 7.9 Color de las lámparas y dispositivos reflectantes antirreglamentario **(TEXTO SUPERA LOS 80 CARACTERES)**
-Multa de Tránsito - Cod. 7.10 Montaje de dispositivos reflectantes, lámparas de gálibo y lámparas demarcadoras laterales no reglamentario **(TEXTO SUPERA LOS 80 CARACTERES)**
-Multa de Tránsito - Cod. 7.11 Dispositivos reflectantes, lámparas de gálibo, lámparas de identificación y lámparas demarcadoras laterales antirreglamentarios **(TEXTO SUPERA LOS 80 CARACTERES)**
-Multa de Tránsito - Cod. 7.14a Carecer de señales o señalar incorrectamente carga saliente **(TEXTO SUPERA LOS 80 CARACTERES)**
-Multa de Tránsito - Cod. 7.14b No utilizar reflectivos y luces para circular con carga saliente en la noche **(TEXTO SUPERA LOS 80 CARACTERES)**
-Multa de Tránsito - Cod. 7.15a Uso incorrecto o faros de niebla no reglamentarios **(TEXTO SUPERA LOS 80 CARACTERES)**
-Multa de Tránsito - Cod. 7.15b Usar en forma indebida los faros delanteros complementarios **(TEXTO SUPERA LOS 80 CARACTERES)**
+Multa de Tránsito - Cod. 7.8 Luces de identificación colocadas en forma no reglamentaria
+Multa de Tránsito - Cod. 7.9 Color de las lámparas y dispositivos reflectantes antirreglamentario
+Multa de Tránsito - Cod. 7.10 Montaje de dispositivos reflectantes, lámparas de gálibo y lámparas demarcadoras laterales no reglamentario
+Multa de Tránsito - Cod. 7.11 Dispositivos reflectantes, lámparas de gálibo, lámparas de identificación y lámparas demarcadoras laterales antirreglamentarios
+Multa de Tránsito - Cod. 7.14a Carecer de señales o señalar incorrectamente carga saliente
+Multa de Tránsito - Cod. 7.14b No utilizar reflectivos y luces para circular con carga saliente en la noche
+Multa de Tránsito - Cod. 7.15a Uso incorrecto o faros de niebla no reglamentarios
+Multa de Tránsito - Cod. 7.15b Usar en forma indebida los faros delanteros complementarios
 Multa de Tránsito - Cod. 7.15c Usar lámpara de cortesía no reglamentaria
 Multa de Tránsito - Cod. 7.15d Usar luces de reversa no reglamentaria
 Multa de Tránsito - Cod. 7.15e Carecer de luces de advertencia o no funcionan
-Multa de Tránsito - Cod. 7.16a Carecer de luz delantera o de giro delantero en motos, o antirreglamentario **(TEXTO SUPERA LOS 80 CARACTERES)**
-Multa de Tránsito - Cod. 7.16b Carecer de luz posterior posición, giro o frenado en motos o antirreglamentaria **(TEXTO SUPERA LOS 80 CARACTERES)**
-Multa de Tránsito - Cod. 7.19 Señalizar en forma no reglamentaria vehículos que transportan inflamables, explosivos u otras cargas peligrosas **(TEXTO SUPERA LOS 80 CARACTERES)**
+Multa de Tránsito - Cod. 7.16a Carecer de luz delantera o de giro delantero en motos, o antirreglamentario
+Multa de Tránsito - Cod. 7.16b Carecer de luz posterior posición, giro o frenado en motos o antirreglamentaria
+Multa de Tránsito - Cod. 7.19 Señalizar en forma no reglamentaria vehículos que transportan inflamables, explosivos u otras cargas peligrosas
 Multa de Tránsito - Cod. 7.20b Usar luces altas en calles y avenidas.
 Multa de Tránsito - Cod. 7.21 No utilizar luces de estacionamiento
-Multa de Tránsito - Cod. 7.22 No poseer baliza (2 balizas en caso de vehículo de más de 1500Kg) **(TEXTO SUPERA LOS 80 CARACTERES)**
+Multa de Tránsito - Cod. 7.22 No poseer baliza (2 balizas en caso de vehículo de más de 1500Kg)
 Multa de Tránsito - Cod. 7.23b No utilizar balizas en detención de emergencia
-Multa de Tránsito - Cod. 7.25 Circular en urgencia sin luces reglamentarias (vehículos policiales, extinción de incendios o asistencia sanitaria) **(TEXTO SUPERA LOS 80 CARACTERES)**
-Multa de Tránsito - Cod. 7.26 Circular maquinaria en vía pública sin luces intermitentes o giratorias **(TEXTO SUPERA LOS 80 CARACTERES)**
-Multa de Tránsito - Cod. 7.Artículo 30 No usar luces cortas (o DRL) encendidos en forma permanente **(TEXTO SUPERA LOS 80 CARACTERES)**
-Multa de Tránsito - Cod. 8.1 Carecer de un sistema de frenos accesibles y conservado adecuadamente **(TEXTO SUPERA LOS 80 CARACTERES)**
-Multa de Tránsito - Cod. 8.2a Carecer de frenos de servicio o no funcionan adecuadamente **(TEXTO SUPERA LOS 80 CARACTERES)**
-Multa de Tránsito - Cod. 8.2b Carecer de freno de estacionamiento o no funciona adecuadamente **(TEXTO SUPERA LOS 80 CARACTERES)**
-Multa de Tránsito - Cod. 8.3a Carecer de frenos de servicio frenos servicio remolques y semi-remolques o no funcionan **(TEXTO SUPERA LOS 80 CARACTERES)**
-Multa de Tránsito - Cod. 8.3b Carecer de frenos estacionamiento remolques y semi-remolques o no funcionan **(TEXTO SUPERA LOS 80 CARACTERES)**
-Multa de Tránsito - Cod. 8.4 Carecer de frenos de servicio o no reglamentarios en remolques **(TEXTO SUPERA LOS 80 CARACTERES)**
-Multa de Tránsito - Cod. 8.5 Combinaciones o trenes de vehículos sin frenos o no reglamentarios **(TEXTO SUPERA LOS 80 CARACTERES)**
-Multa de Tránsito - Cod. 8.6 Carecer de frenos en ambas ruedas (motonetas y motocicletas), o no funcionan **(TEXTO SUPERA LOS 80 CARACTERES)**
+Multa de Tránsito - Cod. 7.25 Circular en urgencia sin luces reglamentarias (vehículos policiales, extinción de incendios o asistencia sanitaria)
+Multa de Tránsito - Cod. 7.26 Circular maquinaria en vía pública sin luces intermitentes o giratorias
+Multa de Tránsito - Cod. 7.Artículo 30 No usar luces cortas (o DRL) encendidos en forma permanente
+Multa de Tránsito - Cod. 8.1 Carecer de un sistema de frenos accesibles y conservado adecuadamente
+Multa de Tránsito - Cod. 8.2a Carecer de frenos de servicio o no funcionan adecuadamente
+Multa de Tránsito - Cod. 8.2b Carecer de freno de estacionamiento o no funciona adecuadamente
+Multa de Tránsito - Cod. 8.3a Carecer de frenos de servicio frenos servicio remolques y semi-remolques o no funcionan
+Multa de Tránsito - Cod. 8.3b Carecer de frenos estacionamiento remolques y semi-remolques o no funcionan
+Multa de Tránsito - Cod. 8.4 Carecer de frenos de servicio o no reglamentarios en remolques
+Multa de Tránsito - Cod. 8.5 Combinaciones o trenes de vehículos sin frenos o no reglamentarios
+Multa de Tránsito - Cod. 8.6 Carecer de frenos en ambas ruedas (motonetas y motocicletas), o no funcionan
 Multa de Tránsito - Cod. 8.7 Carecer de sistema de frenos (otros vehículos)
 Multa de Tránsito - Cod. 8.68.10.- Frenos Bicicleta
-Multa de Tránsito - Cod. 8.8 Carecer de sistema de advertencia y manómetro para frenos de aire o no funcionan **(TEXTO SUPERA LOS 80 CARACTERES)**
+Multa de Tránsito - Cod. 8.8 Carecer de sistema de advertencia y manómetro para frenos de aire o no funcionan
 Multa de Tránsito - Cod. 9.1.1 Carecer de bocina o no funciona
 Multa de Tránsito - Cod. 9.1.2 Usar indebidamente aparatos sonoros
 Multa de Tránsito - Cod. 9.2 Usar indebidamente la bocina
@@ -84,7 +84,7 @@ Multa de Tránsito - Cod. 10.7 Carecer de guardabarros
 Multa de Tránsito - Cod. 10.8.1 Cubiertas en mal estado o desgastada
 Multa de Tránsito - Cod. 10.8.2 Falta de cubierta auxiliar
 Multa de Tránsito - Cod. 10.10.1 Bandas de rodamiento metálico con puntas
-Multa de Tránsito - Cod. 10.10.2 Circulación no autorizada de vehículos con bandas de rodamiento metálico no autorizado **(TEXTO SUPERA LOS 80 CARACTERES)**
+Multa de Tránsito - Cod. 10.10.2 Circulación no autorizada de vehículos con bandas de rodamiento metálico no autorizado
 Multa de Tránsito - Cod. 10.11 Cierre inseguro de tapa de motor y maletero
 Multa de Tránsito - Cod. 10.12 Falta de para golpe trasero o delantero
 Multa de Tránsito - Cod. 10.13.1 Falta placa matrícula o ilegible
@@ -98,34 +98,33 @@ Multa de Tránsito - Cod. 10.18 Carecer de limpiaparabrisas o no funciona
 Multa de Tránsito - Cod. 10.20a Asientos no anclados o sin respaldo
 Multa de Tránsito - Cod. 10.20b Carecer de visera rebatible
 Multa de Tránsito - Cod. 10.20c Carecer de luz interior o no funciona
-Multa de Tránsito - Cod. 10.20d Carecer de cinturón de seguridad o apoya cabeza reglamentarios **(TEXTO SUPERA LOS 80 CARACTERES)**
+Multa de Tránsito - Cod. 10.20d Carecer de cinturón de seguridad o apoya cabeza reglamentarios
 Multa de Tránsito - Cod. 10.21 Carecer de tablero de comando o no funciona.
 Multa de Tránsito - Cod. 10.22 Carecer de extintor en condiciones
-Multa de Tránsito - Cod. 10.24 Circular sin maletín de primeros auxilios y seguridad vial **(TEXTO SUPERA LOS 80 CARACTERES)**
-Multa de Tránsito - Cod. 10.68.9.- Birrodado no cuenta con espejo, sistema lumínico (faro de luz blanca o reflectante blanco delantero, faro de luz roja y reflectante trasero, dispositivos, retro reflectantes en ruedas, bandas en pedales, etc.). Por vehículo en condiciones antirreglamentarias **(TEXTO SUPERA LOS 80 CARACTERES)**
+Multa de Tránsito - Cod. 10.24 Circular sin maletín de primeros auxilios y seguridad vial
+Multa de Tránsito - Cod. 10.68.9.- Birrodado no cuenta con espejo, sistema lumínico. Por vehículo en condiciones antirreglamentarias
 Multa de Tránsito - Cod. 10.68.11.- Bicicleta sin Timbre
 Multa de Tránsito - Cod. 12.1 No circular por la derecha
-Multa de Tránsito - Cod. 12.2 Circular sin respetar el uso reglamentario de las sendas **(TEXTO SUPERA LOS 80 CARACTERES)**
+Multa de Tránsito - Cod. 12.2 Circular sin respetar el uso reglamentario de las sendas
 Multa de Tránsito - Cod. 12.3.1 Uso más de una senda de circulación
-Multa de Tránsito - Cod. 12.3.2 Uso de senda de circulación izquierda velocidad inferior a la media **(TEXTO SUPERA LOS 80 CARACTERES)**
-Multa de Tránsito - Cod. 12.5 No mantener la derecha al cruzarse con vehículos que circulan en sentido opuesto **(TEXTO SUPERA LOS 80 CARACTERES)**
-Multa de Tránsito - Cod. 12.6 Circular a contramano
+Multa de Tránsito - Cod. 12.3.2 Uso de senda de circulación izquierda velocidad inferior a la media
+Multa de Tránsito - Cod. 12.5 No mantener la derecha al cruzarse con vehículos que circulan en sentido opuesto
 Multa de Tránsito - Cod. 12.7 Circulación incorrecta en rotondas
 Multa de Tránsito - Cod. 12.8 Circular sobre marcas delimitadoras o isletas
 Multa de Tránsito - Cod. 12.9 No mantener distancia de circulación
 Multa de Tránsito - Cod. 12.1 Seguir vehículos de emergencia
 Multa de Tránsito - Cod. 12.11 Circular en caravana
-Multa de Tránsito - Cod. 12.68.13.- Bicicletas destinadas a competencias deportivas haciendo uso de la vía pública en condiciones antirreglamentarias **(TEXTO SUPERA LOS 80 CARACTERES)**
-Multa de Tránsito - Cod. 13.1 Conducir a velocidad o forma imprudente o desatenta **(TEXTO SUPERA LOS 80 CARACTERES)**
+Multa de Tránsito - Cod. 12.68.13.- Bicicletas destinadas a competencias deportivas haciendo uso de la vía pública en condiciones antirreglamentarias
+Multa de Tránsito - Cod. 13.1 Conducir a velocidad o forma imprudente o desatenta
 Multa de Tránsito - Cod. 13.3 Superar las velocidades máximas permitidas
 Multa de Tránsito - Cod. 13.6 Conducir a velocidades inferiores a la mínima
-Multa de Tránsito - Cod. 13.7 Reducir bruscamente la velocidad en forma innecesaria **(TEXTO SUPERA LOS 80 CARACTERES)**
+Multa de Tránsito - Cod. 13.7 Reducir bruscamente la velocidad en forma innecesaria
 Multa de Tránsito - Cod. 14.1.1 Adelantar por la derecha
-Multa de Tránsito - Cod. 14.1.2 No realizar señales indicadores en adelantamiento **(TEXTO SUPERA LOS 80 CARACTERES)**
+Multa de Tránsito - Cod. 14.1.2 No realizar señales indicadores en adelantamiento
 Multa de Tránsito - Cod. 14.1.3 Adelantar en zona no permitida
 Multa de Tránsito - Cod. 14.2 No ceder paso al ser adelantado
 Multa de Tránsito - Cod. 14.3 No ceder mitad de camino al que adelanta
-Multa de Tránsito - Cod. 14.4 Vehículo pesado no aminora marcha o se aparta al ser adelantado **(TEXTO SUPERA LOS 80 CARACTERES)**
+Multa de Tránsito - Cod. 14.4 Vehículo pesado no aminora marcha o se aparta al ser adelantado
 Multa de Tránsito - Cod. 14.5 Adelantar en banquinas
 Multa de Tránsito - Cod. 14.6 Adelantamiento no permitido en vías de 2 sentidos
 Multa de Tránsito - Cod. 14.7 Adelantar en intersecciones
@@ -135,16 +134,16 @@ Multa de Tránsito - Cod. 15.2 No respetar preferencia de la derecha
 Multa de Tránsito - Cod. 15.3.1 No respetar cartel de Pare
 Multa de Tránsito - Cod. 15.3.2 No respetar cartel Ceda el Paso
 Multa de Tránsito - Cod. 15.4 No respetar señales luminosas
-Multa de Tránsito - Cod. 15.5 No respetar preferencia de vía de mayor importancia, en zona rural **(TEXTO SUPERA LOS 80 CARACTERES)**
-Multa de Tránsito - Cod. 15.6 No respetar preferencia del vehículo que inició el cruce **(TEXTO SUPERA LOS 80 CARACTERES)**
+Multa de Tránsito - Cod. 15.5 No respetar preferencia de vía de mayor importancia, en zona rural
+Multa de Tránsito - Cod. 15.6 No respetar preferencia del vehículo que inició el cruce
 Multa de Tránsito - Cod. 15.7 No dar preferencia en cambio dirección o sentido
 Multa de Tránsito - Cod. 15.8 No dar preferencia al ingreso o egreso vía pública
 Multa de Tránsito - Cod. 15.9.1 No dar preferencia a peatón en cruce señalizado
 Multa de Tránsito - Cod. 15.9.2 No dar preferencia a peatón en intersección
-Multa de Tránsito - Cod. 15.1 No dar preferencia al vehículo de la derecha al salir de rotonda **(TEXTO SUPERA LOS 80 CARACTERES)**
+Multa de Tránsito - Cod. 15.1 No dar preferencia al vehículo de la derecha al salir de rotonda
 Multa de Tránsito - Cod. 15.11 No dar preferencia a vehículo de emergencia
-Multa de Tránsito - Cod. 16.1 No ubicarse correctamente y/o no señalizar el giro a la izquierda **(TEXTO SUPERA LOS 80 CARACTERES)**
-Multa de Tránsito - Cod. 16.2 No ubicarse correctamente y/o no señalizar el giro a la derecha **(TEXTO SUPERA LOS 80 CARACTERES)**
+Multa de Tránsito - Cod. 16.1 No ubicarse correctamente y/o no señalizar el giro a la izquierda
+Multa de Tránsito - Cod. 16.2 No ubicarse correctamente y/o no señalizar el giro a la derecha
 Multa de Tránsito - Cod. 16.3 No respetar sendas especiales para giros
 Multa de Tránsito - Cod. 16.4 Inversión de sentido de marcha en forma imprudente
 Multa de Tránsito - Cod. 16.5 No respetar giros o inversiones circunstanciales
@@ -155,25 +154,25 @@ Multa de Tránsito - Cod. 17.2 Circular marcha atrás innecesariamente
 Multa de Tránsito - Cod. 17.3 Remolque inadecuado de vehículos
 Multa de Tránsito - Cod. 17.4 Circular con personas en remolques
 Multa de Tránsito - Cod. 17.5 No dar preferencia a tropas
-Multa de Tránsito - Cod. 17.6 Circulación no reglamentaria de maquinaria agrícola **(TEXTO SUPERA LOS 80 CARACTERES)**
-Multa de Tránsito - Cod. 18.1.1 Estacionar en sentido contrario al de circulación **(TEXTO SUPERA LOS 80 CARACTERES)**
-Multa de Tránsito - Cod. 18.1.2 Estacionar a mayor distancia del cordón que la permitida **(TEXTO SUPERA LOS 80 CARACTERES)**
-Multa de Tránsito - Cod. 18.1.3 No estacionar en paralelo fuera de zonas autorizadas **(TEXTO SUPERA LOS 80 CARACTERES)**
+Multa de Tránsito - Cod. 17.6 Circulación no reglamentaria de maquinaria agrícola
+Multa de Tránsito - Cod. 18.1.1 Estacionar en sentido contrario al de circulación
+Multa de Tránsito - Cod. 18.1.2 Estacionar a mayor distancia del cordón que la permitida
+Multa de Tránsito - Cod. 18.1.3 No estacionar en paralelo fuera de zonas autorizadas
 Multa de Tránsito - Cod. 18.2.1 Estacionar en doble fila
 Multa de Tránsito - Cod. 18.2.2 Estacionar en intersección
 Multa de Tránsito - Cod. 18.2.3 Estacionar en cruce peatonal
 Multa de Tránsito - Cod. 18.2.4 Estacionar en puente, viaducto o paso nivel
 Multa de Tránsito - Cod. 18.2.5 Estacionar en curva o rasante poca visibilidad
-Multa de Tránsito - Cod. 18.2.6 Estacionar a menos 10m de un cartel de Pare, Ceda el Paso o advertencia **(TEXTO SUPERA LOS 80 CARACTERES)**
+Multa de Tránsito - Cod. 18.2.6 Estacionar a menos 10m de un cartel de Pare, Ceda el Paso o advertencia
 Multa de Tránsito - Cod. 18.2.7 Estacionar en parada de transporte colectivo
 Multa de Tránsito - Cod. 18.2.8 Estacionar en entrada a inmueble
-Multa de Tránsito - Cod. 18.2.9 Estacionar junto a canteros centrales e islas sep. **(TEXTO SUPERA LOS 80 CARACTERES)**
+Multa de Tránsito - Cod. 18.2.9 Estacionar junto a canteros centrales e islas sep.
 Multa de Tránsito - Cod. 18.3 Estacionar carreteras y caminos
-Multa de Tránsito - Cod. 18.4 Ponerse en movimiento en forma insegura y/o sin señalizar **(TEXTO SUPERA LOS 80 CARACTERES)**
+Multa de Tránsito - Cod. 18.4 Ponerse en movimiento en forma insegura y/o sin señalizar
 Multa de Tránsito - Cod. 18.5 Apertura indebida de puertas
-Multa de Tránsito - Cod. 18.6 Estacionar o detener ómnibus en lugar no autorizado **(TEXTO SUPERA LOS 80 CARACTERES)**
+Multa de Tránsito - Cod. 18.6 Estacionar o detener ómnibus en lugar no autorizado
 Multa de Tránsito - Cod. 18.7 Estacionar en condiciones inadecuadas
-Multa de Tránsito - Cod. 18.8 Operaciones de carga y descarga dificultando la circulación **(TEXTO SUPERA LOS 80 CARACTERES)**
+Multa de Tránsito - Cod. 18.8 Operaciones de carga y descarga dificultando la circulación
 Multa de Tránsito - Cod. 18.9.1 Estacionar en lugar prohibido o regulado
 Multa de Tránsito - Cod. 18.9.2 Estacionado sin abonar tarifa
 Multa de Tránsito - Cod. 18.9.3 Estacionado con tiempo abonado excedido
@@ -183,36 +182,36 @@ Multa de Tránsito - Cod. 19.3 Realizar cambio de marcha al cruzar vía férrea
 Multa de Tránsito - Cod. 20.2 Conducir vehículos de emergencia sin precaución
 Multa de Tránsito - Cod. 21.2.1 Conducir birrodados sin pleno dominio
 Multa de Tránsito - Cod. 21.2.2 Llevar acompañante en birrodado no habilitado
-Multa de Tránsito - Cod. 21.2.3 Llevar carga en birrodado que afecte la conducción **(TEXTO SUPERA LOS 80 CARACTERES)**
+Multa de Tránsito - Cod. 21.2.3 Llevar carga en birrodado que afecte la conducción
 Multa de Tránsito - Cod. 21.2.4 Llevar remolque en birrodado no habilitado
-Multa de Tránsito - Cod. 21.2.5 Circular con conductor o acompañante de birrodado asido de otro vehículo **(TEXTO SUPERA LOS 80 CARACTERES)**
-Multa de Tránsito - Cod. 21.3.1 Conductor o acompañante sin casco- Bicicleta 1 UR - decreto 81/014 **(TEXTO SUPERA LOS 80 CARACTERES)**
-Multa de Tránsito - Cod. 21.3.2 Circulación de motos entre sendas o filas de vehículos **(TEXTO SUPERA LOS 80 CARACTERES)**
-Multa de Tránsito - Cod. 21.4 Ciclistas entrenando o en competencias deportivas sin protección ocular **(TEXTO SUPERA LOS 80 CARACTERES)**
+Multa de Tránsito - Cod. 21.2.5 Circular con conductor o acompañante de birrodado asido de otro vehículo
+Multa de Tránsito - Cod. 21.3.1 Conductor o acompañante sin casco- Bicicleta 1 UR - decreto 81/014
+Multa de Tránsito - Cod. 21.3.2 Circulación de motos entre sendas o filas de vehículos
+Multa de Tránsito - Cod. 21.4 Ciclistas entrenando o en competencias deportivas sin protección ocular
 Multa de Tránsito - Cod. 21.7 Menor no alcanza posa pie
-Multa de Tránsito - Cod. 21.8 No usar chaleco, campera o bandas retroreflectivas reglamentaria **(TEXTO SUPERA LOS 80 CARACTERES)**
-Multa de Tránsito - Cod. 21.68.8.- Conductor de bicicleta no usa casco protector de seguridad reglamentario **(TEXTO SUPERA LOS 80 CARACTERES)**
+Multa de Tránsito - Cod. 21.8 No usar chaleco, campera o bandas retroreflectivas reglamentaria
+Multa de Tránsito - Cod. 21.68.8.- Conductor de bicicleta no usa casco protector de seguridad reglamentario
 Multa de Tránsito - Cod. 22.2 Circular con carga acondicionada indebidamente
 Multa de Tránsito - Cod. 22.3 Circular con carga saliente en exceso
-Multa de Tránsito - Cod. 22.4 Transportar pasajeros en la caja de vehículo que no sea diseñado para dicho fin. Art. 51. Ley 19.824 **(TEXTO SUPERA LOS 80 CARACTERES)**
-Multa de Tránsito - Cod. 22.5.3 Señalización de transporte de mercancías peligrosas no reglamentaria o inadecuada **(TEXTO SUPERA LOS 80 CARACTERES)**
-Multa de Tránsito - Cod. 22.5.4 Falta de dispositivo descarga a tierra en camiones tanque **(TEXTO SUPERA LOS 80 CARACTERES)**
-Multa de Tránsito - Cod. 22.6 Fumar, llevar fulminantes o herramientas metálicas sueltas en vehículos de transporte de explosivos **(TEXTO SUPERA LOS 80 CARACTERES)**
-Multa de Tránsito - Cod. 22.7 Vehículo de transporte de explosivos o inflamables con remolque o acoplado. **(TEXTO SUPERA LOS 80 CARACTERES)**
+Multa de Tránsito - Cod. 22.4 Transportar pasajeros en la caja de vehículo que no sea diseñado para dicho fin. Art. 51. Ley 19.824
+Multa de Tránsito - Cod. 22.5.3 Señalización de transporte de mercancías peligrosas no reglamentaria o inadecuada
+Multa de Tránsito - Cod. 22.5.4 Falta de dispositivo descarga a tierra en camiones tanque
+Multa de Tránsito - Cod. 22.6 Fumar, llevar fulminantes o herramientas metálicas sueltas en vehículos de transporte de explosivos
+Multa de Tránsito - Cod. 22.7 Vehículo de transporte de explosivos o inflamables con remolque o acoplado.
 Multa de Tránsito - Cod. 22.8 Transporte de cargas peligrosas no autorizada
-Multa de Tránsito - Cod. 22.9 Estacionar vehículos de transporte de explosivos en zona poblada **(TEXTO SUPERA LOS 80 CARACTERES)**
-Multa de Tránsito - Cod. 22.1 Transporte de animales incorrectamente acondicionados o con pérdida de estiércol en la vía pública **(TEXTO SUPERA LOS 80 CARACTERES)**
-Multa de Tránsito - Cod. 22.11 Transporte de estiércol, animales muertos, residuos o sustancias contaminantes en vehículos no herméticos y no habilitados **(TEXTO SUPERA LOS 80 CARACTERES)**
-Multa de Tránsito - Cod. 22.12 Carga y descarga de ganado o bultos peligrosos en la vía pública, sin permiso **(TEXTO SUPERA LOS 80 CARACTERES)**
-Multa de Tránsito - Cod. 22.13 Vehículo de carga sin matrícula pintada en los laterales **(TEXTO SUPERA LOS 80 CARACTERES)**
-Multa de Tránsito - Cod. 22.14 Circulación con acoplados de ancho sobresaliente en forma antirreglamentaria **(TEXTO SUPERA LOS 80 CARACTERES)**
-Multa de Tránsito - Cod. 22.15 Sistemas de enganche de acoplados o remolques no reglamentarios **(TEXTO SUPERA LOS 80 CARACTERES)**
+Multa de Tránsito - Cod. 22.9 Estacionar vehículos de transporte de explosivos en zona poblada
+Multa de Tránsito - Cod. 22.1 Transporte de animales incorrectamente acondicionados o con pérdida de estiércol en la vía pública
+Multa de Tránsito - Cod. 22.11 Transporte de estiércol, animales muertos, residuos o sustancias contaminantes en vehículos no herméticos y no habilitados
+Multa de Tránsito - Cod. 22.12 Carga y descarga de ganado o bultos peligrosos en la vía pública, sin permiso
+Multa de Tránsito - Cod. 22.13 Vehículo de carga sin matrícula pintada en los laterales
+Multa de Tránsito - Cod. 22.14 Circulación con acoplados de ancho sobresaliente en forma antirreglamentaria
+Multa de Tránsito - Cod. 22.15 Sistemas de enganche de acoplados o remolques no reglamentarios
 Multa de Tránsito - Cod. 22.16 Cantidad inapropiada ejes en acoplado
-Multa de Tránsito - Cod. 22.17 Circulación de trenes de vehículos no autorizados o en vías no autorizadas **(TEXTO SUPERA LOS 80 CARACTERES)**
+Multa de Tránsito - Cod. 22.17 Circulación de trenes de vehículos no autorizados o en vías no autorizadas
 Multa de Tránsito - Cod. 24.3 Dañar o alterar señales tránsito
-Multa de Tránsito - Cod. 25.1 No retirar vehículos, animales u objetos que obstaculicen el tránsito en forma inmediata o el tiempo mínimo necesario **(TEXTO SUPERA LOS 80 CARACTERES)**
-Multa de Tránsito - Cod. 25.2 Arrojar o depositar elementos perjudiciales o dañinos para la vía pública **(TEXTO SUPERA LOS 80 CARACTERES)**
-Multa de Tránsito - Cod. 25.8 Instalación no autorizada de carteles, señal o signo de señalización del tránsito **(TEXTO SUPERA LOS 80 CARACTERES)**
-Multa de Tránsito - Cod. 26.1 No cumplir con normas de detención, pedido de auxilio, colaboración, etc. en caso de siniestro de tránsito **(TEXTO SUPERA LOS 80 CARACTERES)**
-Multa de Tránsito - Cod. 27.1 No contar con la póliza de SOA, o que la misma se encuentre vencida **(TEXTO SUPERA LOS 80 CARACTERES)**
+Multa de Tránsito - Cod. 25.1 No retirar vehículos, animales u objetos que obstaculicen el tránsito en forma inmediata o el tiempo mínimo necesario
+Multa de Tránsito - Cod. 25.2 Arrojar o depositar elementos perjudiciales o dañinos para la vía pública
+Multa de Tránsito - Cod. 25.8 Instalación no autorizada de carteles, señal o signo de señalización del tránsito
+Multa de Tránsito - Cod. 26.1 No cumplir con normas de detención, pedido de auxilio, colaboración, etc. en caso de siniestro de tránsito
+Multa de Tránsito - Cod. 27.1 No contar con la póliza de SOA, o que la misma se encuentre vencida
 Multa de Tránsito - Cod. 28.1 Dejar animales sueltos en la vía pública

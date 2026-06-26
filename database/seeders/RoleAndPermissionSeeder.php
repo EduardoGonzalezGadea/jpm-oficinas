@@ -5,121 +5,129 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
+use App\Modules\ModuleRegistry;
 
 class RoleAndPermissionSeeder extends Seeder
 {
     public function run()
     {
-        // Reset cached roles and permissions
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
 
-        $guards = ['web', 'api'];
-
-        // Crear permisos
-        $permisos = [
-            // Accesos por categoría
-            'acceso_administrador',
-            'acceso_gerente',
-            'acceso_supervisor',
-
-            // Módulo Usuarios
-            'gestionar_usuarios',
-            'crear_usuarios',
-            'editar_usuarios',
-            'eliminar_usuarios',
-            'ver_usuarios',
-            'cambiar_propia_contraseña',
-            'editar_propio_perfil',
-
-            // Módulo Tesorería
-            'gestionar_tesoreria',
-            'supervisar_tesoreria',
-            'operador_tesoreria',
-            'gestionar_pagos',
-            'crear_pagos',
-            'editar_pagos',
-            'eliminar_pagos',
-            'ver_pagos',
-            'gestionar_conceptos_pago',
-
-            // Módulo Sistema
-            'administrar_sistema',
-
-            // Módulo Roles
-            'roles.index',
-            'roles.create',
-            'roles.edit',
-            'roles.destroy',
-            'roles.show',
-            'roles.assign',
-
-            // Módulo Permisos
-            'permissions.index',
-            'permissions.create',
-            'permissions.edit',
-            'permissions.destroy',
-            'permissions.show',
+        // ========================================
+        // 1. Permisos globales del sistema
+        // ========================================
+        $globales = [
+            'sistema.acceso.total',
+            'sistema.acceso.administrador',
+            'usuarios.gestionar',
+            'usuarios.crear',
+            'usuarios.editar',
+            'usuarios.eliminar',
+            'usuarios.ver',
+            'usuarios.cambiar_contrasena',
+            'usuarios.editar_perfil',
+            'usuarios.asignar_roles',
+            'roles.gestionar',
+            'permisos.gestionar',
+            'sistema.backups',
+            'sistema.auditoria',
         ];
 
-        foreach ($guards as $guard) {
-            foreach ($permisos as $permiso) {
-                Permission::firstOrCreate(['name' => $permiso, 'guard_name' => $guard]);
+        foreach ($globales as $permiso) {
+            Permission::firstOrCreate(['name' => $permiso, 'guard_name' => 'web']);
+        }
+
+        // ========================================
+        // 2. Permisos por módulo y recurso
+        // ========================================
+        foreach (ModuleRegistry::claves() as $claveModulo) {
+            foreach (ModuleRegistry::recursos($claveModulo) as $recurso) {
+                $acciones = ['ver', 'crear', 'editar'];
+                // Supervisores pueden además aprobar/revertir
+                $accionesSupervisor = array_merge($acciones, ['aprobar', 'revertir']);
+                // Gerentes pueden todo + eliminar y configurar
+                $accionesGerente = array_merge($accionesSupervisor, ['eliminar', 'configurar']);
+
+                foreach ($accionesGerente as $accion) {
+                    Permission::firstOrCreate([
+                        'name' => ModuleRegistry::permiso($claveModulo, $recurso, $accion),
+                        'guard_name' => 'web',
+                    ]);
+                }
             }
+        }
 
-            // Crear roles
-            $administrador = Role::firstOrCreate(['name' => 'administrador', 'guard_name' => $guard]);
+        // ========================================
+        // 3. Permisos de nivel de módulo
+        // ========================================
+        $moduloNivelPermisos = ['acceso', 'supervisar', 'gestionar'];
+        foreach (ModuleRegistry::claves() as $claveModulo) {
+            foreach ($moduloNivelPermisos as $permiso) {
+                Permission::firstOrCreate([
+                    'name' => "{$claveModulo}.{$permiso}",
+                    'guard_name' => 'web',
+                ]);
+            }
+        }
 
-            $gerente_tesoreria = Role::firstOrCreate(['name' => 'gerente_tesoreria', 'guard_name' => $guard]);
-            $supervisor_tesoreria = Role::firstOrCreate(['name' => 'supervisor_tesoreria', 'guard_name' => $guard]);
-            $usuario_tesoreria = Role::firstOrCreate(['name' => 'usuario_tesoreria', 'guard_name' => $guard]);
+        // ========================================
+        // 4. Rol Administrador (todo)
+        // ========================================
+        $admin = Role::firstOrCreate(['name' => 'administrador', 'guard_name' => 'web']);
+        $admin->givePermissionTo(Permission::all());
 
-            // Asignar permisos a roles
+        // ========================================
+        // 5. Roles por módulo con jerarquía
+        // ========================================
+        foreach (ModuleRegistry::claves() as $claveModulo) {
+            $recursos = ModuleRegistry::recursos($claveModulo);
 
-            // Administrador: todos los permisos
-            $administrador->givePermissionTo(Permission::all()->where('guard_name', $guard));
+            // --- OPERADOR ---
+            $rolOperador = ModuleRegistry::rolName($claveModulo, 'operador');
+            $operador = Role::firstOrCreate(['name' => $rolOperador, 'guard_name' => 'web']);
+            $permisosOperador = [
+                "{$claveModulo}.acceso",
+                'usuarios.cambiar_contrasena',
+                'usuarios.editar_perfil',
+            ];
+            foreach ($recursos as $recurso) {
+                $permisosOperador[] = ModuleRegistry::permiso($claveModulo, $recurso, 'ver');
+                $permisosOperador[] = ModuleRegistry::permiso($claveModulo, $recurso, 'crear');
+                $permisosOperador[] = ModuleRegistry::permiso($claveModulo, $recurso, 'editar');
+            }
+            $operador->givePermissionTo($permisosOperador);
 
-            // Gerentes: pueden gestionar usuarios de su módulo
-            $gerente_tesoreria->givePermissionTo([
-                'operador_tesoreria',
-                'acceso_gerente',
-                'gestionar_usuarios',
-                'crear_usuarios',
-                'editar_usuarios',
-                'eliminar_usuarios',
-                'ver_usuarios',
-                'gestionar_tesoreria',
-                'cambiar_propia_contraseña',
-                'editar_propio_perfil',
-                'gestionar_pagos',
-                'crear_pagos',
-                'editar_pagos',
-                'eliminar_pagos',
-                'ver_pagos',
-                'gestionar_conceptos_pago',
-                'administrar_sistema',
+            // --- SUPERVISOR (hereda operador +) ---
+            $rolSupervisor = ModuleRegistry::rolName($claveModulo, 'supervisor');
+            $supervisor = Role::firstOrCreate(['name' => $rolSupervisor, 'guard_name' => 'web']);
+            $supervisor->givePermissionTo($operador->permissions);
+            $extraSupervisor = [
+                "{$claveModulo}.supervisar",
+                'sistema.auditoria',
+                'usuarios.ver',
+                'usuarios.crear',
+                'usuarios.editar',
+            ];
+            foreach ($recursos as $recurso) {
+                $extraSupervisor[] = ModuleRegistry::permiso($claveModulo, $recurso, 'aprobar');
+                $extraSupervisor[] = ModuleRegistry::permiso($claveModulo, $recurso, 'revertir');
+            }
+            $supervisor->givePermissionTo($extraSupervisor);
+
+            // --- GERENTE (hereda supervisor +) ---
+            $rolGerente = ModuleRegistry::rolName($claveModulo, 'gerente');
+            $gerente = Role::firstOrCreate(['name' => $rolGerente, 'guard_name' => 'web']);
+            $gerente->givePermissionTo($supervisor->permissions);
+            $gerente->givePermissionTo([
+                "{$claveModulo}.gestionar",
+                'usuarios.gestionar',
+                'usuarios.eliminar',
+                'usuarios.asignar_roles',
             ]);
-
-            // Supervisores: pueden gestionar usuarios de su módulo
-            $supervisor_tesoreria->givePermissionTo([
-                'operador_tesoreria',
-                'acceso_supervisor',
-                'gestionar_usuarios',
-                'crear_usuarios',
-                'editar_usuarios',
-                'ver_usuarios',
-                'supervisar_tesoreria',
-                'cambiar_propia_contraseña',
-                'editar_propio_perfil',
-                'administrar_sistema',
-            ]);
-
-            // Usuarios normales: solo su módulo
-            $usuario_tesoreria->givePermissionTo([
-                'operador_tesoreria',
-                'cambiar_propia_contraseña',
-                'editar_propio_perfil'
-            ]);
-
+            foreach ($recursos as $recurso) {
+                $gerente->givePermissionTo(ModuleRegistry::permiso($claveModulo, $recurso, 'eliminar'));
+                $gerente->givePermissionTo(ModuleRegistry::permiso($claveModulo, $recurso, 'configurar'));
+            }
         }
     }
 }

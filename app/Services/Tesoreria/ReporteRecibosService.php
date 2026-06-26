@@ -11,6 +11,7 @@ use App\Models\Tesoreria\TesMultasCobradas;
 use App\Models\Tesoreria\TesPorteArmas;
 use App\Models\Tesoreria\TesTenenciaArmas;
 use App\Models\Tesoreria\Prenda;
+use App\Models\Tesoreria\TesCfe;
 
 class ReporteRecibosService
 {
@@ -171,6 +172,12 @@ class ReporteRecibosService
             $granTotalMonto += $seccion['monto_total'];
         }
 
+        foreach ($this->procesarSeccionesCfe($desde, $hasta) as $seccion) {
+            $secciones[] = $seccion;
+            $granTotalCantidad += $seccion['cantidad'];
+            $granTotalMonto += $seccion['monto_total'];
+        }
+
         return [
             'secciones' => $secciones,
             'gran_total_cantidad' => $granTotalCantidad,
@@ -218,6 +225,97 @@ class ReporteRecibosService
             'monto_total_formateado' => $this->formatearMonto($montoTotal),
             'registros' => $registrosNormalizados,
         ];
+    }
+
+    /**
+     * Nombre de secciones existentes que tienen un modelo de negocio dedicado.
+     * Los CFE cuyo concepto de caja coincida con alguna de estas se excluyen
+     * para evitar duplicación con los datos ya reportados por los modelos.
+     */
+    private const SECCIONES_MODELO = [
+        'Arrendamientos',
+        'Certificados de Residencia',
+        'Depósito de Vehículos',
+        'Eventuales',
+        'Multas por carecer de SOA',
+        'Multas por carecer de SOA y otras',
+        'Multas varias',
+        'Porte de Armas',
+        'Tenencia de Armas (THATA)',
+        'Prendas',
+    ];
+
+    /**
+     * Mapeo de nombres de CajaConcepto a nombres de sección del reporte.
+     * Cuando un CFE tiene un concepto de caja que mapea a una sección existente,
+     * se omite para evitar doble conteo.
+     */
+    private const MAPA_CONCEPTO_A_SECCION = [
+        'ARRENDAMIENTOS'                                         => 'Arrendamientos',
+        'CERTIFICADO DE RESIDENCIA'                               => 'Certificados de Residencia',
+        'DEPÓSITO DE VEHÍCULOS'                                   => 'Depósito de Vehículos',
+        'MULTAS DE TRÁNSITO'                                      => 'Multas varias',
+        'PORTE DE ARMAS'                                          => 'Porte de Armas',
+        'TITULO HABILITACIÓN Y TENENCIA DE ARMA (TAHTA)'          => 'Tenencia de Armas (THATA)',
+    ];
+
+    /**
+     * Procesa los CFE cargados vía Gestión de CFEs agrupándolos por concepto de caja.
+     * Omite conceptos que ya tienen una sección dedicada en getSecciones().
+     */
+    protected function procesarSeccionesCfe(Carbon $desde, Carbon $hasta): array
+    {
+        $secciones = [];
+
+        $cfes = TesCfe::whereNull('deleted_at')
+            ->whereDate('fecha', '>=', $desde)
+            ->whereDate('fecha', '<=', $hasta)
+            ->with('cajaConcepto')
+            ->orderBy('fecha', 'asc')
+            ->get();
+
+        $agrupados = $cfes->groupBy(function ($cfe) {
+            return $cfe->cajaConcepto?->caja_concepto ?? 'Sin concepto';
+        });
+
+        foreach ($agrupados as $nombreConcepto => $grupo) {
+            $nombreSeccion = self::MAPA_CONCEPTO_A_SECCION[$nombreConcepto] ?? $nombreConcepto;
+
+            if (in_array($nombreSeccion, self::SECCIONES_MODELO)) {
+                continue;
+            }
+
+            $registros = $grupo->map(function ($cfe) {
+                $recibo = '';
+                if ($cfe->documento_tipo) {
+                    $recibo = trim($cfe->documento_tipo . ' ' . ($cfe->documento_serie ?? ''));
+                    $recibo = trim($recibo . '-' . $cfe->documento_numero, ' -');
+                } else {
+                    $recibo = $cfe->documento_numero ?? '';
+                }
+
+                return [
+                    'recibo' => $recibo,
+                    'fecha' => $cfe->fecha ? $cfe->fecha->format('d/m/Y') : '',
+                    'cedula' => $cfe->receptor_documento_ruc ?? '',
+                    'titular' => mb_strtoupper($cfe->receptor_nombre_denominacion ?? ''),
+                    'monto' => (float) ($cfe->total_a_pagar ?? 0),
+                    'monto_formateado' => $this->formatearMonto((float) ($cfe->total_a_pagar ?? 0)),
+                ];
+            })->toArray();
+
+            $montoTotal = $grupo->sum('total_a_pagar');
+
+            $secciones[] = [
+                'nombre' => $nombreSeccion,
+                'cantidad' => count($registros),
+                'monto_total' => (float) $montoTotal,
+                'monto_total_formateado' => $this->formatearMonto((float) $montoTotal),
+                'registros' => $registros,
+            ];
+        }
+
+        return $secciones;
     }
 
     /**

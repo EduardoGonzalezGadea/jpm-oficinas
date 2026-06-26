@@ -27,6 +27,7 @@ class EventServiceProvider extends ServiceProvider
      */
     protected $subscribe = [
         \App\Listeners\AuthEventListener::class,
+        \App\Listeners\Tesoreria\LogCfeActivity::class,
     ];
 
     /**

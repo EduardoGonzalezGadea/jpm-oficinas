@@ -193,8 +193,10 @@ class HttpClientService
         ];
 
         // Agregar proxy si está configurado
-        if (isset($userOptions['proxy']) && $userOptions['proxy']) {
-            $options['proxy'] = $userOptions['proxy'];
+        // Si 'proxy' está presente como string vacío, se pasa explícitamente para
+        // anular el auto-detect de Guzzle/curl desde HTTP_PROXY/HTTPS_PROXY del entorno.
+        if (array_key_exists('proxy', $userOptions)) {
+            $options['proxy'] = $userOptions['proxy'] === '' ? '' : $userOptions['proxy'];
         }
 
         // Mergear opciones del usuario
@@ -213,7 +215,7 @@ class HttpClientService
     protected function getProxyAttempts(): array
     {
         $attempts = [
-            null, // Intento 1: sin proxy
+            '', // Intento 1: sin proxy explícito (vacío = Guzzle no usará proxy de env vars)
         ];
 
         $proxy = $this->detectProxy();
@@ -250,6 +252,16 @@ class HttpClientService
         foreach ($proxyEnvVars as $var) {
             if ($value = getenv($var)) {
                 $proxy = $value;
+                break;
+            }
+            // Fallback a $_ENV / $_SERVER si getenv() no encontró el valor
+            // (útil en algunos entornos PHP-FPM donde getenv() puede no funcionar)
+            if (isset($_ENV[$var]) && !empty($_ENV[$var])) {
+                $proxy = $_ENV[$var];
+                break;
+            }
+            if (isset($_SERVER[$var]) && !empty($_SERVER[$var])) {
+                $proxy = $_SERVER[$var];
                 break;
             }
         }
@@ -382,7 +394,7 @@ class HttpClientService
      *
      * @param string $serviceName
      */
-    protected function resetCircuitBreaker(string $serviceName): void
+    public function resetCircuitBreaker(string $serviceName): void
     {
         $cacheKey = $this->config['global']['circuit_breaker']['cache_key_prefix'] . $serviceName;
         Cache::forget($cacheKey . '_open');

@@ -283,9 +283,10 @@ class EventualesExtractor extends BaseExtractor
      */
     private function parsearLineaItem(string $linea): ?array
     {
-        // Patrón general: todo-antes-de-cantidad (CANT,DEC) (Unidad) precio\t±importe
+        // Patrón general: todo-antes-de-cantidad (CANT,DEC) [(Unidad)] precio\t±importe
+        // La unidad entre paréntesis (Hora, Func, etc.) puede no estar presente.
         // La cantidad puede usar punto de miles y coma decimal: "216,000" = 216 o "4,000" = 4
-        $patron = '/^(.*?)\s+([\d\.]+,\d+)\s+\(([^)]+)\)\s+([\d\.,]+)\s*\t\s*([-\d\.,]+)\s*$/u';
+        $patron = '/^(.*?)\s+([\d\.]+,\d+)(?:\s+\(([^)]+)\))?\s+([\d\.,]+)\s*\t\s*([-\d\.,]+)\s*$/u';
 
         if (!preg_match($patron, $linea, $m)) {
             return null;
@@ -293,7 +294,7 @@ class EventualesExtractor extends BaseExtractor
 
         $textoIzq    = trim($m[1]);
         $cantStr     = $m[2];
-        $unidad      = trim($m[3]);
+        $unidad      = isset($m[3]) ? trim($m[3]) : '';
         $precioStr   = $m[4];
         $importeStr  = $m[5];
 

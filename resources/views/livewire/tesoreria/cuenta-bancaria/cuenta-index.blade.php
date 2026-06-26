@@ -1,7 +1,7 @@
 <div>
     <div class="card">
-        <div class="card-header d-flex justify-content-between">
-            <h5>Cuentas Bancarias</h5>
+        <div class="card-header card-header-section card-header-gradient py-2 px-3 d-flex justify-content-between align-items-center">
+            <h4 class="mb-0"><strong><i class="fas fa-wallet mr-2"></i>Cuentas Bancarias</strong></h4>
             <button wire:click="create" type="button" class="btn btn-primary btn-sm">+ Nuevo</button>
         </div>
         <div class="card-body px-2">

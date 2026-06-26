@@ -12,10 +12,9 @@ class UserSeeder extends Seeder
 {
     public function run()
     {
-        // Obtener módulos
-        $tesoreria = Modulo::where('nombre', 'Tesorería')->first();
+        $tesoreria = Modulo::where('clave', 'tesoreria')->first();
+        $asesoriaContable = Modulo::where('clave', 'asesoria_contable')->first();
 
-        // Usuario Administrador
         $admin = User::create([
             'nombre' => 'Administrador',
             'apellido' => 'del Sistema',
@@ -26,10 +25,9 @@ class UserSeeder extends Seeder
             'activo' => true,
             'modulo_id' => null,
         ]);
-        $adminRole = Role::findByName('administrador', 'api');
+        $adminRole = Role::findByName('administrador', 'web');
         $admin->assignRole($adminRole);
 
-        // Gerente Tesorería
         $gerente_tes = User::create([
             'nombre' => 'Alicia',
             'apellido' => 'Roldán',
@@ -40,10 +38,20 @@ class UserSeeder extends Seeder
             'activo' => true,
             'modulo_id' => $tesoreria->id,
         ]);
-        $gerente_tesoreriaRole = Role::findByName('gerente_tesoreria', 'api');
-        $gerente_tes->assignRole($gerente_tesoreriaRole);
+        $gerente_tes->assignRole(Role::findByName('tesoreria_gerente', 'web'));
 
-        // Supervisor Tesorería
+        $gerente_ac = User::create([
+            'nombre' => 'María Fiorella',
+            'apellido' => 'Quiñones',
+            'email' => 'maria.quinones@minterior.gub.uy',
+            'cedula' => null,
+            'telefono' => null,
+            'password' => Hash::make('123456'),
+            'activo' => true,
+            'modulo_id' => $asesoriaContable->id,
+        ]);
+        $gerente_ac->assignRole(Role::findByName('asesoria_contable_gerente', 'web'));
+
         $supervisor_tes = User::create([
             'nombre' => 'Mónica',
             'apellido' => 'Pintos',
@@ -54,10 +62,8 @@ class UserSeeder extends Seeder
             'activo' => true,
             'modulo_id' => $tesoreria->id,
         ]);
-        $supervisor_tesoreriaRole = Role::findByName('supervisor_tesoreria', 'api');
-        $supervisor_tes->assignRole($supervisor_tesoreriaRole);
+        $supervisor_tes->assignRole(Role::findByName('tesoreria_supervisor', 'web'));
 
-        // Usuario Tesorería
         $usuario_tes = User::create([
             'nombre' => 'Eduardo',
             'apellido' => 'González',
@@ -68,7 +74,18 @@ class UserSeeder extends Seeder
             'activo' => true,
             'modulo_id' => $tesoreria->id,
         ]);
-        $usuario_tesoreriaRole = Role::findByName('usuario_tesoreria', 'api');
-        $usuario_tes->assignRole($usuario_tesoreriaRole);
+        $usuario_tes->assignRole(Role::findByName('tesoreria_operador', 'web'));
+
+        $usuario_ac = User::create([
+            'nombre' => 'Carlos',
+            'apellido' => 'Camejo',
+            'email' => 'carlos.camejo@minterior.gub.uy',
+            'cedula' => null,
+            'telefono' => null,
+            'password' => Hash::make('123456'),
+            'activo' => true,
+            'modulo_id' => $asesoriaContable->id,
+        ]);
+        $usuario_ac->assignRole(Role::findByName('asesoria_contable_operador', 'web'));
     }
 }

@@ -357,11 +357,10 @@
 @push('scripts')
 <script>
     window.addEventListener('show-detail-modal', event => {
-        // Prevenir scroll del body cuando el modal está abierto
         document.body.classList.add('modal-open');
     });
 
-    Livewire.on('closeDetailModal', () => {
+    window.addEventListener('close-detail-modal', event => {
         document.body.classList.remove('modal-open');
     });
 </script>

@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Auth;
+use Spatie\Activitylog\LogOptions;
 
 class TesCfe extends Model
 {
@@ -25,6 +26,20 @@ class TesCfe extends Model
         'monto_total' => 'decimal:2',
         'total_a_pagar' => 'decimal:2',
     ];
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly([
+                'documento_tipo', 'documento_serie', 'documento_numero',
+                'fecha', 'receptor_nombre_denominacion', 'total_a_pagar',
+                'tes_caja_concepto_id', 'siif_distribucion_dependencia_id',
+                'referencias', 'adenda',
+            ])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->useLogName('cfes');
+    }
 
     protected static function boot()
     {
@@ -90,5 +105,6 @@ class TesCfe extends Model
     {
         return $this->belongsTo(SiifDistribucionDependencia::class, 'siif_distribucion_dependencia_id');
     }
+
 }
 

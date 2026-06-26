@@ -2,8 +2,8 @@
     <div class="row">
         <div class="col-md-12">
             <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h3 class="mb-0">Dependencias de Distribución SIIF</h3>
+                <div class="card-header card-header-section card-header-gradient py-2 px-3 d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0"><strong><i class="fas fa-building mr-2"></i>Dependencias de Distribución SIIF</strong></h4>
                     <button type="button" class="btn btn-primary" wire:click.prevent="create">
                         <i class="fas fa-plus"></i> Nueva Dependencia
                     </button>

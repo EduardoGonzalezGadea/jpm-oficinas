@@ -12,7 +12,14 @@ class ModuloSeeder extends Seeder
         $modulos = [
             [
                 'nombre' => 'Tesorería',
+                'clave' => 'tesoreria',
                 'descripcion' => 'Módulo de gestión de tesorería y finanzas',
+                'activo' => true,
+            ],
+            [
+                'nombre' => 'Asesoría Contable',
+                'clave' => 'asesoria_contable',
+                'descripcion' => 'Módulo de información para Asesoría Contable',
                 'activo' => true,
             ],
         ];

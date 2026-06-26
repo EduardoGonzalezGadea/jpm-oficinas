@@ -1,4 +1,11 @@
 <div>
+    <style>
+        .table-vmiddle th,
+        .table-vmiddle td {
+            vertical-align: middle !important;
+        }
+    </style>
+
     <!-- Filtros -->
     <div class="row mb-3">
         <div class="col-md-4">
@@ -41,7 +48,7 @@
 
     <!-- Tabla -->
     <div class="table-responsive">
-        <table class="table table-striped table-hover">
+        <table class="table table-striped table-hover table-vmiddle">
             <thead class="thead-dark">
                 <tr>
                     <th>Nombre</th>
@@ -101,6 +108,20 @@
                                 title="Editar">
                                 <i class="fas fa-edit"></i>
                             </a>
+
+                            @can('usuarios.asignar_roles')
+                            <button type="button" class="btn btn-sm btn-info" title="Editar Roles"
+                                onclick="manageUserRoles({{ $user->id }}, '{{ addslashes($user->nombre_completo) }}')">
+                                <i class="fas fa-user-tag"></i>
+                            </button>
+                            @endcan
+
+                            @can('permisos.gestionar')
+                            <button type="button" class="btn btn-sm btn-secondary" title="Editar Permisos"
+                                onclick="manageUserPermissions({{ $user->id }}, '{{ addslashes($user->nombre_completo) }}')">
+                                <i class="fas fa-key"></i>
+                            </button>
+                            @endcan
 
                             <!-- Botón para restablecer contraseña -->
                             @if ($user->id !== 1)

@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Modules\ModuleRegistry;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -14,9 +16,7 @@ class User extends Authenticatable implements JWTSubject
 {
     use HasFactory, Notifiable, HasRoles, SoftDeletes, LogsActivityTrait;
 
-    protected $guard_name = 'api';
-
-
+    protected $guard_name = 'web';
 
     protected $fillable = [
         'nombre',
@@ -51,7 +51,6 @@ class User extends Authenticatable implements JWTSubject
         'two_factor_recovery_codes' => 'encrypted:array',
     ];
 
-    // JWT Methods
     public function getJWTIdentifier()
     {
         return $this->getKey();
@@ -62,48 +61,101 @@ class User extends Authenticatable implements JWTSubject
         return [];
     }
 
-    // Relationships
     public function modulo()
     {
         return $this->belongsTo(Modulo::class);
     }
 
-    // Helper methods
-    public function esAdministrador()
+    public function moduloClave(): ?string
     {
-        return $this->hasPermissionTo('acceso_administrador');
+        return $this->modulo?->clave;
     }
 
-    public function esGerente()
+    public function nivelActual(): ?string
     {
-        return $this->hasPermissionTo('acceso_gerente');
+        foreach ($this->getRoleNames() as $rol) {
+            $nivel = ModuleRegistry::nivelDesdeRol($rol);
+            if ($nivel) return $nivel;
+        }
+        return null;
     }
 
-    public function esSupervisor()
+    public function moduloActual(): ?string
     {
-        return $this->hasPermissionTo('acceso_supervisor');
+        foreach ($this->getRoleNames() as $rol) {
+            $modulo = ModuleRegistry::moduloDesdeRol($rol);
+            if ($modulo) return $modulo;
+        }
+        return null;
     }
 
-    public function puedeGestionarUsuarios()
+    public function esAdministrador(): bool
+    {
+        return $this->hasRole('administrador');
+    }
+
+    public function esGerente(): bool
+    {
+        return $this->getRoleNames()->contains(fn($rol) =>
+            ModuleRegistry::nivelDesdeRol($rol) === 'gerente'
+        );
+    }
+
+    public function esSupervisor(): bool
+    {
+        return $this->getRoleNames()->contains(fn($rol) =>
+            ModuleRegistry::nivelDesdeRol($rol) === 'supervisor'
+        );
+    }
+
+    public function esOperador(): bool
+    {
+        return $this->getRoleNames()->contains(fn($rol) =>
+            ModuleRegistry::nivelDesdeRol($rol) === 'operador'
+        );
+    }
+
+    public function puedeGestionarUsuarios(): bool
     {
         return $this->esAdministrador() || $this->esGerente() || $this->esSupervisor();
     }
 
-    // Accessors
+    public function nivelJerarquia(): int
+    {
+        if ($this->esAdministrador()) return 99;
+        $nivel = $this->nivelActual();
+        return $nivel ? ModuleRegistry::nivelJerarquia($nivel) : 0;
+    }
+
     public function getNombreCompletoAttribute()
     {
         return $this->nombre . ' ' . $this->apellido;
     }
 
-    // Scopes
-    public function scopeActivos($query)
+    public function scopeActivos(Builder $query): Builder
     {
         return $query->where('activo', true);
     }
 
-    public function scopeInactivos($query)
+    public function scopeInactivos(Builder $query): Builder
     {
         return $query->where('activo', false);
+    }
+
+    public function scopeDelModulo(Builder $query, string $clave): Builder
+    {
+        return $query->whereHas('modulo', fn($q) => $q->where('clave', $clave));
+    }
+
+    public function scopeGestionables(Builder $query): Builder
+    {
+        if (!$this->esAdministrador()) {
+            $clave = $this->moduloClave();
+            if ($clave) {
+                $query->delModulo($clave);
+            }
+        }
+        return $query;
     }
 
     public function getThemePathAttribute()

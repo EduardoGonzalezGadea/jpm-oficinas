@@ -308,6 +308,48 @@ class Eventuales extends Component
         }
     }
 
+    public function editIngreso($id)
+    {
+        $eventual = Model::findOrFail($id);
+
+        $this->eventual_id = $id;
+        $this->titular = $eventual->titular;
+        $this->monto = $eventual->monto_formateado;
+        $this->orden_cobro = $eventual->orden_cobro;
+        $this->recibo = $eventual->recibo;
+        $this->ingreso = $eventual->ingreso;
+
+        $this->dispatchBrowserEvent('show-modal', ['id' => 'ingresoModal']);
+    }
+
+    public function updateIngreso()
+    {
+        if (empty($this->ingreso)) {
+            $this->ingreso = null;
+        }
+
+        $this->validate(['ingreso' => 'nullable|integer']);
+
+        if ($this->eventual_id) {
+            $eventual = Model::findOrFail($this->eventual_id);
+
+            try {
+                DB::beginTransaction();
+                $eventual->update(['ingreso' => $this->ingreso]);
+                $this->clearCache();
+                DB::commit();
+            } catch (\Exception $e) {
+                DB::rollBack();
+                $this->dispatchBrowserEvent('alert', ['type' => 'error', 'message' => 'Hubo un error al actualizar el ingreso. Por favor, inténtalo nuevamente.', 'toast' => true]);
+                return;
+            }
+
+            $this->resetInput();
+            $this->emit('eventualUpdate');
+            $this->dispatchBrowserEvent('alert', ['type' => 'success', 'message' => 'Ingreso actualizado con éxito!', 'toast' => true]);
+        }
+    }
+
     public function showDetails($id)
     {
         $this->selectedEventual = Model::findOrFail($id);
@@ -369,7 +411,7 @@ class Eventuales extends Component
     {
 
 
-        if (auth()->user()->cannot('gestionar_tesoreria') && auth()->user()->cannot('supervisar_tesoreria')) {
+        if (auth()->user()->cannot('tesoreria.supervisar')) {
             abort(403);
         }
 

@@ -46,4 +46,30 @@ class SiifDistribucion extends Model
     {
         return $this->belongsTo(SiifDistribucionDependencia::class, 'dependencia_id');
     }
+
+    public function scopeSearch($query, $term)
+    {
+        if (empty($term)) {
+            return $query;
+        }
+
+        return $query->where(function ($q) use ($term) {
+            $q->where('concepto', 'like', '%' . $term . '%')
+              ->orWhere('rubro', 'like', '%' . $term . '%')
+              ->orWhere('codigo_sir', 'like', '%' . $term . '%')
+              ->orWhere('recurso', 'like', '%' . $term . '%')
+              ->orWhereHas('tipo', fn($t) => $t->where('tipo', 'like', '%' . $term . '%'))
+              ->orWhereHas('dependencia', fn($d) => $d->where('dependencia', 'like', '%' . $term . '%'));
+        });
+    }
+
+    public function scopeOrdenado($query)
+    {
+        return $query->select('siif_distribucions.*')
+            ->join('siif_distribucion_tipos', 'siif_distribucions.tipo_id', '=', 'siif_distribucion_tipos.id')
+            ->join('siif_distribucion_dependencias', 'siif_distribucions.dependencia_id', '=', 'siif_distribucion_dependencias.id')
+            ->orderBy('siif_distribucion_tipos.tipo')
+            ->orderBy('siif_distribucion_dependencias.dependencia')
+            ->orderBy('siif_distribucions.concepto');
+    }
 }

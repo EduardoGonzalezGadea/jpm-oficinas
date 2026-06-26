@@ -14,33 +14,25 @@ class Multa303Test extends TestCase
 {
     use RefreshDatabase;
 
-    /**
-     * Crea todos los permisos necesarios para el guard 'api'
-     */
     protected function setUp(): void
     {
         parent::setUp();
 
         $permisos = [
-            'operador_tesoreria', 'acceso_administrador', 'ver_auditoria',
-            'administrar_sistema', 'gerente_tesoreria', 'supervisor_tesoreria',
-            'ver_usuarios', 'ver_roles', 'ver_permisos', 'ver_modulos',
-            'acceso_tesoreria', 'ver_bancos', 'ver_cuentas_bancarias',
+            'tesoreria.acceso', 'sistema.acceso.administrador', 'sistema.auditoria',
+            'sistema.backups', 'usuarios.ver', 'tesoreria.supervisar',
         ];
 
         foreach ($permisos as $permiso) {
-            Permission::firstOrCreate(['name' => $permiso, 'guard_name' => 'api']);
+            Permission::firstOrCreate(['name' => $permiso, 'guard_name' => 'web']);
         }
     }
 
-    /**
-     * Helper para crear un usuario con permisos en el guard 'api'
-     */
     private function crearUsuarioConPermiso(string $permiso): User
     {
         $user = User::factory()->create();
         $user->givePermissionTo(
-            Permission::where('name', $permiso)->where('guard_name', 'api')->first()
+            Permission::where('name', $permiso)->where('guard_name', 'web')->first()
         );
         return $user;
     }
@@ -48,10 +40,9 @@ class Multa303Test extends TestCase
     /** @test */
     public function usuario_puede_listar_y_buscar_multas_303(): void
     {
-        $user = $this->crearUsuarioConPermiso('operador_tesoreria');
-        $this->actingAs($user, 'api');
+        $user = $this->crearUsuarioConPermiso('tesoreria.acceso');
+        $this->actingAs($user, 'web');
 
-        // Crear algunas multas en la BD
         $multa1 = Multa303Model::create([
             'grupo' => 'GRUPO A',
             'codigo' => '1.2.3',
@@ -66,14 +57,11 @@ class Multa303Test extends TestCase
             'valor_ur' => '2 x c/u',
         ]);
 
-        // Test listado y búsqueda básica
         Livewire::test(Multa303::class)
             ->assertSee('1.2.3')
             ->assertSee('Infracción de prueba uno')
             ->assertSee('4.5.6')
             ->assertSee('Otra infracción de prueba dos')
-            
-            // Buscar por código
             ->set('search', '4.5.6')
             ->assertSee('Otra infracción de prueba dos')
             ->assertDontSee('Infracción de prueba uno');
@@ -82,8 +70,8 @@ class Multa303Test extends TestCase
     /** @test */
     public function normalizacion_de_busqueda_convierte_comas_en_puntos(): void
     {
-        $user = $this->crearUsuarioConPermiso('operador_tesoreria');
-        $this->actingAs($user, 'api');
+        $user = $this->crearUsuarioConPermiso('tesoreria.acceso');
+        $this->actingAs($user, 'web');
 
         Multa303Model::create([
             'grupo' => 'GRUPO A',
@@ -101,21 +89,17 @@ class Multa303Test extends TestCase
     /** @test */
     public function usuario_puede_crear_multa_303(): void
     {
-        $user = $this->crearUsuarioConPermiso('operador_tesoreria');
-        $this->actingAs($user, 'api');
+        $user = $this->crearUsuarioConPermiso('tesoreria.acceso');
+        $this->actingAs($user, 'web');
 
         Livewire::test(Multa303::class)
             ->call('create')
             ->assertSet('isOpen', true)
             ->assertSet('isEdit', false)
-            
-            // Rellenar formulario
             ->set('grupo', 'Grupo Test')
             ->set('codigo', '12.34.5')
             ->set('descripcion', 'Descripción de multa test')
             ->set('valor_ur', '5')
-            
-            // Guardar
             ->call('store')
             ->assertHasNoErrors()
             ->assertSet('isOpen', false);
@@ -131,8 +115,8 @@ class Multa303Test extends TestCase
     /** @test */
     public function usuario_puede_editar_multa_303(): void
     {
-        $user = $this->crearUsuarioConPermiso('operador_tesoreria');
-        $this->actingAs($user, 'api');
+        $user = $this->crearUsuarioConPermiso('tesoreria.acceso');
+        $this->actingAs($user, 'web');
 
         $multa = Multa303Model::create([
             'grupo' => 'Grupo Original',
@@ -146,12 +130,8 @@ class Multa303Test extends TestCase
             ->assertSet('isOpen', true)
             ->assertSet('isEdit', true)
             ->assertSet('grupo', 'Grupo Original')
-            
-            // Cambiar valores
             ->set('descripcion', 'Modified desc')
             ->set('valor_ur', '2.5')
-            
-            // Guardar
             ->call('store')
             ->assertHasNoErrors()
             ->assertSet('isOpen', false);
@@ -168,8 +148,8 @@ class Multa303Test extends TestCase
     /** @test */
     public function usuario_puede_eliminar_multa_303(): void
     {
-        $user = $this->crearUsuarioConPermiso('operador_tesoreria');
-        $this->actingAs($user, 'api');
+        $user = $this->crearUsuarioConPermiso('tesoreria.acceso');
+        $this->actingAs($user, 'web');
 
         $multa = Multa303Model::create([
             'grupo' => 'Grupo Test',
@@ -181,7 +161,6 @@ class Multa303Test extends TestCase
         Livewire::test(Multa303::class)
             ->call('delete', $multa->id);
 
-        // Debería estar borrada lógicamente (soft deleted)
         $this->assertSoftDeleted('tes_multas_303_2023', [
             'id' => $multa->id
         ]);

@@ -43,6 +43,9 @@ class SincronizacionHoraService
         $cached = Cache::get(self::CACHE_KEY);
         if (is_array($cached)) {
             Log::debug("SincronizacionHoraService: Retornando resultado en caché");
+            // Siempre retornar la hora actual, no el datetime stale del caché
+            $cached['datetime'] = now('America/Montevideo')->toIso8601String();
+            $cached['drift_seconds'] = 0;
             return $cached;
         }
 
@@ -91,6 +94,8 @@ class SincronizacionHoraService
     protected function intentarApi(string $url, int $idx, array $config): array
     {
         try {
+            // Resetear circuit breaker para que cada URL se intente independientemente
+            $this->httpClient->resetCircuitBreaker('sincronizacion_hora');
             Log::debug("SincronizacionHoraService: Intentando obtener hora desde {$url}");
 
             $response = $this->httpClient->getWithRetry(
@@ -162,28 +167,19 @@ class SincronizacionHoraService
                 return $this->buildResult('worldtimeapi', false);
             }
 
-            // Validar que el timezone sea el esperado
-            $expectedTimezone = $config['validation']['expected_timezone'] ?? 'America/Montevideo';
-            if ($timezone !== $expectedTimezone) {
-                Log::warning("Timezone inesperado en WorldTimeAPI: {$timezone}");
-                return $this->buildResult('worldtimeapi', false);
-            }
-
-            // Validar que la fecha sea razonablemente actual
             $remoteTime = Carbon::parse($datetime);
             $localTime = now('America/Montevideo');
             $drift = abs($remoteTime->diffInSeconds($localTime));
 
             $maxDrift = $config['validation']['max_drift_seconds'] ?? 60;
             if ($drift > $maxDrift) {
-                Log::warning("Drift demasiado grande en sincronización de hora: {$drift}s");
-                return $this->buildResult('worldtimeapi', false);
+                Log::warning("SincronizacionHoraService: Drift detectado ({$drift}s) - usando hora remota de todas formas");
             }
 
             return $this->buildResult('worldtimeapi', true, $datetime, $timezone, $drift);
 
         } catch (\Exception $e) {
-            Log::warning("Error procesando respuesta WorldTimeAPI: " . $e->getMessage());
+            Log::warning("SincronizacionHoraService: Error procesando respuesta WorldTimeAPI: " . $e->getMessage());
             return $this->buildResult('worldtimeapi', false);
         }
     }
@@ -206,27 +202,19 @@ class SincronizacionHoraService
 
             $timezone = $data['timeZone'] ?? 'America/Montevideo';
 
-            // Misma validación
-            $expectedTimezone = $config['validation']['expected_timezone'] ?? 'America/Montevideo';
-            if ($timezone !== $expectedTimezone) {
-                Log::warning("Timezone inesperado en TimeAPI.io: {$timezone}");
-                return $this->buildResult('timeapi', false);
-            }
-
             $remoteTime = Carbon::parse($datetime);
             $localTime = now('America/Montevideo');
             $drift = abs($remoteTime->diffInSeconds($localTime));
 
             $maxDrift = $config['validation']['max_drift_seconds'] ?? 60;
             if ($drift > $maxDrift) {
-                Log::warning("Drift demasiado grande en sincronización de hora: {$drift}s");
-                return $this->buildResult('timeapi', false);
+                Log::warning("SincronizacionHoraService: Drift detectado ({$drift}s) - usando hora remota de todas formas");
             }
 
             return $this->buildResult('timeapi', true, $datetime, $timezone, $drift);
 
         } catch (\Exception $e) {
-            Log::warning("Error procesando respuesta TimeAPI.io: " . $e->getMessage());
+            Log::warning("SincronizacionHoraService: Error procesando respuesta TimeAPI.io: " . $e->getMessage());
             return $this->buildResult('timeapi', false);
         }
     }

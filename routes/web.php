@@ -10,6 +10,7 @@
  *  - routes/administracion.php  → Usuarios, Roles, Permisos, Módulos, API interna
  *  - routes/tesoreria.php       → Todos los submódulos de Tesorería
  *  - routes/valores.php         → Gestión de Valores (preexistente)
+ *  - routes/asesoria_contable.php → Módulo de Asesoría Contable
  */
 
 use App\Http\Controllers\AuthController;
@@ -32,6 +33,9 @@ Route::get('/', fn () => view('welcome'))->name('home');
 // Descarga de extensiones del navegador
 Route::get('/download-extension',              [ExtensionController::class, 'downloadCfeDetect'])   ->name('extension.download');
 Route::get('/download-text-replacer-extension', [ExtensionController::class, 'downloadTextReplacer'])->name('extension.text-replacer.download');
+
+// Acceso público unificado
+Route::get('/acceso-publico', fn () => view('tesoreria.acceso-publico'))->name('acceso-publico');
 
 // Vista pública de multas de tránsito
 Route::get('/multas-transito-publico', fn () => view('tesoreria.multas-publico'))->name('multas-transito-publico');
@@ -84,25 +88,28 @@ Route::middleware(['web', 'jwt.verify', 'two-factor'])->group(function () {
     // ------------------------------------------------------------------------
     // Respaldos del sistema
     // ------------------------------------------------------------------------
-    Route::prefix('system/backups')->name('system.backups.')->middleware(['can:administrar_sistema,web'])->group(function () {
-        Route::get('/',                  [BackupController::class, 'index'])    ->name('index');
-        Route::get('/create',            [BackupController::class, 'create'])   ->name('create');
-        Route::post('/restore',          [BackupController::class, 'restore'])  ->name('restore');
-        Route::get('/download/{file}',   [BackupController::class, 'download']) ->name('download')->where('file', '.*');
-        Route::delete('/',               [BackupController::class, 'delete'])   ->name('delete');
+    Route::prefix('system/backups')->name('system.backups.')->group(function () {
+        Route::get('/create',            [BackupController::class, 'create'])   ->name('create')->middleware(['modulo:tesoreria']);
+
+        Route::middleware(['modulo:tesoreria,supervisor'])->group(function () {
+            Route::get('/',                  [BackupController::class, 'index'])    ->name('index');
+            Route::post('/restore',          [BackupController::class, 'restore'])  ->name('restore');
+            Route::get('/download/{file}',   [BackupController::class, 'download']) ->name('download')->where('file', '.*');
+            Route::delete('/',               [BackupController::class, 'delete'])   ->name('delete');
+        });
     });
 
     // ------------------------------------------------------------------------
     // Historial de auditoría
     // ------------------------------------------------------------------------
-    Route::middleware(['role:administrador|gerente_tesoreria|supervisor_tesoreria'])->group(function () {
+    Route::middleware(['modulo:tesoreria,supervisor'])->group(function () {
         Route::get('/sistema/auditoria', \App\Http\Livewire\Sistema\Auditoria\Index::class)->name('sistema.auditoria.index');
     });
 
     // ------------------------------------------------------------------------
     // Pendrive virtual
     // ------------------------------------------------------------------------
-    Route::prefix('pendrive')->name('pendrive.')->group(function () {
+    Route::prefix('pendrive')->name('pendrive.')->middleware(['modulo:tesoreria'])->group(function () {
         Route::get('/',                  [PendriveController::class, 'index'])     ->name('index');
         Route::post('upload',            [PendriveController::class, 'upload'])    ->name('upload');
         Route::get('download/{filename}', [PendriveController::class, 'download']) ->name('download');
@@ -120,6 +127,11 @@ Route::middleware(['web', 'jwt.verify', 'two-factor'])->group(function () {
     // Tesorería (todos sus submódulos bajo prefix 'tesoreria')
     Route::prefix('tesoreria')->name('tesoreria.')->group(function () {
         require __DIR__ . '/tesoreria.php';
+    });
+
+    // Asesoría Contable (todos sus submódulos bajo prefix 'asesoria-contable')
+    Route::prefix('asesoria-contable')->name('asesoria-contable.')->group(function () {
+        require __DIR__ . '/asesoria_contable.php';
     });
 });
 

@@ -371,7 +371,7 @@ class Arrendamiento extends Component
     {
 
 
-        if (auth()->user()->cannot('gestionar_tesoreria') && auth()->user()->cannot('supervisar_tesoreria')) {
+        if (auth()->user()->cannot('tesoreria.supervisar')) {
             abort(403);
         }
 

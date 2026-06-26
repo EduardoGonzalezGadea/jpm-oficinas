@@ -7,6 +7,7 @@ use App\Services\Tesoreria\ReporteRecibosService;
 use App\Exports\ReporteRecibosExport;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class ReporteRecibosController extends Controller
 {
@@ -28,6 +29,20 @@ class ReporteRecibosController extends Controller
 
         $filename = 'reporte_recibos_' . $request->desde . '_a_' . $request->hasta . '.xlsx';
 
-        return response()->download($filePath, $filename)->deleteFileAfterSend(true);
+        return $this->crearDescarga($filePath, $filename);
+    }
+
+    private function crearDescarga(string $filePath, string $filename): BinaryFileResponse
+    {
+        while (ob_get_level()) {
+            ob_end_clean();
+        }
+
+        return response()->download($filePath, $filename, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            'Cache-Control' => 'no-cache, must-revalidate',
+            'Pragma' => 'no-cache',
+        ])->deleteFileAfterSend(true);
     }
 }

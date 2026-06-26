@@ -18,7 +18,7 @@
                         <a href="{{ route('permissions.index') }}" class="btn btn-warning mr-2">
                             <i class="fas fa-shield-alt"></i> Permisos
                         </a>
-                        @can('acceso_administrador')
+                        @can('roles.gestionar')
                         <a href="{{ route('roles.create') }}" class="btn btn-primary">
                             <i class="fas fa-plus"></i> Nuevo Rol
                         </a>

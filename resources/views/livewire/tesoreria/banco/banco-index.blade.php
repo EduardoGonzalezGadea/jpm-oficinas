@@ -1,8 +1,8 @@
 <div>
     <div class="card">
-        <div class="card-header d-flex justify-content-between">
-            <h5>Bancos</h5>
-            <button wire:click="create" type="button" class="btn btn-primary btn-sm" onclick="console.log('Button clicked from onclick')">+ Nuevo</button>
+        <div class="card-header card-header-section card-header-gradient py-2 px-3 d-flex justify-content-between align-items-center">
+            <h4 class="mb-0"><strong><i class="fas fa-university mr-2"></i>Bancos</strong></h4>
+            <button wire:click="create" type="button" class="btn btn-primary btn-sm">+ Nuevo</button>
         </div>
         <div class="card-body px-2">
             <input type="text" wire:model.debounce.500ms="search" class="form-control mb-3" placeholder="Buscar...">

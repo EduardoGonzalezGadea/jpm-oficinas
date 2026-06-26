@@ -92,6 +92,7 @@ trait LogsActivityTrait
             'TesCfe' => 'cfes',
             'TesCfeItem' => 'cfes',
             'TesCfeMedioPago' => 'cfes',
+            'TesPlanillaEr' => 'ers',
         ];
 
         return $logNames[$className] ?? 'sistema';
@@ -183,6 +184,7 @@ trait LogsActivityTrait
             'TesCfe' => 'el CFE',
             'TesCfeItem' => 'el ítem de CFE',
             'TesCfeMedioPago' => 'el medio de pago de CFE',
+            'TesPlanillaEr' => 'la planilla de ER',
         ];
 
         return $displayNames[$className] ?? 'el registro';

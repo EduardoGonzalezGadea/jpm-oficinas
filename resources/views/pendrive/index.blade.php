@@ -5,110 +5,182 @@
 @endpush
 
 @section('content')
+<div class="container-fluid p-0 m-0">
     <div id="pendrive-container">
-        <div class="main-container">
-            <div id="alert-container"></div>
+        <div class="card mb-4">
+            <div class="card-header bg-info text-white card-header-gradient py-2 px-3 d-flex justify-content-between align-items-center">
+                <h4 class="mb-0"><strong><i class="fas fa-hdd mr-2"></i>Pendrive Virtual</strong></h4>
+            </div>
+        </div>
 
-            <h1 class="main-title">
-                <i class="fas fa-hdd mr-3"></i>Pendrive Virtual
-            </h1>
+        <style>
+            .upload-container {
+                position: relative;
+                transition: all 0.3s ease;
+            }
 
-            <div class="row">
-                <div class="col-12">
-                    <!-- Upload Card -->
-                    <div class="card upload-card mb-4">
-                        <div class="card-header bg-primary text-white">
-                            <i class="fas fa-cloud-upload-alt mr-2"></i>Subir Archivos
+            .upload-box {
+                border: 2px dashed #ced4da;
+                border-radius: 10px;
+                background-color: rgba(128, 128, 128, 0.05);
+                padding: 1.5rem;
+                text-align: center;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                position: relative;
+                overflow: hidden;
+            }
+
+            .upload-box:hover {
+                border-color: #17a2b8;
+                background-color: rgba(128, 128, 128, 0.1);
+                transform: translateY(-2px);
+                box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            }
+
+            .upload-box.drag-over {
+                border-color: #17a2b8;
+                background-color: rgba(23, 162, 184, 0.1);
+                transform: scale(1.02);
+            }
+
+            .upload-box i {
+                font-size: 2.5rem;
+                margin-bottom: 0.5rem;
+                transition: transform 0.3s ease;
+            }
+
+            .upload-box:hover i {
+                transform: scale(1.1);
+            }
+
+            .upload-box input[type="file"] {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                opacity: 0;
+                cursor: pointer;
+                z-index: 10;
+            }
+
+            .upload-loading-overlay {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.3);
+                display: none !important;
+                align-items: center;
+                justify-content: center;
+                z-index: 20;
+                border-radius: 8px;
+            }
+        </style>
+
+        <div id="alert-container"></div>
+
+        <!-- Upload Card -->
+        <div class="card mb-4">
+            <div class="card-header bg-info text-white card-header-gradient py-2 px-3 d-flex justify-content-between align-items-center">
+                <h4 class="mb-0"><strong><i class="fas fa-cloud-upload-alt mr-2"></i>Subir Archivos</strong></h4>
+            </div>
+            <div class="card-body py-3">
+                <form id="upload-form" action="{{ route('pendrive.upload') }}" method="POST" enctype="multipart/form-data">
+                    @csrf
+                    <div class="upload-container">
+                        <div id="drop-zone" class="upload-box">
+                            <input type="file" name="file" id="file-input">
+                            <div id="upload-loading" class="upload-loading-overlay" style="display: none !important;">
+                                <div class="text-white text-center">
+                                    <i class="fas fa-spinner fa-spin fa-2x mb-2"></i>
+                                    <div class="font-weight-bold text-uppercase small">Subiendo...</div>
+                                </div>
+                            </div>
+                            <div class="upload-content">
+                                <i class="fas fa-cloud-upload-alt text-info"></i>
+                                <h6 class="font-weight-bold mb-1">Arrastra tu archivo aquí</h6>
+                                <p class="text-muted small mb-0">Haz clic para seleccionar o arrastra cualquier archivo</p>
+                                <small class="text-muted"><i class="fas fa-info-circle mr-1"></i>Tamaño máximo: 100MB</small>
+                            </div>
                         </div>
-                        <div class="card-body">
-                            <form id="upload-form" action="{{ route('pendrive.upload') }}" method="POST" enctype="multipart/form-data">
-                                @csrf
-                                <div id="drop-zone">
-                                    <div class="icon pulse-icon"><i class="fas fa-cloud-upload-alt"></i></div>
-                                    <div class="text">Arrastra y suelta tu archivo aquí</div>
-                                    <div class="subtitle">o haz clic para seleccionar desde tu dispositivo</div>
-                                    <small class="text-muted d-block mt-3">
-                                        <i class="fas fa-info-circle mr-1"></i>Tamaño máximo permitido: 100MB
-                                    </small>
-                                </div>
-                                <input type="file" name="file" id="file-input">
-                                <div id="upload-progress" class="mt-3" style="display: none;">
-                                    <div class="progress">
-                                        <div class="progress-bar progress-bar-striped progress-bar-animated"
-                                             role="progressbar" style="width: 0%;" aria-valuenow="0"
-                                             aria-valuemin="0" aria-valuemax="100">0%</div>
-                                    </div>
-                                    <div class="text-center mt-2">
-                                        <small class="text-muted">Subiendo archivo...</small>
-                                    </div>
-                                </div>
-                            </form>
+                        <div id="upload-progress" class="mt-3" style="display: none;">
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar progress-bar-striped progress-bar-animated"
+                                     role="progressbar" style="width: 0%;" aria-valuenow="0"
+                                     aria-valuemin="0" aria-valuemax="100">0%</div>
+                            </div>
+                            <div class="text-center mt-1">
+                                <small class="text-muted">Subiendo archivo...</small>
+                            </div>
                         </div>
                     </div>
+                </form>
+            </div>
+        </div>
 
-                    <!-- Files List Card -->
-                    <div class="card files-card">
-                        <div class="card-header bg-success text-white">
-                            <i class="fas fa-folder-open mr-2"></i>Archivos Almacenados
-                            <span class="badge badge-light ml-2" id="file-count">
-                                @if(isset($files) && count($files) > 0)
-                                    {{ count($files) }} archivo{{ count($files) != 1 ? 's' : '' }}
-                                @else
-                                    0 archivos
-                                @endif
-                            </span>
-                        </div>
-                        <div class="card-body p-4">
-                            <ul id="file-list" class="list-group list-group-flush" data-url-base="{{ route('pendrive.index') }}">
-                                @forelse ($files as $file)
-                                    <li class="list-group-item d-flex justify-content-between align-items-center flex-column flex-md-row"
-                                        data-filename="{{ basename($file) }}">
-                                        <div class="d-flex align-items-center flex-grow-1 mb-2 mb-md-0">
-                                            <img src="{{ route('pendrive.thumbnail', ['filename' => basename($file)]) }}"
-                                                 alt="Miniatura" class="thumbnail mr-3"
-                                                 onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjYwIiBoZWlnaHQ9IjYwIiBmaWxsPSIjZTVlN2ViIi8+CjxyZWN0IHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgZmlsbD0iI2ZmZiIvPgo8cmVjdCB4PSI1MCIgeT0iMzAiIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCIgZmlsbD0iI2ZmZiIvPgo8cmVjdCB4PSI0MCIgeT0iMzAiIHdpZHRoPSIxMCIgaGVpZ2h0PSIxMCIgZmlsbD0iI2ZmZiIvPgo8L3N2Zz4K';">
-                                            <div>
-                                                <div class="filename">{{ basename($file) }}</div>
-                                                <div class="file-info">
-                                                    <i class="fas fa-calendar-alt mr-1"></i>
-                                                    {{ date('d/m/Y H:i', filemtime($file)) }}
-                                                    <span class="mx-2">•</span>
-                                                    <i class="fas fa-weight-hanging mr-1"></i>
-                                                    {{ formatBytes(filesize($file)) }}
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="action-buttons">
-                                            <a href="{{ route('pendrive.download', ['filename' => basename($file)]) }}"
-                                               class="btn btn-download btn-sm" title="Descargar archivo"
-                                               onclick="showDownloadToast('{{ basename($file) }}'); return false;">
-                                                <i class="fas fa-download mr-1"></i>Descargar
-                                            </a>
-                                            <button type="button" class="btn btn-delete btn-sm delete-btn"
-                                                    data-filename="{{ basename($file) }}" title="Eliminar archivo">
-                                                <i class="fas fa-trash-alt mr-1"></i>Eliminar
-                                            </button>
-                                        </div>
-                                    </li>
-                                @empty
-                                    <li class="no-files-message">
-                                        <i class="fas fa-folder-open fa-3x text-muted mb-3 d-block"></i>
-                                        <div>No hay archivos almacenados</div>
-                                        <small class="text-muted">Comienza subiendo tu primer archivo</small>
-                                    </li>
-                                @endforelse
-                            </ul>
-                        </div>
-                    </div>
-                </div>
+        <!-- Files List Card -->
+        <div class="card">
+            <div class="card-header bg-info text-white card-header-gradient py-2 px-3 d-flex justify-content-between align-items-center">
+                <h4 class="mb-0"><strong><i class="fas fa-folder-open mr-2"></i>Archivos Almacenados</strong></h4>
+                <span class="badge badge-light ml-2" id="file-count">
+                    @if(isset($files) && count($files) > 0)
+                        {{ count($files) }} archivo{{ count($files) != 1 ? 's' : '' }}
+                    @else
+                        0 archivos
+                    @endif
+                </span>
+            </div>
+            <div class="card-body p-2">
+                <ul id="file-list" class="list-group list-group-flush" data-url-base="{{ route('pendrive.index') }}">
+                    @forelse ($files as $file)
+                        <li class="list-group-item d-flex justify-content-between align-items-center flex-column flex-md-row"
+                            data-filename="{{ basename($file) }}">
+                            <div class="d-flex align-items-center flex-grow-1 mb-2 mb-md-0">
+                                <img src="{{ route('pendrive.thumbnail', ['filename' => basename($file)]) }}"
+                                     alt="Miniatura" class="thumbnail mr-3"
+                                     onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjYwIiBoZWlnaHQ9IjYwIiBmaWxsPSIjZTVlN2ViIi8+CjxyZWN0IHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgZmlsbD0iI2ZmZiIvPgo8cmVjdCB4PSI1MCIgeT0iMzAiIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCIgZmlsbD0iI2ZmZiIvPgo8cmVjdCB4PSI0MCIgeT0iMzAiIHdpZHRoPSIxMCIgaGVpZ2h0PSIxMCIgZmlsbD0iI2ZmZiIvPgo8L3N2Zz4K';">
+                                <div>
+                                    <div class="filename">{{ basename($file) }}</div>
+                                    <div class="file-info">
+                                        <i class="fas fa-calendar-alt mr-1"></i>
+                                        {{ date('d/m/Y H:i', filemtime($file)) }}
+                                        <span class="mx-2">•</span>
+                                        <i class="fas fa-weight-hanging mr-1"></i>
+                                        {{ formatBytes(filesize($file)) }}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="action-buttons">
+                                <a href="{{ route('pendrive.download', ['filename' => basename($file)]) }}"
+                                   class="btn btn-download btn-sm" title="Descargar archivo"
+                                   onclick="showDownloadToast('{{ basename($file) }}'); return false;">
+                                    <i class="fas fa-download mr-1"></i>Descargar
+                                </a>
+                                <button type="button" class="btn btn-delete btn-sm delete-btn"
+                                        data-filename="{{ basename($file) }}" title="Eliminar archivo">
+                                    <i class="fas fa-trash-alt mr-1"></i>Eliminar
+                                </button>
+                            </div>
+                        </li>
+                    @empty
+                        <li class="no-files-message">
+                            <i class="fas fa-folder-open fa-3x text-muted mb-3 d-block"></i>
+                            <div>No hay archivos almacenados</div>
+                            <small class="text-muted">Comienza subiendo tu primer archivo</small>
+                        </li>
+                    @endforelse
+                </ul>
             </div>
         </div>
     </div>
+</div>
 @endsection
 
 @push('scripts')
     <script>
-        // Helper function to format bytes
         function formatBytes(bytes, decimals = 2) {
             if (bytes === 0) return '0 Bytes';
             const k = 1024;
@@ -119,22 +191,18 @@
         }
 
         document.addEventListener('DOMContentLoaded', function() {
-            // --- Existing variables ---
             const dropZone = document.getElementById('drop-zone');
             const fileInput = document.getElementById('file-input');
             const uploadForm = document.getElementById('upload-form');
             const progressContainer = document.getElementById('upload-progress');
             const progressBar = progressContainer.querySelector('.progress-bar');
             const fileList = document.getElementById('file-list');
-            const alertContainer = document.getElementById('alert-container');
             const fileCount = document.getElementById('file-count');
+            const loadingOverlay = document.getElementById('upload-loading');
 
-            // --- CSRF Token for all AJAX requests ---
             const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
             const urlBase = fileList.dataset.urlBase;
 
-            // --- Existing Upload Logic ---
-            dropZone.addEventListener('click', () => fileInput.click());
             fileInput.addEventListener('change', () => handleFile(fileInput.files[0]));
             ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
                 dropZone.addEventListener(eventName, preventDefaults, false);
@@ -151,6 +219,7 @@
                 dropZone.addEventListener(eventName, () => dropZone.classList.remove('drag-over'), false);
             });
             dropZone.addEventListener('drop', (e) => {
+                dropZone.classList.remove('drag-over');
                 handleFile(e.dataTransfer.files[0]);
             }, false);
 
@@ -163,7 +232,7 @@
                 const formData = new FormData();
                 formData.append('file', file);
 
-                // Show progress
+                loadingOverlay.style.display = 'flex';
                 progressContainer.style.display = 'block';
                 let progress = 0;
                 const interval = setInterval(() => {
@@ -184,13 +253,11 @@
                         status: response.status,
                         body: data
                     })))
-                    .then(({
-                        status,
-                        body
-                    }) => {
+                    .then(({ status, body }) => {
                         clearInterval(interval);
                         progressBar.style.width = '100%';
                         progressBar.textContent = '100%';
+                        loadingOverlay.style.display = 'none';
 
                         setTimeout(() => {
                             progressContainer.style.display = 'none';
@@ -200,32 +267,26 @@
 
                         if (status >= 200 && status < 300) {
                             window.dispatchEvent(new CustomEvent('swal:success', {
-                                detail: {
-                                    text: body.success
-                                }
+                                detail: { text: body.success }
                             }));
                             addFileToList(file.name);
                             updateFileCount();
                         } else {
                             window.dispatchEvent(new CustomEvent('swal:toast-error', {
-                                detail: {
-                                    text: body.error || 'Error en la subida.'
-                                }
+                                detail: { text: body.error || 'Error en la subida.' }
                             }));
                         }
                     })
                     .catch(() => {
                         clearInterval(interval);
                         progressContainer.style.display = 'none';
+                        loadingOverlay.style.display = 'none';
                         window.dispatchEvent(new CustomEvent('swal:toast-error', {
-                            detail: {
-                                text: 'Error de red. No se pudo completar la subida.'
-                            }
+                            detail: { text: 'Error de red. No se pudo completar la subida.' }
                         }));
                     });
             }
 
-            // --- NEW: Delete Logic ---
             fileList.addEventListener('click', function(e) {
                 const deleteButton = e.target.closest('.delete-btn');
                 if (deleteButton) {
@@ -263,37 +324,26 @@
                         ok: response.ok,
                         body: data
                     })))
-                    .then(({
-                        ok,
-                        body
-                    }) => {
+                    .then(({ ok, body }) => {
                         if (ok) {
                             window.dispatchEvent(new CustomEvent('swal:success', {
-                                detail: {
-                                    text: body.success || 'El archivo ha sido eliminado.'
-                                }
+                                detail: { text: body.success || 'El archivo ha sido eliminado.' }
                             }));
                             removeFileFromList(filename);
                             updateFileCount();
                         } else {
                             window.dispatchEvent(new CustomEvent('swal:toast-error', {
-                                detail: {
-                                    text: body.error || 'No se pudo eliminar el archivo.'
-                                }
+                                detail: { text: body.error || 'No se pudo eliminar el archivo.' }
                             }));
                         }
                     })
                     .catch(error => {
-                        console.error('Error:', error);
                         window.dispatchEvent(new CustomEvent('swal:toast-error', {
-                            detail: {
-                                text: 'Error de Red. No se pudo conectar con el servidor.'
-                            }
+                            detail: { text: 'Error de Red.' }
                         }));
                     });
             }
 
-            // --- Helper Functions ---
             function updateFileCount() {
                 const items = fileList.querySelectorAll('li[data-filename]');
                 const count = items.length;
@@ -342,7 +392,6 @@
                 `;
                 fileList.prepend(li);
 
-                // Add animation
                 li.style.opacity = '0';
                 li.style.transform = 'translateY(-20px)';
                 setTimeout(() => {
@@ -374,12 +423,9 @@
                 }
             }
 
-            // Función para mostrar toast de descarga
             function showDownloadToast(filename) {
                 window.dispatchEvent(new CustomEvent('swal:success', {
-                    detail: {
-                        text: `Iniciando descarga del archivo: ${filename}`
-                    }
+                    detail: { text: `Iniciando descarga del archivo: ${filename}` }
                 }));
 
                 const downloadUrl = `${urlBase}/download/${encodeURIComponent(filename)}`;

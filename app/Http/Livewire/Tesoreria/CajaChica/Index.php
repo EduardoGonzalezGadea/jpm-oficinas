@@ -362,7 +362,7 @@ class Index extends Component
 
     public function eliminarPendiente($id)
     {
-        if (!auth()->user()->hasRole(['administrador', 'gerente_tesoreria', 'supervisor_tesoreria'])) {
+        if (!auth()->user()->can('tesoreria.supervisar')) {
             $this->dispatchBrowserEvent('swal:toast-error', ['text' => 'No tiene permisos para eliminar pendientes.']);
             return;
         }
@@ -389,7 +389,7 @@ class Index extends Component
 
     public function eliminarPago($id)
     {
-        if (!auth()->user()->hasRole(['administrador', 'gerente_tesoreria', 'supervisor_tesoreria'])) {
+        if (!auth()->user()->can('tesoreria.supervisar')) {
             $this->dispatchBrowserEvent('swal:toast-error', ['text' => 'No tiene permisos para eliminar pagos.']);
             return;
         }

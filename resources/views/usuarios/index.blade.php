@@ -14,12 +14,16 @@
                     <div>
                         <!-- Botones de gestión -->
                         <div class="btn-group mr-2" role="group">
+                            @can('roles.gestionar')
                             <a href="{{ route('roles.index') }}" class="btn btn-info">
                                 <i class="fas fa-user-tag"></i> Gestionar Roles
                             </a>
+                            @endcan
+                            @can('permisos.gestionar')
                             <a href="{{ route('permissions.index') }}" class="btn btn-warning">
                                 <i class="fas fa-key"></i> Gestionar Permisos
                             </a>
+                            @endcan
                         </div>
                         <a href="{{ route('usuarios.create') }}" class="btn btn-primary">
                             <i class="fas fa-plus"></i> Nuevo Usuario
@@ -31,6 +35,7 @@
                     {{-- Livewire component for the users table --}}
                     @livewire('users-table')
 
+                    @if(auth()->user()->esAdministrador())
                     <!-- Panel de estadísticas rápidas -->
                     <hr class="my-4">
                     <h5 class="mb-0">
@@ -81,6 +86,7 @@
                             </em>
                         </small>
                     </div>
+                    @endif
                 </div>
             </div>
         </div>

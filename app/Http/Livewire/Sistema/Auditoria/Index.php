@@ -47,7 +47,7 @@ class Index extends Component
     {
         // Verificar permisos
         $user = auth()->user();
-        if (!$user->hasAnyRole(['administrador', 'gerente_tesoreria', 'supervisor_tesoreria'])) {
+        if (!$user->esAdministrador() && ($user->moduloClave() !== 'tesoreria' || !in_array($user->nivelActual(), ['supervisor', 'gerente']))) {
             abort(403, 'No tienes permiso para acceder a esta sección.');
         }
 
@@ -168,6 +168,7 @@ class Index extends Component
     {
         $this->showDetailModal = false;
         $this->selectedActivity = null;
+        $this->dispatchBrowserEvent('close-detail-modal');
     }
 
     public function getEventBadgeClass($event)

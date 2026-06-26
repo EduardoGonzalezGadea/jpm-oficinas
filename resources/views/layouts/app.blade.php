@@ -151,7 +151,7 @@
 
 
     @auth
-    @if(auth()->user()->hasRole('admin') || auth()->user()->esAdministrador())
+    @if(auth()->user()->esAdministrador())
     <script>
         (function() {
             let extensionVerified = false;
@@ -219,54 +219,8 @@
 
 <body>
     @auth
-    @if(auth()->user()->hasRole('admin') || auth()->user()->esAdministrador())
-    <div id="extension-banners-container">
-        <div id="cfe-extension-banner" class="extension-banner">
-            <div>
-                <i class="fas fa-puzzle-piece mr-2"></i>
-                <strong>¡Atención!</strong> La extensión "Detector de CFEs" no está instalada.
-            </div>
-            <div>
-                <a href="{{ route('extension.download') }}" class="btn-install mr-2" data-no-loader="true">
-                    <i class="fas fa-download mr-1"></i> Descargar
-                </a>
-                <a href="#" onclick="Swal.fire({
-                            title: 'Instalación CFE',
-                            html: '<div class=\'text-left\'><ol><li>Descarga el ZIP.</li><li>Descomprime en una carpeta.</li><li>Ve a <b>Extensiones</b> en el navegador.</li><li>Activa <b>Modo Desarrollador</b>.</li><li>Clic en <b>Cargar descomprimida</b>.</li></ol></div>',
-                            icon: 'info',
-                            confirmButtonText: 'Entendido'
-                        }); return false;" class="text-white small underline">
-                    ¿Cómo instalar?
-                </a>
-                <button type="button" class="close text-white ml-3" onclick="document.getElementById('cfe-extension-banner').style.display='none'">
-                    <span>&times;</span>
-                </button>
-            </div>
-        </div>
-
-        <div id="text-replacer-banner" class="extension-banner">
-            <div>
-                <i class="fas fa-keyboard mr-2"></i>
-                <strong>¡Atención!</strong> La extensión "Text Replacer" no está instalada.
-            </div>
-            <div>
-                <a href="{{ route('extension.text-replacer.download') }}" class="btn-install mr-2" data-no-loader="true">
-                    <i class="fas fa-download mr-1"></i> Descargar
-                </a>
-                <a href="#" onclick="Swal.fire({
-                            title: 'Instalación Text Replacer',
-                            html: '<div class=\'text-left\'><ol><li>Descarga el ZIP.</li><li>Descomprime en una carpeta.</li><li>Ve a <b>Extensiones</b> en el navegador.</li><li>Activa <b>Modo Desarrollador</b>.</li><li>Clic en <b>Cargar descomprimida</b>.</li></ol></div>',
-                            icon: 'info',
-                            confirmButtonText: 'Entendido'
-                        }); return false;" class="text-white small underline">
-                    ¿Cómo instalar?
-                </a>
-                <button type="button" class="close text-white ml-3" onclick="document.getElementById('text-replacer-banner').style.display='none'">
-                    <span>&times;</span>
-                </button>
-            </div>
-        </div>
-    </div>
+    @if(auth()->user()->esAdministrador())
+    @include('partials.extension-banners')
     @endif
     @include('layouts.nav')
     @endauth

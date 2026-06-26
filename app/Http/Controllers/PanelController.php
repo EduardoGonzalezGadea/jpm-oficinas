@@ -29,8 +29,8 @@ class PanelController extends Controller
             })->count(),
         ];
 
-        // Obtener alertas centralizadas con cache
-        $alertas = $this->alertService->getAllAlerts();
+        // Obtener alertas centralizadas con cache (filtradas por módulo del usuario)
+        $alertas = $this->alertService->getAllAlerts($usuario);
 
         return view('panel.index', compact('usuario', 'estadisticas', 'alertas'));
     }

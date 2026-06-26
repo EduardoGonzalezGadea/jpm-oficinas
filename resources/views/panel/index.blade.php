@@ -47,17 +47,17 @@
                 }
             }
         }
+        $alertasVisibles = $todasLasAlertas;
     @endphp
 
-    @if($todasLasAlertas->isNotEmpty())
     <div class="accordion mb-4 shadow-sm" id="alertasAccordion">
         <div class="card border-0">
-            <div class="card-header p-0 bg-warning" id="headingAlertas">
+            <div class="card-header p-0 bg-info" id="headingAlertas">
                 <h2 class="mb-0">
                     <button class="btn btn-block text-left d-flex align-items-center justify-content-between text-decoration-none py-2 px-3 collapsed" type="button" data-toggle="collapse" data-target="#collapseAlertas" aria-expanded="false" aria-controls="collapseAlertas" style="color: #FFFFFF !important; text-shadow: 1px 1px 2px rgba(0,0,0,0.7), 0 0 3px rgba(0,0,0,0.5);">
                         <span class="font-weight-bold" style="font-size: 0.9rem;">
                             <i class="fas fa-exclamation-triangle mr-2"></i>ALERTAS DEL SISTEMA
-                            <span class="badge badge-dark badge-pill ml-2">{{ $todasLasAlertas->count() }}</span>
+                            <span class="badge badge-dark badge-pill ml-2">{{ $alertasVisibles->count() }}</span>
                         </span>
                         <i class="fas fa-chevron-down"></i>
                     </button>
@@ -66,8 +66,9 @@
 
             <div id="collapseAlertas" class="collapse" aria-labelledby="headingAlertas" data-parent="#alertasAccordion">
                 <div class="card-body p-0 border-left border-right border-bottom border-warning">
+                    @if($alertasVisibles->isNotEmpty())
                     <ul class="list-group list-group-flush">
-                        @foreach($todasLasAlertas as $alerta)
+                        @foreach($alertasVisibles as $alerta)
                         <li class="list-group-item list-group-item-warning d-flex justify-content-between align-items-center py-1 px-3" style="font-size: 0.85rem;">
                             <span class="">
                                 <i class="fas fa-circle text-{{ $alerta['tipo'] ?? 'warning' }} mr-2" style="font-size: 0.5rem;"></i>
@@ -80,20 +81,22 @@
                         </li>
                         @endforeach
                     </ul>
+                    @else
+                    <p class="text-muted text-center py-2 mb-0 small"><strong>No hay alertas activas.</strong></p>
+                    @endif
                 </div>
             </div>
         </div>
     </div>
-    @endif
 
     <!-- 3. Accesos Rápidos (Widgets Compactos) -->
     <h5 class="mb-3 text-premium-header ml-1">
         <i class="fas fa-th-large mr-2"></i>Accesos Directos
     </h5>
     <div class="row">
-        @can('operador_tesoreria')
+        @can('tesoreria.acceso')
         <!-- Arrendamientos -->
-        <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 mb-3">
+        <div class="col-xl-3 col-lg-3 col-md-4 col-sm-6 mb-3">
             <a href="{{ route('tesoreria.arrendamientos.index') }}" class="text-decoration-none">
                 <div class="card shadow-sm h-100 widget-card border-left-financial">
                     <div class="card-body p-2 d-flex align-items-center">
@@ -109,7 +112,7 @@
         </div>
 
         <!-- Art. Multas CPT -->
-        <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 mb-3">
+        <div class="col-xl-3 col-lg-3 col-md-4 col-sm-6 mb-3">
             <a href="{{ route('tesoreria.multas-transito') }}" class="text-decoration-none">
                 <div class="card shadow-sm h-100 widget-card border-left-operational">
                     <div class="card-body p-2 d-flex align-items-center">
@@ -125,7 +128,7 @@
         </div>
 
         <!-- Multas CPT Dec. 303 -->
-        <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 mb-3">
+        <div class="col-xl-3 col-lg-3 col-md-4 col-sm-6 mb-3">
             <a href="{{ route('tesoreria.multas-303-2023') }}" class="text-decoration-none">
                 <div class="card shadow-sm h-100 widget-card border-left-operational">
                     <div class="card-body p-2 d-flex align-items-center">
@@ -141,7 +144,7 @@
         </div>
 
         <!-- Caja Chica -->
-        <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 mb-3">
+        <div class="col-xl-3 col-lg-3 col-md-4 col-sm-6 mb-3">
             <a href="{{ route('tesoreria.caja-chica.index') }}" class="text-decoration-none">
                 <div class="card shadow-sm h-100 widget-card border-left-financial">
                     <div class="card-body p-2 d-flex align-items-center">
@@ -158,7 +161,7 @@
 
     
         <!-- Cert. Residencia -->
-        <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 mb-3">
+        <div class="col-xl-3 col-lg-3 col-md-4 col-sm-6 mb-3">
             <a href="{{ route('tesoreria.certificados-residencia.index') }}" class="text-decoration-none">
                 <div class="card shadow-sm h-100 widget-card border-left-documentary">
                     <div class="card-body p-2 d-flex align-items-center">
@@ -174,7 +177,7 @@
         </div>
 
         <!-- Tarjetas BROU -->
-        <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 mb-3">
+        <div class="col-xl-3 col-lg-3 col-md-4 col-sm-6 mb-3">
             <a href="{{ route('tesoreria.tarjetas-cobro-brou.index') }}" class="text-decoration-none">
                 <div class="card shadow-sm h-100 widget-card border-left-documentary">
                     <div class="card-body p-2 d-flex align-items-center">
@@ -190,7 +193,7 @@
         </div>
 
         <!-- Gestión de CFEs -->
-        <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 mb-3">
+        <div class="col-xl-3 col-lg-3 col-md-4 col-sm-6 mb-3">
             <a href="{{ route('tesoreria.gestion-cfe.index') }}" class="text-decoration-none">
                 <div class="card shadow-sm h-100 widget-card border-left-documentary">
                     <div class="card-body p-2 d-flex align-items-center">
@@ -205,8 +208,24 @@
             </a>
         </div>
 
+        <!-- Estados de Recaudación -->
+        <div class="col-xl-3 col-lg-3 col-md-4 col-sm-6 mb-3">
+            <a href="{{ route('tesoreria.gestion-cfe.estados-recaudacion') }}" class="text-decoration-none">
+                <div class="card shadow-sm h-100 widget-card border-left-info">
+                    <div class="card-body p-2 d-flex align-items-center">
+                        <div class="mr-3 text-info">
+                            <i class="fas fa-chart-line fa-2x"></i>
+                        </div>
+                        <div>
+                            <div class="font-weight-bold text-body small">Est. Recaudación</div>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+
         <!-- Cheques -->
-        <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 mb-3">
+        <div class="col-xl-3 col-lg-3 col-md-4 col-sm-6 mb-3">
             <a href="{{ route('tesoreria.cheques.index') }}" class="text-decoration-none">
                 <div class="card shadow-sm h-100 widget-card border-left-financial">
                     <div class="card-body p-2 d-flex align-items-center">
@@ -221,12 +240,12 @@
             </a>
         </div>
 
-        @can('administrar_sistema')
+        @can('sistema.acceso.administrador')
 
         @endcan
 
         <!-- Depósito Vehículos -->
-        <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 mb-3">
+        <div class="col-xl-3 col-lg-3 col-md-4 col-sm-6 mb-3">
             <a href="{{ route('tesoreria.deposito-vehiculos.index') }}" class="text-decoration-none">
                 <div class="card shadow-sm h-100 widget-card border-left-operational">
                     <div class="card-body p-2 d-flex align-items-center">
@@ -242,7 +261,7 @@
         </div>
 
         <!-- Eventuales -->
-        <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 mb-3">
+        <div class="col-xl-3 col-lg-3 col-md-4 col-sm-6 mb-3">
             <a href="{{ route('tesoreria.eventuales.index') }}" class="text-decoration-none">
                 <div class="card shadow-sm h-100 widget-card border-left-financial">
                     <div class="card-body p-2 d-flex align-items-center">
@@ -258,7 +277,7 @@
         </div>
 
         <!-- Multas Cobradas -->
-        <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 mb-3">
+        <div class="col-xl-3 col-lg-3 col-md-4 col-sm-6 mb-3">
             <a href="{{ route('tesoreria.multas-cobradas.index') }}" class="text-decoration-none">
                 <div class="card shadow-sm h-100 widget-card border-left-operational">
                     <div class="card-body p-2 d-flex align-items-center">
@@ -274,7 +293,7 @@
         </div>
 
         <!-- Porte de Armas -->
-        <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 mb-3">
+        <div class="col-xl-3 col-lg-3 col-md-4 col-sm-6 mb-3">
             <a href="{{ route('tesoreria.armas.porte') }}" class="text-decoration-none">
                 <div class="card shadow-sm h-100 widget-card border-left-operational">
                     <div class="card-body p-2 d-flex align-items-center">
@@ -290,7 +309,7 @@
         </div>
 
         <!-- Prendas -->
-        <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 mb-3">
+        <div class="col-xl-3 col-lg-3 col-md-4 col-sm-6 mb-3">
             <a href="{{ route('tesoreria.prendas.index') }}" class="text-decoration-none">
                 <div class="card shadow-sm h-100 widget-card border-left-documentary">
                     <div class="card-body p-2 d-flex align-items-center">
@@ -306,7 +325,7 @@
         </div>
 
         <!-- Valores -->
-        <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 mb-3">
+        <div class="col-xl-3 col-lg-3 col-md-4 col-sm-6 mb-3">
             <a href="{{ route('tesoreria.valores.index') }}" class="text-decoration-none">
                 <div class="card shadow-sm h-100 widget-card border-left-financial">
                     <div class="card-body p-2 d-flex align-items-center">
@@ -321,9 +340,9 @@
             </a>
         </div>
 
-        @if(auth()->user()->hasAnyRole(['administrador', 'gerente_tesoreria', 'supervisor_tesoreria']))
+        @if(auth()->user()->esAdministrador() || auth()->user()->esGerente() || auth()->user()->esSupervisor())
         <!-- Reporte de Recibos (Contabilidad) -->
-        <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 mb-3">
+        <div class="col-xl-3 col-lg-3 col-md-4 col-sm-6 mb-3">
             <a href="{{ route('tesoreria.reporte-recibos.index') }}" class="text-decoration-none">
                 <div class="card shadow-sm h-100 widget-card border-left-danger">
                     <div class="card-body p-2 d-flex align-items-center">
@@ -341,9 +360,44 @@
         @endif
         @endcan
 
-        @can('ver_usuarios')
+        @can('asesoria_contable.acceso')
+        <!-- Est. Recaudación (Asesoría Contable) -->
+        <div class="col-xl-3 col-lg-3 col-md-4 col-sm-6 mb-3">
+            <a href="{{ route('asesoria-contable.estados-recaudacion') }}" class="text-decoration-none">
+                <div class="card shadow-sm h-100 widget-card border-left-info">
+                    <div class="card-body p-2 d-flex align-items-center">
+                        <div class="mr-3 text-info">
+                            <i class="fas fa-chart-bar fa-2x"></i>
+                        </div>
+                        <div>
+                            <div class="font-weight-bold text-body small">Est. Recaudación</div>
+                            <div class="text-muted" style="font-size: 0.65rem;">Asesoría Contable</div>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <!-- Resumen Recaudaciones (Asesoría Contable) -->
+        <div class="col-xl-3 col-lg-3 col-md-4 col-sm-6 mb-3">
+            <a href="{{ route('asesoria-contable.resumen-recaudaciones') }}" class="text-decoration-none">
+                <div class="card shadow-sm h-100 widget-card border-left-info">
+                    <div class="card-body p-2 d-flex align-items-center">
+                        <div class="mr-3 text-info">
+                            <i class="fas fa-chart-pie fa-2x"></i>
+                        </div>
+                        <div>
+                            <div class="font-weight-bold text-body small">Res. Recaudación</div>
+                            <div class="text-muted" style="font-size: 0.65rem;">Asesoría Contable</div>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+        @endcan
+
+        @can('usuarios.ver')
         <!-- Usuarios -->
-        <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 mb-3">
+        <div class="col-xl-3 col-lg-3 col-md-4 col-sm-6 mb-3">
             <a href="{{ route('usuarios.index') }}" class="text-decoration-none">
                 <div class="card shadow-sm h-100 widget-card border-left-system">
                     <div class="card-body p-2 d-flex align-items-center">
@@ -360,7 +414,7 @@
         @endcan
 
         <!-- Mi Perfil (siempre al final) -->
-        <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 mb-3">
+        <div class="col-xl-3 col-lg-3 col-md-4 col-sm-6 mb-3">
             <a href="{{ route('usuarios.miPerfil') }}" class="text-decoration-none">
                 <div class="card shadow-sm h-100 widget-card border-left-system">
                     <div class="card-body p-2 d-flex align-items-center">

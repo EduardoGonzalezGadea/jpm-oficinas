@@ -13,6 +13,7 @@ class Modulo extends Model
 
     protected $fillable = [
         'nombre',
+        'clave',
         'descripcion',
         'activo',
         'created_by',

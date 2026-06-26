@@ -244,7 +244,7 @@ class CfeUniversalParserService
                 
                 // Tratar de hacer match al final de la línea que contiene los montos
                 // Ej: "1,000 (Unid) 7.392,00 7.392,00" o "1,000 (Unid) 589,00 -179.056,00"
-                if (preg_match('/(-?[\d\.,]+)\s*\((.*?)\)\s+(-?[\d\.,]+)(?:\s+(-?[\d\.,]+))?(?:\s+(-?[\d\.,]+))?\s+(-?[\d\.,]+)$/u', $line, $im)) {
+                if (preg_match('/(-?\d[\d\.,]*)(?:\s+\(([^)]+)\))?\s+(-?\d[\d\.,]*)(?:\s+(-?\d[\d\.,]*))?(?:\s+(-?\d[\d\.,]*))?\s+(-?\d[\d\.,]*)$/u', $line, $im)) {
                      // The match $im has the amounts. 
                      $cantidad = $this->parseMonto($im[1]);
                      // The text before the quantity is the part of description or it was on previous lines

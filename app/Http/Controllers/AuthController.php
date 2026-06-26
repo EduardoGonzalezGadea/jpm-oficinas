@@ -84,17 +84,17 @@ class AuthController extends Controller
         session()->save();
 
         // Inicia una sesión de Laravel tradicional para este usuario
-        Auth::login($user, false); // Remember me = true
+        Auth::login($user, false);
         session()->put('auth.password_confirmed_at', time());
 
-        // Regenerar la sesión para prevenir ataques de fijación de sesión
-        session()->regenerate(true);
+        // Regenerar ID de sesión (sin destruir datos) para prevenir fijación de sesión
+        session()->regenerate();
 
         if ($request->expectsJson()) {
             return response()->json([
                 'access_token' => $token,
                 'token_type' => 'bearer',
-                'expires_in' => config('jwt.ttl', 60) * 60,
+                'expires_in' => config('jwt.ttl', config('auth_session.lifetime_minutes', 1440)) * 60,
                 'user' => $user,
                 'roles' => $user->getRoleNames(),
                 'permissions' => $user->getAllPermissions()->pluck('name')
@@ -103,20 +103,15 @@ class AuthController extends Controller
 
         // Para peticiones web, guardar token en cookie y redirigir
         $minutes = (int) config('jwt.ttl', config('auth_session.lifetime_minutes', 1440));
-        $cookie = cookie('jwt_token', $token, $minutes, '/', null, false, true); // httpOnly = true
+        $cookie = cookie('jwt_token', $token, $minutes, '/', null, false, true);
+        $expiredCookie = cookie()->forget('jwt_token');
 
         // Establecer el token en JWTAuth para la sesión actual
         JWTAuth::setToken($token);
 
-        // Asegurar que el usuario esté autenticado en la sesión web
-        if (!auth()->check()) {
-            auth()->login($user, true);
-            session()->put('auth.password_confirmed_at', time());
-            session()->regenerate(true);
-        }
-
         return redirect()->intended('/panel')
             ->withCookie($cookie)
+            ->withCookie($expiredCookie)
             ->with('success', 'Sesión iniciada exitosamente');
     }
 
@@ -152,10 +147,9 @@ class AuthController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
-        // Asignar rol por defecto si existe
-        if ($user) {
-            $user->assignRole('user'); // Asume que existe un rol 'user'
-        }
+        // El registro público asigna rol operador del módulo por defecto
+        // Si es registro interno, los roles se asignan desde el panel de administración
+        // Por seguridad, no se asigna rol automáticamente aquí
 
         $token = JWTAuth::fromUser($user);
 
@@ -164,7 +158,7 @@ class AuthController extends Controller
                 'message' => 'Usuario creado exitosamente',
                 'access_token' => $token,
                 'token_type' => 'bearer',
-                'expires_in' => config('jwt.ttl', 60) * 60,
+                'expires_in' => config('jwt.ttl', config('auth_session.lifetime_minutes', 1440)) * 60,
                 'user' => $user,
             ], 201);
         }
@@ -172,6 +166,7 @@ class AuthController extends Controller
         // Para peticiones web
         $minutes = (int) config('jwt.ttl', config('auth_session.lifetime_minutes', 1440));
         $cookie = cookie('jwt_token', $token, $minutes, '/', null, false, true);
+        $expiredCookie = cookie()->forget('jwt_token');
 
         // Iniciar sesión al registrarse
         Auth::login($user, false);
@@ -180,6 +175,7 @@ class AuthController extends Controller
 
         return redirect()->route('panel.index')
             ->withCookie($cookie)
+            ->withCookie($expiredCookie)
             ->with('success', 'Cuenta creada exitosamente');
     }
 
@@ -284,12 +280,12 @@ class AuthController extends Controller
                 return response()->json([
                     'access_token' => $token,
                     'token_type' => 'bearer',
-                    'expires_in' => config('jwt.ttl', 60) * 60
+                    'expires_in' => config('jwt.ttl', config('auth_session.lifetime_minutes', 1440)) * 60
                 ]);
             }
 
             // Para peticiones web, actualizar cookie
-            $minutes = config('jwt.ttl', 60);
+            $minutes = (int) config('jwt.ttl', config('auth_session.lifetime_minutes', 1440));
             $cookie = cookie('jwt_token', $token, $minutes, '/', null, false, true);
             return response()->json(['success' => true])->withCookie($cookie);
         } catch (TokenExpiredException $e) {

@@ -31,15 +31,10 @@ class AuthServiceProvider extends ServiceProvider
         $this->registerPermissionGates();
 
         Gate::before(function ($user, $ability) {
-            // Log para depuración (opcional)
-            \Illuminate\Support\Facades\Log::info('Gate::before - User: ' . ($user ? $user->id : 'Guest') . ', Ability: ' . $ability);
-
-            // Si el usuario tiene el permiso específico, permitir acceso
             if ($user && $user->hasPermissionTo($ability)) {
                 return true;
             }
 
-            // Si no tiene el permiso, continuar con la verificación normal de Gates
             return null;
         });
     }

@@ -40,10 +40,11 @@ Route::get('/', [TesoreriaController::class, 'index'])->name('index');
 
 Route::get('bancos', [BancoController::class, 'index'])
     ->name('bancos.index')
-    ->middleware('auth');
+    ->middleware('modulo:tesoreria');
 
 Route::get('cuentas-bancarias', [CuentaBancariaController::class, 'index'])
-    ->name('cuentas-bancarias.index');
+    ->name('cuentas-bancarias.index')
+    ->middleware('modulo:tesoreria');
 
 // ============================================================================
 // CHEQUES
@@ -76,7 +77,7 @@ Route::get('multas-transito/exportar-pdf',
 // MULTAS COBRADAS
 // ============================================================================
 
-Route::prefix('multas-cobradas')->name('multas-cobradas.')->middleware(['can:operador_tesoreria'])->group(function () {
+Route::prefix('multas-cobradas')->name('multas-cobradas.')->middleware(['modulo:tesoreria'])->group(function () {
     Route::get('/',         fn () => view('tesoreria.multas-cobradas.index'))     ->name('index');
     Route::get('cargar-cfe', fn () => view('tesoreria.multas-cobradas.cargar-cfe')) ->name('cargar-cfe');
 
@@ -228,6 +229,10 @@ Route::prefix('tarjetas-cobro-brou')->name('tarjetas-cobro-brou.')->group(functi
 
 Route::prefix('gestion-cfe')->name('gestion-cfe.')->group(function () {
     Route::get('/', \App\Http\Livewire\Tesoreria\GestionCfe\Index::class)->name('index');
+    Route::get('estados-recaudacion', \App\Http\Livewire\Tesoreria\EstadosRecaudacion\Index::class)->name('estados-recaudacion');
+    Route::get('estados-recaudacion/no-confirmadas', \App\Http\Livewire\Tesoreria\EstadosRecaudacion\NoConfirmadas::class)->name('estados-recaudacion.no-confirmadas')->middleware('modulo:tesoreria,supervisor');
+    Route::get('estados-recaudacion/confirmar/{planilla}', \App\Http\Livewire\Tesoreria\EstadosRecaudacion\Confirmar::class)->name('estados-recaudacion.confirmar')->middleware('modulo:tesoreria,supervisor');
+    Route::get('recaudaciones', \App\Http\Livewire\Tesoreria\Recaudaciones\Index::class)->name('recaudaciones');
 });
 
 // ============================================================================
@@ -281,7 +286,7 @@ Route::prefix('deposito-vehiculos/planillas')->name('deposito-vehiculos.planilla
 // CONFIGURACIÓN
 // ============================================================================
 
-Route::prefix('configuracion')->name('configuracion.')->group(function () {
+Route::prefix('configuracion')->name('configuracion.')->middleware('modulo:tesoreria')->group(function () {
     Route::get('medios-de-pago',
         fn () => view('tesoreria.configuracion.medios-de-pago.index-livewire')
     )->name('medios-de-pago.index');
@@ -305,12 +310,16 @@ Route::prefix('configuracion')->name('configuracion.')->group(function () {
     Route::get('siif-distribucion-tipos',
         fn () => view('tesoreria.configuracion.siif-distribucion-tipos.index-livewire')
     )->name('siif-distribucion-tipos.index');
+
+    Route::get('siif-distribuciones',
+        fn () => view('tesoreria.configuracion.siif-distribuciones.index-livewire')
+    )->name('siif-distribuciones.index');
 });
 // ============================================================================
 // CAJA CHICA
 // ============================================================================
 
-Route::prefix('caja-chica')->name('caja-chica.')->middleware(['permission:operador_tesoreria'])->group(function () {
+Route::prefix('caja-chica')->name('caja-chica.')->middleware(['modulo:tesoreria'])->group(function () {
     Route::get('/',                             [CajaChicaController::class, 'index'])  ->name('index');
     Route::get('pendientes/{id}/editar',        [PendienteController::class, 'edit'])   ->name('pendientes.editar');
     Route::get('imprimir/pendiente/{id}', [CajaChicaImpresionController::class, 'imprimirPendiente'])->name('imprimir.pendiente');
@@ -332,7 +341,7 @@ Route::get('valores/reportes/download-stock/{filename}', [StockReporteController
 
 Route::prefix('reporte-recibos')
     ->name('reporte-recibos.')
-    ->middleware(['role:administrador|gerente_tesoreria|supervisor_tesoreria'])
+    ->middleware(['modulo:tesoreria,supervisor'])
     ->group(function () {
         Route::get('/',       \App\Http\Livewire\Tesoreria\ReporteRecibos\ReporteRecibosIndex::class) ->name('index');
         Route::get('imprimir', \App\Http\Livewire\Tesoreria\ReporteRecibos\PrintReporteRecibos::class) ->name('imprimir');

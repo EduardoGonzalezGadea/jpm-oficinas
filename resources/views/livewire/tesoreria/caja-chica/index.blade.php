@@ -31,7 +31,6 @@
         .table-container thead th {
             position: sticky;
             top: 0;
-            background-color: #f4f6f9; /* Color adminLTE/Bootstrap */
             z-index: 1;
             box-shadow: 0 1px 2px rgba(0,0,0,0.1);
         }
@@ -325,7 +324,7 @@
                                     <i class="fas fa-print"></i>
                                 </a>
                                 </a>
-                                @if(auth()->user()->hasRole(['administrador', 'gerente_tesoreria', 'supervisor_tesoreria']))
+                                @can('tesoreria.supervisar')
                                 @if(($item['cant_movimientos'] ?? 0) == 0)
                                 <button type="button" class="btn btn-sm btn-danger ml-1"
                                     title="Eliminar Pendiente"
@@ -333,7 +332,7 @@
                                     <i class="fas fa-trash"></i>
                                 </button>
                                 @endif
-                                @endif
+                                @endcan
                         </div>
                     </td>
                 </tr>
@@ -538,7 +537,7 @@
                                     target="_blank" class="btn btn-sm btn-dark" title="Imprimir Pago Directo">
                                     <i class="fas fa-print"></i>
                                 </a>
-                                @if(auth()->user()->hasRole(['administrador', 'gerente_tesoreria', 'supervisor_tesoreria']))
+                                @can('tesoreria.supervisar')
                                 @if(
                                     !($item['tiene_datos_rendicion'] ?? false) &&
                                     !($item['tiene_datos_recuperacion'] ?? false)
@@ -549,7 +548,7 @@
                                     <i class="fas fa-trash"></i>
                                 </button>
                                 @endif
-                                @endif
+                                @endcan
                         </div>
                     </td>
                 </tr>

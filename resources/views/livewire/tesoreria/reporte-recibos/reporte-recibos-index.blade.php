@@ -173,7 +173,7 @@
                             <tr>
                                 <th class="align-middle" style="width: 120px;">Nro. Recibo</th>
                                 <th class="align-middle" style="width: 100px;">Fecha</th>
-                                <th class="align-middle" style="width: 130px;">Cédula</th>
+                                <th class="align-middle" style="width: 130px;">Cédula / RUC</th>
                                 <th class="align-middle">Titular</th>
                                 <th class="align-middle text-right" style="width: 130px;">Monto</th>
                             </tr>

@@ -87,9 +87,9 @@
                                     <th class="text-center align-middle">Recibo</th>
                                     <th class="text-center align-middle">Medio de Pago</th>
                                     <th class="text-center align-middle"></th>
-                                    @canany(['gestionar_tesoreria', 'supervisar_tesoreria'])
+                                    @can('tesoreria.supervisar')
                                     <th class="text-center align-middle d-print-none">Confirmado</th>
-                                    @endcanany
+                                    @endcan
                                     <th class="text-center align-middle d-print-none">Acciones</th>
                                 </tr>
                             </thead>
@@ -120,7 +120,7 @@
                                         <i class="fas fa-times-circle text-danger" title="No en planilla"></i>
                                         @endif
                                     </td>
-                                    @canany(['gestionar_tesoreria', 'supervisar_tesoreria'])
+                                    @can('tesoreria.supervisar')
                                     <td
                                         class="text-center{{ !$arrendamiento->confirmado ? ' table-warning' : '' }} align-middle d-print-none">
                                         <div class="custom-control custom-switch" style="transform: scale(0.8);">
@@ -132,7 +132,7 @@
                                                 for="confirmado-{{ $arrendamiento->id }}"></label>
                                         </div>
                                     </td>
-                                    @endcanany
+                                    @endcan
                                     <td class="text-center align-middle d-print-none">
                                         <div class="btn-group" role="group">
                                             <button wire:click="showDetails({{ $arrendamiento->id }})"
@@ -160,7 +160,7 @@
                                 </tr>
                                 @empty
                                 <tr>
-                                    <td colspan="@canany(['gestionar_tesoreria', 'supervisar_tesoreria']) 10 @else 9 @endcanany"
+                                    <td colspan="@can('tesoreria.supervisar') 10 @else 9 @endcan"
                                         class="text-center">No hay registros para el mes y año seleccionados.</td>
                                 </tr>
                                 @endforelse
@@ -173,7 +173,7 @@
                                     <td class="text-right align-middle"><strong><span class="text-nowrap-custom">$
                                                 {{ number_format($subtotal->total, 2, ',', '.') }}</span></strong>
                                     </td>
-                                    <td colspan="@canany(['gestionar_tesoreria', 'supervisar_tesoreria']) 7 @else 6 @endcanany"
+                                    <td colspan="@can('tesoreria.supervisar') 7 @else 6 @endcan"
                                         class="align-middle"></td>
                                 </tr>
                                 @endforeach
@@ -183,7 +183,7 @@
                                     <td class="text-right align-middle"><strong><span class="text-nowrap-custom">$
                                                 {{ number_format($total, 2, ',', '.') }}</span></strong></td>
                                     <td
-                                        colspan="@canany(['gestionar_tesoreria', 'supervisar_tesoreria']) 7 @else 6 @endcanany">
+                                        colspan="@can('tesoreria.supervisar') 7 @else 6 @endcan">
                                     </td>
                                 </tr>
                             </tfoot>

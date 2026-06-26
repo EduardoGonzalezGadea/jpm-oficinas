@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
 use App\Models\User;
+use App\Modules\ModuleRegistry;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
@@ -13,65 +14,44 @@ class RoleController extends Controller
 {
     public function __construct()
     {
-        // $this->middleware(['auth', 'permission:roles.index'])->only('index');
-        // $this->middleware(['auth', 'permission:roles.create'])->only(['create', 'store']);
-        // $this->middleware(['auth', 'permission:roles.edit'])->only(['edit', 'update']);
-        // $this->middleware(['auth', 'permission:roles.destroy'])->only('destroy');
+        $this->middleware(['auth', 'permission:roles.gestionar'])->except(['index', 'show']);
+        $this->middleware(['auth', 'permission:roles.gestionar'])->only(['create', 'store', 'edit', 'update', 'destroy']);
+        $this->middleware(['auth', 'permission:usuarios.asignar_roles'])->only(['assignToUser', 'removeFromUser']);
     }
 
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
-        // Filtros
+        $user = auth()->user();
         $query = Role::with(['permissions', 'users']);
 
-        // Si es gerente o supervisor, solo puede ver roles utilizados en su módulo
-        if (!auth()->user()->esAdministrador()) {
-            $query->whereHas('users', function ($q) {
-                $q->where('modulo_id', auth()->user()->modulo_id);
-            });
+        if (!$user->esAdministrador()) {
+            $clave = $user->moduloClave();
+            $rolesModulo = ModuleRegistry::rolesDelModulo($clave);
+            $query->whereIn('name', $rolesModulo);
         }
 
-        // Obtener los roles
-        $roles = $query->orderBy('name', 'asc')
-            ->paginate(10);
+        $roles = $query->orderBy('name')->paginate(10);
 
-        // Datos adicionales para estadísticas
         $totalPermissions = Permission::count();
         $totalRoles = Role::count();
         $totalUsers = User::count();
 
         return view('roles.index', compact(
-            'roles',
-            'totalPermissions',
-            'totalRoles',
-            'totalUsers',
+            'roles', 'totalPermissions', 'totalRoles', 'totalUsers',
         ));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
         $permissions = Permission::orderBy('name')->get();
-
         return view('roles.create', compact('permissions'));
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
         $request->validate([
             'name' => [
-                'required',
-                'string',
-                'max:255',
-                'unique:roles,name',
+                'required', 'string', 'max:255', 'unique:roles,name',
                 'regex:/^[a-zA-Z0-9_\-\s]+$/'
             ],
             'permissions' => 'nullable|array',
@@ -86,13 +66,11 @@ class RoleController extends Controller
         try {
             DB::beginTransaction();
 
-            // Crear el rol
             $role = Role::create([
                 'name' => strtolower(trim($request->name)),
-                'guard_name' => 'api',
+                'guard_name' => 'web',
             ]);
 
-            // Asignar permisos si se seleccionaron
             if ($request->has('permissions') && is_array($request->permissions)) {
                 $permissions = Permission::whereIn('id', $request->permissions)->get();
                 $role->syncPermissions($permissions);
@@ -110,19 +88,12 @@ class RoleController extends Controller
         }
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show(Role $role)
     {
         $role->load(['permissions', 'users']);
-
         return view('roles.show', compact('role'));
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit(Role $role)
     {
         $permissions = Permission::orderBy('name')->get();
@@ -131,16 +102,15 @@ class RoleController extends Controller
         return view('roles.edit', compact('role', 'permissions', 'rolePermissions'));
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, Role $role)
     {
+        if ($role->name === 'administrador') {
+            return back()->with('error', 'No se puede modificar el rol de administrador.');
+        }
+
         $request->validate([
             'name' => [
-                'required',
-                'string',
-                'max:255',
+                'required', 'string', 'max:255',
                 Rule::unique('roles')->ignore($role->id),
                 'regex:/^[a-zA-Z0-9_\-\s]+$/'
             ],
@@ -156,17 +126,11 @@ class RoleController extends Controller
         try {
             DB::beginTransaction();
 
-            // Actualizar el rol
-            $role->update([
-                'name' => strtolower(trim($request->name))
-            ]);
+            $role->update(['name' => strtolower(trim($request->name))]);
 
-            // Sincronizar permisos
             if ($request->has('permissions') && is_array($request->permissions)) {
-                $permissions = Permission::whereIn('id', $request->permissions)->get();
-                $role->syncPermissions($permissions);
+                $role->syncPermissions(Permission::whereIn('id', $request->permissions)->get());
             } else {
-                // Si no se enviaron permisos, remover todos
                 $role->syncPermissions([]);
             }
 
@@ -182,33 +146,23 @@ class RoleController extends Controller
         }
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(Role $role)
     {
+        if ($role->name === 'administrador') {
+            return back()->with('error', 'No se puede eliminar el rol de administrador.');
+        }
+
+        if ($role->users()->count() > 0) {
+            return back()->with(
+                'toast-error',
+                'No se puede eliminar. El rol tiene ' . $role->users()->count() . ' usuarios asignados.'
+            );
+        }
+
         try {
-            // Verificar que no sea el rol de administrador
-            if ($role->name === 'administrador') {
-                return back()->with('error', 'No se puede eliminar el rol de administrador.');
-            }
-
-            // Verificar si hay usuarios asignados a este rol
-            if ($role->users()->count() > 0) {
-                return back()->with(
-                    'toast-error',
-                    'No se puede eliminar. El rol tiene ' . $role->users()->count() . ' usuarios asignados.'
-                );
-            }
-
             DB::beginTransaction();
-
-            // Remover todos los permisos del rol
             $role->syncPermissions([]);
-
-            // Eliminar el rol
             $role->delete();
-
             DB::commit();
 
             return redirect()->route('roles.index')
@@ -220,9 +174,6 @@ class RoleController extends Controller
         }
     }
 
-    /**
-     * Asignar rol a usuario (API endpoint adicional)
-     */
     public function assignToUser(Request $request)
     {
         $request->validate([
@@ -231,8 +182,8 @@ class RoleController extends Controller
         ]);
 
         try {
-            $user = auth()->user()->find($request->user_id);
-            $role = Role::find($request->role_id);
+            $user = User::findOrFail($request->user_id);
+            $role = Role::findOrFail($request->role_id);
 
             $user->assignRole($role);
 
@@ -248,23 +199,19 @@ class RoleController extends Controller
         }
     }
 
-    /**
-     * Remover rol de usuario (API endpoint adicional)
-     */
     public function removeFromUser($user_id, $role_id)
     {
         try {
             $user = User::findOrFail($user_id);
             $role = Role::findOrFail($role_id);
 
-            // Evitar que un usuario se quite a sí mismo el rol de administrador
             if ($user->id === auth()->id() && $role->name === 'administrador') {
                 return back()->with('error', 'No puedes remover tu propio rol de administrador.');
             }
 
             $user->removeRole($role);
 
-            return back()->with('success', "Rol '{$role->name}' removido del usuario '{$user->name}' exitosamente.");
+            return back()->with('success', "Rol '{$role->name}' removido exitosamente.");
         } catch (\Exception $e) {
             return back()->with('error', 'Error al remover el rol: ' . $e->getMessage());
         }

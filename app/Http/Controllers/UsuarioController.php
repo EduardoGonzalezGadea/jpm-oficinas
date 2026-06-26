@@ -6,28 +6,22 @@ use App\Http\Requests\StoreUserRequest;
 use App\Http\Requests\UpdateUserRequest;
 use App\Models\Modulo;
 use App\Models\User;
+use App\Modules\ModuleRegistry;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Log;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
 class UsuarioController extends Controller
 {
-    public function __construct()
-    {
-        // $this->middleware('jwt.verify');
-    }
-
     public function index(Request $request)
     {
-        $this->authorize('ver_usuarios');
+        $this->authorize('usuarios.ver');
 
-        $query = User::with(['modulo', 'roles']);
+        $user = auth()->user();
+        $query = User::with(['modulo', 'roles'])->where('id', '!=', 1);
 
-        // Filtros
         if ($request->filled('buscar')) {
             $buscar = $request->buscar;
             $query->where(function ($q) use ($buscar) {
@@ -43,52 +37,48 @@ class UsuarioController extends Controller
         }
 
         if ($request->filled('rol')) {
-            $query->whereHas('roles', function ($q) use ($request) {
-                $q->where('name', $request->rol);
-            });
+            $query->whereHas('roles', fn($q) => $q->where('name', $request->rol));
         }
 
-        // Si es gerente o supervisor, solo puede ver usuarios de su módulo
-        if (auth()->user()->esGerente() || auth()->user()->esSupervisor() && !auth()->user()->esAdministrador()) {
-            $query->where('modulo_id', auth()->user()->modulo_id);
+        // Scoping: no-admin solo ve usuarios de su módulo
+        if (!$user->esAdministrador()) {
+            $query->delModulo($user->moduloClave());
         }
 
         $usuarios = $query->latest()->paginate(10);
+        $modulos = Modulo::activos()->get();
+        $roles = Role::all();
 
-        $modulos = Cache::remember('modulos_activos', now()->addDay(), function () {
-            return Modulo::activos()->get();
-        });
-
-        $roles = Cache::remember('roles_all', now()->addDay(), function () {
-            return Role::all();
-        });
-
-        // Datos adicionales para estadísticas
-        $totalPermissions = Permission::count();
-        $totalRoles = Role::count();
-        $totalUsers = User::count();
+        if ($user->esAdministrador()) {
+            $totalPermissions = Permission::count();
+            $totalRoles = Role::count();
+            $totalUsers = User::count();
+        } else {
+            $totalPermissions = 0;
+            $totalRoles = 0;
+            $totalUsers = 0;
+        }
 
         return view('usuarios.index', compact(
-            'usuarios',
-            'modulos',
-            'roles',
-            'totalPermissions',
-            'totalRoles',
-            'totalUsers',
+            'usuarios', 'modulos', 'roles',
+            'totalPermissions', 'totalRoles', 'totalUsers',
         ));
     }
 
     public function create()
     {
-        $this->authorize('crear_usuarios');
+        $this->authorize('usuarios.crear');
 
-        $modulos = Cache::remember('modulos_activos', now()->addDay(), function () {
-            return Modulo::activos()->get();
-        });
+        $user = auth()->user();
 
-        $roles = Cache::remember('roles_all', now()->addDay(), function () {
-            return Role::all();
-        });
+        if ($user->esAdministrador()) {
+            $modulos = Modulo::activos()->get();
+            $roles = Role::all();
+        } else {
+            $clave = $user->moduloClave();
+            $modulos = Modulo::where('clave', $clave)->get();
+            $roles = Role::whereIn('name', ModuleRegistry::rolesDelModulo($clave))->get();
+        }
 
         return view('usuarios.create', compact('modulos', 'roles'));
     }
@@ -105,12 +95,11 @@ class UsuarioController extends Controller
                 'cedula' => $validatedData['cedula'] ?? null,
                 'telefono' => $validatedData['telefono'] ?? null,
                 'direccion' => $validatedData['direccion'] ?? null,
-                'password' => Hash::make('123456'), // Default password
+                'password' => Hash::make('123456'),
                 'modulo_id' => $validatedData['modulo_id'] ?? null,
                 'activo' => true,
             ]);
 
-            // Asignar roles
             if (isset($validatedData['roles'])) {
                 $usuario->syncRoles($validatedData['roles']);
             }
@@ -122,36 +111,28 @@ class UsuarioController extends Controller
 
     public function show(User $usuario)
     {
-        $this->authorize('ver_usuarios');
+        $this->authorize('usuarios.ver');
+        $this->verificarAccesoModulo($usuario);
 
         return view('usuarios.show', compact('usuario'));
     }
 
     public function edit(User $usuario)
     {
-        $this->authorize('editar_usuarios');
+        $this->authorize('usuarios.editar');
+        $this->verificarAccesoModulo($usuario);
 
-        if (auth()->user()->esAdministrador()) {
-            $modulos = Cache::remember('modulos_activos', now()->addDay(), function () {
-                return Modulo::activos()->get();
-            });
+        $user = auth()->user();
+
+        if ($user->esAdministrador()) {
+            $modulos = Modulo::activos()->get();
+            $roles = Role::all();
         } else {
-            $modulos = Modulo::activos()->where('id', auth()->user()->modulo_id)->get();
+            $clave = $user->moduloClave();
+            $modulos = Modulo::where('clave', $clave)->get();
+            $roles = Role::whereIn('name', ModuleRegistry::rolesDelModulo($clave))->get();
         }
 
-        if (auth()->user()->esAdministrador()) {
-            $roles = Cache::remember('roles_all', now()->addDay(), function () {
-                return Role::all();
-            });
-        } else {
-            $userRoleName = $usuario->getRoleNames()->first();
-            $parts = explode('_', $userRoleName, 2);
-            $moduleIdentifier = $parts[1];
-
-            $roles = Role::where('name', '!=', 'administrador')
-                        ->where('name', 'like', '%' . $moduleIdentifier . '%')
-                        ->get();
-        }
         $usuario->load('roles');
         $usuarioRoles = $usuario->roles->pluck('name')->toArray();
 
@@ -160,6 +141,8 @@ class UsuarioController extends Controller
 
     public function update(UpdateUserRequest $request, User $usuario)
     {
+        $this->verificarAccesoModulo($usuario);
+
         $validatedData = $request->validated();
 
         DB::transaction(function () use ($request, $usuario, $validatedData) {
@@ -174,9 +157,8 @@ class UsuarioController extends Controller
                 'activo' => $validatedData['activo'] ?? false,
             ]);
 
-            // Sincronizar roles
             if (isset($validatedData['roles'])) {
-                $usuario->syncRoles([$validatedData['roles']]);
+                $usuario->syncRoles($validatedData['roles']);
             } else {
                 $usuario->syncRoles([]);
             }
@@ -188,15 +170,17 @@ class UsuarioController extends Controller
 
     public function destroy(User $usuario)
     {
-        $this->authorize('eliminar_usuarios');
+        $this->authorize('usuarios.eliminar');
 
         if ($usuario->id === auth()->id()) {
             return back()->withErrors(['error' => 'No puedes eliminarte a ti mismo']);
         }
 
         if ($usuario->id === 1) {
-            return back()->withErrors(['error' => 'No puedes eliminar este usuario, porque es el administrador']);
+            return back()->withErrors(['error' => 'No puedes eliminar el administrador principal']);
         }
+
+        $this->verificarAccesoModulo($usuario);
 
         $usuario->delete();
 
@@ -206,9 +190,7 @@ class UsuarioController extends Controller
 
     public function miPerfil()
     {
-        $usuario = auth()->user();
-        // Eliminar el dd() que causa problemas
-        return view('usuarios.perfil', compact('usuario'));
+        return view('usuarios.perfil', ['usuario' => auth()->user()]);
     }
 
     public function actualizarPerfil(Request $request)
@@ -223,13 +205,7 @@ class UsuarioController extends Controller
             'direccion' => 'nullable|string|max:500',
         ]);
 
-        $usuario->update([
-            'nombre' => $request->nombre,
-            'apellido' => $request->apellido,
-            'email' => $request->email,
-            'telefono' => $request->telefono,
-            'direccion' => $request->direccion,
-        ]);
+        $usuario->update($request->only(['nombre', 'apellido', 'email', 'telefono', 'direccion']));
 
         return back()->with('success', 'Perfil actualizado exitosamente');
     }
@@ -237,8 +213,8 @@ class UsuarioController extends Controller
     public function cambiarContrasena(Request $request)
     {
         $request->validate([
-            'contraseña_actual' => 'required', // Corregir nombre del campo
-            'nueva_contraseña' => 'required|string|min:6|confirmed', // Corregir nombre del campo
+            'contraseña_actual' => 'required',
+            'nueva_contraseña' => 'required|string|min:6|confirmed',
         ], [
             'contraseña_actual.required' => 'La contraseña actual es obligatoria',
             'nueva_contraseña.required' => 'La nueva contraseña es obligatoria',
@@ -251,74 +227,56 @@ class UsuarioController extends Controller
             return back()->withErrors(['contraseña_actual' => 'La contraseña actual es incorrecta']);
         }
 
-        $usuario->update([
-            'password' => Hash::make($request->nueva_contraseña)
-        ]);
+        $usuario->update(['password' => Hash::make($request->nueva_contraseña)]);
 
         return back()->with('success', 'Contraseña cambiada exitosamente');
     }
 
     public function resetPassword(Request $request, User $usuario)
     {
-        // Autorización: Asegúrate de que el usuario autenticado tiene permiso para gestionar usuarios.
-        $this->authorize('gestionar_usuarios');
+        $this->authorize('usuarios.gestionar');
+        $this->verificarAccesoModulo($usuario);
 
-        try {
-            // Actualizar la contraseña del usuario a '123456'
-            $usuario->update([
-                'password' => Hash::make('123456')
-            ]);
+        $usuario->update(['password' => Hash::make('123456')]);
 
-            // Comprobar si la solicitud es una petición AJAX
-            if ($request->ajax()) {
-                // Si es AJAX, devolver una respuesta JSON de éxito.
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Contraseña restablecida a: 123456',
-                    'usuario' => $usuario
-                ], 200);
-            }
-
-            // Si no es AJAX (es una solicitud web normal), redirigir con un mensaje de éxito.
-            return redirect()->route('usuarios.index')
-                ->with('success', 'Contraseña restablecida a: 123456');
-        } catch (\Exception $e) {
-            // Opcional: Registrar el error para depuración
-            Log::error('Error al restablecer la contraseña del usuario ' . $usuario->id . ': ' . $e->getMessage());
-
-            // Manejar errores para solicitudes AJAX
-            if ($request->ajax()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Ha ocurrido un error al restablecer la contraseña.',
-                    'error' => $e->getMessage() // Opcional: para depuración, no mostrar en producción
-                ], 500); // Código de estado HTTP 500 Internal Server Error
-            }
-
-            // Manejar errores para solicitudes web normales
-            return redirect()->back() // Redirige a la página anterior
-                ->with('error', 'Ha ocurrido un error al restablecer la contraseña. Inténtalo de nuevo.');
+        if ($request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Contraseña restablecida a: 123456',
+            ], 200);
         }
+
+        return redirect()->route('usuarios.index')
+            ->with('success', 'Contraseña restablecida a: 123456');
     }
 
     public function toggleStatus(Request $request, User $usuario)
     {
-        $this->authorize('gestionar_usuarios');
+        $this->authorize('usuarios.gestionar');
+        $this->verificarAccesoModulo($usuario);
 
         $usuario->update(['activo' => !$usuario->activo]);
 
-        // Comprobar si la solicitud es una petición AJAX
         if ($request->ajax()) {
-            // Si es AJAX, devolver una respuesta JSON de éxito.
             return response()->json([
                 'success' => true,
                 'message' => 'Usuario ' . ($usuario->activo ? 'activado' : 'desactivado') . ' exitosamente.',
-                'user' => $usuario
             ], 200);
         }
 
-        $status = $usuario->activo ? 'activado' : 'desactivado';
         return redirect()->route('usuarios.index')
-            ->with('success', "Usuario {$status} exitosamente.");
+            ->with('success', "Usuario " . ($usuario->activo ? 'activado' : 'desactivado') . " exitosamente.");
+    }
+
+    protected function verificarAccesoModulo(User $usuario): void
+    {
+        $user = auth()->user();
+        if ($user->esAdministrador()) return;
+
+        abort_if(
+            $usuario->moduloClave() !== $user->moduloClave(),
+            403,
+            'No puedes gestionar usuarios de otro módulo'
+        );
     }
 }

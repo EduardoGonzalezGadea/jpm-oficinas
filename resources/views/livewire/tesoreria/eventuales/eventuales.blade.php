@@ -102,9 +102,9 @@
                                     <th class="text-center align-middle">Recibo</th>
                                     <th class="text-center align-middle">Medio de Pago</th>
                                     <th class="text-center align-middle"></th>
-                                    @canany(['gestionar_tesoreria', 'supervisar_tesoreria'])
+                                    @can('tesoreria.supervisar')
                                     <th class="text-center align-middle d-print-none">Confirmado</th>
-                                    @endcanany
+                                    @endcan
                                     <th class="text-center align-middle d-print-none">Acciones</th>
                                 </tr>
                             </thead>
@@ -131,7 +131,7 @@
                                         <i class="fas fa-times-circle text-danger" title="No en planilla"></i>
                                         @endif
                                     </td>
-                                    @canany(['gestionar_tesoreria', 'supervisar_tesoreria'])
+                                    @can('tesoreria.supervisar')
                                     <td
                                         class="text-center{{ !$eventual->confirmado ? ' table-warning' : '' }} align-middle d-print-none">
                                         <div class="custom-control custom-switch" style="transform: scale(0.8);">
@@ -143,12 +143,15 @@
                                                 for="confirmado-{{ $eventual->id }}"></label>
                                         </div>
                                     </td>
-                                    @endcanany
+                                    @endcan
                                     <td class="text-center align-middle d-print-none text-nowrap">
                                         <button wire:click="showDetails({{ $eventual->id }})"
                                             class="btn btn-sm btn-info btn-action-fixed" data-toggle="modal"
                                             data-target="#detailsModal" title="Detalles"><i
                                                 class="fas fa-eye"></i></button>
+                                        <button wire:click="editIngreso({{ $eventual->id }})"
+                                            class="btn btn-sm btn-success btn-action-fixed" title="Ingreso"><i
+                                                class="fas fa-file-invoice-dollar"></i></button>
                                         <button wire:click="edit({{ $eventual->id }})"
                                             class="btn btn-sm btn-primary btn-action-fixed" title="Editar"><i
                                                 class="fas fa-edit"></i></button>
@@ -165,7 +168,7 @@
                                 </tr>
                                 @empty
                                 <tr>
-                                    <td colspan="@canany(['gestionar_tesoreria', 'supervisar_tesoreria']) 10 @else 9 @endcanany"
+                                    <td colspan="@can('tesoreria.supervisar') 10 @else 9 @endcan"
                                         class="text-center">No hay registros para el mes y año seleccionados.</td>
                                 </tr>
                                 @endforelse
@@ -178,7 +181,7 @@
                                     <td class="text-right align-middle"><strong><span class="text-nowrap-custom">$
                                                 {{ number_format($subtotal->total_submonto, 2, ',', '.') }}</span></strong>
                                     </td>
-                                    <td colspan="@canany(['gestionar_tesoreria', 'supervisar_tesoreria']) 6 @else 5 @endcanany"
+                                    <td colspan="@can('tesoreria.supervisar') 6 @else 5 @endcan"
                                         class="align-middle"></td>
                                 </tr>
                                 @endforeach
@@ -188,7 +191,7 @@
                                     <td class="text-right align-middle"><strong><span class="text-nowrap-custom">$
                                                 {{ number_format($generalTotal, 2, ',', '.') }}</span></strong></td>
                                     <td
-                                        colspan="@canany(['gestionar_tesoreria', 'supervisar_tesoreria']) 6 @else 5 @endcanany">
+                                        colspan="@can('tesoreria.supervisar') 6 @else 5 @endcan">
                                     </td>
                                 </tr>
                             </tfoot>
@@ -368,6 +371,51 @@
         </div>
     </div>
 
+    <!-- Ingreso Modal -->
+    <div wire:ignore.self class="modal fade" id="ingresoModal" tabindex="-1" role="dialog"
+        aria-labelledby="ingresoModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="ingresoModalLabel">Registrar Ingreso</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <dl class="row">
+                            <dt class="col-sm-3">Titular</dt>
+                            <dd class="col-sm-9">{{ $titular }}</dd>
+
+                            <dt class="col-sm-3">Monto</dt>
+                            <dd class="col-sm-9">{{ $monto }}</dd>
+
+                            <dt class="col-sm-3">O/C</dt>
+                            <dd class="col-sm-9">{{ $orden_cobro }}</dd>
+
+                            <dt class="col-sm-3">Recibo</dt>
+                            <dd class="col-sm-9">{{ $recibo }}</dd>
+                        </dl>
+                        <div class="form-group">
+                            <label for="ingreso_input">Ingreso</label>
+                            <input type="text" wire:model.defer="ingreso" id="ingreso_input"
+                                class="form-control form-control-sm">
+                            @error('ingreso')
+                            <span class="text-danger">{{ $message }}</span>
+                            @enderror
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                    <button type="button" wire:click.prevent="updateIngreso()"
+                        class="btn btn-primary">Guardar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <livewire:tesoreria.eventuales.planillas-manager :mes="$mes" :year="$year" :key="$mes . $year" />
 
     @push('scripts')
@@ -440,10 +488,15 @@
 
         window.livewire.on('eventualUpdate', () => {
             $('#eventualModal').modal('hide');
+            $('#ingresoModal').modal('hide');
         });
 
         $(document).ready(function() {
             $('#eventualModal').on('hidden.bs.modal', function() {
+                window.livewire.emit('resetForm');
+            });
+
+            $('#ingresoModal').on('hidden.bs.modal', function() {
                 window.livewire.emit('resetForm');
             });
 
@@ -467,6 +520,10 @@
                         }
                     }
                 });
+            });
+
+            $('#ingresoModal').on('shown.bs.modal', function() {
+                $('#ingreso_input').focus();
             });
         });
     </script>
