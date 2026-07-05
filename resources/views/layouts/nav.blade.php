@@ -191,7 +191,7 @@
                                     <i class="fas fa-tags mr-2"></i>Conceptos de Caja
                                 </a>
                                 <a class="dropdown-item" href="{{ route('tesoreria.configuracion.siif-distribucion-dependencias.index') }}">
-                                    <i class="fas fa-sitemap mr-2"></i>Dist. SIIF Dependencias
+                                    <i class="fas fa-sitemap mr-2"></i>Dist. SIIF Deps.
                                 </a>
                                 <a class="dropdown-item" href="{{ route('tesoreria.configuracion.siif-distribucion-tipos.index') }}">
                                     <i class="fas fa-list-ol mr-2"></i>Dist. SIIF Tipos
