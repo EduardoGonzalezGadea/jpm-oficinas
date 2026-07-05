@@ -3,11 +3,14 @@
 namespace Tests\Unit\Services\Tesoreria;
 
 use App\DataTransferObjects\CfeData;
+use App\Exceptions\Tesoreria\CfeDuplicateException;
+use App\Exceptions\Tesoreria\CfeValidationException;
 use App\Models\Tesoreria\CajaConcepto;
 use App\Models\Tesoreria\TesCfe;
 use App\Models\Tesoreria\TesPlanillaEr;
 use App\Models\Tesoreria\SiifDistribucionTipo;
 use App\Models\Tesoreria\SiifDistribucionDependencia;
+use App\Models\TesCfePendiente;
 use App\Services\Tesoreria\CfeCreatorService;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\TestCase;
@@ -76,7 +79,7 @@ class CfeCreatorServiceTest extends TestCase
 
     public function test_create_manual_rejects_totals_mismatch(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(CfeValidationException::class);
 
         $data = new CfeData(
             documento_tipo: 'E-Factura Cobranza',
@@ -111,7 +114,7 @@ class CfeCreatorServiceTest extends TestCase
         );
         $this->service->createManual($data);
 
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(CfeDuplicateException::class);
         $this->service->createManual($data);
     }
 
@@ -141,7 +144,7 @@ class CfeCreatorServiceTest extends TestCase
             'planilla_er_id' => $this->planilla->id,
         ]);
 
-        $this->expectException(\RuntimeException::class);
+        $this->expectException(CfeValidationException::class);
         $this->service->deleteCfe($cfe->id);
     }
 
@@ -179,7 +182,7 @@ class CfeCreatorServiceTest extends TestCase
             items: [['id' => $item->id, 'detalle' => 'En planilla', 'importe' => 100]],
         );
 
-        $this->expectException(\RuntimeException::class);
+        $this->expectException(CfeValidationException::class);
         $this->service->updateCfe($cfe->id, $data);
     }
 
@@ -192,5 +195,175 @@ class CfeCreatorServiceTest extends TestCase
         );
 
         $this->assertTrue(true);
+    }
+
+    public function test_check_duplicate_rejects_same_serie_numero_in_tes_cfe(): void
+    {
+        TesCfe::factory()->create([
+            'documento_tipo' => 'E-Factura Cobranza',
+            'documento_serie' => 'X',
+            'documento_numero' => 'DDUP001',
+        ]);
+
+        $this->expectException(CfeDuplicateException::class);
+        $this->expectExceptionMessage('ya existe en el sistema');
+
+        $this->service->checkDocumentoDuplicado('E-Factura Cobranza', 'DDUP001', 'X');
+    }
+
+    public function test_check_duplicate_allows_same_numero_different_serie_in_tes_cfe(): void
+    {
+        TesCfe::factory()->create([
+            'documento_tipo' => 'E-Factura Cobranza',
+            'documento_serie' => 'A',
+            'documento_numero' => '123456',
+        ]);
+
+        $this->service->checkDocumentoDuplicado('E-Factura Cobranza', '123456', 'B');
+        $this->assertTrue(true);
+    }
+
+    private function crearPendiente(array $overrides = []): TesCfePendiente
+    {
+        $defaults = [
+            'tipo_cfe' => 'multas_cobradas',
+            'serie' => 'P',
+            'numero' => 'PEND001',
+            'fecha' => now(),
+            'monto' => 1000,
+            'moneda' => 'UYU',
+            'datos_extraidos' => '{}',
+            'estado' => 'pendiente',
+        ];
+        return TesCfePendiente::create(array_merge($defaults, $overrides));
+    }
+
+    public function test_check_duplicate_rejects_pendiente_with_same_serie_numero(): void
+    {
+        $this->crearPendiente(['serie' => 'P', 'numero' => 'PEND001']);
+
+        $this->expectException(CfeDuplicateException::class);
+        $this->expectExceptionMessage('ya existe como pendiente');
+
+        $this->service->checkDocumentoDuplicado('E-Factura Cobranza', 'PEND001', 'P');
+    }
+
+    public function test_check_duplicate_ignores_rechazado_pendiente(): void
+    {
+        $this->crearPendiente([
+            'serie' => 'R',
+            'numero' => 'RECHAZ01',
+            'tipo_cfe' => 'multas_cobradas',
+            'monto' => 500,
+            'estado' => 'rechazado',
+        ]);
+
+        $this->service->checkDocumentoDuplicado('E-Factura Cobranza', 'RECHAZ01', 'R');
+        $this->assertTrue(true);
+    }
+
+    public function test_create_manual_rejects_when_pendiente_exists(): void
+    {
+        $this->crearPendiente([
+            'serie' => 'A',
+            'numero' => 'PENDFLOW',
+            'monto' => 2000,
+        ]);
+
+        $this->expectException(CfeDuplicateException::class);
+        $this->expectExceptionMessage('ya existe como pendiente');
+
+        $data = new CfeData(
+            documento_tipo: 'E-Factura Cobranza',
+            documento_serie: 'A',
+            documento_numero: 'PENDFLOW',
+            fecha: now()->format('Y-m-d'),
+            receptor_nombre_denominacion: 'Test',
+            tes_caja_concepto_id: $this->concepto->id,
+            siif_distribucion_dependencia_id: $this->dependencia->id,
+            items: [['detalle' => 'Item', 'importe' => 2000]],
+            moneda: 'UYU',
+        );
+
+        $this->service->createManual($data);
+    }
+
+    public function test_check_duplicate_detects_same_tipo_serie_numero_without_serie(): void
+    {
+        TesCfe::factory()->create([
+            'documento_tipo' => 'e-Ticket',
+            'documento_serie' => null,
+            'documento_numero' => '12345',
+        ]);
+
+        $this->expectException(CfeDuplicateException::class);
+        $this->expectExceptionMessage('ya existe en el sistema');
+
+        $this->service->checkDocumentoDuplicado('e-Ticket', '12345', null);
+    }
+
+    public function test_check_duplicate_allows_same_numero_different_serie_or_tipo(): void
+    {
+        TesCfe::factory()->create([
+            'documento_tipo' => 'e-Factura',
+            'documento_serie' => 'A',
+            'documento_numero' => '99999',
+        ]);
+
+        // Mismo numero, distinta serie -> no debe rechazar
+        $this->service->checkDocumentoDuplicado('e-Factura', '99999', 'B');
+        $this->assertTrue(true);
+    }
+
+    public function test_check_duplicate_rejects_same_numero_and_null_serie_in_pendiente(): void
+    {
+        $this->crearPendiente([
+            'serie' => null,
+            'numero' => 'NOSERIE01',
+            'monto' => 500,
+        ]);
+
+        $this->expectException(CfeDuplicateException::class);
+        $this->expectExceptionMessage('ya existe como pendiente');
+
+        $this->service->checkDocumentoDuplicado('e-Ticket', 'NOSERIE01', null);
+    }
+
+    public function test_check_duplicate_allows_different_tipo_with_same_numero_in_tes_cfe(): void
+    {
+        TesCfe::factory()->create([
+            'documento_tipo' => 'e-Factura',
+            'documento_serie' => null,
+            'documento_numero' => '12345',
+        ]);
+
+        // Mismo numero y null serie, pero distinto tipo -> documentos diferentes
+        $this->service->checkDocumentoDuplicado('e-Ticket', '12345', null);
+        $this->assertTrue(true);
+    }
+
+    public function test_create_manual_rejects_when_pendiente_exists_without_serie(): void
+    {
+        $this->crearPendiente([
+            'serie' => null,
+            'numero' => 'NOSERIECFE',
+            'monto' => 3000,
+        ]);
+
+        $this->expectException(CfeDuplicateException::class);
+        $this->expectExceptionMessage('ya existe como pendiente');
+
+        $data = new CfeData(
+            documento_tipo: 'e-Ticket',
+            documento_numero: 'NOSERIECFE',
+            fecha: now()->format('Y-m-d'),
+            receptor_nombre_denominacion: 'Test',
+            tes_caja_concepto_id: $this->concepto->id,
+            siif_distribucion_dependencia_id: $this->dependencia->id,
+            items: [['detalle' => 'Item', 'importe' => 3000]],
+            moneda: 'UYU',
+        );
+
+        $this->service->createManual($data);
     }
 }

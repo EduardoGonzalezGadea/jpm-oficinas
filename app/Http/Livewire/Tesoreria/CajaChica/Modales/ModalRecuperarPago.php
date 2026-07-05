@@ -50,7 +50,7 @@ class ModalRecuperarPago extends Component
 
             $this->showModal = true;
         } catch (\Exception $e) {
-            $this->emit('mostrarAlerta', ['icon' => 'error', 'text' => 'Pago no encontrado o error al cargar datos.', 'toast' => true, 'position' => 'top-end', 'timer' => 5000]);
+            $this->dispatchBrowserEvent('swal', ['icon' => 'error', 'text' => 'Pago no encontrado o error al cargar datos.', 'toast' => true, 'position' => 'top-end', 'timer' => 5000]);
         }
     }
 
@@ -61,17 +61,32 @@ class ModalRecuperarPago extends Component
         $rules['recuperarPagoData.numero_ingreso_bse'] = 'nullable|string|max:255';
         $rules['recuperarPagoData.fecha_ingreso_bse'] = 'nullable|date';
 
-        $this->validate($rules, $request->messages() ?? []);
+        $pago = Pago::find($this->recuperarPagoData['relPago']);
+        $maxRecuperable = 0;
+        if ($pago) {
+            $rendido = $pago->rendidoPagos;
+            $recuperado = $pago->recuperadoPagos ?: 0;
+            $maxRecuperable = is_null($rendido)
+                ? max(0, round($pago->montoPagos - $recuperado, 2))
+                : max(0, round($rendido - $recuperado, 2));
+        }
+        $rules['recuperarPagoData.monto_recuperado'] = "required|numeric|min:0.01|max:{$maxRecuperable}";
+
+        $messages = $request->messages() ?? [];
+        $messages['recuperarPagoData.monto_recuperado.max'] = 'El monto a recuperar no puede ser mayor que el saldo disponible ($' . number_format($maxRecuperable, 2, ',', '.') . ').';
+
+        $this->validate($rules, $messages);
 
         try {
             $service = app(\App\Services\Tesoreria\CajaChicaService::class);
             $service->guardarRecuperacionPago($this->recuperarPagoData);
 
             $this->cerrarModal();
-            $this->emit('fondoActualizado'); 
-            $this->emit('mostrarAlerta', ['icon' => 'success', 'text' => 'Recuperación de pago guardada exitosamente.', 'toast' => true, 'position' => 'top-end', 'timer' => 5000]);
+            session()->flash('message', 'Recuperación de pago guardada exitosamente.');
+            return redirect()->route('tesoreria.caja-chica.index');
         } catch (\Exception $e) {
-            $this->emit('mostrarAlerta', ['icon' => 'error', 'text' => 'Error al guardar la recuperación del pago: ' . $e->getMessage(), 'toast' => true, 'position' => 'top-end', 'timer' => 5000]);
+            session()->flash('error', 'Error al guardar la recuperación del pago: ' . $e->getMessage());
+            return redirect()->route('tesoreria.caja-chica.index');
         }
     }
 

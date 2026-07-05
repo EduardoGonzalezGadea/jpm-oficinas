@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Services\CfeExtractor;
 
+use App\Helpers\TextoHelper;
 use App\Services\CfeProcessorService;
 use App\Repositories\CfePendienteRepository;
 use PHPUnit\Framework\TestCase;
@@ -134,15 +135,15 @@ class CfeDeteccionTipoTest extends TestCase
 
     public function test_quitar_acentos_reemplaza_vocales_acentuadas(): void
     {
-        $this->assertEquals('aeiou', $this->service->quitarAcentos('áéíóú'));
-        $this->assertEquals('aeiou', $this->service->quitarAcentos('ÁÉÍÓÚ'));
-        $this->assertEquals('n', $this->service->quitarAcentos('ñ'));
-        $this->assertEquals('u', $this->service->quitarAcentos('ü'));
+        $this->assertEquals('aeiou', TextoHelper::quitarAcentos('áéíóú'));
+        $this->assertEquals('AEIOU', TextoHelper::quitarAcentos('ÁÉÍÓÚ'));
+        $this->assertEquals('n', TextoHelper::quitarAcentos('ñ'));
+        $this->assertEquals('u', TextoHelper::quitarAcentos('ü'));
     }
 
     public function test_quitar_acentos_no_modifica_texto_sin_acentos(): void
     {
         $texto = 'hola mundo 123';
-        $this->assertEquals($texto, $this->service->quitarAcentos($texto));
+        $this->assertEquals($texto, TextoHelper::quitarAcentos($texto));
     }
 }

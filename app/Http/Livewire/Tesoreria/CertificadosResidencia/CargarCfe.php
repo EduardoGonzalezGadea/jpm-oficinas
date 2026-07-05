@@ -42,25 +42,29 @@ class CargarCfe extends Component
         try {
             $text = app(\App\Services\CfeProcessorService::class)->parsearPdf($this->archivo->getRealPath());
 
-            $datos = $this->parsearTextoCfe($text);
+            $extractor = new \App\Services\CfeExtractor\CertificadoResidenciaExtractor();
+            /** @var \App\DTOs\CfeExtraccionDto $dto */
+            $dto = $extractor->extraer($text);
+            $extractor->validar($dto);
 
-            if (isset($datos['error_validacion'])) {
-                $this->mensajeError = $datos['error_validacion'];
-                $this->dispatchBrowserEvent('swal:modal-error', [
-                    'title' => 'Comprobante No Válido',
-                    'text' => $datos['error_validacion']
-                ]);
-                return;
-            }
+            $datos = $dto->toArray();
 
-            if (empty($datos) || !$datos['numero']) {
-                $this->mensajeError = "No se pudieron extraer datos del archivo. Asegúrate de que es un CFE válido.";
+            // Validar campos críticos
+            if (empty($datos['fecha']) || empty($datos['serie']) || empty($datos['numero']) || empty($datos['monto'])) {
+                $this->mensajeError = "Datos incompletos del CFE. Faltan campos obligatorios (fecha, serie, número, monto).";
+                \Illuminate\Support\Facades\Log::channel('cfe_errors')->warning('CertificadosResidencia: campos críticos vacíos', $datos);
                 return;
             }
 
             $this->datosExtraidos = $datos;
             $this->buscarCertificadoCoincidente();
             $this->prefilarNuevoCertificado();
+        } catch (\App\Exceptions\CfeExtraccionInvalidaException $e) {
+            $this->mensajeError = $e->getMessage();
+            $this->dispatchBrowserEvent('swal:modal-error', [
+                'title' => 'Comprobante No Válido',
+                'text' => $e->getMessage()
+            ]);
         } catch (\Exception $e) {
             $this->mensajeError = "Error al procesar el PDF: " . $e->getMessage();
         }
@@ -113,9 +117,9 @@ class CargarCfe extends Component
         }
 
         // Nombre Receptor del CFE
-        if (preg_match('/NOMBRE O DENOMINACIÓN DOMICILIO FISCAL\s*\n\s*(.*?)(?=\s*\n\s*(?:INFORMACION ADICIONAL|DETALLE DESCRIPCIÓN|PERIODO|FECHA|$))/isu', $text, $matches)) {
+        if (preg_match('/NOMBRE O DENOMINACIÓN\s*\n?\s*DOMICILIO FISCAL\s+(.*?)(?=\s*(?:INFORMACION ADICIONAL|DETALLE DESCRIPCIÓN|PERIODO|FECHA|$))/isu', $text, $matches)) {
             $datos['nombre_receptor'] = trim(preg_replace('/\s+/', ' ', $matches[1]));
-        } elseif (preg_match('/FISCAL\s*(.*?)(?=\s*(?:INFORMACION|DETALLE|FECHA|\d{2}\/\d{2}\/\d{4}|$))/isu', $text, $matches)) {
+        } elseif (preg_match('/(?:NOMBRE O DENOMINACIÓN[\s\S]*?)?DOMICILIO\s+FISCAL\s+(.*?)(?=\s*(?:INFORMACION|DETALLE|FECHA|\d{2}\/\d{2}\/\d{4}|$))/isu', $text, $matches)) {
             $datos['nombre_receptor'] = trim(preg_replace('/\s+/', ' ', $matches[1]));
         }
 

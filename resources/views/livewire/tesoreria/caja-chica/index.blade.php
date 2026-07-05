@@ -1,48 +1,4 @@
 <div>
-    @if (session()->has('message'))
-    <div class="alert alert-success alert-dismissible fade show" role="alert">
-        {{ session('message') }}
-        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-        </button>
-    </div>
-    @endif
-
-    @if (session()->has('error'))
-    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-        {{ session('error') }}
-        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-        </button>
-    </div>
-    @endif
-
-    {{-- Fila mes anterior ahora gestionada globalmente o mantenida aquí si es única --}}
-    <style>
-        .fila-mes-anterior {
-            background-color: rgba(253, 126, 20, 0.08) !important; /* Ahora usa el color de acento (naranja) suave */
-            border-left: 3px solid var(--color-accent) !important;
-        }
-
-        /* Mejoras de densidad y Sticky Headers */
-        .table-container {
-            /* Permitir que la tabla se expanda infinitamente */
-        }
-        .table-container thead th {
-            position: sticky;
-            top: 0;
-            z-index: 1;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-        }
-        /* Ajuste para Dark Mode */
-        @media (prefers-color-scheme: dark) {
-            .table-container thead th {
-                background-color: #343a40;
-                color: #ffffff;
-            }
-        }
-    </style>
-
     <!-- Cabecera de Caja Chica -->
     <div class="card mb-3 shadow-sm">
         <div class="card-header card-header-section card-header-gradient py-2 px-3">
@@ -95,7 +51,7 @@
                     <th class="text-center d-print-none">Acciones</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody wire:key="tbody-caja-{{ $refreshKey }}">
                 @forelse ($tablaCajaChica as $item)
                 <tr wire:key="cajachica-{{ $item['idCajaChica'] }}">
                     <td class="text-center font-weight-bold">{{ mb_strtoupper($item['mes'], 'UTF-8') }}</td>
@@ -142,9 +98,9 @@
             <button class="btn btn-secondary btn-sm mr-2" wire:click="establecerFechaHoy">
                 <i class="fas fa-calendar-day"></i> Hoy
             </button>
-            <button class="btn btn-success btn-sm" wire:click="exportarExcel" onclick="setTimeout(() => { document.getElementById('loader').style.display = 'none'; }, 2000)">
+            <a href="{{ route('tesoreria.caja-chica.exportar-excel', ['mes' => $mesActual, 'anio' => $anioActual, 'fecha_hasta' => $fechaHasta]) }}" class="btn btn-success btn-sm" target="_blank">
                 <i class="fas fa-file-excel"></i> Excel
-            </button>
+            </a>
         </div>
     </div>
 
@@ -163,7 +119,7 @@
                     <th class="text-center align-middle">Saldo en $</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody wire:key="tbody-totales-{{ $refreshKey }}">
                 @if (!empty($tablaTotales))
                 <tr>
                     <td class="text-center align-middle font-weight-bold">
@@ -263,7 +219,7 @@
                     <th class="text-center align-middle d-print-none">ACCIONES</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody wire:key="tbody-pendientes-{{ $refreshKey }}">
                 @forelse ($tablaPendientesDetalle as $item)
                 <tr wire:key="pendiente-{{ $item['idPendientes'] }}"
                     class="{{ ($item['es_mes_anterior'] ?? false) ? 'table-warning fila-mes-anterior' : '' }}">
@@ -322,7 +278,6 @@
                                 <a href="{{ route('tesoreria.caja-chica.imprimir.pendiente', $item['idPendientes']) }}"
                                     target="_blank" class="btn btn-sm btn-dark mr-1" title="Imprimir Pendiente">
                                     <i class="fas fa-print"></i>
-                                </a>
                                 </a>
                                 @can('tesoreria.supervisar')
                                 @if(($item['cant_movimientos'] ?? 0) == 0)
@@ -480,7 +435,7 @@
                     <th class="text-center align-middle d-print-none">ACCIONES</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody wire:key="tbody-pagos-{{ $refreshKey }}">
                 @forelse ($tablaPagos as $item)
                 <tr wire:key="pago-{{ $item['idPagos'] }}"
                     class="{{ ($item['es_mes_anterior'] ?? false) ? 'table-warning fila-mes-anterior' : '' }}">
@@ -517,7 +472,7 @@
                         <input type='hidden' name='selIdPagos' value='{{ $item['idPagos'] }}'>
                         <div class='btn-group' role='group'>
                             <button type="button" class="btn btn-sm btn-dark"
-                                wire:click="$emit('mostrarModalEditarPago', {{ $item['idPagos'] }})" title="Editar">
+                                wire:click="$emitTo('tesoreria.caja-chica.modales.modal-editar-pago', 'mostrarModalEditarPago', {{ $item['idPagos'] }})" title="Editar">
                                 <i class="fas fa-pencil-alt"></i>
                             </button>
                             @if (!($item['tiene_datos_rendicion'] ?? false))
@@ -562,6 +517,29 @@
                 @endforelse
             </tbody>
         </table>
+    </div>
+
+    <!-- Estadísticas del período -->
+    <div class="card mt-4 mb-3 shadow-sm border-primary">
+        <div class="card-header bg-primary text-white py-1 px-3">
+            <strong><i class="fas fa-chart-bar mr-2"></i>Estadísticas del período ({{ ucfirst($mesActual) }} {{ $anioActual }})</strong>
+        </div>
+        <div class="card-body py-2 px-3">
+            <div class="row text-center">
+                <div class="col-md-4 border-right">
+                    <div class="small text-muted">Total Pendientes Entregados</div>
+                    <div class="font-weight-bold h5 mb-0 text-primary">$ {{ number_format($totalPendientesEntregados, 2, ',', '.') }}</div>
+                </div>
+                <div class="col-md-4 border-right">
+                    <div class="small text-muted">Total Pagos Directos Otorgados</div>
+                    <div class="font-weight-bold h5 mb-0 text-warning">$ {{ number_format($totalPagosDirectosOtorgados, 2, ',', '.') }}</div>
+                </div>
+                <div class="col-md-4">
+                    <div class="small text-muted">Pendientes + Pagos Directos</div>
+                    <div class="font-weight-bold h5 mb-0 text-success">$ {{ number_format($sumaPendientesMasPagos, 2, ',', '.') }}</div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Espacio inferior extra para no tapar contenido con botones flotantes -->
@@ -619,156 +597,5 @@
             </div>
         </div>
     </div>
+
 </div>
-
-@push('scripts')
-<script>
-    document.addEventListener('livewire:init', function() {
-        // === Gestión de Modales ===
-
-        // Prevenir que Livewire re-renderice innecesariamente
-        Livewire.on('livewire:load', () => {
-            console.log('Livewire cargado, manteniendo estado de modales');
-        });
-
-        // === Gestión de Estados de Carga ===
-        const modales = {
-            recuperar: {
-                show: () => $('#modalRecuperar').modal('show'),
-                hide: () => $('#modalRecuperar').modal('hide')
-            },
-            nuevoFondo: {
-                show: () => {
-                    if ($('#modalNuevoFondo').length) {
-                        $('#modalNuevoFondo').modal('show');
-                    } else {
-                        console.error('Error: Elemento #modalNuevoFondo no encontrado en el DOM.');
-                    }
-                },
-                hide: () => {
-                    if ($('#modalNuevoFondo').length) {
-                        $('#modalNuevoFondo').modal('hide');
-                    }
-                }
-            }
-        };
-
-        // Eventos de modales
-        Livewire.on('show-recuperar-modal', modales.recuperar.show);
-        Livewire.on('hide-recuperar-modal', modales.recuperar.hide);
-        Livewire.on('show-recuperar-rendido-modal', () => $('#modalRecuperarRendido').modal('show'));
-        Livewire.on('hide-recuperar-rendido-modal', () => $('#modalRecuperarRendido').modal('hide'));
-        Livewire.on('show-recuperar-pago-modal', () => $('#modalRecuperarPago').modal('show'));
-        Livewire.on('hide-recuperar-pago-modal', () => $('#modalRecuperarPago').modal('hide'));
-        Livewire.on('mostrar-modal-nuevo-fondo', modales.nuevoFondo.show);
-        Livewire.on('cerrar-modal-nuevo-fondo', modales.nuevoFondo.hide);
-
-        // Inicializar datepicker si es necesario
-        Livewire.on('contentChanged', function() {
-            if ($.fn.datepicker) {
-                $('.datepicker').not('.hasDatepicker').datepicker({
-                    dateFormat: 'dd/mm/yy',
-                    changeMonth: true,
-                    changeYear: true,
-                });
-            }
-        });
-
-
-
-        // --- Listener para mostrar el modal de nuevo fondo ---
-        Livewire.on('mostrar-modal-nuevo-fondo', function() {
-            if ($('#modalNuevoFondo').length) {
-                $('#modalNuevoFondo').modal('show');
-            } else {
-                console.error('Error: Elemento #modalNuevoFondo no encontrado en el DOM.');
-            }
-        });
-
-        Livewire.on('cerrar-modal-nuevo-fondo', function() {
-            if ($('#modalNuevoFondo').length) {
-                $('#modalNuevoFondo').modal('hide');
-            }
-        });
-
-        // Listener para eventos de actualización
-        Livewire.on('fondo-actualizado', function(data) {
-            console.log('Fondo actualizado:', data);
-            // Aquí puedes agregar notificaciones adicionales si necesitas
-        });
-
-        // Listeners para el modal de dependencias
-        Livewire.on('dependenciaCreada', function() {
-            console.log('Dependencia creada exitosamente');
-        });
-
-        Livewire.on('dependenciaActualizada', function() {
-            console.log('Dependencia actualizada exitosamente');
-        });
-
-        Livewire.on('dependenciaEliminada', function() {
-            console.log('Dependencia eliminada exitosamente');
-        });
-
-
-
-        // Listener para cuando se recargan los datos
-        Livewire.on('datosRecargados', function() {
-            console.log('Datos recargados correctamente');
-            // Forzar la actualización de la interfaz si es necesario
-            Livewire.find('{{ $this->id }}').call('$refresh');
-        });
-
-        // Listener para cuando se completa la recarga forzada
-        Livewire.on('recargaCompletada', function() {
-            console.log('Recarga completa finalizada');
-            // Aquí se pueden agregar acciones adicionales si es necesario
-        });
-
-        // Listeners para gestión de modales de acreedores y dependencias
-        Livewire.on('cerrarModalAcreedores', function() {
-            $('#modalAcreedores').modal('hide');
-        });
-
-        Livewire.on('cerrarModalDependencias', function() {
-            $('#modalDependencias').modal('hide');
-        });
-
-        // === Gestión de Estados de Carga ===
-        const tablasAfectadas = ['tablaTotales', 'tablaPendientesDetalle', 'tablaPagos'];
-
-        // Función para manejar el estado de carga de las tablas
-        const manejarEstadoTablas = (estado) => {
-            tablasAfectadas.forEach(tabla => {
-                const elemento = document.querySelector(`[wire\\:loading\\.${tabla}]`);
-                if (elemento) {
-                    if (estado === 'loading') {
-                        elemento.classList.add('loading');
-                    } else {
-                        elemento.classList.remove('loading');
-                    }
-                }
-            });
-        };
-
-        // Escuchar eventos de carga
-        Livewire.on('loading', () => manejarEstadoTablas('loading'));
-        Livewire.on('loaded', () => manejarEstadoTablas('loaded'));
-
-        // === Gestión de Errores ===
-        Livewire.on('error', (error) => {
-            console.error('Error en Livewire:', error);
-            // Aquí puedes agregar manejo de errores global
-        });
-
-        // === Inicialización Adicional ===
-        // Asegurar que los modales se inicialicen correctamente
-        $(document).ready(function() {
-            // Verificar que los modales estén disponibles
-            console.log('Modales disponibles:', {
-                nuevoFondo: $('#modalNuevoFondo').length > 0
-            });
-        });
-    });
-</script>
-@endpush

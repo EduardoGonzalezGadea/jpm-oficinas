@@ -10,7 +10,12 @@ use App\Models\Tesoreria\CajaConcepto;
 use App\Models\Tesoreria\SiifDistribucion;
 use App\Models\Tesoreria\SiifDistribucionDependencia;
 use App\Models\Tesoreria\MedioDePago;
+use App\Exceptions\Tesoreria\CfeNotFoundException;
+use App\Exceptions\Tesoreria\CfeValidationException;
+use App\Helpers\TextoHelper;
 use App\Services\Tesoreria\CfeCreatorService;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 
 class Index extends Component
 {
@@ -76,10 +81,12 @@ class Index extends Component
         try {
             $this->cfeCreator->deleteCfe($cfeId);
 
-            $this->dispatchBrowserEvent('swal:modal', [
-                'type' => 'success',
-                'title' => 'CFE eliminado',
-                'text' => 'El CFE ha sido eliminado correctamente.',
+            $this->dispatchBrowserEvent('swal:toast-success', [
+                'text' => 'CFE eliminado correctamente.',
+            ]);
+        } catch (CfeNotFoundException | CfeValidationException $e) {
+            $this->dispatchBrowserEvent('swal:toast-error', [
+                'text' => $e->getMessage(),
             ]);
         } catch (\RuntimeException $e) {
             $this->dispatchBrowserEvent('swal:toast-error', [
@@ -88,15 +95,37 @@ class Index extends Component
         }
     }
 
-    private function normalizarTexto(string $texto): string
+    public function render()
     {
-        $texto = mb_strtolower($texto, 'UTF-8');
-        $from = ['á', 'é', 'í', 'ó', 'ú', 'ü', 'ñ', 'à', 'è', 'ì', 'ò', 'ù', 'â', 'ê', 'î', 'ô', 'û'];
-        $to = ['a', 'e', 'i', 'o', 'u', 'u', 'n', 'a', 'e', 'i', 'o', 'u', 'a', 'e', 'i', 'o', 'u'];
-        return str_replace($from, $to, $texto);
+        try {
+            return $this->doRender();
+        } catch (\Throwable $e) {
+            Log::error('Error en render de GestionCfe', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            $this->dispatchBrowserEvent('swal:toast-error', [
+                'text' => 'Error al cargar la lista de CFEs. Recargue la página e intente nuevamente.',
+            ]);
+
+            $cfes = collect();
+            $cajaConceptos = collect();
+            $siifDependencias = collect();
+            $distribuciones = [];
+            $editDistribuciones = [];
+            $nuevoDistribuciones = [];
+            $mediosDePago = collect();
+            $anosRegistrados = [(int) date('Y')];
+
+            return view('livewire.tesoreria.gestion-cfe.index', compact(
+                'cfes', 'cajaConceptos', 'siifDependencias', 'distribuciones',
+                'editDistribuciones', 'nuevoDistribuciones', 'mediosDePago', 'anosRegistrados'
+            ))->extends('layouts.app')->section('content');
+        }
     }
 
-    public function render()
+    private function doRender()
     {
         $cfes = TesCfe::with(['items.planillaEr', 'mediosPago', 'cajaConcepto', 'siifDistribucionTipo', 'siifDistribucionDependencia'])
             ->withCount(['items as items_en_planilla_count' => fn($q) => $q->whereNotNull('planilla_er_id')])
@@ -127,13 +156,13 @@ class Index extends Component
         $cfes = $cfes->orderBy('fecha', 'desc')->orderBy('documento_numero', 'desc')
             ->paginate(15);
 
-        $cajaConceptos = CajaConcepto::whereNull('deleted_at')
-            ->ordenado()
-            ->get();
+        $cajaConceptos = Cache::remember('cfe_caja_conceptos', 300, fn() =>
+            CajaConcepto::whereNull('deleted_at')->ordenado()->get()
+        );
 
-        $siifDependencias = SiifDistribucionDependencia::whereNull('deleted_at')
-            ->orderBy('dependencia')
-            ->get();
+        $siifDependencias = Cache::remember('cfe_siif_dependencias', 300, fn() =>
+            SiifDistribucionDependencia::whereNull('deleted_at')->orderBy('dependencia')->get()
+        );
 
         $distribuciones = [];
         if ($this->cajaConceptoSeleccionado && $this->siifDependenciaSeleccionado) {
@@ -177,20 +206,26 @@ class Index extends Component
             }
         }
 
-        $mediosDePago = MedioDePago::activos()->ordenado()->get();
+        $mediosDePago = Cache::remember('cfe_medios_pago', 300, fn() =>
+            MedioDePago::activos()->ordenado()->get()
+        );
 
         $currentYear = (int) date('Y');
-        $anosRegistrados = TesCfe::whereNotNull('fecha')
-            ->selectRaw('YEAR(fecha) as ano')
-            ->distinct()
-            ->orderBy('ano', 'desc')
-            ->pluck('ano')
-            ->map(fn($year) => (int) $year)
-            ->toArray();
+        $anosRegistrados = Cache::remember('cfe_anos_registrados', 300, function () use ($currentYear) {
+            $anos = TesCfe::whereNotNull('fecha')
+                ->selectRaw('YEAR(fecha) as ano')
+                ->distinct()
+                ->orderBy('ano', 'desc')
+                ->pluck('ano')
+                ->map(fn($year) => (int) $year)
+                ->toArray();
 
-        if (!in_array($currentYear, $anosRegistrados)) {
-            array_unshift($anosRegistrados, $currentYear);
-        }
+            if (!in_array($currentYear, $anos)) {
+                array_unshift($anos, $currentYear);
+            }
+
+            return $anos;
+        });
 
         return view('livewire.tesoreria.gestion-cfe.index', compact('cfes', 'cajaConceptos', 'siifDependencias', 'distribuciones', 'editDistribuciones', 'nuevoDistribuciones', 'mediosDePago', 'anosRegistrados'))
             ->extends('layouts.app')

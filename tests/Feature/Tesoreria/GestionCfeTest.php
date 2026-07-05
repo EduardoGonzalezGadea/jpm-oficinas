@@ -83,7 +83,7 @@ class GestionCfeTest extends TestCase
             ->set('nuevoItems.0.detalle', 'Item de prueba')
             ->set('nuevoItems.0.importe', 1500)
             ->call('guardarNuevo')
-            ->assertDispatchedBrowserEvent('swal:modal');
+            ->assertDispatchedBrowserEvent('swal:toast-success');
 
         $this->assertDatabaseHas('tes_cfes', [
             'documento_numero' => 'TEST001',
@@ -96,6 +96,7 @@ class GestionCfeTest extends TestCase
     {
         TesCfe::factory()->create([
             'documento_tipo' => 'E-Factura Cobranza',
+            'documento_serie' => null,
             'documento_numero' => 'DUP001',
         ]);
 
@@ -150,7 +151,7 @@ class GestionCfeTest extends TestCase
             ->set('editCajaConceptoSeleccionado', $concepto2->id)
             ->set('editSiifDependenciaSeleccionado', $dependencia2->id)
             ->call('guardarEdicion')
-            ->assertDispatchedBrowserEvent('swal:modal');
+            ->assertDispatchedBrowserEvent('swal:toast-success');
 
         $this->assertDatabaseHas('tes_cfes', [
             'id' => $cfe->id,
@@ -165,7 +166,7 @@ class GestionCfeTest extends TestCase
 
         Livewire::test(\App\Http\Livewire\Tesoreria\GestionCfe\Index::class)
             ->call('borrarCfe', $cfe->id)
-            ->assertDispatchedBrowserEvent('swal:modal');
+            ->assertDispatchedBrowserEvent('swal:toast-success');
 
         $this->assertSoftDeleted('tes_cfes', ['id' => $cfe->id]);
     }

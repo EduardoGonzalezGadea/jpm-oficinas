@@ -84,7 +84,7 @@ class Index extends Component
         $totalGeneralPorMedioPago = collect();
 
         if ($this->tabActivo) {
-            $cfes = TesCfe::with(['siifDistribucionTipo', 'siifDistribucionDependencia', 'mediosPago'])
+            $cfes = TesCfe::with(['siifDistribucionTipo', 'siifDistribucionDependencia', 'mediosPago', 'cajaConcepto'])
                 ->where('siif_distribucion_tipo_id', $this->tabActivo)
                 ->when($this->search, function ($query) {
                     $query->where(function ($q) {
@@ -111,9 +111,25 @@ class Index extends Component
                 $mediosPagoSubtotal = $items->flatMap->mediosPago
                     ->groupBy('medio_pago_tipo')
                     ->map(fn($mps) => $mps->sum('medio_pago_valor'));
+
+                $conceptos = $items->groupBy(function ($cfe) {
+                    return $cfe->cajaConcepto?->caja_concepto ?? 'Sin concepto';
+                })->map(function ($cfes, $concepto) {
+                    $conceptoSubtotal = $cfes->sum('total_a_pagar');
+                    $conceptoMediosPago = $cfes->flatMap->mediosPago
+                        ->groupBy('medio_pago_tipo')
+                        ->map(fn($mps) => $mps->sum('medio_pago_valor'));
+                    return (object) [
+                        'concepto' => $concepto,
+                        'items' => $cfes,
+                        'subtotal' => $conceptoSubtotal,
+                        'mediosPago' => $conceptoMediosPago,
+                    ];
+                })->sortKeys()->values();
+
                 return (object) [
                     'fecha' => $fecha,
-                    'items' => $items,
+                    'conceptos' => $conceptos,
                     'subtotal' => $subtotal,
                     'mediosPago' => $mediosPagoSubtotal,
                 ];

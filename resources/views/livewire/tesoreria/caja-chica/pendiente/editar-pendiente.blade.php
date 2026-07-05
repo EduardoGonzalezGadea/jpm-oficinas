@@ -1,6 +1,11 @@
 <div>
     <!-- Tabla Pendiente Detalle con botón de editar -->
-    <h4 class="mt-4">Detalle del Pendiente</h4>
+    <div class="d-flex justify-content-between align-items-center mt-4 mb-2">
+        <h4 class="mb-0">Detalle del Pendiente</h4>
+        <a href="{{ route('tesoreria.caja-chica.index') }}" class="btn btn-success btn-sm">
+            <i class="fas fa-arrow-left"></i> Volver
+        </a>
+    </div>
     <div class="table-responsive">
         <table class="table table-striped table-bordered" id="tablaCajaChica">
             <thead class="thead-dark">

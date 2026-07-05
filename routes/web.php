@@ -59,6 +59,7 @@ Route::get('/utilidad/actualizar-soa-art-184', [UtilidadController::class, 'actu
 Route::prefix('health')->name('health.')->group(function () {
     Route::get('/external-downloads',        [HealthCheckController::class, 'externalDownloads']) ->name('external-downloads');
     Route::get('/external-downloads-stats',  [HealthCheckController::class, 'externalDownloadsStats']) ->name('external-downloads-stats');
+    Route::get('/cfe',                       [HealthCheckController::class, 'cfeHealth']);
 });
 
 // ============================================================================

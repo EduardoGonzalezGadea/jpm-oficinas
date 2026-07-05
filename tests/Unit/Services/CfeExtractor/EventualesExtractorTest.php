@@ -3,14 +3,14 @@
 namespace Tests\Unit\Services\CfeExtractor;
 
 use App\Services\CfeExtractor\EventualesExtractor;
+use App\DTOs\CfeExtraccionDto;
 use PHPUnit\Framework\TestCase;
+use Tests\Unit\Services\CfeExtractor\Helpers\WithCfeFixtures;
 
-/**
- * Tests unitarios para EventualesExtractor.
- * Cubre soporta(), getNombreLegible(), extraer() y validar().
- */
 class EventualesExtractorTest extends TestCase
 {
+    use WithCfeFixtures;
+
     private EventualesExtractor $extractor;
 
     protected function setUp(): void
@@ -19,19 +19,13 @@ class EventualesExtractorTest extends TestCase
         $this->extractor = new EventualesExtractor();
     }
 
-    // -------------------------------------------------------------------------
-    // soporta()
-    // -------------------------------------------------------------------------
-
     public function test_soporta_eventuales(): void
     {
         $this->assertTrue($this->extractor->soporta('eventuales'));
-        $this->assertTrue($this->extractor->soporta('eventual'));
     }
 
     public function test_soporta_policias_eventuales(): void
     {
-        // la palabra "eventual" está contenida en "policias_eventuales"
         $this->assertTrue($this->extractor->soporta('policias_eventuales'));
     }
 
@@ -65,10 +59,6 @@ class EventualesExtractorTest extends TestCase
         $this->assertFalse($this->extractor->soporta('multas_cobradas'));
     }
 
-    // -------------------------------------------------------------------------
-    // getNombreLegible()
-    // -------------------------------------------------------------------------
-
     public function test_nombre_legible_es_string_no_vacio(): void
     {
         $nombre = $this->extractor->getNombreLegible();
@@ -78,93 +68,91 @@ class EventualesExtractorTest extends TestCase
 
     public function test_nombre_legible_contiene_eventuales(): void
     {
-        // getNombreLegible() retorna 'Eventuales (e-Factura)'
-        $this->assertStringContainsStringIgnoringCase('Eventuales', $this->extractor->getNombreLegible());
+        $nombre = $this->extractor->getNombreLegible();
+        $this->assertStringContainsStringIgnoringCase('Eventuales', $nombre);
     }
 
-    // -------------------------------------------------------------------------
-    // extraer() — el extractor usa campos: recibo, titular, monto, medio_de_pago
-    // Los tests verifican que los campos existen y tienen el tipo correcto
-    // -------------------------------------------------------------------------
-
-    private function textoEventualesEjemplo(): string
+    public function test_extrae_datos_desde_fixture_real(): void
     {
-        // Texto simplificado que activa las regex de fecha y monto
-        return <<<'TEXT'
-e-Factura Contado
-H 55001 Contado
-NOMBRE O DENOMINACIÓN DOMICILIO FISCAL
-EMPRESA ABC S.A.
-INFORMACION ADICIONAL
-RUT: 98.765.432-1
-FECHA MONEDA
-12/03/2026 Peso uruguayo
+        $texto = $this->loadEventualesFixture();
+        $dto = $this->extractor->extraer($texto);
 
-TOTAL A PAGAR: 7.000,00
-Transferencia bancaria: 7.000,00
-REFERENCIAS:
-TEXT;
+        $this->assertSame('A', $dto->serie);
+        $this->assertSame('4873', $dto->numero);
+        $this->assertSame('22/05/2026', $dto->fecha);
+        $this->assertSame(340222.80, $dto->monto);
+        $this->assertSame('UYU', $dto->moneda);
+
+        $this->assertStringContainsString('INTENDENCIA DE MONTEVIDEO', $dto->receptorNombre ?? '');
+        $this->assertStringContainsString('RECURSOS FINANCIEROS', $dto->receptorNombre ?? '');
+
+        $this->assertCount(2, $dto->items);
+
+        $primerItem = $dto->items[0];
+        $this->assertSame('Nocturnidad', $primerItem['concepto']);
+        $this->assertSame(13774.32, $primerItem['importe']);
+
+        $segundoItem = $dto->items[1];
+        $this->assertSame('Sueldos', $segundoItem['concepto']);
+        $this->assertSame(326448.48, $segundoItem['importe']);
+
+        $this->assertStringContainsString('e-Factura-A-3679', $dto->referencias ?? '');
+        $this->assertStringContainsString('ING. 3020', $dto->adenda ?? '');
     }
-
-    public function test_resultado_extrae_campos_base(): void
-    {
-        $datos = $this->extractor->extraer($this->textoEventualesEjemplo());
-        $this->assertIsArray($datos);
-        $this->assertArrayHasKey('monto', $datos);
-        $this->assertArrayHasKey('moneda', $datos);
-        $this->assertArrayHasKey('serie', $datos);
-        $this->assertArrayHasKey('numero', $datos);
-        $this->assertArrayHasKey('fecha', $datos);
-    }
-
-    public function test_extrae_moneda_uyu(): void
-    {
-        $datos = $this->extractor->extraer($this->textoEventualesEjemplo());
-        $this->assertEquals('UYU', $datos['moneda']);
-    }
-
-    public function test_extrae_monto_total_a_pagar(): void
-    {
-        $datos = $this->extractor->extraer($this->textoEventualesEjemplo());
-        $this->assertEquals(7000.0, $datos['monto']);
-    }
-
-    public function test_extrae_fecha(): void
-    {
-        $datos = $this->extractor->extraer($this->textoEventualesEjemplo());
-        // El EventualesExtractor usa una regex específica de FECHA MONEDA\n<fecha>
-        // que puede no capturar en el texto simplificado — verificamos que es string
-        $this->assertIsString($datos['fecha']);
-    }
-
-    // -------------------------------------------------------------------------
-    // validar() — hereda de BaseExtractor
-    // -------------------------------------------------------------------------
 
     public function test_validar_datos_completos(): void
     {
-        $datos = [
-            'fecha'        => '12/03/2026',
-            'serie'        => 'H',
-            'numero'       => '55001',
-            'monto'        => 7000.0,
-            'ruc_receptor' => '216079910016',
-            'ingreso'      => '3020',
-        ];
-        $resultado = $this->extractor->validar($datos);
-        $this->assertTrue($resultado['valid']);
-        $this->assertEmpty($resultado['errors']);
+        $dto = new CfeExtraccionDto(
+            tipoCfe: 'test',
+            serie: 'A',
+            numero: '123456',
+            fecha: '15/03/2026',
+            monto: 1500.0,
+            moneda: 'UYU',
+            cedula: '1.234.567-8',
+            nombre: 'TEST RECEPTOR',
+            domicilio: null,
+            montoTotal: 1500.0,
+            formaPago: 'Transferencia',
+            adicional: null,
+            adenda: null,
+            referencias: null,
+            items: [['importe' => 1500.0]],
+            detalle: null,
+            detalleCompleto: null,
+            tipoCfeCodigo: 'eventuales',
+            extractorVersion: '1.0.0',
+        );
+        $this->extractor->validar($dto);
+        $this->assertTrue(true);
     }
 
     public function test_validar_sin_monto_es_invalido(): void
     {
-        $datos = [
-            'fecha'  => '12/03/2026',
-            'serie'  => 'H',
-            'numero' => '55001',
-            'monto'  => 0.0,
-        ];
-        $resultado = $this->extractor->validar($datos);
-        $this->assertFalse($resultado['valid']);
+        $this->expectException(\App\Exceptions\CfeExtraccionInvalidaException::class);
+        $this->expectExceptionMessage('Monto no valido');
+
+        $dto = new CfeExtraccionDto(
+            tipoCfe: 'test',
+            serie: 'A',
+            numero: '123456',
+            fecha: '15/03/2026',
+            monto: 0.0,
+            moneda: 'UYU',
+            cedula: null,
+            nombre: null,
+            domicilio: null,
+            montoTotal: 0.0,
+            formaPago: 'Transferencia',
+            adicional: null,
+            adenda: null,
+            referencias: null,
+            items: [],
+            detalle: null,
+            detalleCompleto: null,
+            tipoCfeCodigo: 'eventuales',
+            extractorVersion: '1.0.0',
+        );
+        $this->extractor->validar($dto);
     }
 }

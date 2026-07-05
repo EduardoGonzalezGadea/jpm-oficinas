@@ -2,6 +2,9 @@
 
 namespace App\Services\CfeExtractor;
 
+use App\DTOs\CfeExtraccionDto;
+use App\Exceptions\CfeExtraccionInvalidaException;
+
 /**
  * Extractor para CFE de Certificados de Residencia.
  */
@@ -33,12 +36,22 @@ class CertificadoResidenciaExtractor extends BaseExtractor
     }
 
     /**
-     * Extrae los datos del CFE de certificado de residencia.
+     * Obtiene la versión del extractor.
+     *
+     * @return string
+     */
+    public function getExtractorVersion(): string
+    {
+        return '1.0.0';
+    }
+
+    /**
+     * Extrae array de datos de certificado de residencia.
      *
      * @param string $texto
      * @return array
      */
-    public function extraer(string $texto): array
+    protected function extraerArray(string $texto): array
     {
         $texto = $this->limpiarTexto($texto);
 
@@ -52,7 +65,9 @@ class CertificadoResidenciaExtractor extends BaseExtractor
         $datos['detalle'] = '';
         $datos['descripcion'] = '';
         $datos['cedula_titular'] = '';
+        $datos['nombre_titular'] = '';
         $datos['retira_es_titular'] = true;
+        $datos['adenda'] = '';
 
         // Tipo de CFE
         $datos['tipo_cfe'] = $this->extraerTipoCfe($texto);
@@ -82,8 +97,31 @@ class CertificadoResidenciaExtractor extends BaseExtractor
         // Moneda
         $datos['moneda'] = $this->detectarMoneda($texto);
 
+        // Adenda
+        $datos['adenda'] = $this->extraerAdenda($texto);
+
         // Items (Detalle + Descripcion)
         $this->extraerItems($texto, $datos);
+
+        // Fallback: si no se detectó cédula en el encabezado, buscar en detalle/descripción
+        if (empty($datos['cedula_receptor'])) {
+            $cedula = $this->extraerCedulaDesdeTexto($datos['detalle']);
+            if (!empty($cedula)) {
+                $datos['cedula_receptor'] = $cedula;
+            }
+        }
+        if (empty($datos['cedula_receptor'])) {
+            $cedula = $this->extraerCedulaDesdeTexto($datos['descripcion']);
+            if (!empty($cedula)) {
+                $datos['cedula_receptor'] = $cedula;
+            }
+        }
+        if (empty($datos['cedula_receptor'])) {
+            $cedula = $this->extraerCedulaDesdeTexto($datos['adenda'] ?? '');
+            if (!empty($cedula)) {
+                $datos['cedula_receptor'] = $cedula;
+            }
+        }
 
         // Detectar cedula del titular
         $this->detectarCedulaTitular($datos);
@@ -146,18 +184,82 @@ class CertificadoResidenciaExtractor extends BaseExtractor
      */
     private function detectarCedulaTitular(array &$datos): void
     {
-        if (!empty($datos['descripcion'])) {
-            if (preg_match('/([\d][\d\.]{4,}[\d])/u', $datos['descripcion'], $ciMatch)) {
-                $ciLimpia = preg_replace('/[^0-9]/', '', $ciMatch[1]);
-                if (strlen($ciLimpia) >= 6 && strlen($ciLimpia) <= 10) {
-                    $datos['cedula_titular'] = $ciMatch[1];
-                    $datos['retira_es_titular'] = false;
-                    return;
+        $camposBusqueda = ['descripcion', 'detalle'];
+        foreach ($camposBusqueda as $campo) {
+            if (!empty($datos[$campo])) {
+                if (preg_match('/(?:C\.I\.|CI|CÉDULA|CEDULA|DOCUMENTO)\s*[:\-\s]*([\d][\d\.\-]{4,}[\d])/iu', $datos[$campo], $ciMatch)) {
+                    $ciLimpia = preg_replace('/[^0-9]/', '', $ciMatch[1]);
+                    if (strlen($ciLimpia) >= 6 && strlen($ciLimpia) <= 10) {
+                        $datos['cedula_titular'] = $ciMatch[1];
+                        $datos['retira_es_titular'] = false;
+
+                        if (!empty($datos['descripcion'])) {
+                            if (preg_match('/(?:NOMBRE|TITULAR)\s*[:\-\s]+([A-Za-zÀ-ÿÑñ\s\.]+?)(?=(?:\s*(?:C\.I\.|CI|CÉDULA|CEDULA|TEL|$)))/iu', $datos['descripcion'], $nomMatch)) {
+                                $datos['nombre_titular'] = trim(preg_replace('/\s+/', ' ', $nomMatch[1]));
+                            } elseif (preg_match('/' . preg_quote($ciMatch[1], '/') . '\s*[:\-\s]*([A-Za-zÀ-ÿÑñ\s\.]+?)(?=(?:\s*(?:CORRESPONDE|$)))/iu', $datos['descripcion'], $nomFallback)) {
+                                $datos['nombre_titular'] = trim(preg_replace('/\s+/', ' ', $nomFallback[1]));
+                            }
+                        }
+                        return;
+                    }
                 }
             }
         }
 
-        // Si no se detecto CI en descripcion, el receptor es el titular
         $datos['cedula_titular'] = $datos['cedula_receptor'];
+        $datos['nombre_titular'] = $datos['nombre_receptor'] ?? '';
+    }
+
+    /**
+     * Busca una cédula de identidad en un texto, reconociendo prefijos
+     * como CI, C.I., Cédula, Cedula, CÉDULA, CEDULA, etc.
+     */
+    private function extraerCedulaDesdeTexto(string $texto): string
+    {
+        if (empty($texto)) {
+            return '';
+        }
+
+        // Patrón: prefijo opcional (CI, C.I., Cédula, etc.) + separador + número
+        if (preg_match('/(?:C\.?\s*I\.?|C(?:E|É)DULA|CEDULA)\s*[:\-]?\s*([\d][\d\.\s\-]{4,}[\d])/iu', $texto, $m)) {
+            return trim($m[1]);
+        }
+
+        // Fallback: cualquier número de 6-8 dígitos con formato de cédula (con puntos)
+        if (preg_match('/([\d][\d\.]{4,}[\d])/u', $texto, $m)) {
+            $ciLimpia = preg_replace('/[^0-9]/', '', $m[1]);
+            if (strlen($ciLimpia) >= 6 && strlen($ciLimpia) <= 8) {
+                return $m[1];
+            }
+        }
+
+        return '';
+    }
+
+    /**
+     * Validación específica para certificados de residencia.
+     *
+     * @param CfeExtraccionDto $dto
+     * @return void
+     * @throws CfeExtraccionInvalidaException
+     */
+    public function validar(CfeExtraccionDto $dto): void
+    {
+        parent::validar($dto);
+
+        $errors = [];
+        $data = $dto->toArray();
+
+        if (empty($data['cedula_receptor'])) {
+            $errors[] = 'Cédula del receptor no detectada';
+        }
+
+        if (empty($data['nombre_receptor'])) {
+            $errors[] = 'Nombre del receptor no detectado';
+        }
+
+        if (!empty($errors)) {
+            throw CfeExtraccionInvalidaException::fromValidationErrors($errors);
+        }
     }
 }

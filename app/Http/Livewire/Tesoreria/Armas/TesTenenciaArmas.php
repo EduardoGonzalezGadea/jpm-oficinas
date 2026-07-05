@@ -143,7 +143,7 @@ class TesTenenciaArmas extends Component
                 ->whereYear('fecha', $this->anio)
                 ->with('planilla')
                 ->orderBy('fecha', 'desc')
-                ->orderBy('recibo', 'asc')
+                ->orderByRaw('LENGTH(recibo) DESC, recibo DESC')
                 ->paginate(10);
         });
 
@@ -262,7 +262,7 @@ class TesTenenciaArmas extends Component
             [
                 'fecha' => $this->fecha,
                 'orden_cobro' => $this->orden_cobro ?: null,
-                'numero_tramite' => $this->numero_tramite ?: null,
+                'numero_tramite' => $this->numero_tramite ?: '',
                 'ingreso_contabilidad' => $this->ingreso_contabilidad ?: null,
                 'recibo' => $this->recibo ?: null,
                 'monto' => $this->monto,

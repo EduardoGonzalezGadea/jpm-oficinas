@@ -17,8 +17,11 @@ class TesCfePendiente extends Model
         'monto',
         'moneda',
         'datos_extraidos',
+        'datos_modificados',
         'pdf_path',
         'source_url',
+        'pdf_hash',
+        'extractor_version',
         'estado',
         'motivo_rechazo',
         'user_id',
@@ -27,10 +30,36 @@ class TesCfePendiente extends Model
     ];
 
     protected $casts = [
-        'fecha' => 'date',
-        'procesado_at' => 'datetime',
-        'monto' => 'decimal:2',
+        'fecha'           => 'date',
+        'procesado_at'    => 'datetime',
+        'monto'           => 'decimal:2',
+        'datos_extraidos' => 'array',
     ];
+
+    public function scopePendientes($query)
+    {
+        return $query->where('estado', 'pendiente');
+    }
+
+    public function scopeEnRevision($query)
+    {
+        return $query->where('estado', 'en_revision');
+    }
+
+    public function scopeConfirmados($query)
+    {
+        return $query->where('estado', 'confirmado');
+    }
+
+    public function scopeRechazados($query)
+    {
+        return $query->where('estado', 'rechazado');
+    }
+
+    public function scopeExpirados($query)
+    {
+        return $query->where('estado', 'expirado');
+    }
 
     public function user()
     {

@@ -130,32 +130,4 @@
         </div>
     </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            window.addEventListener('formModal-show', function () {
-                $('#formModal').modal({
-                    backdrop: 'static',
-                    keyboard: false
-                });
-            });
-
-            window.addEventListener('formModal-hide', function () {
-                $('#formModal').modal('hide');
-            });
-
-            window.addEventListener('deleteModal-show', function () {
-                $('#deleteModal').modal({
-                    backdrop: 'static',
-                    keyboard: false
-                });
-            });
-
-            window.addEventListener('deleteModal-hide', function () {
-                $('#deleteModal').modal('hide');
-            });
-
-            // Debug listeners to track events
-            console.log('DEBUG: Event listeners setup for dependencias');
-        });
-    </script>
 </div>

@@ -136,33 +136,4 @@
         </div>
     </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            window.addEventListener('formModalAcreedores-show', function() {
-                $('#formModalAcreedores').modal({
-                    backdrop: 'static',
-                    keyboard: false
-                });
-            });
-
-            window.addEventListener('formModalAcreedores-hide', function() {
-                $('#formModalAcreedores').modal('hide');
-            });
-
-            window.addEventListener('deleteModalAcreedores-show', function() {
-                $('#deleteModalAcreedores').modal({
-                    backdrop: 'static',
-                    keyboard: false
-                });
-            });
-
-            window.addEventListener('deleteModalAcreedores-hide', function() {
-                $('#deleteModalAcreedores').modal('hide');
-            });
-
-            // Debug listeners to track events
-            console.log('DEBUG: Event listeners setup for acreedores');
-        });
-    </script>
-
 </div>

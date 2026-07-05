@@ -3,6 +3,9 @@
 namespace App\Http\Livewire\Tesoreria\GestionCfe;
 
 use App\DataTransferObjects\CfeData;
+use App\Exceptions\Tesoreria\CfeNotFoundException;
+use App\Exceptions\Tesoreria\CfeValidationException;
+use App\Helpers\TextoHelper;
 use App\Models\Tesoreria\CajaConcepto;
 use App\Models\Tesoreria\TesCfe;
 use App\Models\Tesoreria\TesCfeItem;
@@ -98,44 +101,11 @@ trait WithEdicionCfe
             return;
         }
 
-        $concepto = CajaConcepto::find($this->editCajaConceptoSeleccionado);
-        if (!$concepto || !$concepto->siif_distribucion_tipo_id) {
-            return;
-        }
-
-        foreach ($this->editCfeItems as $index => $item) {
-            $detalle = trim($item['detalle'] ?? '');
-            if (empty($detalle)) {
-                continue;
-            }
-
-            $ultimosItems = TesCfeItem::where('detalle', $detalle)
-                ->whereNotNull('siif_distribucion_id')
-                ->whereNull('deleted_at')
-                ->orderBy('id', 'desc')
-                ->take(10)
-                ->get();
-
-            if ($ultimosItems->isEmpty()) {
-                continue;
-            }
-
-            $frecuencias = $ultimosItems->groupBy('siif_distribucion_id')
-                ->map->count()
-                ->sortDesc();
-
-            $distribucionId = $frecuencias->keys()->first();
-
-            $existe = SiifDistribucion::where('id', $distribucionId)
-                ->where('tipo_id', $concepto->siif_distribucion_tipo_id)
-                ->where('dependencia_id', $this->editSiifDependenciaSeleccionado)
-                ->whereNull('deleted_at')
-                ->exists();
-
-            if ($existe) {
-                $this->editItemDistribuciones[$index] = (string) $distribucionId;
-            }
-        }
+        $this->editItemDistribuciones = $this->cfeCreator->autoAsignarDistribuciones(
+            $this->editCajaConceptoSeleccionado,
+            $this->editSiifDependenciaSeleccionado,
+            $this->editCfeItems
+        );
     }
 
     public function guardarEdicion(): void
@@ -194,13 +164,11 @@ trait WithEdicionCfe
             $this->dispatchBrowserEvent('cerrar-modal-editar-cfe');
             $this->cancelarEdicion();
 
-            $this->dispatchBrowserEvent('swal:modal', [
-                'type' => 'success',
-                'title' => 'CFE Actualizado',
-                'text' => 'El CFE ha sido actualizado correctamente.',
+            $this->dispatchBrowserEvent('swal:toast-success', [
+                'text' => 'CFE actualizado correctamente.',
             ]);
 
-        } catch (\RuntimeException $e) {
+        } catch (CfeNotFoundException | CfeValidationException | \RuntimeException $e) {
             $this->dispatchBrowserEvent('swal:toast-error', [
                 'text' => $e->getMessage(),
             ]);

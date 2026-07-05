@@ -2,6 +2,9 @@
 
 namespace App\Services\CfeExtractor;
 
+use App\DTOs\CfeExtraccionDto;
+use App\Exceptions\CfeExtraccionInvalidaException;
+
 /**
  * Extractor para CFE de Prendas.
  */
@@ -33,13 +36,23 @@ class PrendasExtractor extends BaseExtractor
     }
 
     /**
-     * Extrae los datos del CFE de prendas.
-     * Nota: La estructura es similar a Arrendamientos.
+     * Obtiene la versión del extractor.
+     *
+     * @return string
+     return string
+     */
+    public function getExtractorVersion(): string
+    {
+        return '1.0.0';
+    }
+
+    /**
+     * Extrae array de datos de prendas.
      *
      * @param string $texto
      * @return array
      */
-    public function extraer(string $texto): array
+    protected function extraerArray(string $texto): array
     {
         $texto = $this->limpiarTexto($texto);
 
@@ -91,12 +104,22 @@ class PrendasExtractor extends BaseExtractor
         // Orden de Cobro desde adenda
         $datos['orden_cobro'] = $this->extraerOrdenCobro($datos['adenda']);
 
-        // Validacion de tipo
+        // Validacion de tipo (buscar en detalle, texto completo o adenda)
         $detalleNorm = $this->quitarAcentos(mb_strtolower($datos['detalle'], 'UTF-8'));
-        if (strpos($detalleNorm, 'prenda') === false && strpos($detalleNorm, 'prendas') === false) {
-            return [
-                'error_validacion' => 'Este comprobante no corresponde a Prendas. No se encontro la palabra "PRENDA" en el detalle del CFE.'
-            ];
+        $textoNorm = $this->quitarAcentos(mb_strtolower($texto, 'UTF-8'));
+        $adendaNorm = $this->quitarAcentos(mb_strtolower($datos['adenda'], 'UTF-8'));
+
+        $tienePalabraClave = strpos($detalleNorm, 'prenda') !== false
+            || strpos($detalleNorm, 'prendas') !== false
+            || strpos($textoNorm, 'prenda') !== false
+            || strpos($textoNorm, 'prendas') !== false
+            || strpos($adendaNorm, 'prenda') !== false
+            || strpos($adendaNorm, 'prendas') !== false;
+
+        if (!$tienePalabraClave) {
+            throw CfeExtraccionInvalidaException::fromValidationErrors([
+                'Este comprobante no corresponde a Prendas. No se encontró la palabra "PRENDA" en el CFE.'
+            ]);
         }
 
         // Si se pago por transferencia, concatenar al detalle
@@ -115,11 +138,27 @@ class PrendasExtractor extends BaseExtractor
      */
     private function extraerDetalle(string $texto): string
     {
-        if (!preg_match('/DETALLE\s+DESCRIPCI.N.*?IMPORTE\s*(.*?)(?=\s*MONTO\s+NO\s+FACTURABLE)/isu', $texto, $matches)) {
+        $patrones = [
+            '/DETALLE\s+DESCRIPCI[ÓO]N.*?IMPORTE\s*(.*?)(?=\s*(?:MONTO\s+NO\s+FACTURABLE|TOTAL\s+A\s+PAGAR))/isu',
+            '/DETALLE\s+DESCRIPCI[ÓO]N.*?\n(.*?)(?=\s*(?:MONTO\s+NO\s+FACTURABLE|TOTAL\s+A\s+PAGAR))/isu',
+            '/DETALLE\s*\n(.*?)(?=\s*(?:MONTO\s+NO\s+FACTURABLE|TOTAL\s+A\s+PAGAR))/isu',
+            '/DETALLE\s*\n(.+?)(?=\s*(?:REFERENCIAS|ADENDA|N[ÚU]MERO\s+DE\s+CAE))/isu',
+        ];
+
+        $bloqueItems = '';
+        foreach ($patrones as $patron) {
+            if (preg_match($patron, $texto, $matches)) {
+                $bloqueItems = trim($matches[1]);
+                if (!empty($bloqueItems)) {
+                    break;
+                }
+            }
+        }
+
+        if (empty($bloqueItems)) {
             return '';
         }
 
-        $bloqueItems = trim($matches[1]);
         $lineas = explode("\n", $bloqueItems);
         $bufferDetalle = [];
 
@@ -127,13 +166,20 @@ class PrendasExtractor extends BaseExtractor
             $linea = trim($linea);
             if (empty($linea)) continue;
 
-            if (preg_match('/^(.*?)([\d\.,]+(?:\s*\(Unid\))?\s*[\d\.,]+\s+[\d\.,]+)$/i', $linea, $m)) {
-                $restoLinea = trim($m[1]);
-                if (!empty($restoLinea)) {
-                    $bufferDetalle[] = $restoLinea;
+            $partes = preg_split('/[ \t]{3,}/', $linea, 2);
+            $textoLinea = trim($partes[0]);
+            $tieneColumnasNumericas = count($partes) > 1;
+
+            if ($tieneColumnasNumericas) {
+                $bufferDetalle[] = $textoLinea;
+            } elseif (!empty($textoLinea)) {
+                $textoSinParens = preg_replace('/\([^)]*\)/', '', $textoLinea);
+                if (preg_match('/[a-zA-Z]/', $textoSinParens)
+                    || preg_match('/^\d{8,}$/', $textoLinea)
+                    || preg_match('/^\d{2}\/\d{2}\/\d{2,4}$/', $textoLinea)
+                ) {
+                    $bufferDetalle[] = $textoLinea;
                 }
-            } else {
-                $bufferDetalle[] = $linea;
             }
         }
 
@@ -175,20 +221,20 @@ class PrendasExtractor extends BaseExtractor
     }
 
     /**
-     * Validacion especifica para prendas.
+     * Validación específica para prendas.
      *
-     * @param array $datos
-     * @return array
+     * @param CfeExtraccionDto $dto
+     * @return void
+     * @throws CfeExtraccionInvalidaException
      */
-    public function validar(array $datos): array
+    public function validar(CfeExtraccionDto $dto): void
     {
-        $result = parent::validar($datos);
+        $data = $dto->toArray();
 
-        if (isset($datos['error_validacion'])) {
-            $result['errors'][] = $datos['error_validacion'];
-            $result['valid'] = false;
+        if (isset($data['error_validacion'])) {
+            throw CfeExtraccionInvalidaException::fromValidationErrors([$data['error_validacion']]);
         }
 
-        return $result;
+        parent::validar($dto);
     }
 }

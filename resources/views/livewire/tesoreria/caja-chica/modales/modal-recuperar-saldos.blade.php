@@ -112,14 +112,3 @@
     @endif
 </div>
 
-@push('scripts')
-<script>
-    document.addEventListener('livewire:init', function() {
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape' && document.getElementById('modalRecuperar')) {
-                Livewire.getByName('tesoreria.caja-chica.modales.modal-recuperar-saldos')[0].cerrarModal();
-            }
-        });
-    });
-</script>
-@endpush

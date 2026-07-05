@@ -65,23 +65,3 @@
     @endif
 </div>
 
-@push('scripts')
-<script>
-    document.addEventListener('livewire:init', function() {
-        Livewire.on('modal-edit-fondo-opened', function() {
-            setTimeout(() => {
-                const editMonto = document.getElementById('editMonto');
-                if(editMonto) {
-                    editMonto.focus();
-                    editMonto.select();
-                }
-            }, 300);
-        });
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape' && document.getElementById('modalEditarFondo')) {
-                Livewire.getByName('tesoreria.caja-chica.modales.modal-editar-fondo')[0].cerrarModal();
-            }
-        });
-    });
-</script>
-@endpush

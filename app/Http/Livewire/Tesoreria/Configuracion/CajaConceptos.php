@@ -21,6 +21,7 @@ class CajaConceptos extends Component
     public $requiere_confirmacion    = false;
     public $requiere_distribucion    = false;
     public $permite_planilla         = false;
+    public $requiere_organismo       = false;
     public ?int $siif_distribucion_tipo_id = null;
     public $selectedConcepto = null;
 
@@ -50,6 +51,7 @@ class CajaConceptos extends Component
             'requiere_confirmacion'      => 'boolean',
             'requiere_distribucion'      => 'boolean',
             'permite_planilla'           => 'boolean',
+            'requiere_organismo'         => 'boolean',
             'siif_distribucion_tipo_id'  => 'nullable|exists:siif_distribucion_tipos,id',
         ]);
 
@@ -58,6 +60,7 @@ class CajaConceptos extends Component
             'requiere_confirmacion'     => $this->requiere_confirmacion ?? false,
             'requiere_distribucion'     => $this->requiere_distribucion ?? false,
             'permite_planilla'          => $this->permite_planilla ?? false,
+            'requiere_organismo'        => $this->requiere_organismo ?? false,
             'siif_distribucion_tipo_id' => $this->siif_distribucion_tipo_id ?: null,
         ]);
 
@@ -75,6 +78,7 @@ class CajaConceptos extends Component
         $this->requiere_confirmacion   = $concepto->requiere_confirmacion;
         $this->requiere_distribucion   = $concepto->requiere_distribucion;
         $this->permite_planilla        = $concepto->permite_planilla;
+        $this->requiere_organismo      = $concepto->requiere_organismo;
         $this->siif_distribucion_tipo_id = $concepto->siif_distribucion_tipo_id;
 
         $this->dispatchBrowserEvent('show-modal', ['id' => 'cajaConceptoModal']);
@@ -87,6 +91,7 @@ class CajaConceptos extends Component
             'requiere_confirmacion'      => 'boolean',
             'requiere_distribucion'      => 'boolean',
             'permite_planilla'           => 'boolean',
+            'requiere_organismo'         => 'boolean',
             'siif_distribucion_tipo_id'  => 'nullable|exists:siif_distribucion_tipos,id',
         ]);
 
@@ -97,6 +102,7 @@ class CajaConceptos extends Component
                 'requiere_confirmacion'     => $this->requiere_confirmacion ?? false,
                 'requiere_distribucion'     => $this->requiere_distribucion ?? false,
                 'permite_planilla'          => $this->permite_planilla ?? false,
+                'requiere_organismo'        => $this->requiere_organismo ?? false,
                 'siif_distribucion_tipo_id' => $this->siif_distribucion_tipo_id ?: null,
             ]);
 
@@ -112,6 +118,38 @@ class CajaConceptos extends Component
         $concepto->delete();
 
         $this->dispatchBrowserEvent('alert', ['type' => 'success', 'message' => 'Concepto de caja eliminado con éxito.', 'toast' => true]);
+    }
+
+    public function toggleConfirmacion($id)
+    {
+        $concepto = Model::findOrFail($id);
+        $concepto->update([
+            'requiere_confirmacion' => !$concepto->requiere_confirmacion,
+        ]);
+    }
+
+    public function toggleDistribucion($id)
+    {
+        $concepto = Model::findOrFail($id);
+        $concepto->update([
+            'requiere_distribucion' => !$concepto->requiere_distribucion,
+        ]);
+    }
+
+    public function togglePlanilla($id)
+    {
+        $concepto = Model::findOrFail($id);
+        $concepto->update([
+            'permite_planilla' => !$concepto->permite_planilla,
+        ]);
+    }
+
+    public function toggleOrganismo($id)
+    {
+        $concepto = Model::findOrFail($id);
+        $concepto->update([
+            'requiere_organismo' => !$concepto->requiere_organismo,
+        ]);
     }
 
     public function showDetails($id)
@@ -141,6 +179,7 @@ class CajaConceptos extends Component
         $this->requiere_confirmacion   = false;
         $this->requiere_distribucion   = false;
         $this->permite_planilla        = false;
+        $this->requiere_organismo      = false;
         $this->siif_distribucion_tipo_id = null;
     }
 }

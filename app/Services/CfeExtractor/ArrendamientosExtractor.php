@@ -2,6 +2,9 @@
 
 namespace App\Services\CfeExtractor;
 
+use App\DTOs\CfeExtraccionDto;
+use App\Exceptions\CfeExtraccionInvalidaException;
+
 /**
  * Extractor para CFE de Arrendamientos.
  */
@@ -32,12 +35,22 @@ class ArrendamientosExtractor extends BaseExtractor
     }
 
     /**
-     * Extrae los datos del CFE de arrendamientos.
+     * Obtiene la versión del extractor.
+     *
+     * @return string
+     */
+    public function getExtractorVersion(): string
+    {
+        return '1.0.0';
+    }
+
+    /**
+     * Extrae array de datos de arrendamientos.
      *
      * @param string $texto
      * @return array
      */
-    public function extraer(string $texto): array
+    protected function extraerArray(string $texto): array
     {
         $texto = $this->limpiarTexto($texto);
 
@@ -67,9 +80,9 @@ class ArrendamientosExtractor extends BaseExtractor
         $datos['cedula'] = $this->extraerReceptorDocumento($texto);
         
         $bloqueNombre = '';
-        if (preg_match('/NOMBRE O DENOMINACIÓN DOMICILIO FISCAL\s*\n\s*(.*?)(?=\s*\n\s*(?:INFORMACION ADICIONAL|DETALLE DESCRIPCIÓN|PERIODO|FECHA|$))/isu', $texto, $matches)) {
+        if (preg_match('/NOMBRE O DENOMINACIÓN\s*\n?\s*DOMICILIO FISCAL\s+(.*?)(?=\s*(?:INFORMACION ADICIONAL|DETALLE DESCRIPCIÓN|PERIODO|FECHA|$))/isu', $texto, $matches)) {
             $bloqueNombre = $matches[1];
-        } elseif (preg_match('/FISCAL\s*(.*?)(?=\s*(?:INFORMACION|DETALLE|FECHA|\d{2}\/\d{2}\/\d{4}|$))/isu', $texto, $matches)) {
+        } elseif (preg_match('/(?:NOMBRE O DENOMINACIÓN[\s\S]*?)?DOMICILIO\s+FISCAL\s+(.*?)(?=\s*(?:INFORMACION|DETALLE|FECHA|\d{2}\/\d{2}\/\d{4}|$))/isu', $texto, $matches)) {
             $bloqueNombre = $matches[1];
         }
 
@@ -145,12 +158,22 @@ class ArrendamientosExtractor extends BaseExtractor
         // Orden de Cobro: buscar en detalle y adenda
         $datos['orden_cobro'] = $this->extraerOrdenCobro($datos['detalle'], $datos['adenda']);
 
-        // Validacion de tipo (basada en el detalle original)
+        // Validacion de tipo (buscar en detalle, texto completo o adenda)
         $detalleNorm = $this->quitarAcentos(mb_strtolower($datos['detalle'], 'UTF-8'));
-        if (strpos($detalleNorm, 'arrendamiento') === false && strpos($detalleNorm, 'arrendamientos') === false) {
-            return [
-                'error_validacion' => 'Este comprobante no corresponde a un Arrendamiento. No se encontro la palabra "ARRENDAMIENTO" en el detalle del CFE.'
-            ];
+        $textoNorm = $this->quitarAcentos(mb_strtolower($texto, 'UTF-8'));
+        $adendaNorm = $this->quitarAcentos(mb_strtolower($datos['adenda'], 'UTF-8'));
+
+        $tienePalabraClave = strpos($detalleNorm, 'arrendamiento') !== false
+            || strpos($detalleNorm, 'arrendamientos') !== false
+            || strpos($textoNorm, 'arrendamiento') !== false
+            || strpos($textoNorm, 'arrendamientos') !== false
+            || strpos($adendaNorm, 'arrendamiento') !== false
+            || strpos($adendaNorm, 'arrendamientos') !== false;
+
+        if (!$tienePalabraClave) {
+            throw CfeExtraccionInvalidaException::fromValidationErrors([
+                'Este comprobante no corresponde a un Arrendamiento. No se encontró la palabra "ARRENDAMIENTO" en el CFE.'
+            ]);
         }
 
         // Quitar palabra ARRENDAMIENTO(S) del detalle ya que esta implícito
@@ -211,11 +234,31 @@ class ArrendamientosExtractor extends BaseExtractor
      */
     private function extraerDetalle(string $texto): string
     {
-        if (!preg_match('/DETALLE\s+DESCRIPCI.N.*?IMPORTE\s*(.*?)(?=\s*(?:TOTAL\s+A\s+PAGAR|MONTO\s+NO\s+FACTURABLE))/isu', $texto, $matches)) {
+        $patrones = [
+            // 1. Formato estándar con encabezado completo (con o sin tilde)
+            '/DETALLE\s+DESCRIPCI[ÓO]N.*?IMPORTE\s*(.*?)(?=\s*(?:TOTAL\s+A\s+PAGAR|MONTO\s+NO\s+FACTURABLE))/isu',
+            // 2. DETALLE DESCRIPCIÓN sin IMPORTE
+            '/DETALLE\s+DESCRIPCI[ÓO]N.*?\n(.*?)(?=\s*(?:TOTAL\s+A\s+PAGAR|MONTO\s+NO\s+FACTURABLE))/isu',
+            // 3. DETALLE a secas hasta TOTAL
+            '/DETALLE\s*\n(.*?)(?=\s*(?:TOTAL\s+A\s+PAGAR|MONTO\s+NO\s+FACTURABLE))/isu',
+            // 4. DETALLE hasta REFERENCIAS o ADENDA
+            '/DETALLE\s*\n(.+?)(?=\s*(?:REFERENCIAS|ADENDA|N[ÚU]MERO\s+DE\s+CAE))/isu',
+        ];
+
+        $bloqueItems = '';
+        foreach ($patrones as $patron) {
+            if (preg_match($patron, $texto, $matches)) {
+                $bloqueItems = trim($matches[1]);
+                if (!empty($bloqueItems)) {
+                    break;
+                }
+            }
+        }
+
+        if (empty($bloqueItems)) {
             return '';
         }
 
-        $bloqueItems = trim($matches[1]);
         $lineas = explode("\n", $bloqueItems);
         $bufferDetalle = [];
 
@@ -223,13 +266,23 @@ class ArrendamientosExtractor extends BaseExtractor
             $linea = trim($linea);
             if (empty($linea)) continue;
 
-            if (preg_match('/^(.*?)([\d\.,]+(?:\s*\(Unid\))?\s*[\d\.,]+\s+[\d\.,]+)$/i', $linea, $m)) {
-                $restoLinea = trim($m[1]);
-                if (!empty($restoLinea)) {
-                    $bufferDetalle[] = $restoLinea;
+            // Separar texto descriptivo de columnas tabulares (qty, precio, importe)
+            // usando el primer gap de 3+ espacios como separador
+            $partes = preg_split('/[ \t]{3,}/', $linea, 2);
+            $textoLinea = trim($partes[0]);
+            $tieneColumnasNumericas = count($partes) > 1;
+
+            if ($tieneColumnasNumericas) {
+                $bufferDetalle[] = $textoLinea;
+            } elseif (!empty($textoLinea)) {
+                // Ignorar paréntesis (unidades como "(Unid)") al buscar texto real
+                $textoSinParens = preg_replace('/\([^)]*\)/', '', $textoLinea);
+                if (preg_match('/[a-zA-Z]/', $textoSinParens)
+                    || preg_match('/^\d{8,}$/', $textoLinea)
+                    || preg_match('/^\d{2}\/\d{2}\/\d{2,4}$/', $textoLinea)
+                ) {
+                    $bufferDetalle[] = $textoLinea;
                 }
-            } else {
-                $bufferDetalle[] = $linea;
             }
         }
 
@@ -249,7 +302,7 @@ class ArrendamientosExtractor extends BaseExtractor
      */
     private function extraerOrdenCobro(string $detalle, string $adenda): string
     {
-        $patronOC = '/(?:orden\s+de\s+cobro|orden\s+cobro|o\.\s*\(?c\.?\)?|o\/c)\s*(\d+)/iu';
+        $patronOC = '/(?:orden\s+de\s+cobro|orden\s+|o\.\s*\(?c\.?\)?|o\/c)\s*(\d+)/iu';
 
         // 1. Buscar en el detalle
         if (!empty($detalle)) {
@@ -351,20 +404,20 @@ class ArrendamientosExtractor extends BaseExtractor
     }
 
     /**
-     * Validacion especifica para arrendamientos.
+     * Validación específica para arrendamientos.
      *
-     * @param array $datos
-     * @return array
+     * @param CfeExtraccionDto $dto
+     * @return void
+     * @throws CfeExtraccionInvalidaException
      */
-    public function validar(array $datos): array
+    public function validar(CfeExtraccionDto $dto): void
     {
-        $result = parent::validar($datos);
+        $data = $dto->toArray();
 
-        if (isset($datos['error_validacion'])) {
-            $result['errors'][] = $datos['error_validacion'];
-            $result['valid'] = false;
+        if (isset($data['error_validacion'])) {
+            throw CfeExtraccionInvalidaException::fromValidationErrors([$data['error_validacion']]);
         }
 
-        return $result;
+        parent::validar($dto);
     }
 }

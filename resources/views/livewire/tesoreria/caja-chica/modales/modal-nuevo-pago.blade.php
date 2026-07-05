@@ -1,4 +1,3 @@
-{{-- resources/views/livewire/tesoreria/caja-chica/modal-nuevo-pago.blade.php --}}
 <div>
     @if ($mostrarModal)
     <div class="modal fade" id="modalNuevoPago" tabindex="-1" wire:ignore.self>
@@ -102,32 +101,4 @@
         </div>
     </div>
     @endif
-
-    <script>
-        document.addEventListener('livewire:init', function() {
-            // Manejar el cierre del modal con Bootstrap y sincronizar con Livewire
-            $(document).on('hidden.bs.modal', '#modalNuevoPago', function() {
-                @this.cerrarModal();
-            });
-
-            $('#modalNuevoPago').on('shown.bs.modal', function() {
-                $('#pagoEgreso').focus();
-
-                const form = document.querySelector('#modalNuevoPago form');
-                const focusable = Array.from(form.querySelectorAll('input, select, button[type="submit"]'));
-
-                form.addEventListener('keydown', function(e) {
-                    if (e.key === 'Enter' && e.target.tagName !== 'BUTTON') {
-                        e.preventDefault();
-                        const currentIndex = focusable.indexOf(e.target);
-                        const nextElement = focusable[currentIndex + 1];
-
-                        if (nextElement) {
-                            nextElement.focus();
-                        }
-                    }
-                });
-            });
-        });
-    </script>
 </div>

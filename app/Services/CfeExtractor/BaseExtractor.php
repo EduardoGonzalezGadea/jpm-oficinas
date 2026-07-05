@@ -2,6 +2,10 @@
 
 namespace App\Services\CfeExtractor;
 
+use App\DTOs\CfeExtraccionDto;
+use App\Exceptions\CfeExtraccionInvalidaException;
+use App\Helpers\TextoHelper;
+
 /**
  * Clase base para extractores de CFE con funcionalidad comun.
  */
@@ -18,8 +22,8 @@ abstract class BaseExtractor implements CfeExtractorInterface
         'monto_total' => '/TOTAL\s+A\s+PAGAR:\s*([\d\.,]+)/is',
         'monto_no_facturable' => '/MONTO\s+NO\s+FACTURABLE:\s*([\d\.,]+)/is',
         'telefono' => '/(?:TEL\.?|TEL(?:E|É)FONO|CEL\.?)[\s:]*([\d][\d\s\-\/\.]{5,})/iu',
-        'nombre_receptor' => '/NOMBRE O DENOMINACIÓN DOMICILIO FISCAL\s*\n\s*(.*?)(?=\s*\n\s*(?:INFORMACION ADICIONAL|DETALLE DESCRIPCIÓN|PERIODO|FECHA|$))/isu',
-        'nombre_receptor_alt' => '/FISCAL\s*(.*?)(?=\s*(?:INFORMACION|DETALLE|FECHA|\d{2}\/\d{2}\/\d{4}|$))/isu',
+        'nombre_receptor' => '/NOMBRE O DENOMINACIÓN\s*\n?\s*DOMICILIO FISCAL\s+(.*?)(?=\s*(?:INFORMACION ADICIONAL|DETALLE DESCRIPCIÓN|PERIODO|FECHA|$))/isu',
+        'nombre_receptor_alt' => '/(?:NOMBRE O DENOMINACIÓN[\s\S]*?)?DOMICILIO\s+FISCAL\s+(.*?)(?=\s*(?:INFORMACION|DETALLE|FECHA|\d{2}\/\d{2}\/\d{4}|$))/isu',
         'emisor_rut' => '/(\d{12})\s+(?:e-Factura|e-Ticket|e-Boleta)/i',
         'tipo_cfe' => '/(e-Factura|e-Ticket|e-Boleta)(?:\s+Cobranza)?/i',
         'peso_uruguayo' => '/Peso uruguayo/i',
@@ -48,9 +52,7 @@ abstract class BaseExtractor implements CfeExtractorInterface
      */
     protected function quitarAcentos(string $texto): string
     {
-        $search  = ['á', 'é', 'í', 'ó', 'ú', 'ñ', 'ü', 'Á', 'É', 'Í', 'Ó', 'Ú', 'Ñ', 'Ü'];
-        $replace = ['a', 'e', 'i', 'o', 'u', 'n', 'u', 'a', 'e', 'i', 'o', 'u', 'n', 'u'];
-        return str_replace($search, $replace, $texto);
+        return TextoHelper::quitarAcentos($texto);
     }
 
     /**
@@ -293,28 +295,72 @@ abstract class BaseExtractor implements CfeExtractorInterface
     /**
      * Validacion base de datos extraidos.
      *
-     * @param array $datos
-     * @return array
+     * @param CfeExtraccionDto $dto
+     * @return void
+     * @throws CfeExtraccionInvalidaException
      */
-    public function validar(array $datos): array
+    public function validar(CfeExtraccionDto $dto): void
     {
         $errors = [];
 
-        if (empty($datos['fecha'])) {
+        if (empty($dto->fecha)) {
             $errors[] = 'Fecha no detectada';
         }
 
-        if (empty($datos['serie']) || empty($datos['numero'])) {
+        if (empty($dto->serie) || empty($dto->numero)) {
             $errors[] = 'Serie/Numero no detectado';
         }
 
-        if (empty($datos['monto']) || $datos['monto'] <= 0) {
+        if (empty($dto->monto) || $dto->monto <= 0) {
             $errors[] = 'Monto no valido';
         }
 
-        return [
-            'valid' => empty($errors),
-            'errors' => $errors,
-        ];
+        if (!empty($errors)) {
+            throw CfeExtraccionInvalidaException::fromValidationErrors($errors);
+        }
+    }
+
+    /**
+     * Convierte array de datos extraídos a DTO.
+     *
+     * @param array $datos
+     * @return CfeExtraccionDto
+     */
+    protected function toDto(array $datos): CfeExtraccionDto
+    {
+        return CfeExtraccionDto::fromArray($datos);
+    }
+
+    /**
+     * Extrae y valida, retornando DTO.
+     *
+     * @param string $texto
+     * @return CfeExtraccionDto
+     * @throws CfeExtraccionInvalidaException
+     */
+    public function extraer(string $texto): CfeExtraccionDto
+    {
+        $datos = $this->extraerArray($texto);
+        $dto = $this->toDto($datos);
+        $this->validar($dto);
+        return $dto;
+    }
+
+    /**
+     * Método a implementar por subclases para extraer array de datos.
+     *
+     * @param string $texto
+     * @return array
+     */
+    abstract protected function extraerArray(string $texto): array;
+
+    /**
+     * Obtiene la versión del extractor (commit hash o semver).
+     *
+     * @return string
+     */
+    public function getExtractorVersion(): string
+    {
+        return '1.0.0';
     }
 }

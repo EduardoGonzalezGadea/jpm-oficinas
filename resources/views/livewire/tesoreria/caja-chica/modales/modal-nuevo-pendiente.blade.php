@@ -110,13 +110,4 @@
         </div>
     </div>
     @endif
-
-    <script>
-        document.addEventListener('livewire:init', function() {
-            // Manejar el cierre del modal con Bootstrap y sincronizar con Livewire
-            $(document).on('hidden.bs.modal', '#modalNuevoPendiente', function() {
-                @this.cerrarModal();
-            });
-        });
-    </script>
 </div>

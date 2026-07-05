@@ -15,20 +15,19 @@ class SiifDistribucionSeeder extends Seeder
      */
     public function run()
     {
-        // Al duplicar la estructura y los datos, importamos los registros utilizando PDO/Query Builder directo
-        // para garantizar que la copia sea exacta y rápida.
-        $dbConnection = DB::connection();
-        
-        // Obtenemos los datos desde la base de datos externa 'jpm-tesoreria-2026'
         try {
             $externalRecords = DB::connection('mysql')
                 ->table('jpm-tesoreria-2026.siif_distribucions')
                 ->get();
         } catch (\Exception $e) {
-            // Si no está configurada la base externa en config/database.php o falla, usamos una consulta cruda PDO.
-            $pdo = DB::connection()->getPdo();
-            $stmt = $pdo->query("SELECT * FROM `jpm-tesoreria-2026`.`siif_distribucions`");
-            $externalRecords = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+            try {
+                $pdo = DB::connection()->getPdo();
+                $stmt = $pdo->query("SELECT * FROM `jpm-tesoreria-2026`.`siif_distribucions`");
+                $externalRecords = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+            } catch (\Exception $e2) {
+                $this->command->warn('Base de datos externa no disponible. Se saltan datos SIIF.');
+                return;
+            }
         }
 
         foreach ($externalRecords as $record) {

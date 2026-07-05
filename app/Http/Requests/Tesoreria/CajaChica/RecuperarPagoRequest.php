@@ -15,7 +15,7 @@ class RecuperarPagoRequest extends FormRequest
     {
         $rules = [
             'recuperarPagoData.fecha' => 'required|date',
-            'recuperarPagoData.numero_ingreso' => 'required|string|max:255',
+            'recuperarPagoData.numero_ingreso' => 'nullable|string|max:255',
             'recuperarPagoData.monto_recuperado' => 'required|numeric|min:0.01|max:99999999.99',
         ];
 
@@ -30,7 +30,6 @@ class RecuperarPagoRequest extends FormRequest
     {
         return [
             'recuperarPagoData.fecha.required' => 'La fecha es obligatoria.',
-            'recuperarPagoData.numero_ingreso.required' => 'El número de ingreso es obligatorio.',
             'recuperarPagoData.numero_ingreso.max' => 'El número de ingreso no puede exceder los 255 caracteres.',
             'recuperarPagoData.numero_ingreso_bse.required' => 'El número de ingreso BSE es obligatorio para Banco de Seguros del Estado.',
             'recuperarPagoData.numero_ingreso_bse.max' => 'El número de ingreso BSE no puede exceder los 255 caracteres.',

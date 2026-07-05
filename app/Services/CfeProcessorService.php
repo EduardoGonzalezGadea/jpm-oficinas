@@ -2,6 +2,11 @@
 
 namespace App\Services;
 
+use App\DTOs\CfeExtraccionDto;
+use App\Events\Tesoreria\CfeProcesado;
+use App\Exceptions\CfeExtraccionInvalidaException;
+use App\Helpers\TextoHelper;
+use App\Jobs\ConfirmarCfeJob;
 use App\Models\TesCfePendiente;
 use App\Models\Tesoreria\TesMultasCobradas;
 use App\Repositories\CfePendienteRepository;
@@ -14,87 +19,217 @@ use App\Services\CfeExtractor\MultasExtractor;
 use App\Services\CfeExtractor\PrendasExtractor;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Smalot\PdfParser\Parser;
 
-/**
- * Servicio refactorizado para procesamiento de CFE mediante patrón Strategy.
- * Delega la extracción de datos a extractores especializados por tipo de CFE.
- */
 class CfeProcessorService
 {
-    /**
-     * Extractores registrados, ordenados por prioridad de detección.
-     *
-     * @var CfeExtractorInterface[]
-     */
     private array $extractors;
 
     public function __construct(
         private readonly CfePendienteRepository $repository
     ) {
-        // Orden importa: tipos más específicos primero para evitar falsos positivos
         $this->extractors = [
             new CertificadoResidenciaExtractor(),
             new MultasExtractor(),
             new PrendasExtractor(),
             new ArrendamientosExtractor(),
             new ArmasExtractor(),
-            new EventualesExtractor(), // Fallback genérico (e-Factura/e-Ticket)
+            new EventualesExtractor(),
         ];
     }
 
-    /**
-     * Procesa un archivo PDF y crea el registro CFE pendiente.
-     *
-     * @param  \Illuminate\Http\UploadedFile  $pdf
-     * @param  string|null  $sourceUrl
-     * @param  int|null  $userId
-     * @return TesCfePendiente
-     */
     public function procesarPdf($pdf, ?string $sourceUrl = null, ?int $userId = null): TesCfePendiente
     {
-        $pdfPath = $pdf->store('cfe-pendientes');
+        $inicio = microtime(true);
 
-        $texto = $this->parsearPdf(Storage::path($pdfPath));
+        $pdfPath = $pdf->store('cfe-pendientes');
+        $absolutePath = Storage::path($pdfPath);
+        $pdfHash = hash_file('sha256', $absolutePath);
+
+        $existente = $this->repository->buscarPorPdfHash($pdfHash);
+        if ($existente) {
+            Storage::delete($pdfPath);
+            return $existente;
+        }
+
+        $result = $this->ejecutarExtraccion($absolutePath, $pdfHash);
+
+        return $this->crearPendienteDesdeExtraccion(
+            $result, $pdfPath, $sourceUrl, $pdfHash, $userId, $inicio
+        );
+    }
+
+    protected function ejecutarExtraccion(string $absolutePath, string $pdfHash): array
+    {
+        $cacheKey = 'cfe_pdf_' . $pdfHash;
+
+        if (Config::get('cfe.cache.enabled', true)) {
+            $cached = Cache::get($cacheKey);
+            if ($cached !== null) {
+                return [
+                    'dto'              => CfeExtraccionDto::fromArray($cached['datos'])
+                        ->withExtractorVersion($cached['extractor_version']),
+                    'tipo_cfe'         => $cached['tipo_cfe'],
+                    'extractor_version' => $cached['extractor_version'],
+                    'fallback_usado'   => $cached['fallback_usado'] ?? false,
+                    'desde_cache'      => true,
+                ];
+            }
+        }
+
+        $texto = $this->parsearPdf($absolutePath);
         $tipoCfe = $this->detectarTipoCfe($texto);
 
         $extractor = $this->getExtractor($tipoCfe);
-        $datosExtraidos = $extractor->extraer($texto);
+        $fallbackUsado = false;
 
-        $validacion = $extractor->validar($datosExtraidos);
-        if (!$validacion['valid']) {
-            $this->logParsingWarning($tipoCfe, $texto, $datosExtraidos, $validacion['errors']);
+        try {
+            $dto = $extractor->extraer($texto);
+        } catch (CfeExtraccionInvalidaException $e) {
+            Log::channel('cfe_errors')->warning('Extractor principal falló, usando fallback', [
+                'tipo_cfe'          => $tipoCfe,
+                'extractor'         => get_class($extractor),
+                'extractor_version' => $extractor->getExtractorVersion(),
+                'errores'           => $e->errores,
+                'pdf_hash'          => $pdfHash,
+            ]);
+
+            $extractor = new EventualesExtractor();
+            $fallbackUsado = true;
+            $dto = $extractor->extraer($texto);
         }
 
-        return $this->repository->crear([
-            'tipo_cfe'        => $tipoCfe,
-            'serie'           => $datosExtraidos['serie'] ?? null,
-            'numero'          => $datosExtraidos['numero'] ?? null,
-            'fecha'           => $datosExtraidos['fecha'] ?? null,
-            'monto'           => $this->normalizarMonto($datosExtraidos),
-            'moneda'          => $datosExtraidos['moneda'] ?? 'UYU',
-            'datos_extraidos' => $datosExtraidos,
-            'pdf_path'        => $pdfPath,
-            'source_url'      => $sourceUrl,
-            'user_id'         => $userId,
-            'estado'          => 'pendiente',
-        ]);
+        $extractorVersion = $extractor->getExtractorVersion();
+
+        if (Config::get('cfe.cache.enabled', true)) {
+            Cache::put(
+                $cacheKey,
+                [
+                    'tipo_cfe'          => $tipoCfe,
+                    'datos'             => $dto->withExtractorVersion($extractorVersion)->toArray(),
+                    'extractor_version' => $extractorVersion,
+                    'fallback_usado'    => $fallbackUsado,
+                    'procesado_at'      => now()->toIso8601String(),
+                ],
+                now()->addDays((int) Config::get('cfe.cache.ttl_dias', 7))
+            );
+        }
+
+        return [
+            'dto'              => $dto,
+            'tipo_cfe'         => $tipoCfe,
+            'extractor_version' => $extractorVersion,
+            'fallback_usado'   => $fallbackUsado,
+            'desde_cache'      => false,
+        ];
     }
 
-    /**
-     * Detecta el tipo de CFE basado en palabras clave del texto.
-     *
-     * @param string $texto
-     * @return string
-     */
+    private function crearPendienteDesdeExtraccion(
+        array $result,
+        string $pdfPath,
+        ?string $sourceUrl,
+        string $pdfHash,
+        ?int $userId,
+        float $inicio
+    ): TesCfePendiente {
+        $dto = $result['dto'];
+        $tipoCfe = $result['tipo_cfe'];
+        $extractorVersion = $result['extractor_version'];
+        $fallbackUsado = $result['fallback_usado'];
+
+        $pendiente = $this->repository->crear([
+            'tipo_cfe'          => $tipoCfe,
+            'serie'             => $dto->serie,
+            'numero'            => $dto->numero,
+            'fecha'             => $dto->fecha,
+            'monto'             => $dto->monto,
+            'moneda'            => $dto->moneda,
+            'datos_extraidos'   => $dto->toArray(),
+            'pdf_path'          => $pdfPath,
+            'source_url'        => $sourceUrl,
+            'pdf_hash'          => $pdfHash,
+            'extractor_version' => $extractorVersion,
+            'user_id'           => $userId,
+            'estado'            => 'pendiente',
+        ]);
+
+        $duracionMs = (int) ((microtime(true) - $inicio) * 1000);
+        event(new CfeProcesado($pendiente, $tipoCfe, $dto->toArray(), $duracionMs));
+
+        if ($fallbackUsado) {
+            $datosExtra = $pendiente->datos_extraidos;
+            $datosExtra['fallback_usado'] = true;
+            $pendiente->datos_extraidos = $datosExtra;
+            $pendiente->save();
+        }
+
+        if (Config::get("cfe.auto_confirm_types.{$tipoCfe}", false)) {
+            ConfirmarCfeJob::dispatch($pendiente->id)->onQueue(
+                Config::get('cfe.jobs.confirm.queue', 'cfe-confirmation')
+            );
+        }
+
+        return $pendiente;
+    }
+
+    public function procesarPendienteExistente(TesCfePendiente $pendiente): TesCfePendiente
+    {
+        $absolutePath = Storage::path($pendiente->pdf_path);
+
+        if (!$absolutePath || !file_exists($absolutePath)) {
+            throw new \RuntimeException(
+                "Archivo PDF no encontrado para pendiente {$pendiente->id}: {$pendiente->pdf_path}"
+            );
+        }
+
+        $pdfHash = $pendiente->pdf_hash ?? hash_file('sha256', $absolutePath);
+        $result = $this->ejecutarExtraccion($absolutePath, $pdfHash);
+
+        $dto = $result['dto'];
+        $tipoCfe = $result['tipo_cfe'];
+        $extractorVersion = $result['extractor_version'];
+        $fallbackUsado = $result['fallback_usado'];
+
+        $pendiente->update([
+            'tipo_cfe'          => $tipoCfe,
+            'serie'             => $dto->serie,
+            'numero'            => $dto->numero,
+            'fecha'             => $dto->fecha,
+            'monto'             => $dto->monto,
+            'moneda'            => $dto->moneda,
+            'datos_extraidos'   => $dto->toArray(),
+            'extractor_version' => $extractorVersion,
+            'pdf_hash'          => $pdfHash,
+            'estado'            => 'pendiente',
+        ]);
+
+        event(new CfeProcesado($pendiente, $tipoCfe, $dto->toArray(), 0));
+
+        if ($fallbackUsado) {
+            $datosExtra = $pendiente->datos_extraidos;
+            $datosExtra['fallback_usado'] = true;
+            $pendiente->datos_extraidos = $datosExtra;
+            $pendiente->save();
+        }
+
+        if (Config::get("cfe.auto_confirm_types.{$tipoCfe}", false)) {
+            ConfirmarCfeJob::dispatch($pendiente->id)->onQueue(
+                Config::get('cfe.jobs.confirm.queue', 'cfe-confirmation')
+            );
+        }
+
+        return $pendiente->fresh();
+    }
+
     public function detectarTipoCfe(string $texto): string
     {
         $textoLower = mb_strtolower($texto, 'UTF-8');
-        $textoNorm  = $this->quitarAcentos($textoLower);
+        $textoNorm  = TextoHelper::quitarAcentos($textoLower);
 
         if (Str::contains($textoNorm, ['certificado de residencia', 'certificado residencia'])) {
             return 'certificado_residencia';
@@ -135,26 +270,15 @@ class CfeProcessorService
         return 'desconocido';
     }
 
-    /**
-     * Parsea un archivo PDF y retorna el texto extraído.
-     *
-     * @param string $rutaAbsoluta Ruta absoluta al archivo PDF
-     * @return string
-     *
-     * @throws \Exception
-     */
     public function parsearPdf(string $rutaAbsoluta): string
     {
         $parser  = new Parser();
         $content = file_get_contents($rutaAbsoluta);
 
-        // Algunos PDFs de CFE comienzan con BOM UTF-8 (\xEF\xBB\xBF) antes de %PDF,
-        // lo que desplaza los offsets internos y causa "Unable to find startxref".
         if (str_starts_with($content, "\xEF\xBB\xBF")) {
             $content = substr($content, 3);
         }
 
-        // Reparar fin de archivo si el PDF está truncado y termina en %%E o %%EO en lugar de %%EOF
         $trimmedContent = rtrim($content);
         if (str_ends_with($trimmedContent, '%%E')) {
             $content = $trimmedContent . 'OF';
@@ -166,13 +290,6 @@ class CfeProcessorService
         return $pdf->getText();
     }
 
-    /**
-     * Retorna el extractor adecuado para el tipo de CFE dado.
-     * Si no hay uno específico, devuelve el EventualesExtractor como fallback.
-     *
-     * @param string $tipoCfe
-     * @return CfeExtractorInterface
-     */
     public function getExtractor(string $tipoCfe): CfeExtractorInterface
     {
         foreach ($this->extractors as $extractor) {
@@ -181,30 +298,10 @@ class CfeProcessorService
             }
         }
 
-        // Fallback: EventualesExtractor (genérico)
         return new EventualesExtractor();
     }
 
-    /**
-     * Quita acentos del texto para comparación insensible a caracteres especiales.
-     *
-     * @param string $texto
-     * @return string
-     */
-    public function quitarAcentos(string $texto): string
-    {
-        $search  = ['á', 'é', 'í', 'ó', 'ú', 'ñ', 'ü', 'Á', 'É', 'Í', 'Ó', 'Ú', 'Ñ', 'Ü'];
-        $replace = ['a', 'e', 'i', 'o', 'u', 'n', 'u', 'a', 'e', 'i', 'o', 'u', 'n', 'u'];
-        return str_replace($search, $replace, $texto);
-    }
 
-    /**
-     * Normaliza el campo "monto" de los datos extraídos a float.
-     * Distintos extractores usan diferentes claves (monto, monto_total).
-     *
-     * @param array $datos
-     * @return float
-     */
     private function normalizarMonto(array $datos): float
     {
         $valor = $datos['monto'] ?? $datos['monto_total'] ?? 0;
@@ -216,13 +313,6 @@ class CfeProcessorService
         return (float) str_replace(['.', ','], ['', '.'], (string) $valor);
     }
 
-    /**
-     * Analiza un PDF desde una ruta local y retorna los datos extraídos sin persistir.
-     * Usado por la extensión del navegador para previsualizar antes de confirmar.
-     *
-     * @param string $filepath Ruta absoluta al PDF
-     * @return array ['es_cfe' => bool, 'tipo_cfe' => string, 'tipo_cfe_codigo' => string, 'datos' => array, 'mensaje' => string]
-     */
     public function analizarPdf(string $filepath): array
     {
         if (!file_exists($filepath)) {
@@ -257,18 +347,8 @@ class CfeProcessorService
         ];
     }
 
-    /**
-     * Prepara un registro a partir del análisis previo: guarda datos en caché
-     * y retorna la URL de redirección al formulario del módulo correspondiente.
-     *
-     * @param string      $tipoCfe  Código de tipo (ej: 'multas_cobradas')
-     * @param array       $datos    Datos extraídos del PDF
-     * @param string|null $filepath Ruta original del PDF (para referencia)
-     * @return array ['success' => bool, 'mensaje' => string, 'redirect_url' => string]
-     */
     public function crearRegistroDesdeAnalisis(string $tipoCfe, array $datos, ?string $filepath = null): array
     {
-        // Mapa tipo → URL del formulario de carga
         $rutas = [
             'multas_cobradas'        => 'tesoreria/multas-cobradas/cargar-cfe',
             'eventuales'             => 'tesoreria/eventuales/cargar-efactura',
@@ -279,7 +359,6 @@ class CfeProcessorService
             'prendas'                => 'tesoreria/prendas/cargar-cfe',
         ];
 
-        // Normalizar: aceptar tanto código como nombre legible del tipo
         $tipoCodigo = mb_strtolower(str_replace([' ', '-'], '_', $tipoCfe));
         $rutaRelativa = $rutas[$tipoCodigo] ?? ($rutas[$tipoCfe] ?? null);
 
@@ -290,7 +369,6 @@ class CfeProcessorService
             ];
         }
 
-        // Persistir datos en caché 15 minutos para que el formulario pueda leerlos
         $prefillId = Str::random(40);
         Cache::put('cfe_prefill_' . $prefillId, [
             'datos'    => $datos,
@@ -311,15 +389,6 @@ class CfeProcessorService
         ];
     }
 
-    /**
-     * Registra automáticamente una multa a partir de los datos ya extraídos del CFE.
-     * Valida consistencia, verifica duplicados y persiste cabecera + ítems en una transacción.
-     *
-     * @param array $datos   Datos extraídos por MultasExtractor
-     * @param int   $userId  ID del usuario que registra
-     * @return TesMultasCobradas
-     * @throws \Exception Si hay inconsistencia, duplicado o error de BD
-     */
     public function registrarMultaAuto(array $datos, int $userId): TesMultasCobradas
     {
         if (empty($datos['items'])) {
@@ -357,16 +426,16 @@ class CfeProcessorService
 
         return DB::transaction(function () use ($datos, $fecha, $recibo, $montoTotal, $userId) {
             $cobro = TesMultasCobradas::create([
-                'fecha'      => $fecha->format('Y-m-d'),
-                'recibo'     => $recibo,
-                'monto'      => $montoTotal,
-                'nombre'     => mb_strtoupper($datos['nombre'], 'UTF-8'),
-                'cedula'     => $datos['cedula'],
-                'adicional'  => $datos['adicional'] ?? null,
-                'adenda'     => $datos['adenda'] ?? null,
+                'fecha'       => $fecha->format('Y-m-d'),
+                'recibo'      => $recibo,
+                'monto'       => $montoTotal,
+                'nombre'      => mb_strtoupper($datos['nombre'], 'UTF-8'),
+                'cedula'      => $datos['cedula'],
+                'adicional'   => $datos['adicional'] ?? null,
+                'adenda'      => $datos['adenda'] ?? null,
                 'referencias' => $datos['referencias'] ?? null,
-                'forma_pago' => $datos['forma_pago'] ?? 'SIN DATOS',
-                'created_by' => $userId,
+                'forma_pago'  => $datos['forma_pago'] ?? 'SIN DATOS',
+                'created_by'  => $userId,
             ]);
 
             foreach ($datos['items'] as $itemData) {
@@ -384,15 +453,6 @@ class CfeProcessorService
         });
     }
 
-    /**
-     * Registra una advertencia cuando la extracción no es completamente válida.
-     *
-     * @param string $tipoCfe
-     * @param string $texto
-     * @param array  $datosExtraidos
-     * @param array  $errores
-     * @return void
-     */
     private function logParsingWarning(
         string $tipoCfe,
         string $texto,

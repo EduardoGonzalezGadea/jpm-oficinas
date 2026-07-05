@@ -6,6 +6,7 @@ use Livewire\Component;
 use Livewire\WithFileUploads;
 use Smalot\PdfParser\Parser;
 use App\Models\Tesoreria\Eventual;
+use App\Models\Tesoreria\EventualInstitucion;
 use App\Models\Tesoreria\MedioDePago;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -19,6 +20,7 @@ class CargarEfactura extends Component
     public $archivo;
     public $datosExtraidos = null;
     public $mensajeError = null;
+    public $anulacionPendiente = null;
 
     protected $rules = [
         'archivo' => 'required|mimes:pdf|max:10240', // 10MB max
@@ -39,8 +41,8 @@ class CargarEfactura extends Component
                 'medio_de_pago' => $this->normalizarMedioPago($data['medio_de_pago'] ?? ''),
                 'detalle' => $data['detalle'] ?? '',
                 'orden_cobro' => $data['orden_cobro'] ?? '',
-                'recibo' => $data['recibo'] ?? (($data['serie'] ?? '') . ($data['numero'] ?? '')),
-                'ingreso' => $data['ingreso'] ?? '',
+                'recibo' => $data['recibo'] ?? (($data['serie'] ?? '') . '-' . ($data['numero'] ?? '')),
+                'ingreso' => $data['ingreso'] ?? $data['ingreso_contabilidad'] ?? '',
                 'institucion' => $data['institucion'] ?? $this->detectarInstitucion($data['titular'] ?? ($data['receptor_nombre'] ?? '')),
             ];
 
@@ -60,8 +62,8 @@ class CargarEfactura extends Component
                 'medio_de_pago' => $this->normalizarMedioPago($data['medio_de_pago'] ?? ''),
                 'detalle' => $data['detalle'] ?? '',
                 'orden_cobro' => $data['orden_cobro'] ?? '',
-                'recibo' => $data['recibo'] ?? (($data['serie'] ?? '') . ($data['numero'] ?? '')),
-                'ingreso' => $data['ingreso'] ?? '',
+                'recibo' => $data['recibo'] ?? (($data['serie'] ?? '') . '-' . ($data['numero'] ?? '')),
+                'ingreso' => $data['ingreso'] ?? $data['ingreso_contabilidad'] ?? '',
                 'institucion' => $data['institucion'] ?? $this->detectarInstitucion($data['receptor_nombre'] ?? $data['titular'] ?? ''),
             ];
 
@@ -86,24 +88,59 @@ class CargarEfactura extends Component
 
             // Usar el extractor especializado para obtener datos robustos
             $extractor = new \App\Services\CfeExtractor\EventualesExtractor();
-            $data = $extractor->extraer($text);
+            /** @var \App\DTOs\CfeExtraccionDto $dto */
+            $dto = $extractor->extraer($text);
+            $extractor->validar($dto);
 
-            if (empty($data['recibo']) && empty($data['titular'])) {
-                $this->mensajeError = "No se pudieron extraer datos del archivo. Asegúrate de que es una eFactura válida de eventuales.";
+            $data = $dto->toArray();
+
+            // Construir recibo si no existe (serie + numero)
+            $recibo = $data['recibo'] ?? '';
+            if (empty($recibo) && !empty($data['serie']) && !empty($data['numero'])) {
+                $recibo = $data['serie'] . '-' . $data['numero'];
+            }
+
+            // Usar titular o construir desde serie/numero
+            $titular = $data['titular'] ?? $data['receptor_nombre'] ?? '';
+            if (empty($titular) && !empty($recibo)) {
+                $titular = $recibo;
+            }
+
+            // Validar campos críticos
+            if (empty($data['fecha']) || empty($data['monto']) || empty($recibo)) {
+                $this->mensajeError = "Datos incompletos del CFE. Faltan campos obligatorios (fecha, monto, recibo).";
+                \Illuminate\Support\Facades\Log::channel('cfe_errors')->warning('Eventuales: campos críticos vacíos', array_merge($data, ['recibo_construido' => $recibo]));
                 return;
             }
 
             $this->datosExtraidos = [
-                'titular' => $data['titular'] ?? '',
+                'titular' => $titular,
                 'fecha' => $data['fecha'] ?? '',
                 'monto' => $data['monto'] ?? 0.0,
                 'medio_de_pago' => $this->normalizarMedioPago($data['medio_de_pago'] ?? ''),
                 'detalle' => $data['detalle'] ?? '',
                 'orden_cobro' => $data['orden_cobro'] ?? '',
-                'recibo' => $data['recibo'] ?? '',
-                'ingreso' => $data['ingreso'] ?? '',
-                'institucion' => $this->detectarInstitucion($data['titular'] ?? ''),
+                'recibo' => $recibo,
+                'ingreso' => $data['ingreso'] ?? $data['ingreso_contabilidad'] ?? '',
+                'institucion' => $this->detectarInstitucion($titular),
             ];
+        } catch (\App\Exceptions\CfeExtraccionInvalidaException $e) {
+            if (str_contains($e->getMessage(), 'Monto no valido')) {
+                $resultado = $this->detectarAnulacion($text);
+                if ($resultado === 'confirmar') {
+                    return;
+                }
+                if ($resultado === 'inexistente') {
+                    $this->mensajeError = 'Nota de crédito: la e-Factura/e-Ticket referenciada (' . $this->ultimaRefEncontrada . ') no está registrada en el sistema, no es necesario eliminar nada.';
+                    return;
+                }
+            }
+
+            $this->mensajeError = $e->getMessage();
+            $this->dispatchBrowserEvent('swal:modal-error', [
+                'title' => 'Comprobante No Válido',
+                'text' => $e->getMessage()
+            ]);
         } catch (\Exception $e) {
             $this->mensajeError = "Error al procesar el PDF: " . $e->getMessage();
         }
@@ -192,6 +229,101 @@ class CargarEfactura extends Component
         return null;
     }
 
+    private string $ultimaRefEncontrada = '';
+
+    /**
+     * Detecta si el CFE es una nota de crédito (monto negativo) que referencia
+     * una factura existente en el sistema.
+     * @return string 'confirmar' si existe y montos coinciden, 'inexistente' si la ref. no está registrada, '' si no aplica.
+     */
+    private function detectarAnulacion(string $text): string
+    {
+        if (!preg_match('/TOTAL\s+A\s+PAGAR:\s*-\s*([\d\.,]+)/iu', $text, $mMonto)) {
+            return '';
+        }
+
+        // Extraer el bloque REFERENCIAS para buscar la referencia, evitando
+        // falsos positivos con la serie/número del propio documento en el encabezado.
+        if (!preg_match('/REFERENCIAS:\s*\n(.*?)(?=ADENDA\b|Fecha\s+de\s+Vencimiento|$)/isu', $text, $refBlock)) {
+            return '';
+        }
+
+        $refText = $refBlock[1];
+        if (!preg_match('/e-(?:Factura|Ticket|Boleta)[\s\-]*([A-Z])\s*-?\s*(\d+)/iu', $refText, $mRef)) {
+            return '';
+        }
+
+        $refRecibo = mb_strtoupper($mRef[1] . '-' . $mRef[2], 'UTF-8');
+        $refReciboNoSep = mb_strtoupper($mRef[1] . $mRef[2], 'UTF-8');
+        $this->ultimaRefEncontrada = $refRecibo;
+
+        // Si la referencia en REFERENCIAS es al propio documento (autoreferencia),
+        // no es una anulación — es un CFE normal con total negativo.
+        $propioRecibo = '';
+        if (preg_match('/SERIE\s*N[ÚU]MERO\b[^\n]*\n\s*([A-Z])\s+(\d+)/iu', $text, $mPropio)) {
+            $propioRecibo = mb_strtoupper($mPropio[1] . '-' . $mPropio[2], 'UTF-8');
+        }
+        if (!empty($propioRecibo) && ($refRecibo === $propioRecibo || $refReciboNoSep === str_replace('-', '', $propioRecibo))) {
+            return '';
+        }
+
+        // Buscar por recibo (serie+numero con que se registró originalmente),
+        // no por orden_cobro (que es una referencia a otro CFE distinto).
+        // Soportar ambos formatos (con/sin guión) por compatibilidad con registros
+        // creados antes de que se estandarizara el formato "A-4788".
+        $existing = Eventual::where('recibo', $refRecibo)
+            ->orWhere('recibo', $refReciboNoSep)
+            ->first();
+        if (!$existing) {
+            return 'inexistente';
+        }
+
+        $montoNota = (float)str_replace(['.', ','], ['', '.'], $mMonto[1]);
+
+        // Verificar que los montos coincidan (abs de la nota == monto del registro)
+        if (abs(abs($montoNota) - (float)$existing->monto) > 1.0) {
+            $this->mensajeError = 'Nota de crédito: el monto (' . number_format($montoNota, 2, ',', '.') . ') no coincide con el registro referenciado ' . $refRecibo . ' (' . number_format($existing->monto, 2, ',', '.') . ').';
+            return '';
+        }
+
+        $this->anulacionPendiente = [
+            'orden_cobro' => $refRecibo,
+            'record_id' => $existing->id,
+            'titular' => $existing->titular,
+            'fecha' => $existing->fecha instanceof \Carbon\Carbon
+                ? $existing->fecha->format('d/m/Y')
+                : $existing->fecha,
+            'monto' => $existing->monto,
+            'monto_nota' => $montoNota,
+        ];
+
+        return 'confirmar';
+    }
+
+    public function confirmarAnulacion()
+    {
+        if (!$this->anulacionPendiente) return;
+
+        $record = Eventual::find($this->anulacionPendiente['record_id']);
+        if ($record) {
+            $record->delete();
+            $this->clearCache();
+            session()->flash('message', 'Registro ' . $this->anulacionPendiente['orden_cobro'] . ' eliminado exitosamente.');
+        }
+
+        $this->anulacionPendiente = null;
+        $this->archivo = null;
+        $this->datosExtraidos = null;
+    }
+
+    public function cancelarAnulacion()
+    {
+        $this->anulacionPendiente = null;
+        $this->archivo = null;
+        $this->datosExtraidos = null;
+        $this->mensajeError = 'No se cargó el comprobante. El monto negativo no es válido para una recaudación de eventuales.';
+    }
+
     public function guardar()
     {
         if (!$this->datosExtraidos) return;
@@ -257,6 +389,7 @@ class CargarEfactura extends Component
         $this->archivo = null;
         $this->datosExtraidos = null;
         $this->mensajeError = null;
+        $this->anulacionPendiente = null;
     }
 
     public function render()

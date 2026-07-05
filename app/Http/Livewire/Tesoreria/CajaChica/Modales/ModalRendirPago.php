@@ -67,7 +67,7 @@ class ModalRendirPago extends Component
 
             $this->showModal = true;
         } catch (\Exception $e) {
-            $this->emit('mostrarAlerta', ['icon' => 'error', 'text' => 'Pago no encontrado o error al cargar datos.', 'toast' => true, 'position' => 'top-end', 'timer' => 5000]);
+            $this->dispatchBrowserEvent('swal', ['icon' => 'error', 'text' => 'Pago no encontrado o error al cargar datos.', 'toast' => true, 'position' => 'top-end', 'timer' => 5000]);
         }
     }
 
@@ -103,11 +103,11 @@ class ModalRendirPago extends Component
             $service->guardarRendicionPago($this->rendirPagoData);
 
             $this->cerrarModal();
-            $this->emit('datosRecargados');
-            $this->emit('fondoActualizado');
-            $this->emit('mostrarAlerta', ['icon' => 'success', 'text' => 'Rendición guardada exitosamente.', 'toast' => true, 'position' => 'top-end', 'timer' => 5000]);
+            session()->flash('message', 'Rendición guardada exitosamente.');
+            return redirect()->route('tesoreria.caja-chica.index');
         } catch (\Exception $e) {
-            $this->emit('mostrarAlerta', ['icon' => 'error', 'text' => 'Error al guardar la rendición: ' . $e->getMessage(), 'toast' => true, 'position' => 'top-end', 'timer' => 5000]);
+            session()->flash('error', 'Error al guardar la rendición: ' . $e->getMessage());
+            return redirect()->route('tesoreria.caja-chica.index');
         }
     }
 

@@ -229,10 +229,19 @@ Route::prefix('tarjetas-cobro-brou')->name('tarjetas-cobro-brou.')->group(functi
 
 Route::prefix('gestion-cfe')->name('gestion-cfe.')->group(function () {
     Route::get('/', \App\Http\Livewire\Tesoreria\GestionCfe\Index::class)->name('index');
-    Route::get('estados-recaudacion', \App\Http\Livewire\Tesoreria\EstadosRecaudacion\Index::class)->name('estados-recaudacion');
-    Route::get('estados-recaudacion/no-confirmadas', \App\Http\Livewire\Tesoreria\EstadosRecaudacion\NoConfirmadas::class)->name('estados-recaudacion.no-confirmadas')->middleware('modulo:tesoreria,supervisor');
-    Route::get('estados-recaudacion/confirmar/{planilla}', \App\Http\Livewire\Tesoreria\EstadosRecaudacion\Confirmar::class)->name('estados-recaudacion.confirmar')->middleware('modulo:tesoreria,supervisor');
-    Route::get('recaudaciones', \App\Http\Livewire\Tesoreria\Recaudaciones\Index::class)->name('recaudaciones');
+    Route::get('/estados-recaudacion', \App\Http\Livewire\Tesoreria\EstadosRecaudacion\Index::class)
+        ->name('estados-recaudacion');
+    Route::get('/estados-recaudacion/no-confirmadas', \App\Http\Livewire\Tesoreria\EstadosRecaudacion\NoConfirmadas::class)
+        ->name('estados-recaudacion.no-confirmadas');
+    Route::get('/estados-recaudacion/confirmar/{planilla}', \App\Http\Livewire\Tesoreria\EstadosRecaudacion\Confirmar::class)
+        ->name('estados-recaudacion.confirmar');
+    Route::get('/recaudaciones', \App\Http\Livewire\Tesoreria\Recaudaciones\Index::class)
+        ->name('recaudaciones');
+});
+
+Route::prefix('cfe')->name('cfe.')->group(function () {
+    Route::get('/pendientes', \App\Http\Livewire\CfePendientesIndex::class)->name('pendientes');
+    Route::get('/monitoring', \App\Http\Livewire\Tesoreria\CfeMonitoring\Index::class)->name('monitoring');
 });
 
 // ============================================================================
@@ -324,6 +333,7 @@ Route::prefix('caja-chica')->name('caja-chica.')->middleware(['modulo:tesoreria'
     Route::get('pendientes/{id}/editar',        [PendienteController::class, 'edit'])   ->name('pendientes.editar');
     Route::get('imprimir/pendiente/{id}', [CajaChicaImpresionController::class, 'imprimirPendiente'])->name('imprimir.pendiente');
     Route::get('imprimir/pago/{id}',      [CajaChicaImpresionController::class, 'imprimirPago'])     ->name('imprimir.pago');
+    Route::get('exportar-excel',          [CajaChicaController::class, 'exportarExcel'])->name('exportar-excel');
 });
 
 // ============================================================================

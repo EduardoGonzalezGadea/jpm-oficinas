@@ -114,6 +114,13 @@ return [
         'emergency' => [
             'path' => storage_path('logs/laravel.log'),
         ],
+
+        'cfe_errors' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/cfe_errors.log'),
+            'level' => 'warning',
+            'days' => 30,
+        ],
     ],
 
 ];

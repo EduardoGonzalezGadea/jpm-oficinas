@@ -14,9 +14,10 @@ class Multa extends Model
 
     protected $table = 'tes_multas';
 
-    // --- REFACTORIZADO ---
     protected $fillable = [
+        'codigo',
         'articulo',
+        'literal',
         'apartado',
         'articulo_completo',
         'descripcion',
@@ -24,6 +25,11 @@ class Multa extends Model
         'importe_original',
         'importe_unificado',
         'decreto',
+        'monto_ur',
+        'monto_ui',
+        'monto_pesos',
+        'inciso_legal',
+        'visible',
         'created_by',
         'updated_by',
         'deleted_by',
@@ -32,8 +38,11 @@ class Multa extends Model
     protected $casts = [
         'importe_original' => 'decimal:2',
         'importe_unificado' => 'decimal:2',
+        'monto_ur' => 'decimal:4',
+        'monto_ui' => 'decimal:4',
+        'monto_pesos' => 'decimal:2',
+        'visible' => 'boolean',
     ];
-    // ---------------------
 
     protected $dates = ['deleted_at'];
     public $timestamps = true;

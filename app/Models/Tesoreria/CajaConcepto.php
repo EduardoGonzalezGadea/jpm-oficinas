@@ -30,6 +30,7 @@ class CajaConcepto extends Model
         'requiere_confirmacion',
         'requiere_distribucion',
         'permite_planilla',
+        'requiere_organismo',
         'siif_distribucion_tipo_id',
         'created_by',
         'updated_by',
@@ -45,6 +46,7 @@ class CajaConcepto extends Model
         'requiere_confirmacion'      => 'boolean',
         'requiere_distribucion'      => 'boolean',
         'permite_planilla'           => 'boolean',
+        'requiere_organismo'         => 'boolean',
         'siif_distribucion_tipo_id'  => 'integer',
     ];
 

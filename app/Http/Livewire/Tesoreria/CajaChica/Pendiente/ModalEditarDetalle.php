@@ -131,7 +131,7 @@ class ModalEditarDetalle extends Component
             $this->emit('pendienteActualizado');
         } catch (\Exception $e) {
             DB::rollBack();
-            session()->flash('error', 'Error al actualizar el pendiente: ' . $e->getMessage());
+            $this->dispatchBrowserEvent('swal:toast-error', ['text' => 'Error al actualizar el pendiente: ' . $e->getMessage()]);
         }
     }
 

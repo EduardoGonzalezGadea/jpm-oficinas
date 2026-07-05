@@ -160,6 +160,7 @@ class Index extends Component
                     ->orWhere('transferencia', 'like', '%' . $this->search . '%');
             })
             ->orderBy('recibo_fecha', 'desc')
+            ->orderBy('recibo_numero', 'desc')
             ->paginate(10);
 
         return view('livewire.tesoreria.prendas.index', compact('prendas'))

@@ -82,6 +82,43 @@
                 });
             });
 
+            window.addEventListener('swal:modal', (event) => {
+                const data = event.detail;
+                Swal.fire({
+                    icon: data.type || 'info',
+                    title: data.title || 'Información',
+                    text: data.text || '',
+                });
+            });
+
+            window.addEventListener('swal:toast-error', (event) => {
+                const data = event.detail;
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: data.text || 'Ocurrió un error inesperado.',
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 5000,
+                    timerProgressBar: true,
+                });
+            });
+
+            window.addEventListener('swal:toast-success', (event) => {
+                const data = event.detail;
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Éxito',
+                    text: data.text || 'Operación completada.',
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 3000,
+                    timerProgressBar: true,
+                });
+            });
+
             window.addEventListener('swal:documento-duplicado-bloqueante', (event) => {
                 const data = event.detail;
                 Swal.fire({
@@ -114,6 +151,23 @@
 
             $('#modalEditarCfe').on('hidden.bs.modal', function () {
                 @this.call('cancelarEdicion');
+            });
+
+            window.addEventListener('confirmar-descartar-cambios', () => {
+                Swal.fire({
+                    title: '¿Descartar cambios?',
+                    text: 'Los cambios no guardados se perderán.',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#dc3545',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Sí, descartar',
+                    cancelButtonText: 'Seguir editando'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        @this.call('cancelarEdicion');
+                    }
+                });
             });
         });
     </script>

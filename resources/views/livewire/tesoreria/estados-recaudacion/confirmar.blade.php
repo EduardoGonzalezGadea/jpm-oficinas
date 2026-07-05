@@ -32,9 +32,22 @@
                     @forelse($itemsPorCfe as $cfeLabel => $items)
                         @php $primerCfe = $items->first()->cfe; @endphp
                         <div class="card mb-2 border">
-                            <div class="card-header bg-light py-1">
+                            <div class="card-header bg-light py-1 d-flex align-items-center justify-content-between">
                                 <strong><i class="fas fa-file-invoice mr-1"></i>{{ $cfeLabel }}</strong>
-                                <span class="badge badge-info float-right">$ {{ number_format($items->where('enPlanilla', true)->sum('importe'), 2, ',', '.') }}</span>
+                                <div class="d-flex align-items-center">
+                                    @if($items->where('enPlanilla', true)->isNotEmpty())
+                                    <div class="custom-control custom-switch d-inline-block mr-3">
+                                        <input type="checkbox" class="custom-control-input" id="cfeMaster_{{ $primerCfe->id }}"
+                                            onclick="event.preventDefault()"
+                                            wire:click="toggleConfirmadoCfe({{ $primerCfe->id }})"
+                                            {{ $items->where('enPlanilla', true)->every(fn($i) => $i->confirmado) ? 'checked' : '' }}>
+                                        <label class="custom-control-label small" for="cfeMaster_{{ $primerCfe->id }}">
+                                            Conf. todos
+                                        </label>
+                                    </div>
+                                    @endif
+                                    <span class="badge badge-info">$ {{ number_format($items->where('enPlanilla', true)->sum('importe'), 2, ',', '.') }}</span>
+                                </div>
                             </div>
                             @if($primerCfe)
                             <div class="px-3 py-1 small bg-white border-bottom d-flex flex-wrap">
@@ -44,50 +57,72 @@
                             </div>
                             @endif
                             <div class="card-body p-0">
-                                <table class="table table-sm table-bordered mb-0">
-                                    <thead class="thead-light">
-                                        <tr>
-                                            <th>Detalle</th>
-                                            <th>Distribución SIIF</th>
-                                            <th class="text-right">Importe</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach($items as $item)
-                                            <tr class="{{ $item->enPlanilla ? '' : 'text-muted' }}" style="{{ $item->enPlanilla ? '' : 'opacity: 0.6;' }}">
-                                                <td class="align-middle small">
-                                                    @if(!$item->enPlanilla)
-                                                        <i class="fas fa-minus-circle mr-1 text-secondary" title="No integra esta planilla"></i>
-                                                    @else
-                                                        <i class="fas fa-check-circle mr-1 text-success" title="Integra esta planilla"></i>
-                                                    @endif
-                                                    {{ $item->detalle }}
-                                                </td>
-                                                <td class="align-middle">
-                                                    @if($item->enPlanilla)
-                                                        <select class="form-control form-control-sm"
-                                                            wire:change="cambiarDistribucion({{ $item->id }}, $event.target.value)">
-                                                            <option value="">— Sin distribución —</option>
-                                                            @php
-                                                                $cfe = $item->cfe;
-                                                                $key = ($cfe->siif_distribucion_tipo_id ?? 'X') . '-' . ($cfe->siif_distribucion_dependencia_id ?? 'X');
-                                                                $opciones = $opcionesPorTipoDep[$key] ?? [];
-                                                            @endphp
-                                                            @foreach($opciones as $opt)
-                                                                <option value="{{ $opt->id }}" {{ $item->siif_distribucion_id == $opt->id ? 'selected' : '' }}>
-                                                                    {{ $opt->concepto }}
-                                                                </option>
-                                                            @endforeach
-                                                        </select>
-                                                    @else
-                                                        <span class="small">{{ $item->siifDistribucion?->concepto ?? '—' }}</span>
-                                                    @endif
-                                                </td>
-                                                <td class="align-middle small text-right text-nowrap">$ {{ number_format($item->importe, 2, ',', '.') }}</td>
+                                    <table class="table table-sm table-bordered mb-0">
+                                        <thead class="thead-light">
+                                            <tr>
+                                                <th>Detalle</th>
+                                                <th class="text-right" style="width: 80px;">Cantidad</th>
+                                                <th class="text-right" style="width: 100px;">Precios</th>
+                                                <th class="text-right" style="width: 100px;">Importe</th>
+                                                <th>Distribución SIIF</th>
+                                                <th class="text-center" style="width: 100px;">Conf.</th>
                                             </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
+                                        </thead>
+                                        <tbody>
+                                            @foreach($items as $item)
+                                                <tr class="{{ $item->enPlanilla ? '' : 'text-muted' }}" style="{{ $item->enPlanilla ? '' : 'opacity: 0.6;' }}">
+                                                    <td class="align-middle small">
+                                                        @if(!$item->enPlanilla)
+                                                            <i class="fas fa-minus-circle mr-1 text-secondary" title="No integra esta planilla"></i>
+                                                        @else
+                                                            <i class="fas fa-check-circle mr-1 text-success" title="Integra esta planilla"></i>
+                                                        @endif
+                                                        {{ $item->detalle }}
+                                                    </td>
+                                                    <td class="align-middle small text-right text-nowrap">{{ $item->cantidad ? number_format($item->cantidad, 2, ',', '.') : '—' }}</td>
+                                                    <td class="align-middle small text-right text-nowrap">$ {{ number_format($item->precio, 2, ',', '.') }}</td>
+                                                    <td class="align-middle small text-right text-nowrap">$ {{ number_format($item->importe, 2, ',', '.') }}</td>
+                                                    <td class="align-middle">
+                                                        @if($item->enPlanilla)
+                                                            <select class="form-control form-control-sm"
+                                                                wire:change="cambiarDistribucion({{ $item->id }}, $event.target.value)">
+                                                                <option value="">— Sin distribución —</option>
+                                                                @php
+                                                                    $cfe = $item->cfe;
+                                                                    $key = ($cfe->siif_distribucion_tipo_id ?? 'X') . '-' . ($cfe->siif_distribucion_dependencia_id ?? 'X');
+                                                                    $opciones = $opcionesPorTipoDep[$key] ?? [];
+                                                                @endphp
+                                                                @foreach($opciones as $opt)
+                                                                    <option value="{{ $opt->id }}" {{ $item->siif_distribucion_id == $opt->id ? 'selected' : '' }}>
+                                                                        {{ $opt->concepto }}
+                                                                    </option>
+                                                                @endforeach
+                                                            </select>
+                                                        @else
+                                                            <span class="small">{{ $item->siifDistribucion?->concepto ?? '—' }}</span>
+                                                        @endif
+                                                    </td>
+                                                    <td class="align-middle text-center">
+                                                        @if($item->enPlanilla)
+                                                            <div class="custom-control custom-switch d-inline-block">
+                                                                <input type="checkbox" class="custom-control-input" id="itemConfirmado_{{ $item->id }}"
+                                                                    onclick="event.preventDefault()"
+                                                                    wire:click="toggleItemConfirmado({{ $item->id }})"
+                                                                    {{ $item->confirmado ? 'checked' : '' }}>
+                                                                <label class="custom-control-label" for="itemConfirmado_{{ $item->id }}">
+                                                                    <span class="small {{ $item->confirmado ? 'text-success font-weight-bold' : 'text-muted' }}">
+                                                                        {{ $item->confirmado ? 'Sí' : 'No' }}
+                                                                    </span>
+                                                                </label>
+                                                            </div>
+                                                        @else
+                                                            <span class="small text-muted">—</span>
+                                                        @endif
+                                                    </td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
                             </div>
                         </div>
                     @empty
@@ -397,6 +432,7 @@
                             <div class="d-flex align-items-center">
                                 <div class="custom-control custom-switch d-inline-block">
                                     <input type="checkbox" class="custom-control-input" id="switchConfirmar"
+                                        onclick="event.preventDefault()"
                                         wire:click="toggleConfirmada"
                                         {{ $planilla->confirmada ? 'checked' : '' }}>
                                     <label class="custom-control-label font-weight-bold" for="switchConfirmar">
@@ -417,6 +453,11 @@
                             <button type="button" class="btn btn-primary btn-sm" onclick="imprimirConfirmar()">
                                 <i class="fas fa-print mr-1"></i> Imprimir
                             </button>
+                            @else
+                            <button type="button" class="btn btn-danger btn-sm"
+                                onclick="event.preventDefault(); window.dispatchEvent(new CustomEvent('swal:confirm', { detail: { title: '¿Eliminar planilla?', text: 'Esta acción no se puede deshacer. Los ítems quedarán sin asignar.', method: 'eliminarPlanilla', id: {{ $planilla->id }}, confirmButtonText: 'Sí, eliminar' } }))">
+                                <i class="fas fa-trash mr-1"></i> Eliminar esta planilla para E.R.
+                            </button>
                             @endif
                         @else
                             <p class="text-muted mb-0">
@@ -433,6 +474,32 @@
 
 @push('scripts')
 <script>
+window.addEventListener('swal:confirmar-cambio-planilla', event => {
+    const data = event.detail;
+    const showDeny = data.otrosItemsCount > 0;
+    Swal.fire({
+        title: data.title,
+        html: data.html,
+        icon: 'warning',
+        showCancelButton: true,
+        showDenyButton: showDeny,
+        confirmButtonColor: '#3085d6',
+        denyButtonColor: '#28a745',
+        cancelButtonColor: '#d33',
+        confirmButtonText: showDeny ? 'Solo este ítem' : 'Sí, mover ítem',
+        denyButtonText: showDeny ? 'Incluir los ' + data.otrosItemsCount + ' ítem(s)' : null,
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            @this.call('confirmarCambioPlanilla', data.itemId, data.distribucionId, data.targetPlanillaId, data.action, false);
+        } else if (result.isDenied) {
+            @this.call('confirmarCambioPlanilla', data.itemId, data.distribucionId, data.targetPlanillaId, data.action, true);
+        } else {
+            @this.call('cancelarCambioPlanilla');
+        }
+    });
+});
+
 function imprimirConfirmar() {
     var recaudaciones = document.getElementById('seccion-recaudaciones');
     var planillaCuerpo = document.getElementById('seccion-planilla-cuerpo');
@@ -447,7 +514,7 @@ function imprimirConfirmar() {
         }
     }
 
-    var contenidoPlan = planillaCuerpo ? planillaCuerpo.querySelector('.card-body').innerHTML : '';
+    var contenidoPlan = planillaCuerpo ? '<div class="print-planilla">' + planillaCuerpo.querySelector('.card-body').innerHTML + '</div>' : '';
 
     var ventana = window.open('', '_blank', 'width=800,height=600');
     ventana.document.write('<!DOCTYPE html><html><head><title>Planilla {{ $planilla->numero }}</title>');
@@ -456,7 +523,8 @@ function imprimirConfirmar() {
     ventana.document.write('body{padding:20px;font-family:inherit}table{width:100%}');
     ventana.document.write('.d-print-none,.nav-tabs,.tab-pane.fade{display:none!important}');
     ventana.document.write('.tab-pane.fade.show.active,.tab-pane.fade{display:block!important}');
-    ventana.document.write('.card{margin-bottom:1rem;border:1px solid #dee2e6;page-break-inside:avoid}');
+    ventana.document.write('.card{margin-bottom:1rem;border:1px solid #dee2e6}');
+    ventana.document.write('.print-planilla .card{page-break-inside:avoid}');
     ventana.document.write('.card-header{padding:.5rem;background:#f8f9fa;font-weight:700}');
     ventana.document.write('.table{width:100%;border-collapse:collapse}');
     ventana.document.write('.table td,.table th{border:1px solid #dee2e6;padding:.25rem}');

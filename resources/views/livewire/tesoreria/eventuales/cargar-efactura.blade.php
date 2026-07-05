@@ -146,6 +146,25 @@
                     <i class="fas fa-exclamation-triangle mr-1"></i> {{ $mensajeError }}
                 </div>
                 @endif
+
+                @if($anulacionPendiente)
+                <div class="alert alert-warning py-2 px-3 mt-2 mb-0 small text-center border-warning">
+                    <div class="d-flex align-items-center justify-content-center mb-2">
+                        <i class="fas fa-exclamation-triangle text-warning mr-2 fa-lg"></i>
+                        <strong>Posible Anulación Detectada</strong>
+                    </div>
+                    <p class="mb-1">Este comprobante (monto: -$ {{ number_format($anulacionPendiente['monto_nota'], 2, ',', '.') }}) anula la factura <strong>{{ $anulacionPendiente['orden_cobro'] }}</strong>.</p>
+                    <p class="mb-2">¿Desea eliminar el registro existente de <strong>{{ $anulacionPendiente['titular'] }}</strong> ({{ $anulacionPendiente['fecha'] }}, $ {{ number_format($anulacionPendiente['monto'], 2, ',', '.') }})?</p>
+                    <div class="d-flex justify-content-center gap-2">
+                        <button wire:click="confirmarAnulacion" wire:loading.attr="disabled" class="btn btn-warning btn-sm mr-1">
+                            <i class="fas fa-trash mr-1"></i> Sí, eliminar registro
+                        </button>
+                        <button wire:click="cancelarAnulacion" class="btn btn-secondary btn-sm">
+                            <i class="fas fa-times mr-1"></i> No, cancelar
+                        </button>
+                    </div>
+                </div>
+                @endif
             </div>
         </div>
     </div>

@@ -36,7 +36,7 @@ class Index extends Component
 
     public function mount()
     {
-        $this->fecha = date('Y-m-d');
+        $this->fecha = null;
     }
 
     public function abrirModalNueva()
@@ -408,12 +408,33 @@ class Index extends Component
 
     public function render()
     {
-        $planillas = TesPlanillaEr::with(['tipo', 'dependencia', 'items'])
-            ->when($this->fecha, fn($q) => $q->where('fecha', $this->fecha))
-            ->orderBy('fecha', 'desc')->orderBy('id', 'desc')
-            ->paginate(15);
+        $query = TesPlanillaEr::with(['tipo', 'dependencia', 'items']);
 
-        return view('livewire.tesoreria.estados-recaudacion.index', compact('planillas'))
+        if ($this->fecha) {
+            $query->where('fecha', $this->fecha);
+        } else {
+            $now = now();
+            $currentYear = $now->year;
+            $currentMonth = $now->month;
+            $prevYear = $currentMonth == 1 ? $currentYear - 1 : $currentYear;
+            $prevMonth = $currentMonth == 1 ? 12 : $currentMonth - 1;
+
+            $query->where(function ($q) use ($currentYear, $currentMonth, $prevYear, $prevMonth) {
+                $q->whereYear('fecha', $currentYear)->whereMonth('fecha', $currentMonth)
+                  ->orWhere(function ($q2) use ($prevYear, $prevMonth) {
+                      $q2->whereYear('fecha', $prevYear)->whereMonth('fecha', $prevMonth);
+                  });
+            });
+        }
+
+        $planillas = $query->orderBy('fecha', 'desc')->orderBy('id', 'desc')
+            ->paginate(25);
+
+        $planillasPorFecha = $planillas->groupBy(function ($p) {
+            return $p->fecha->format('Y-m-d');
+        });
+
+        return view('livewire.tesoreria.estados-recaudacion.index', compact('planillas', 'planillasPorFecha'))
             ->extends('layouts.app')
             ->section('content');
     }

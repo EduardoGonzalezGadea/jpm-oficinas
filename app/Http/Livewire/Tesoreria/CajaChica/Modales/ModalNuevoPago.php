@@ -92,12 +92,12 @@ class ModalNuevoPago extends Component
             ]);
 
             DB::commit();
-            session()->flash('message', 'Pago Directo creado correctamente.');
+            $this->dispatchBrowserEvent('swal:success', ['text' => 'Pago Directo creado correctamente.']);
             $this->dispatchBrowserEvent('hide-modal', ['id' => 'modalNuevoPago']);
             $this->emitTo('tesoreria.caja-chica.index', 'pagoCreado');
         } catch (\Exception $e) {
             DB::rollBack();
-            session()->flash('error', 'Error al crear el pago directo: ' . $e->getMessage());
+            $this->dispatchBrowserEvent('swal:toast-error', ['text' => 'Error al crear el pago directo: ' . $e->getMessage()]);
         }
     }
 

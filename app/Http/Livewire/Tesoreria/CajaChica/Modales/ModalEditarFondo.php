@@ -46,7 +46,7 @@ class ModalEditarFondo extends Component
             $this->showModal = true;
             $this->dispatchBrowserEvent('modal-edit-fondo-opened');
         } catch (\Exception $e) {
-            $this->emit('mostrarAlerta', ['type' => 'error', 'text' => 'Error al cargar los datos del fondo: ' . $e->getMessage()]);
+            $this->dispatchBrowserEvent('swal', ['type' => 'error', 'text' => 'Error al cargar los datos del fondo: ' . $e->getMessage()]);
         }
     }
 
@@ -65,12 +65,11 @@ class ModalEditarFondo extends Component
 
             if (!$resultado) {
                 $this->cerrarModal();
-                $this->emit('mostrarAlerta', ['icon' => 'success', 'text' => 'No se realizaron cambios en el monto del fondo.', 'toast' => true, 'position' => 'top-end', 'timer' => 3000]);
-                return;
+                session()->flash('message', 'No se realizaron cambios en el monto del fondo.');
+                return redirect()->route('tesoreria.caja-chica.index');
             }
 
             $this->cerrarModal();
-            $this->emit('fondoActualizado');
 
             $mensaje = sprintf(
                 'Fondo actualizado exitosamente. Monto anterior: $%s, Monto nuevo: $%s',
@@ -78,10 +77,12 @@ class ModalEditarFondo extends Component
                 number_format($resultado['montoNuevo'], 2, ',', '.')
             );
 
-            $this->emit('mostrarAlerta', ['icon' => 'success', 'text' => $mensaje, 'toast' => true, 'position' => 'top-end', 'timer' => 5000]);
+            session()->flash('message', $mensaje);
+            return redirect()->route('tesoreria.caja-chica.index');
 
         } catch (\Exception $e) {
-            $this->emit('mostrarAlerta', ['icon' => 'error', 'text' => 'Error al actualizar el fondo: ' . $e->getMessage(), 'toast' => true, 'position' => 'top-end', 'timer' => 5000]);
+            session()->flash('error', 'Error al actualizar el fondo: ' . $e->getMessage());
+            return redirect()->route('tesoreria.caja-chica.index');
         }
     }
 

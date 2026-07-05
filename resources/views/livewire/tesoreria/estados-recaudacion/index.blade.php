@@ -59,57 +59,70 @@
                         </tr>
                     </thead>
                     <tbody class="align-middle">
-                        @forelse($planillas as $p)
-                            <tr>
-                                <td class="align-middle">{{ $p->numero }}</td>
-                                <td class="align-middle">{{ $p->tipo->tipo ?? '—' }}</td>
-                                <td class="align-middle">{{ $p->dependencia->dependencia ?? '—' }}</td>
-                                <td class="align-middle">{{ $p->turno ?? '—' }}</td>
-                                <td class="align-middle text-right text-nowrap">$ {{ number_format($p->items->sum('importe'), 2, ',', '.') }}</td>
-                                <td class="align-middle text-center">
-                                    @if($p->confirmada)
-                                        <i class="fas fa-check-circle text-success" title="Confirmada"></i>
-                                    @else
-                                        <i class="fas fa-times-circle text-danger" title="No confirmada"></i>
-                                    @endif
-                                </td>
-                                <td class="align-middle text-center d-print-none text-nowrap">
-                                    <div class="btn-group btn-group-sm" role="group">
-                                        <button class="btn btn-info btn-action-fixed" title="Ver Detalles"
-                                            wire:click="verDetalles({{ $p->id }})">
-                                            <i class="fas fa-list"></i>
-                                        </button>
-                                        <button class="btn btn-secondary btn-action-fixed" title="Ver Planilla"
-                                            wire:click="verPlanilla({{ $p->id }})">
-                                            <i class="fas fa-file-alt"></i>
-                                        </button>
-                                        <button class="btn btn-warning btn-action-fixed {{ $p->confirmada ? '' : 'd-none' }}"
-                                            title="Editar"
-                                            wire:click="editarPlanilla({{ $p->id }})">
-                                            <i class="fas fa-edit"></i>
-                                        </button>
-                                        <button class="btn btn-danger btn-action-fixed" title="Eliminar"
-                                            onclick="confirmDeletePlanilla({{ $p->id }})">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
+                        @forelse($planillasPorFecha as $fecha => $planillasDelDia)
+                            @php
+                                $totalDia = $planillasDelDia->sum(fn($p) => $p->items->sum('importe'));
+                            @endphp
+                            <tr class="table-info">
+                                <td colspan="7" class="py-1 px-2 font-weight-bold">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span><i class="far fa-calendar-alt mr-1"></i> {{ \Carbon\Carbon::parse($fecha)->format('d/m/Y') }}</span>
+                                        <span class="text-right">Total: $ {{ number_format($totalDia, 2, ',', '.') }}</span>
                                     </div>
                                 </td>
                             </tr>
-                            <tr class="table-secondary">
-                                <td colspan="7" class="py-1 px-2">
-                                    <div class="d-flex flex-wrap align-items-center small">
-                                        <span class="mr-3"><strong>ER N°:</strong> {{ $p->er_numero ?? '—' }}</span>
-                                        <span class="mr-3"><strong>Egresos N°:</strong> {{ $p->egresos_numero ?? '—' }}</span>
-                                        <span class="mr-3"><strong>Ingresos N°:</strong> {{ $p->ingresos_numero ?? '—' }}</span>
-                                        <span class="mr-3"><strong>Transf. Fecha:</strong> {{ $p->transferencia_fecha ? $p->transferencia_fecha->format('d/m/Y') : '—' }}</span>
-                                        <span><strong>Conf. Transf.:</strong> {{ $p->transferencia_confirmacion ?? '—' }}</span>
-                                    </div>
-                                </td>
-                            </tr>
+                            @foreach($planillasDelDia as $p)
+                                <tr>
+                                    <td class="align-middle">{{ $p->numero }}</td>
+                                    <td class="align-middle">{{ $p->tipo->tipo ?? '—' }}</td>
+                                    <td class="align-middle">{{ $p->dependencia->dependencia ?? '—' }}</td>
+                                    <td class="align-middle">{{ $p->turno ?? '—' }}</td>
+                                    <td class="align-middle text-right text-nowrap">$ {{ number_format($p->items->sum('importe'), 2, ',', '.') }}</td>
+                                    <td class="align-middle text-center">
+                                        @if($p->confirmada)
+                                            <i class="fas fa-check-circle text-success" title="Confirmada"></i>
+                                        @else
+                                            <i class="fas fa-times-circle text-danger" title="No confirmada"></i>
+                                        @endif
+                                    </td>
+                                    <td class="align-middle text-center d-print-none text-nowrap">
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            <button class="btn btn-info btn-action-fixed" title="Ver Detalles"
+                                                wire:click="verDetalles({{ $p->id }})">
+                                                <i class="fas fa-list"></i>
+                                            </button>
+                                            <button class="btn btn-secondary btn-action-fixed" title="Ver Planilla"
+                                                wire:click="verPlanilla({{ $p->id }})">
+                                                <i class="fas fa-file-alt"></i>
+                                            </button>
+                                            <button class="btn btn-warning btn-action-fixed {{ $p->confirmada ? '' : 'd-none' }}"
+                                                title="Editar"
+                                                wire:click="editarPlanilla({{ $p->id }})">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="btn btn-danger btn-action-fixed" title="Eliminar"
+                                                onclick="confirmDeletePlanilla({{ $p->id }})">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr class="table-secondary">
+                                    <td colspan="7" class="py-1 px-2">
+                                        <div class="d-flex flex-wrap align-items-center small">
+                                            <span class="mr-3"><strong>ER N°:</strong> {{ $p->er_numero ?? '—' }}</span>
+                                            <span class="mr-3"><strong>Egresos N°:</strong> {{ $p->egresos_numero ?? '—' }}</span>
+                                            <span class="mr-3"><strong>Ingresos N°:</strong> {{ $p->ingresos_numero ?? '—' }}</span>
+                                            <span class="mr-3"><strong>Transf. Fecha:</strong> {{ $p->transferencia_fecha ? $p->transferencia_fecha->format('d/m/Y') : '—' }}</span>
+                                            <span><strong>Conf. Transf.:</strong> {{ $p->transferencia_confirmacion ?? '—' }}</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endforeach
                         @empty
                             <tr>
                                 <td colspan="7" class="text-center py-3">
-                                    No hay planillas para esta fecha.
+                                    No hay planillas en el período seleccionado.
                                 </td>
                             </tr>
                         @endforelse

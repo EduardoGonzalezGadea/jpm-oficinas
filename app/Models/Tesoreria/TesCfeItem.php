@@ -23,6 +23,7 @@ class TesCfeItem extends Model
         'descuento' => 'decimal:2',
         'recargo' => 'decimal:2',
         'importe' => 'decimal:2',
+        'confirmado' => 'boolean',
     ];
 
     protected static function boot()

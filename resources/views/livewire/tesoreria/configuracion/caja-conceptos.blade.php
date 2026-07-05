@@ -32,6 +32,7 @@
                                     <th class="text-center align-middle">Req. Confirmación</th>
                                     <th class="text-center align-middle">Req. Distribución</th>
                                     <th class="text-center align-middle">Permite Planilla</th>
+                                    <th class="text-center align-middle">Req. Organismo</th>
                                     <th class="text-center align-middle">Acciones</th>
                                 </tr>
                             </thead>
@@ -49,25 +50,56 @@
                                             @endif
                                         </td>
                                         <td class="text-center align-middle">
-                                            @if($concepto->requiere_confirmacion)
-                                                <span class="badge badge-warning">Sí</span>
-                                            @else
-                                                <span class="badge badge-secondary">No</span>
-                                            @endif
+                                            <div class="custom-control custom-switch d-inline-block">
+                                                <input type="checkbox" class="custom-control-input"
+                                                    wire:click="toggleConfirmacion({{ $concepto->id }})"
+                                                    id="confirmacion-switch-{{ $concepto->id }}"
+                                                    @if($concepto->requiere_confirmacion) checked @endif>
+                                                <label class="custom-control-label" for="confirmacion-switch-{{ $concepto->id }}">
+                                                    <span class="badge badge-{{ $concepto->requiere_confirmacion ? 'warning' : 'secondary' }}">
+                                                        {{ $concepto->requiere_confirmacion ? 'Sí' : 'No' }}
+                                                    </span>
+                                                </label>
+                                            </div>
                                         </td>
                                         <td class="text-center align-middle">
-                                            @if($concepto->requiere_distribucion)
-                                                <span class="badge badge-info">Sí</span>
-                                            @else
-                                                <span class="badge badge-secondary">No</span>
-                                            @endif
+                                            <div class="custom-control custom-switch d-inline-block">
+                                                <input type="checkbox" class="custom-control-input"
+                                                    wire:click="toggleDistribucion({{ $concepto->id }})"
+                                                    id="distribucion-switch-{{ $concepto->id }}"
+                                                    @if($concepto->requiere_distribucion) checked @endif>
+                                                <label class="custom-control-label" for="distribucion-switch-{{ $concepto->id }}">
+                                                    <span class="badge badge-{{ $concepto->requiere_distribucion ? 'info' : 'secondary' }}">
+                                                        {{ $concepto->requiere_distribucion ? 'Sí' : 'No' }}
+                                                    </span>
+                                                </label>
+                                            </div>
                                         </td>
                                         <td class="text-center align-middle">
-                                            @if($concepto->permite_planilla)
-                                                <span class="badge badge-success">Sí</span>
-                                            @else
-                                                <span class="badge badge-secondary">No</span>
-                                            @endif
+                                            <div class="custom-control custom-switch d-inline-block">
+                                                <input type="checkbox" class="custom-control-input"
+                                                    wire:click="togglePlanilla({{ $concepto->id }})"
+                                                    id="planilla-switch-{{ $concepto->id }}"
+                                                    @if($concepto->permite_planilla) checked @endif>
+                                                <label class="custom-control-label" for="planilla-switch-{{ $concepto->id }}">
+                                                    <span class="badge badge-{{ $concepto->permite_planilla ? 'success' : 'secondary' }}">
+                                                        {{ $concepto->permite_planilla ? 'Sí' : 'No' }}
+                                                    </span>
+                                                </label>
+                                            </div>
+                                        </td>
+                                        <td class="text-center align-middle">
+                                            <div class="custom-control custom-switch d-inline-block">
+                                                <input type="checkbox" class="custom-control-input"
+                                                    wire:click="toggleOrganismo({{ $concepto->id }})"
+                                                    id="organismo-switch-{{ $concepto->id }}"
+                                                    @if($concepto->requiere_organismo) checked @endif>
+                                                <label class="custom-control-label" for="organismo-switch-{{ $concepto->id }}">
+                                                    <span class="badge badge-{{ $concepto->requiere_organismo ? 'primary' : 'secondary' }}">
+                                                        {{ $concepto->requiere_organismo ? 'Sí' : 'No' }}
+                                                    </span>
+                                                </label>
+                                            </div>
                                         </td>
                                         <td class="text-center align-middle">
                                             <button wire:click="showDetails({{ $concepto->id }})"
@@ -88,7 +120,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="6" class="text-center">No hay conceptos de caja registrados.</td>
+                                        <td colspan="7" class="text-center">No hay conceptos de caja registrados.</td>
                                     </tr>
                                 @endforelse
                             </tbody>
@@ -176,6 +208,15 @@
                                 </label>
                                 <small class="form-text text-muted">Se pueden generar planillas para este concepto.</small>
                             </div>
+                            <div class="custom-control custom-switch">
+                                <input type="checkbox" class="custom-control-input"
+                                    wire:model.defer="requiere_organismo"
+                                    id="requiere_organismo">
+                                <label class="custom-control-label" for="requiere_organismo">
+                                    Requiere Organismo
+                                </label>
+                                <small class="form-text text-muted">El concepto requiere seleccionar un organismo/entidad.</small>
+                            </div>
                         </div>
                     </form>
                 </div>
@@ -226,6 +267,11 @@
                         <p class="mb-1"><strong>Permite Planilla:</strong>
                             <span class="badge badge-{{ $selectedConcepto->permite_planilla ? 'success' : 'secondary' }}">
                                 {{ $selectedConcepto->permite_planilla ? 'Sí' : 'No' }}
+                            </span>
+                        </p>
+                        <p class="mb-1"><strong>Requiere Organismo:</strong>
+                            <span class="badge badge-{{ $selectedConcepto->requiere_organismo ? 'primary' : 'secondary' }}">
+                                {{ $selectedConcepto->requiere_organismo ? 'Sí' : 'No' }}
                             </span>
                         </p>
                         <hr>

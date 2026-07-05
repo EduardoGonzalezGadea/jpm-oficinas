@@ -3,11 +3,15 @@
 namespace App\Http\Livewire\Tesoreria\GestionCfe;
 
 use App\DataTransferObjects\CfeData;
+use App\Exceptions\Tesoreria\CfeDuplicateException;
+use App\Exceptions\Tesoreria\CfeValidationException;
+use App\Helpers\TextoHelper;
 use App\Models\Tesoreria\CajaConcepto;
 use App\Models\Tesoreria\TesCfe;
 use App\Models\Tesoreria\TesCfeItem;
 use App\Models\Tesoreria\SiifDistribucion;
 use App\Services\Tesoreria\CfeUniversalParserService;
+use Illuminate\Support\Facades\Log;
 
 trait WithConfirmacionCarga
 {
@@ -64,17 +68,33 @@ trait WithConfirmacionCarga
         }
 
         $conceptos = CajaConcepto::whereNull('deleted_at')->get();
-        $detalleNorm = $this->normalizarTexto($primerDetalle);
+        $detalleNorm = TextoHelper::normalizarTexto($primerDetalle);
 
         foreach ($conceptos as $concepto) {
-            $conceptoNorm = $this->normalizarTexto($concepto->caja_concepto);
+            $conceptoNorm = TextoHelper::normalizarTexto($concepto->caja_concepto);
 
             if ($detalleNorm === $conceptoNorm || str_contains($detalleNorm, $conceptoNorm)) {
                 return $concepto->id;
             }
         }
 
-        return null;
+        $ultimosItems = TesCfeItem::with('cfe')
+            ->where('detalle', $primerDetalle)
+            ->whereHas('cfe', fn($q) => $q->whereNotNull('tes_caja_concepto_id')->whereNull('deleted_at'))
+            ->whereNull('deleted_at')
+            ->orderBy('id', 'desc')
+            ->take(10)
+            ->get();
+
+        if ($ultimosItems->isEmpty()) {
+            return null;
+        }
+
+        $frecuencias = $ultimosItems->groupBy(fn($item) => $item->cfe->tes_caja_concepto_id)
+            ->map->count()
+            ->sortDesc();
+
+        return $frecuencias->keys()->first();
     }
 
     public function updatedCajaConceptoSeleccionado($value): void
@@ -111,44 +131,11 @@ trait WithConfirmacionCarga
             return;
         }
 
-        $cajaConcepto = CajaConcepto::find($this->cajaConceptoSeleccionado);
-        if (!$cajaConcepto || !$cajaConcepto->siif_distribucion_tipo_id) {
-            return;
-        }
-
-        foreach ($this->datosExtraidos['items'] as $index => $item) {
-            $detalle = trim($item['detalle'] ?? '');
-            if (empty($detalle)) {
-                continue;
-            }
-
-            $ultimosItems = TesCfeItem::where('detalle', $detalle)
-                ->whereNotNull('siif_distribucion_id')
-                ->whereNull('deleted_at')
-                ->orderBy('id', 'desc')
-                ->take(10)
-                ->get();
-
-            if ($ultimosItems->isEmpty()) {
-                continue;
-            }
-
-            $frecuencias = $ultimosItems->groupBy('siif_distribucion_id')
-                ->map->count()
-                ->sortDesc();
-
-            $distribucionId = $frecuencias->keys()->first();
-
-            $existe = SiifDistribucion::where('id', $distribucionId)
-                ->where('tipo_id', $cajaConcepto->siif_distribucion_tipo_id)
-                ->where('dependencia_id', $this->siifDependenciaSeleccionado)
-                ->whereNull('deleted_at')
-                ->exists();
-
-            if ($existe) {
-                $this->itemDistribuciones[$index] = (string) $distribucionId;
-            }
-        }
+        $this->itemDistribuciones = $this->cfeCreator->autoAsignarDistribuciones(
+            $this->cajaConceptoSeleccionado,
+            $this->siifDependenciaSeleccionado,
+            $this->datosExtraidos['items']
+        );
     }
 
     public function confirmarCarga(bool $force = false): void
@@ -217,17 +204,54 @@ trait WithConfirmacionCarga
 
         $referencia = trim($this->datosExtraidos['referencias'] ?? '');
         if (!$force && $referencia !== '') {
-            $refNormalizada = preg_split('/\s+/', $referencia)[0];
-            if (preg_match('/^e/i', $refNormalizada)) {
-                $cfeExistente = TesCfe::where('referencias', 'like', $refNormalizada . '%')->whereNull('deleted_at')->first();
-                if ($cfeExistente) {
-                    $documentoIdentificador = "{$cfeExistente->documento_tipo} {$cfeExistente->documento_serie}-{$cfeExistente->documento_numero}";
-                    $this->dispatchBrowserEvent('swal:confirmar-guardar-referencia-duplicada', [
-                        'documentoReferencia' => $refNormalizada,
-                        'documentoExistente' => $documentoIdentificador,
-                    ]);
-                    return;
+            $refCompleta = '';
+            $cfeExistente = null;
+
+            if (preg_match(
+                '/(e[- ]?(?:Factura|Ticket|Boleta)(?:[- ]Cobranza)?|Nota[- ]de[- ]Cr[ée]dito)\s*[-–\s]*([A-Z])?\s*[-–\s]*(\d+)\b/iu',
+                $referencia,
+                $m
+            )) {
+                $refTipo = $m[1];
+                $refSerie = !empty($m[2]) ? mb_strtoupper($m[2], 'UTF-8') : null;
+                $refNumero = $m[3];
+                $tipoNorm = $this->normalizarTipoDoc($refTipo);
+
+                // Buscar por numero en el campo referencias de TesCfe
+                $candidatos = TesCfe::where('referencias', 'like', '%' . $refNumero . '%')
+                    ->whereNull('deleted_at')
+                    ->get();
+
+                foreach ($candidatos as $cfe) {
+                    $refCfe = $cfe->referencias ?? '';
+                    $docTipoNorm = $this->normalizarTipoDoc($cfe->documento_tipo ?? '');
+
+                    // Verificar serie: buscar patron "A1167", "A-1167" o "A 1167"
+                    if ($refSerie && !preg_match('/' . preg_quote($refSerie, '/') . '\s*-?\s*' . $refNumero . '/u', $refCfe)) {
+                        continue;
+                    }
+
+                    // Verificar tipo: coincidencia flexible (ej. "efactura" ≈ "efacturacobranza")
+                    if (!str_contains($docTipoNorm, $tipoNorm) && !str_contains($tipoNorm, $docTipoNorm)) {
+                        continue;
+                    }
+
+                    $cfeExistente = $cfe;
+                    break;
                 }
+
+                if ($cfeExistente) {
+                    $refCompleta = $refTipo . ($refSerie ? "-{$refSerie}" : "") . "-{$refNumero}";
+                }
+            }
+
+            if ($cfeExistente) {
+                $documentoIdentificador = "{$cfeExistente->documento_tipo} {$cfeExistente->documento_serie}-{$cfeExistente->documento_numero}";
+                $this->dispatchBrowserEvent('swal:confirmar-guardar-referencia-duplicada', [
+                    'documentoReferencia' => $refCompleta,
+                    'documentoExistente' => $documentoIdentificador,
+                ]);
+                return;
             }
         }
 
@@ -270,13 +294,11 @@ trait WithConfirmacionCarga
 
             $this->cancelarCarga();
 
-            $this->dispatchBrowserEvent('swal:modal', [
-                'type' => 'success',
-                'title' => 'CFE Procesado',
-                'text' => "El archivo {$this->nombreArchivoOriginal} ha sido procesado y guardado correctamente.",
+            $this->dispatchBrowserEvent('swal:toast-success', [
+                'text' => "Archivo {$this->nombreArchivoOriginal} procesado y guardado correctamente.",
             ]);
 
-        } catch (\InvalidArgumentException $e) {
+        } catch (CfeDuplicateException | CfeValidationException | \InvalidArgumentException $e) {
             $this->dispatchBrowserEvent('swal:toast-error', [
                 'text' => $e->getMessage(),
             ]);
@@ -353,5 +375,10 @@ trait WithConfirmacionCarga
                 }
             })
             ->first();
+    }
+
+    private function normalizarTipoDoc(string $tipo): string
+    {
+        return preg_replace('/[\s\-]+/', '', TextoHelper::normalizarTexto($tipo));
     }
 }

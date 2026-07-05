@@ -16,12 +16,23 @@ class TesMultasItems extends Model
 
     protected $fillable = [
         'tes_multas_cobradas_id',
-        'detalle',
+        'codigo',
         'descripcion',
+        'detalle',
         'importe',
+        'monto_ur',
+        'monto_pesos',
+        'subtotal',
         'created_by',
         'updated_by',
         'deleted_by',
+    ];
+
+    protected $casts = [
+        'importe' => 'decimal:2',
+        'monto_ur' => 'decimal:4',
+        'monto_pesos' => 'decimal:2',
+        'subtotal' => 'decimal:2',
     ];
 
     public function cobrada()

@@ -84,7 +84,7 @@ class ModalNuevoPendiente extends Component
         $this->validate();
 
         if (!$this->idCajaChica) {
-            session()->flash('error', 'No se ha seleccionado un Fondo Permanente válido.');
+            $this->dispatchBrowserEvent('swal:toast-error', ['text' => 'No se ha seleccionado un Fondo Permanente válido.']);
             return;
         }
 
@@ -108,12 +108,12 @@ class ModalNuevoPendiente extends Component
             ]);
 
             DB::commit();
-            session()->flash('message', 'Pendiente creado correctamente.');
+            $this->dispatchBrowserEvent('swal:success', ['text' => 'Pendiente creado correctamente.']);
             $this->dispatchBrowserEvent('hide-modal', ['id' => 'modalNuevoPendiente']);
             $this->emitTo('tesoreria.caja-chica.index', 'pendienteCreado');
         } catch (\Exception $e) {
             DB::rollBack();
-            session()->flash('error', 'Error al crear el pendiente: ' . $e->getMessage());
+            $this->dispatchBrowserEvent('swal:toast-error', ['text' => 'Error al crear el pendiente: ' . $e->getMessage()]);
         }
     }
 

@@ -53,7 +53,7 @@ class ModalRecuperarSaldos extends Component
         $items = $service->obtenerElementosParaRecuperar($cajaChica, $this->mesActual, $this->anioActual, $fechaRecuperacionActual);
 
         if ($items->isEmpty()) {
-            $this->emit('mostrarAlerta', ['icon' => 'success', 'text' => 'No hay saldos pendientes de recuperar para el período y fecha seleccionados.', 'toast' => true, 'position' => 'top-end', 'timer' => 5000]);
+            $this->dispatchBrowserEvent('swal', ['icon' => 'success', 'text' => 'No hay saldos pendientes de recuperar para el período y fecha seleccionados.', 'toast' => true, 'position' => 'top-end', 'timer' => 5000]);
             return;
         }
         
@@ -110,11 +110,12 @@ class ModalRecuperarSaldos extends Component
             );
 
             $this->cerrarModal();
-            $this->emit('fondoActualizado'); // Trigger refresh in parent
-            $this->emit('mostrarAlerta', ['icon' => 'success', 'text' => 'Recuperación guardada exitosamente.', 'toast' => true, 'position' => 'top-end', 'timer' => 5000]);
+            session()->flash('message', 'Recuperación guardada exitosamente.');
+            return redirect()->route('tesoreria.caja-chica.index');
             
         } catch (\Exception $e) {
-            $this->emit('mostrarAlerta', ['icon' => 'error', 'text' => 'Error al guardar la recuperación: ' . $e->getMessage(), 'toast' => true, 'position' => 'top-end', 'timer' => 5000]);
+            session()->flash('error', 'Error al guardar la recuperación: ' . $e->getMessage());
+            return redirect()->route('tesoreria.caja-chica.index');
         }
     }
 

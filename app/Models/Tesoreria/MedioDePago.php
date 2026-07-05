@@ -18,13 +18,16 @@ class MedioDePago extends Model
         'nombre',
         'descripcion',
         'activo',
+        'contado',
+        'codigo_soniar',
         'created_by',
         'updated_by',
         'deleted_by'
     ];
 
     protected $casts = [
-        'activo' => 'boolean'
+        'activo' => 'boolean',
+        'contado' => 'boolean',
     ];
 
     // Scope para obtener solo medios de pago activos

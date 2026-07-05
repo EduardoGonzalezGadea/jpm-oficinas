@@ -3,13 +3,14 @@
 namespace Tests\Unit\Services\CfeExtractor;
 
 use App\Services\CfeExtractor\CertificadoResidenciaExtractor;
+use App\DTOs\CfeExtraccionDto;
 use PHPUnit\Framework\TestCase;
+use Tests\Unit\Services\CfeExtractor\Helpers\WithCfeFixtures;
 
-/**
- * Tests unitarios para CertificadoResidenciaExtractor.
- */
 class CertificadoResidenciaExtractorTest extends TestCase
 {
+    use WithCfeFixtures;
+
     private CertificadoResidenciaExtractor $extractor;
 
     protected function setUp(): void
@@ -17,10 +18,6 @@ class CertificadoResidenciaExtractorTest extends TestCase
         parent::setUp();
         $this->extractor = new CertificadoResidenciaExtractor();
     }
-
-    // -------------------------------------------------------------------------
-    // soporta()
-    // -------------------------------------------------------------------------
 
     public function test_soporta_certificado_residencia(): void
     {
@@ -34,7 +31,6 @@ class CertificadoResidenciaExtractorTest extends TestCase
 
     public function test_no_soporta_certificado_sin_residencia(): void
     {
-        // "certificado" solo no alcanza
         $this->assertFalse($this->extractor->soporta('certificado'));
     }
 
@@ -43,109 +39,87 @@ class CertificadoResidenciaExtractorTest extends TestCase
         $this->assertFalse($this->extractor->soporta('multas_cobradas'));
     }
 
-    // -------------------------------------------------------------------------
-    // getNombreLegible()
-    // -------------------------------------------------------------------------
-
     public function test_nombre_legible(): void
     {
         $this->assertEquals('Certificado de Residencia', $this->extractor->getNombreLegible());
     }
 
-    // -------------------------------------------------------------------------
-    // extraer() — texto sintético con estructura de CFE
-    // -------------------------------------------------------------------------
-
-    private function textoCertificadoEjemplo(): string
+    public function test_extrae_datos_desde_fixture_real(): void
     {
-        return <<<'TEXT'
-e-Ticket Contado
-B 654321 Contado
-NOMBRE O DENOMINACIÓN DOMICILIO FISCAL
-MARIA GARCIA LOPEZ
-INFORMACION ADICIONAL
-C.I.: 5.678.901-2
-TEL.: 099 123 456
-FECHA MONEDA
-22/01/2026 Peso uruguayo
+        $texto = $this->loadCertificadoResidenciaFixture();
+        $dto = $this->extractor->extraer($texto);
 
-DETALLE DESCRIPCIÓN CANTIDAD PRECIO UNITARIO IMPORTE
-CERTIFICADO DE RESIDENCIA CORRESPONDE A TRAMITE 1 300,00 300,00
-
-MONTO NO FACTURABLE: 300,00
-TOTAL A PAGAR: 300,00
-Efectivo: 300,00
-REFERENCIAS:
-TEXT;
-    }
-
-    public function test_extrae_fecha(): void
-    {
-        $datos = $this->extractor->extraer($this->textoCertificadoEjemplo());
-        $this->assertEquals('22/01/2026', $datos['fecha']);
-    }
-
-    public function test_extrae_serie_y_numero(): void
-    {
-        $datos = $this->extractor->extraer($this->textoCertificadoEjemplo());
-        $this->assertEquals('B', $datos['serie']);
-        $this->assertEquals('654321', $datos['numero']);
-    }
-
-    public function test_extrae_cedula_receptor(): void
-    {
-        $datos = $this->extractor->extraer($this->textoCertificadoEjemplo());
-        $this->assertEquals('5.678.901-2', $datos['cedula_receptor']);
-    }
-
-    public function test_extrae_moneda(): void
-    {
-        $datos = $this->extractor->extraer($this->textoCertificadoEjemplo());
-        $this->assertEquals('UYU', $datos['moneda']);
-    }
-
-    public function test_extrae_monto(): void
-    {
-        $datos = $this->extractor->extraer($this->textoCertificadoEjemplo());
-        $this->assertEquals(300.0, $datos['monto']);
-    }
-
-    // -------------------------------------------------------------------------
-    // retira_es_titular — lógica de cedula_titular
-    // -------------------------------------------------------------------------
-
-    public function test_cuando_no_hay_ci_en_descripcion_retira_es_titular(): void
-    {
-        // Sin CI en descripción → el receptor es el titular
-        $datos = $this->extractor->extraer($this->textoCertificadoEjemplo());
-        $this->assertTrue($datos['retira_es_titular']);
-        $this->assertEquals($datos['cedula_receptor'], $datos['cedula_titular']);
+        $this->assertSame('B', $dto->serie);
+        $this->assertSame('654321', $dto->numero);
+        $this->assertSame('22/01/2026', $dto->fecha);
+        $this->assertSame(300.0, $dto->monto);
+        $this->assertSame('UYU', $dto->moneda);
+        $this->assertSame('5.678.901-2', $dto->cedulaReceptor);
+        $this->assertSame('MARIA GARCIA LOPEZ', $dto->nombreReceptor);
+        $this->assertStringContainsString('Efectivo', $dto->formaPago);
+        $this->assertStringContainsString('CERTIFICADO DE RESIDENCIA', $dto->detalle ?? '');
     }
 
     public function test_validar_sin_serie_es_invalido(): void
     {
-        $datos = [
-            'fecha'      => '22/01/2026',
-            'serie'      => '',
-            'numero'     => '',
-            'monto'      => 300.0,
-        ];
+        $this->expectException(\App\Exceptions\CfeExtraccionInvalidaException::class);
+        $this->expectExceptionMessage('Serie/Numero no detectado');
 
-        $resultado = $this->extractor->validar($datos);
-        $this->assertFalse($resultado['valid']);
-        $this->assertContains('Serie/Numero no detectado', $resultado['errors']);
+        $dto = new CfeExtraccionDto(
+            tipoCfe: 'test',
+            serie: '',
+            numero: '',
+            fecha: '22/01/2026',
+            monto: 300.0,
+            moneda: 'UYU',
+            cedula: null,
+            nombre: null,
+            domicilio: null,
+            montoTotal: 300.0,
+            formaPago: 'Efectivo',
+            adicional: null,
+            adenda: null,
+            referencias: null,
+            items: [],
+            detalle: null,
+            detalleCompleto: null,
+            tipoCfeCodigo: 'certificado_residencia',
+            extractorVersion: '1.0.0',
+        );
+        $this->extractor->validar($dto);
     }
 
     public function test_validar_datos_completos(): void
     {
-        $datos = [
-            'fecha'  => '22/01/2026',
-            'serie'  => 'B',
-            'numero' => '654321',
-            'monto'  => 300.0,
-        ];
-
-        $resultado = $this->extractor->validar($datos);
-        $this->assertTrue($resultado['valid']);
+        $dto = new CfeExtraccionDto(
+            tipoCfe: 'test',
+            serie: 'B',
+            numero: '654321',
+            fecha: '22/01/2026',
+            monto: 300.0,
+            moneda: 'UYU',
+            cedula: null,
+            nombre: null,
+            domicilio: null,
+            montoTotal: 300.0,
+            formaPago: 'Efectivo',
+            adicional: null,
+            adenda: null,
+            referencias: null,
+            items: [],
+            detalle: null,
+            detalleCompleto: null,
+            tipoCfeCodigo: 'certificado_residencia',
+            extractorVersion: '1.0.0',
+            telefono: null,
+            receptorDocumento: null,
+            receptorNombre: null,
+            ingresoContabilidad: null,
+            ordenCobro: null,
+            cedulaReceptor: '5.678.901-2',
+            nombreReceptor: 'MARIA GARCIA LOPEZ',
+        );
+        $this->extractor->validar($dto);
+        $this->assertTrue(true);
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\ExternalDownloadLog;
+use App\Models\TesCfePendiente;
 use Illuminate\Support\Facades\Cache;
 
 /**
@@ -54,6 +55,58 @@ class HealthCheckController extends Controller
             'healthy' => $allHealthy,
             'timestamp' => now()->toIso8601String(),
             'services' => $status,
+        ]);
+    }
+
+    /**
+     * Retorna estado del pipeline CFE: procesamiento, pendientes, tasas de éxito.
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function cfeHealth()
+    {
+        $now = now();
+        $todayStart = $now->copy()->startOfDay();
+
+        // Últimas 24h
+        $ultimas24h = TesCfePendiente::where('created_at', '>=', $now->copy()->subHours(24));
+        $recibidos24h = $ultimas24h->count();
+        $confirmados24h = (clone $ultimas24h)->where('estado', 'confirmado')->count();
+        $fallidos24h = (clone $ultimas24h)->where('estado', 'rechazado')->count();
+        $pendientes24h = (clone $ultimas24h)->whereIn('estado', ['pendiente', 'en_revision'])->count();
+
+        $tasaExito = $recibidos24h > 0 ? round(($confirmados24h / $recibidos24h) * 100, 1) : null;
+
+        // Estado actual de pendientes
+        $pendientesAhora = TesCfePendiente::whereIn('estado', ['pendiente', 'en_revision'])->count();
+        $pendientesViejos = TesCfePendiente::whereIn('estado', ['pendiente', 'en_revision'])
+            ->where('created_at', '<', $now->copy()->subDays(3))
+            ->count();
+
+        // Totales acumulados
+        $totalRecibidos = TesCfePendiente::count();
+        $totalConfirmados = TesCfePendiente::where('estado', 'confirmado')->count();
+        $totalTasaExito = $totalRecibidos > 0 ? round(($totalConfirmados / $totalRecibidos) * 100, 1) : null;
+
+        return response()->json([
+            'healthy' => $tasaExito === null || $tasaExito >= 80,
+            'timestamp' => $now->toIso8601String(),
+            'ultimas_24h' => [
+                'recibidos' => $recibidos24h,
+                'confirmados' => $confirmados24h,
+                'fallidos' => $fallidos24h,
+                'pendientes' => $pendientes24h,
+                'tasa_exito_pct' => $tasaExito,
+            ],
+            'pendientes' => [
+                'ahora' => $pendientesAhora,
+                'mas_de_3_dias' => $pendientesViejos,
+            ],
+            'historial' => [
+                'total_recibidos' => $totalRecibidos,
+                'total_confirmados' => $totalConfirmados,
+                'tasa_exito_total_pct' => $totalTasaExito,
+            ],
         ]);
     }
 

@@ -97,7 +97,7 @@ class Index extends Component
             $query->where('estado', $this->estado);
         }
 
-        $certificados = $query->orderBy('fecha_recibido', 'desc')->paginate(10);
+        $certificados = $query->orderBy('fecha_recibido', 'desc')->orderBy('numero_recibo', 'desc')->paginate(10);
 
         $totalRegistros = $query->count();
 

@@ -21,11 +21,11 @@
                         No cuenta con los permisos necesarios para acceder a esta sección.
                         Si cree que esto es un error, contacte al administrador del sistema.
                     </p>
-                    <div class="mt-4">
-                        <a href="{{ route('panel') }}" class="btn btn-primary btn-lg">
+                    <div class="mt-4 mb-2">
+                        <a href="{{ route('panel') }}" class="btn btn-primary btn-lg mb-2 mr-md-3">
                             <i class="fas fa-home mr-2"></i>Ir al Panel Principal
                         </a>
-                        <button onclick="history.back()" class="btn btn-secondary btn-lg ml-2">
+                        <button onclick="history.back()" class="btn btn-secondary btn-lg">
                             <i class="fas fa-arrow-left mr-2"></i>Volver Atrás
                         </button>
                     </div>

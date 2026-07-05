@@ -41,7 +41,7 @@ class ModalRecuperarRendido extends Component
         $pendiente = Pendiente::find($pendienteId);
 
         if (!$pendiente) {
-            $this->emit('mostrarAlerta', ['icon' => 'error', 'text' => 'Pendiente no encontrado.', 'toast' => true, 'position' => 'top-end', 'timer' => 5000]);
+            $this->dispatchBrowserEvent('swal', ['icon' => 'error', 'text' => 'Pendiente no encontrado.', 'toast' => true, 'position' => 'top-end', 'timer' => 5000]);
             return;
         }
 
@@ -71,10 +71,11 @@ class ModalRecuperarRendido extends Component
             $service->guardarRecuperacionRendido($this->recuperarRendidoData, $fechaHastaStr);
 
             $this->cerrarModal();
-            $this->emit('fondoActualizado'); // Actualiza tabla
-            $this->emit('mostrarAlerta', ['icon' => 'success', 'text' => 'Dinero rendido recuperado exitosamente.', 'toast' => true, 'position' => 'top-end', 'timer' => 3000]);
+            session()->flash('message', 'Dinero rendido recuperado exitosamente.');
+            return redirect()->route('tesoreria.caja-chica.index');
         } catch (\Exception $e) {
-            $this->emit('mostrarAlerta', ['icon' => 'error', 'text' => 'Error al guardar la recuperación del dinero rendido: ' . $e->getMessage(), 'toast' => true, 'position' => 'top-end', 'timer' => 5000]);
+            session()->flash('error', 'Error al guardar la recuperación del dinero rendido: ' . $e->getMessage());
+            return redirect()->route('tesoreria.caja-chica.index');
         }
     }
 

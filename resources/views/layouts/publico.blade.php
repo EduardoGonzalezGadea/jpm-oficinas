@@ -51,6 +51,13 @@
     @yield('styles')
 
     @routes
+
+    <style>
+        body {
+            background: linear-gradient(180deg, #001a4d 0%, #0d47a1 30%, #42a5f5 65%, #90caf9 100%);
+            min-height: 100vh;
+        }
+    </style>
 </head>
 
 <body>

@@ -162,7 +162,7 @@
                                 <th class="align-middle">Fecha</th>
                                 <th class="align-middle">Documento</th>
                                 <th class="align-middle">Receptor</th>
-                                <th class="align-middle">Dependencia SIIF</th>
+                                <th class="align-middle">Dependencia</th>
                                 <th class="align-middle text-right">Importe</th>
                             </tr>
                         </thead>
@@ -183,25 +183,42 @@
                                         @endif
                                     </td>
                                 </tr>
-                                {{-- Items del día --}}
-                                @foreach($grupo->items as $cfe)
+                                {{-- Sub-grupos por concepto de caja --}}
+                                @foreach($grupo->conceptos as $concepto)
                                     @php
-                                        $tooltipCfe = $cfe->mediosPago->map(fn($mp) => strtoupper($mp->medio_pago_tipo) . ': $ ' . number_format($mp->medio_pago_valor, 2, ',', '.'))->implode(' | ');
+                                        $tooltipConcepto = $concepto->mediosPago->map(fn($val, $tipo) => strtoupper($tipo) . ': $ ' . number_format($val, 2, ',', '.'))->implode(' | ');
                                     @endphp
-                                    <tr>
-                                        <td class="small align-middle text-nowrap">{{ $cfe->fecha?->format('d/m/Y') ?? '—' }}</td>
-                                        <td class="small align-middle">
-                                            {{ $cfe->documento_tipo }} {{ $cfe->documento_serie }}-{{ $cfe->documento_numero }}
+                                    <tr class="bg-light font-italic">
+                                        <td class="small align-middle" colspan="4">
+                                            <i class="fas fa-tag mr-1 text-secondary"></i>{{ $concepto->concepto }}
                                         </td>
-                                        <td class="small align-middle">{{ $cfe->receptor_nombre_denominacion ?? '—' }}</td>
-                                        <td class="small align-middle">{{ $cfe->siifDistribucionDependencia?->dependencia ?? '—' }}</td>
                                         <td class="small align-middle text-right text-nowrap">
-                                            $ {{ number_format($cfe->total_a_pagar, 2, ',', '.') }}
-                                            @if($cfe->mediosPago->isNotEmpty())
-                                                <i class="fas fa-info-circle text-info ml-1" title="{{ $tooltipCfe }}"></i>
+                                            $ {{ number_format($concepto->subtotal, 2, ',', '.') }}
+                                            @if($concepto->mediosPago->isNotEmpty())
+                                                <i class="fas fa-info-circle text-info ml-1" title="{{ $tooltipConcepto }}"></i>
                                             @endif
                                         </td>
                                     </tr>
+                                    {{-- Items del concepto --}}
+                                    @foreach($concepto->items as $cfe)
+                                        @php
+                                            $tooltipCfe = $cfe->mediosPago->map(fn($mp) => strtoupper($mp->medio_pago_tipo) . ': $ ' . number_format($mp->medio_pago_valor, 2, ',', '.'))->implode(' | ');
+                                        @endphp
+                                        <tr>
+                                            <td class="small align-middle text-nowrap">{{ $cfe->fecha?->format('d/m/Y') ?? '—' }}</td>
+                                            <td class="small align-middle">
+                                                {{ $cfe->documento_tipo }} {{ $cfe->documento_serie }}-{{ $cfe->documento_numero }}
+                                            </td>
+                                            <td class="small align-middle">{{ $cfe->receptor_nombre_denominacion ?? '—' }}</td>
+                                            <td class="small align-middle">{{ $cfe->siifDistribucionDependencia?->dependencia ?? '—' }}</td>
+                                            <td class="small align-middle text-right text-nowrap">
+                                                $ {{ number_format($cfe->total_a_pagar, 2, ',', '.') }}
+                                                @if($cfe->mediosPago->isNotEmpty())
+                                                    <i class="fas fa-info-circle text-info ml-1" title="{{ $tooltipCfe }}"></i>
+                                                @endif
+                                            </td>
+                                        </tr>
+                                    @endforeach
                                 @endforeach
                             @empty
                                 <tr>

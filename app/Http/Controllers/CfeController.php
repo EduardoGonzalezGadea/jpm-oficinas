@@ -5,14 +5,16 @@ namespace App\Http\Controllers;
 use App\Http\Requests\ProcesarCfeRequest;
 use App\Repositories\CfePendienteRepository;
 use App\Services\CfeProcessorService;
+use App\Services\Tesoreria\CfeConfirmationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class CfeController extends Controller
 {
     public function __construct(
-        private readonly CfeProcessorService    $cfeProcessorService,
-        private readonly CfePendienteRepository $repository
+        private readonly CfeProcessorService      $cfeProcessorService,
+        private readonly CfePendienteRepository   $repository,
+        private readonly CfeConfirmationService   $confirmationService
     ) {}
 
     /**
@@ -57,29 +59,31 @@ class CfeController extends Controller
     }
 
     /**
-     * Confirma un CFE pendiente registrando quién lo procesó y cuándo.
+     * Confirma un CFE pendiente usando CfeConfirmationService (eventos + transacción).
      */
     public function confirmarCfe(int $id): JsonResponse
     {
         try {
-            $cfe = $this->repository->buscarPorId($id);
+            $pendiente = $this->repository->buscarPorId($id);
 
-            if (!$cfe || $cfe->estado !== 'pendiente') {
+            if (!$pendiente || !in_array($pendiente->estado, ['pendiente', 'en_revision'])) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'CFE no encontrado o no está pendiente.',
+                    'message' => 'CFE no encontrado o no está pendiente/en revisión.',
                 ], 404);
             }
 
-            $cfe->estado        = 'confirmado';
-            $cfe->procesado_por = auth()->id();
-            $cfe->procesado_at  = now();
-            $cfe->save();
+            $cfe = $this->confirmationService->confirmar($pendiente, []);
 
             return response()->json([
                 'success' => true,
                 'message' => 'CFE confirmado correctamente.',
-                'cfe'     => $cfe,
+                'cfe'     => [
+                    'id' => $cfe->id,
+                    'documento_tipo' => $cfe->documento_tipo,
+                    'documento_serie' => $cfe->documento_serie,
+                    'documento_numero' => $cfe->documento_numero,
+                ],
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -90,28 +94,25 @@ class CfeController extends Controller
     }
 
     /**
-     * Rechaza un CFE pendiente registrando el motivo.
+     * Rechaza un CFE pendiente usando CfeConfirmationService (eventos + logging).
      */
     public function rechazarCfe(int $id, Request $request): JsonResponse
     {
         try {
-            $cfe = $this->repository->buscarPorId($id);
+            $pendiente = $this->repository->buscarPorId($id);
 
-            if (!$cfe || $cfe->estado !== 'pendiente') {
+            if (!$pendiente || !in_array($pendiente->estado, ['pendiente', 'en_revision'])) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'CFE no encontrado o no está pendiente.',
+                    'message' => 'CFE no encontrado o no está pendiente/en revisión.',
                 ], 404);
             }
 
-            $cfe->estado         = 'rechazado';
-            $cfe->motivo_rechazo = $request->input('motivo');
-            $cfe->save();
+            $this->confirmationService->rechazar($pendiente, $request->input('motivo', ''));
 
             return response()->json([
                 'success' => true,
                 'message' => 'CFE rechazado correctamente.',
-                'cfe'     => $cfe,
             ]);
         } catch (\Exception $e) {
             return response()->json([

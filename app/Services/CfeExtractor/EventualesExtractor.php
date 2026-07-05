@@ -2,30 +2,12 @@
 
 namespace App\Services\CfeExtractor;
 
+use App\DTOs\CfeExtraccionDto;
+use App\Exceptions\CfeExtraccionInvalidaException;
+use App\Services\CfeExtractor\BaseExtractor;
+
 /**
  * Extractor para CFE de Policías Eventuales (e-Factura Cobranza / e-Ticket Cobranza).
- *
- * Estructura esperada del texto extraído del PDF:
- *   SERIENÚMERO FORMA DE PAGO VENCIMIENTO
- *   A 4788 CRÉDITO 31/03/2026
- *   RUC COMPRADOR
- *   216079910016
- *   NOMBRE O DENOMINACIÓN DOMICILIO FISCAL
- *   HOSPITAL ESPAÑOL DR. ...
- *   PERIODO
- *   01/02/2026 - 28/02/2026
- *   FECHA    MONEDA
- *   22/05/2026 Peso uruguayo
- *   DETALLE DESCRIPCIÓN CANT. PRECIO DESC. REC. IMPORTE
- *   Nocturnidad  Policias eventuales 216,000 (Hora) 63,77  13.774,32
- *   MONTO NO FACTURABLE: 13.774,32
- *   MONTO TOTAL.: 0,00
- *   TOTAL A PAGAR: 13.774,32
- *   Transferencia Bancaria: 13.774,00   ← puede faltar
- *   REFERENCIAS:
- *   e-Factura-A-3679 13/03/2026
- *   ADENDA
- *   Nocturnidad de Febrero-26. ING. 3022
  */
 class EventualesExtractor extends BaseExtractor
 {
@@ -61,9 +43,22 @@ class EventualesExtractor extends BaseExtractor
     }
 
     /**
-     * Extrae todos los datos del CFE de eventuales desde el texto del PDF.
+     * Obtiene la versión del extractor.
+     *
+     * @return string
      */
-    public function extraer(string $texto): array
+    public function getExtractorVersion(): string
+    {
+        return '1.0.0';
+    }
+
+    /**
+     * Extrae array de datos de eventuales.
+     *
+     * @param string $texto
+     * @return array
+     */
+    protected function extraerArray(string $texto): array
     {
         $texto = $this->limpiarTexto($texto);
 
@@ -99,12 +94,12 @@ class EventualesExtractor extends BaseExtractor
             $datos['numero']         = trim($m[2]);
             $datos['forma_pago_doc'] = mb_strtoupper(trim($m[3]), 'UTF-8');
             $datos['vencimiento']    = trim($m[4]);
-            $datos['recibo']         = $datos['serie'] . $datos['numero'];
+            $datos['recibo']         = $datos['serie'] . '-' . $datos['numero'];
         } elseif (preg_match('/SERIE\s*N[ÚU]MERO[^\n]*\n\s*([A-Z])\s+(\d+)/iu', $texto, $m)) {
             // Fallback: sin forma de pago/vencimiento legibles
             $datos['serie']  = mb_strtoupper(trim($m[1]), 'UTF-8');
             $datos['numero'] = trim($m[2]);
-            $datos['recibo'] = $datos['serie'] . $datos['numero'];
+            $datos['recibo'] = $datos['serie'] . '-' . $datos['numero'];
         }
 
         // --- FECHA y MONEDA ---
@@ -124,6 +119,8 @@ class EventualesExtractor extends BaseExtractor
 
         // --- TITULAR (nombre receptor, multi-línea) ---
         $datos['titular'] = $this->extraerTitular($texto);
+        $datos['receptor_nombre'] = $datos['titular'];
+        $datos['receptor_documento'] = $datos['ruc_receptor'];
 
         // --- PERIODO ---
         if (preg_match('/PERIODO\s*\n\s*(\d{2}\/\d{2}\/\d{4}\s*-\s*\d{2}\/\d{2}\/\d{4})/iu', $texto, $m)) {
@@ -160,9 +157,18 @@ class EventualesExtractor extends BaseExtractor
 
         // --- ING. (número de ingreso) desde la adenda ---
         $datos['ingreso'] = $this->extraerIngreso($datos['adenda']);
+        $datos['ingreso_contabilidad'] = $datos['ingreso'];
 
         // --- DETALLE (texto legible construido desde los ítems) ---
-        $datos['detalle'] = $this->construirTextoDetalle($datos['items']);
+        $detalle = $this->construirTextoDetalle($datos['items']);
+
+        // --- DOMICILIO (dirección del receptor, extraída del bloque NOMBRE O DENOMINACIÓN) ---
+        $domicilio = $this->extraerDomicilio($texto);
+        if (!empty($domicilio)) {
+            $detalle .= ' | Domicilio: ' . $domicilio;
+        }
+
+        $datos['detalle'] = $detalle;
 
         return $datos;
     }
@@ -190,6 +196,9 @@ class EventualesExtractor extends BaseExtractor
 
         // Abreviaciones de vías públicas que indican inicio de dirección
         $abrevViasPublicas = '/\b(AVDA?\.?|CALLE|RAMBLA|BLVD\.?|BVAR\.?|BV\.?|RUTA|DIAGONAL)\b/iu';
+
+        // Abreviaciones de títulos que indican continuación del nombre en la siguiente línea
+        $abrevTitulos = '/\b(SR\.?|SRA\.?|DR\.?|DRA\.?|LIC\.?|PROF\.?|ING\.?|ARQ\.?|TEC\.?|CR\.?|SRITO\.?|SEC\.?)\s*$/iu';
 
         // Rastrear paréntesis abiertos (ej: "INISA (INSTITUTO\nNACIONAL DE\n...ADOLESCENTE)")
         $parentesisAbiertos = 0;
@@ -223,7 +232,9 @@ class EventualesExtractor extends BaseExtractor
             }
 
             // Detener ante nombre de ciudad corto en mayúsculas (ej: "MONTEVIDEO"), solo fuera de paréntesis
-            if ($parentesisAbiertos <= 0 && !empty($partes) && preg_match('/^[A-ZÁÉÍÓÚÑ\s,\-]{4,20}$/', $linea)) {
+            // No detener si la línea anterior termina con abreviatura de título (DR., SR., etc.)
+            $lineaAnteriorTerminaTitulo = !empty($partes) && preg_match($abrevTitulos, end($partes));
+            if ($parentesisAbiertos <= 0 && !empty($partes) && !$lineaAnteriorTerminaTitulo && preg_match('/^[A-ZÁÉÍÓÚÑ\s,\-]{4,20}$/', $linea)) {
                 break;
             }
 
@@ -232,6 +243,53 @@ class EventualesExtractor extends BaseExtractor
 
         // Unir y limpiar espacios redundantes
         return trim(preg_replace('/\s+/', ' ', implode(' ', $partes)));
+    }
+
+    /**
+     * Extrae la dirección (domicilio) del receptor desde el bloque NOMBRE O DENOMINACIÓN.
+     * Son las líneas posteriores al nombre y antes de PERIODO.
+     */
+    private function extraerDomicilio(string $texto): string
+    {
+        if (!preg_match(
+            '/NOMBRE\s+O\s+DENOMINACI[ÓO]N\s+DOMICILIO\s+FISCAL\s*\n(.*?)(?=PERIODO|FECHA\s+MONEDA)/isu',
+            $texto,
+            $m
+        )) {
+            return '';
+        }
+
+        $bloque = trim($m[1]);
+        $lineas = explode("\n", $bloque);
+        $domicilioLineas = [];
+        $parentesisAbiertos = 0;
+        $empezado = false;
+
+        foreach ($lineas as $linea) {
+            $linea = trim($linea);
+            if (empty($linea)) {
+                continue;
+            }
+
+            $parentesisAbiertos += substr_count($linea, '(') - substr_count($linea, ')');
+
+            if ($empezado) {
+                $domicilioLineas[] = $linea;
+            } elseif ($parentesisAbiertos <= 0) {
+                if (preg_match('/\b\d{3,}\b/', $linea) && !preg_match('/\(/', $linea)) {
+                    $empezado = true;
+                    $domicilioLineas[] = $linea;
+                } elseif (preg_match('/Apto\s*:/iu', $linea)) {
+                    $empezado = true;
+                    $domicilioLineas[] = $linea;
+                } elseif (preg_match('/\b(AVDA?\.?|CALLE|RAMBLA|BLVD\.?|BVAR\.?|BV\.?|RUTA|DIAGONAL)\b/iu', $linea)) {
+                    $empezado = true;
+                    $domicilioLineas[] = $linea;
+                }
+            }
+        }
+
+        return trim(preg_replace('/\s+/', ' ', implode(' ', $domicilioLineas)));
     }
 
     /**
@@ -409,24 +467,24 @@ class EventualesExtractor extends BaseExtractor
     {
         // Variante 1: "e-Factura-A-3679" (con guiones completos)
         if (preg_match('/\be-(?:Factura|Ticket|Boleta)-([A-Z])-?(\d+)\b/iu', $referencias, $m)) {
-            return mb_strtoupper($m[1] . $m[2], 'UTF-8');
+            return mb_strtoupper($m[1] . '-' . $m[2], 'UTF-8');
         }
 
         // Variante 2: "e-Factura A1707" or "e-Factura-A1707"
         if (preg_match('/\be-(?:Factura|Ticket|Boleta)[\s\-]*([A-Z])\s*(\d+)\b/iu', $referencias, $m)) {
-            return mb_strtoupper($m[1] . $m[2], 'UTF-8');
+            return mb_strtoupper($m[1] . '-' . $m[2], 'UTF-8');
         }
 
         return '';
     }
 
     /**
-     * Extrae el número de ingreso (ING.) desde el texto de la adenda.
+     * Extrae el número de ingreso (ING./INGRESO) desde el texto de la adenda.
      * Ejemplo: "Sueldos de Marzo-26. ING. 3020" → "3020"
      */
     private function extraerIngreso(string $adenda): string
     {
-        if (preg_match('/\bING\.\s*(\d+)/iu', $adenda, $m)) {
+        if (preg_match('/\bING(?:\.|RESO)?\s*:?\s*(\d+)/iu', $adenda, $m)) {
             return trim($m[1]);
         }
 
@@ -454,27 +512,51 @@ class EventualesExtractor extends BaseExtractor
         return implode(' / ', $partes);
     }
 
-    /**
+/**
      * Validación específica para CFEs de eventuales.
+     *
+     * @param CfeExtraccionDto $dto
+     * @return void
+     * @throws CfeExtraccionInvalidaException
      */
-    public function validar(array $datos): array
+    public function validar(CfeExtraccionDto $dto): void
     {
-        $resultado = parent::validar($datos);
+        $errors = [];
 
-        if (empty($datos['ruc_receptor'])) {
-            $resultado['errors'][] = 'RUC del receptor no detectado';
+        if (empty($dto->fecha)) {
+            $errors[] = 'Fecha no detectada';
         }
 
-        if (empty($datos['ingreso'])) {
-            $resultado['errors'][] = 'Número de ingreso (ING.) no detectado en adenda';
+        if (empty($dto->serie) || empty($dto->numero)) {
+            $errors[] = 'Serie/Numero no detectado';
         }
 
-        if (!empty($datos['items'])) {
-            $sumaItems = array_sum(array_column($datos['items'], 'importe'));
-            $monto     = (float) ($datos['monto'] ?? 0);
+        if (empty($dto->monto)) {
+            $errors[] = 'Monto no valido';
+        }
+
+        if (!empty($errors)) {
+            throw \App\Exceptions\CfeExtraccionInvalidaException::fromValidationErrors($errors);
+        }
+
+        $data = $dto->toArray();
+        $warnings = [];
+
+        // RUC e ING son deseables pero no obligatorios para todos los CFEs
+        if (empty($data['ruc_receptor'])) {
+            $warnings[] = 'RUC del receptor no detectado (opcional)';
+        }
+
+        if (empty($data['ingreso'])) {
+            $warnings[] = 'Número de ingreso (ING.) no detectado en adenda (opcional)';
+        }
+
+        if (!empty($data['items'])) {
+            $sumaItems = array_sum(array_column($data['items'], 'importe'));
+            $monto     = (float) ($data['monto'] ?? 0);
 
             if ($monto != 0 && abs($monto - $sumaItems) > 1.0) {
-                $resultado['errors'][] = sprintf(
+                $warnings[] = sprintf(
                     'Posible inconsistencia: total declarado (%.2f) difiere de suma de ítems (%.2f)',
                     $monto,
                     $sumaItems
@@ -482,10 +564,9 @@ class EventualesExtractor extends BaseExtractor
             }
         }
 
-        if (!empty($resultado['errors'])) {
-            $resultado['valid'] = false;
+        // Log warnings but don't throw exception
+        if (!empty($warnings)) {
+            // Log::channel('cfe_errors')->warning('Eventuales: advertencias de validación', $warnings);
         }
-
-        return $resultado;
     }
 }

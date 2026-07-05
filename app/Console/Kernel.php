@@ -26,6 +26,16 @@ class Kernel extends ConsoleKernel
                  ->dailyAt('02:00')
                  ->withoutOverlapping()
                  ->onOneServer();
+
+        // Detección de CFEs duplicados (reporte diario)
+        $schedule->command('cfe:detect-duplicates --days=7')
+                 ->dailyAt('04:00')
+                 ->withoutOverlapping();
+
+        // Expirar pendientes mayores a 7 días
+        $schedule->command('cfe:expirar-pendientes')
+                 ->dailyAt('05:00')
+                 ->withoutOverlapping();
     }
 
     /**

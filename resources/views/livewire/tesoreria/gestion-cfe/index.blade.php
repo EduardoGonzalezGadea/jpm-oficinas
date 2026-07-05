@@ -1,38 +1,26 @@
 <div>
 <div class="container-fluid px-0">
     <style>
-        .btn-action-fixed {
-            width: 30px;
-            padding-left: 0;
-            padding-right: 0;
-        }
-        .text-small-custom {
-            font-size: 0.8rem;
-        }
+        .btn-action-fixed { width: 30px; padding-left: 0; padding-right: 0; }
+        .text-small-custom { font-size: 0.8rem; }
         .upload-loading-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.3);
-            display: none !important;
-            align-items: center;
-            justify-content: center;
-            z-index: 20;
-            border-radius: 8px;
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.3); display: none !important;
+            align-items: center; justify-content: center; z-index: 20; border-radius: 8px;
         }
-        .item-distribucion-group {
-            outline: 3px solid #1a73e8;
-            outline-offset: -1px;
+        .skeleton-row td { height: 48px; }
+        .skeleton-box {
+            display: inline-block; height: 14px; border-radius: 4px;
+            background: linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%);
+            background-size: 200% 100%; animation: skeleton-shimmer 1.5s infinite;
         }
-        .item-distribucion-group + .item-distribucion-group {
-            outline: 3px solid #1a73e8;
-            outline-offset: -1px;
+        @keyframes skeleton-shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
         }
-        .modal-full-width {
-            max-width: 95vw;
-        }
+        .item-distribucion-group { outline: 3px solid #1a73e8; outline-offset: -1px; }
+        .item-distribucion-group + .item-distribucion-group { outline: 3px solid #1a73e8; outline-offset: -1px; }
+        .modal-full-width { max-width: 95vw; }
     </style>
     @section('title', 'Gestión de CFEs')
 
@@ -152,9 +140,27 @@
                         </tr>
                     </thead>
                     <tbody class="align-middle">
+                        {{-- Skeleton loader durante carga inicial o filtros --}}
+                        <tr wire:loading.block wire:target="search,filtroConcepto,filtroMeses,filtroAno,limpiarFiltroMeses" class="d-none">
+                            <td colspan="7" class="py-3">
+                                <div class="w-100">
+                                    @for($i = 0; $i < 5; $i++)
+                                        <div class="skeleton-row d-flex align-items-center border-bottom px-2 py-2">
+                                            <div class="flex-grow-1 mr-2"><div class="skeleton-box" style="width:15%"></div></div>
+                                            <div class="flex-grow-1 mr-2"><div class="skeleton-box" style="width:30%"></div></div>
+                                            <div class="flex-grow-1 mr-2"><div class="skeleton-box" style="width:20%"></div></div>
+                                            <div class="flex-grow-1 mr-2"><div class="skeleton-box" style="width:12%"></div></div>
+                                            <div class="flex-grow-1 mr-2"><div class="skeleton-box" style="width:15%"></div></div>
+                                            <div class="flex-grow-1 mr-2"><div class="skeleton-box" style="width:18%"></div></div>
+                                            <div style="width:100px"><div class="skeleton-box" style="width:60%"></div></div>
+                                        </div>
+                                    @endfor
+                                </div>
+                            </td>
+                        </tr>
                         @forelse($cfes as $cfe)
                             @php $simbolo = $cfe->moneda === 'UYU' ? '$' : $cfe->moneda; @endphp
-                            <tr>
+                            <tr wire:loading.remove wire:target="search,filtroConcepto,filtroMeses,filtroAno">
                                 <td class="align-middle">
                                     <strong>{{ $cfe->documento_serie }}-{{ $cfe->documento_numero }}</strong>
                                     <span class="text-muted d-block text-small-custom">{{ $cfe->documento_tipo }}</span>
@@ -209,8 +215,22 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="8" class="text-center py-3">
-                                    No hay CFEs registrados. Utilizá el botón <strong>Cargar CFE</strong> para cargar uno.
+                                <td colspan="7" class="text-center py-5">
+                                    <div class="my-4">
+                                        <i class="fas fa-file-invoice fa-4x text-muted mb-3 d-block"></i>
+                                        <p class="text-muted mb-1 font-weight-bold" style="font-size:1.1rem">No hay CFEs registrados</p>
+                                        <p class="text-muted mb-3 small">Comience cargando un CFE desde un PDF o créelo manualmente.</p>
+                                        <div class="d-flex justify-content-center gap-2">
+                                            <label for="archivoPdfInputEmpty" class="btn btn-primary btn-sm mb-0 cursor-pointer mr-2">
+                                                <i class="fas fa-file-upload mr-1"></i> Cargar CFE
+                                            </label>
+                                            <button type="button" class="btn btn-success btn-sm mb-0"
+                                                wire:click="nuevoCfe">
+                                                <i class="fas fa-plus-circle mr-1"></i> Nuevo
+                                            </button>
+                                        </div>
+                                        <input type="file" id="archivoPdfInputEmpty" wire:model="archivoPdf" class="d-none" accept="application/pdf">
+                                    </div>
                                 </td>
                             </tr>
                         @endforelse

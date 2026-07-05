@@ -2,6 +2,9 @@
 
 namespace App\Services\CfeExtractor;
 
+use App\DTOs\CfeExtraccionDto;
+use App\Exceptions\CfeExtraccionInvalidaException;
+
 /**
  * Extractor para CFE de Multas Cobradas.
  */
@@ -43,12 +46,22 @@ class MultasExtractor extends BaseExtractor
     }
 
     /**
-     * Extrae los datos del CFE de multas.
+     * Obtiene la versión del extractor.
+     *
+     * @return string
+     */
+    public function getExtractorVersion(): string
+    {
+        return '1.1.0';
+    }
+
+    /**
+     * Extrae array de datos de multas.
      *
      * @param string $texto
      * @return array
      */
-    public function extraer(string $texto): array
+    protected function extraerArray(string $texto): array
     {
         $texto = $this->limpiarTexto($texto);
 
@@ -189,34 +202,37 @@ class MultasExtractor extends BaseExtractor
     /**
      * Validacion especifica para multas.
      *
-     * @param array $datos
-     * @return array
+     * @param CfeExtraccionDto $dto
+     * @return void
+     * @throws CfeExtraccionInvalidaException
      */
-    public function validar(array $datos): array
+    public function validar(CfeExtraccionDto $dto): void
     {
-        $result = parent::validar($datos);
+        parent::validar($dto);
+
+        $errors = [];
 
         // Validar que haya items
-        if (empty($datos['items'])) {
-            $result['errors'][] = 'No se detectaron items en el CFE';
-            $result['valid'] = false;
+        if (empty($dto->items)) {
+            $errors[] = 'No se detectaron items en el CFE';
         }
 
         // Validar consistencia entre monto total y suma de items
-        if (!empty($datos['items']) && !empty($datos['monto_total'])) {
-            $sumaItems = array_sum(array_column($datos['items'], 'importe'));
-            $montoTotal = $this->parsearMonto($datos['monto_total']);
+        if (!empty($dto->items) && $dto->montoTotal !== null) {
+            $sumaItems = array_sum(array_column($dto->items, 'importe'));
+            $montoTotal = $this->parsearMonto($dto->montoTotal);
 
             if (abs($montoTotal - $sumaItems) > 0.1) {
-                $result['errors'][] = sprintf(
+                $errors[] = sprintf(
                     'Inconsistencia: total (%s) no coincide con suma de items (%s)',
                     number_format($montoTotal, 2),
                     number_format($sumaItems, 2)
                 );
-                $result['valid'] = false;
             }
         }
 
-        return $result;
+        if (!empty($errors)) {
+            throw CfeExtraccionInvalidaException::fromValidationErrors($errors);
+        }
     }
 }

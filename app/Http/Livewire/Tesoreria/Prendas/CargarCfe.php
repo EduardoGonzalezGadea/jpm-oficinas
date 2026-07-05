@@ -13,7 +13,7 @@ use App\Traits\WithOrdenCobroValidation;
 
 class CargarCfe extends Component
 {
-    use WithFileUploads, WithOrdenCobroValidation;
+    use WithFileUploads, WithOrdenCobroValidation, \App\Traits\WithAnulacionCfe;
 
     public $archivo;
     public $datosExtraidos = null;
@@ -58,26 +58,53 @@ class CargarCfe extends Component
         try {
             $text = app(\App\Services\CfeProcessorService::class)->parsearPdf($this->archivo->getRealPath());
 
-            $datos = $this->parsearTextoCfe($text);
+            $extractor = new \App\Services\CfeExtractor\PrendasExtractor();
+            /** @var \App\DTOs\CfeExtraccionDto $dto */
+            $dto = $extractor->extraer($text);
+            $extractor->validar($dto);
 
-            if (isset($datos['error_validacion'])) {
-                $this->mensajeError = $datos['error_validacion'];
-                $this->dispatchBrowserEvent('swal:modal-error', [
-                    'title' => 'Comprobante No Válido',
-                    'text' => $datos['error_validacion']
-                ]);
-                return;
-            }
+            $datos = $dto->toArray();
 
-            if (empty($datos) || !$datos['numero']) {
-                $this->mensajeError = "No se pudieron extraer datos del archivo. Asegúrate de que es un CFE válido.";
+            // Validar campos críticos
+            if (empty($datos['fecha']) || empty($datos['serie']) || empty($datos['numero']) || empty($datos['monto'])) {
+                $this->mensajeError = "Datos incompletos del CFE. Faltan campos obligatorios (fecha, serie, número, monto).";
+                \Illuminate\Support\Facades\Log::channel('cfe_errors')->warning('Prendas: campos críticos vacíos', $datos);
                 return;
             }
 
             $this->datosExtraidos = $datos;
+        } catch (\App\Exceptions\CfeExtraccionInvalidaException $e) {
+            $resultado = $this->handleMontoAnulacion($text, $e->getMessage());
+            if ($resultado === 'confirmar') {
+                return;
+            }
+            if ($resultado === 'inexistente') {
+                $this->mensajeError = 'Posible anulación: la e-Factura/e-Ticket referenciada (' . $this->ultimaRefEncontrada . ') no está registrada en el sistema.';
+                return;
+            }
+            $this->mensajeError = $e->getMessage();
+            $this->dispatchBrowserEvent('swal:modal-error', [
+                'title' => 'Comprobante No Válido',
+                'text' => $e->getMessage()
+            ]);
         } catch (\Exception $e) {
             $this->mensajeError = "Error al procesar el PDF: " . $e->getMessage();
         }
+    }
+
+    protected function getModelClassForAnulacion(): string
+    {
+        return \App\Models\Tesoreria\Prenda::class;
+    }
+
+    protected function getReciboSerieFieldForAnulacion(): ?string
+    {
+        return 'recibo_serie';
+    }
+
+    protected function getReciboNumeroFieldForAnulacion(): ?string
+    {
+        return 'recibo_numero';
     }
 
     /**
@@ -135,9 +162,9 @@ class CargarCfe extends Component
         }
 
         // Nombre Receptor
-        if (preg_match('/NOMBRE O DENOMINACIÓN DOMICILIO FISCAL\s*\n\s*(.*?)(?=\s*\n\s*(?:INFORMACION ADICIONAL|DETALLE DESCRIPCIÓN|PERIODO|FECHA|$))/isu', $text, $matches)) {
+        if (preg_match('/NOMBRE O DENOMINACIÓN\s*\n?\s*DOMICILIO FISCAL\s+(.*?)(?=\s*(?:INFORMACION ADICIONAL|DETALLE DESCRIPCIÓN|PERIODO|FECHA|$))/isu', $text, $matches)) {
             $datos['nombre'] = trim(preg_replace('/\s+/', ' ', $matches[1]));
-        } elseif (preg_match('/FISCAL\s*(.*?)(?=\s*(?:INFORMACION|DETALLE|FECHA|\d{2}\/\d{2}\/\d{4}|$))/isu', $text, $matches)) {
+        } elseif (preg_match('/(?:NOMBRE O DENOMINACIÓN[\s\S]*?)?DOMICILIO\s+FISCAL\s+(.*?)(?=\s*(?:INFORMACION|DETALLE|FECHA|\d{2}\/\d{2}\/\d{4}|$))/isu', $text, $matches)) {
             $datos['nombre'] = trim(preg_replace('/\s+/', ' ', $matches[1]));
         }
 
@@ -376,6 +403,7 @@ class CargarCfe extends Component
         $this->archivo = null;
         $this->datosExtraidos = null;
         $this->mensajeError = null;
+        $this->limpiarAnulacion();
     }
 
     public function render()

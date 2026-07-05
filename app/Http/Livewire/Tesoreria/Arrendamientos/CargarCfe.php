@@ -13,7 +13,7 @@ use App\Traits\WithOrdenCobroValidation;
 
 class CargarCfe extends Component
 {
-    use WithFileUploads, WithOrdenCobroValidation;
+    use WithFileUploads, WithOrdenCobroValidation, \App\Traits\WithAnulacionCfe;
 
     public $archivo;
     public $datosExtraidos = null;
@@ -50,7 +50,7 @@ class CargarCfe extends Component
         $this->procesarArchivo();
     }
 
-    public function procesarArchivo()
+public function procesarArchivo()
     {
         $this->datosExtraidos = null;
         $this->mensajeError = null;
@@ -59,29 +59,59 @@ class CargarCfe extends Component
             $processor = app(\App\Services\CfeProcessorService::class);
             $text = $processor->parsearPdf($this->archivo->getRealPath());
 
-            $extractor = new \App\Services\CfeExtractor\ArrendamientosExtractor();
-            $datos = $extractor->extraer($text);
-            $validacion = $extractor->validar($datos);
+            // Debug: log first 1500 chars of PDF text for diagnosis
+            \Illuminate\Support\Facades\Log::channel('cfe_errors')->info('Arrendamientos: texto PDF (primeros 1500 caracteres)', [
+                'texto' => substr($text, 0, 1500)
+            ]);
 
-            if (!$validacion['valid']) {
-                $errores = implode(", ", $validacion['errors']);
-                $this->mensajeError = $errores;
-                $this->dispatchBrowserEvent('swal:modal-error', [
-                    'title' => 'Comprobante No Válido',
-                    'text' => $errores
-                ]);
+$extractor = new \App\Services\CfeExtractor\ArrendamientosExtractor();
+            /** @var \App\DTOs\CfeExtraccionDto $dto */
+            $dto = $extractor->extraer($text);
+            $extractor->validar($dto);
+
+            $datos = $dto->toArray();
+
+            // Validar campos críticos
+            if (empty($datos['fecha']) || empty($datos['serie']) || empty($datos['numero']) || empty($datos['monto'])) {
+                $this->mensajeError = "Datos incompletos del CFE. Faltan campos obligatorios (fecha, serie, número, monto).";
+                \Illuminate\Support\Facades\Log::warning('Arrendamientos: campos críticos vacíos', $datos);
                 return;
             }
 
-            if (empty($datos) || !$datos['numero']) {
-                $this->mensajeError = "No se pudieron extraer datos del archivo. Asegúrate de que es un CFE válido.";
-                return;
-            }
+            // Debug: log extracted data
+            \Illuminate\Support\Facades\Log::info('Arrendamientos: datos extraídos', $datos);
 
             $this->datosExtraidos = $datos;
+        } catch (\App\Exceptions\CfeExtraccionInvalidaException $e) {
+            $resultado = $this->handleMontoAnulacion($text, $e->getMessage());
+            if ($resultado === 'confirmar') {
+                return;
+            }
+            if ($resultado === 'inexistente') {
+                $this->mensajeError = 'Posible anulación: la e-Factura/e-Ticket referenciada (' . $this->ultimaRefEncontrada . ') no está registrada en el sistema.';
+                return;
+            }
+            \Illuminate\Support\Facades\Log::warning('Arrendamientos: validación fallida', [
+                'errores' => $e->errores,
+                'texto_preview' => substr($text ?? '', 0, 500)
+            ]);
+            $this->mensajeError = $e->getMessage();
+            $this->dispatchBrowserEvent('swal:modal-error', [
+                'title' => 'Comprobante No Válido',
+                'text' => $e->getMessage()
+            ]);
         } catch (\Exception $e) {
-            $this->mensajeError = "Error al procesar el PDF: " . $e->getMessage();
+            \Illuminate\Support\Facades\Log::error('Arrendamientos: error procesando PDF', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+$this->mensajeError = "Error al procesar el PDF: " . $e->getMessage();
         }
+    }
+
+    protected function getModelClassForAnulacion(): string
+    {
+        return \App\Models\Tesoreria\Arrendamiento::class;
     }
 
     /**
@@ -188,6 +218,7 @@ class CargarCfe extends Component
         $this->archivo = null;
         $this->datosExtraidos = null;
         $this->mensajeError = null;
+        $this->limpiarAnulacion();
     }
 
     public function render()

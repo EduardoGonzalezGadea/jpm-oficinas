@@ -81,14 +81,3 @@
     @endif
 </div>
 
-@push('scripts')
-<script>
-    document.addEventListener('livewire:init', function() {
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape' && document.getElementById('modalRecuperarPago')) {
-                Livewire.getByName('tesoreria.caja-chica.modales.modal-recuperar-pago')[0].cerrarModal();
-            }
-        });
-    });
-</script>
-@endpush

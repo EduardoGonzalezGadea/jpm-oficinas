@@ -64,6 +64,19 @@ class CfePendienteRepository
     }
 
     /**
+     * Busca un CFE pendiente por hash del PDF.
+     *
+     * @param string $pdfHash
+     * @return TesCfePendiente|null
+     */
+    public function buscarPorPdfHash(string $pdfHash): ?TesCfePendiente
+    {
+        return $this->model->newQuery()
+            ->where('pdf_hash', $pdfHash)
+            ->first();
+    }
+
+    /**
      * Elimina un CFE pendiente por ID.
      *
      * @param int $id

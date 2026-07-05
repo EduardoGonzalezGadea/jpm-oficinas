@@ -61,7 +61,7 @@ class Arrendamiento extends Component
                 ->whereMonth('fecha', $this->mes)
                 ->search($this->search)
                 ->orderBy('fecha', 'desc')
-                ->orderBy('recibo', 'asc')
+                ->orderByRaw('LENGTH(recibo) DESC, recibo DESC')
                 ->paginate(10);
 
             $subtotales = Model::whereYear('fecha', $this->year)

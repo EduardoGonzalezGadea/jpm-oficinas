@@ -3,6 +3,9 @@
 namespace App\Http\Livewire\Tesoreria\GestionCfe;
 
 use App\DataTransferObjects\CfeData;
+use App\Exceptions\Tesoreria\CfeDuplicateException;
+use App\Exceptions\Tesoreria\CfeValidationException;
+use App\Helpers\TextoHelper;
 use App\Models\Tesoreria\CajaConcepto;
 use App\Models\Tesoreria\TesCfeItem;
 use App\Models\Tesoreria\SiifDistribucion;
@@ -130,44 +133,11 @@ trait WithNuevoCfe
             return;
         }
 
-        $concepto = CajaConcepto::find($this->nuevoCajaConceptoSeleccionado);
-        if (!$concepto || !$concepto->siif_distribucion_tipo_id) {
-            return;
-        }
-
-        foreach ($this->nuevoItems as $index => $item) {
-            $detalle = trim($item['detalle'] ?? '');
-            if (empty($detalle)) {
-                continue;
-            }
-
-            $ultimosItems = TesCfeItem::where('detalle', $detalle)
-                ->whereNotNull('siif_distribucion_id')
-                ->whereNull('deleted_at')
-                ->orderBy('id', 'desc')
-                ->take(10)
-                ->get();
-
-            if ($ultimosItems->isEmpty()) {
-                continue;
-            }
-
-            $frecuencias = $ultimosItems->groupBy('siif_distribucion_id')
-                ->map->count()
-                ->sortDesc();
-
-            $distribucionId = $frecuencias->keys()->first();
-
-            $existe = SiifDistribucion::where('id', $distribucionId)
-                ->where('tipo_id', $concepto->siif_distribucion_tipo_id)
-                ->where('dependencia_id', $this->nuevoSiifDependenciaSeleccionado)
-                ->whereNull('deleted_at')
-                ->exists();
-
-            if ($existe) {
-                $this->nuevoItemDistribuciones[$index] = (string) $distribucionId;
-            }
-        }
+        $this->nuevoItemDistribuciones = $this->cfeCreator->autoAsignarDistribuciones(
+            $this->nuevoCajaConceptoSeleccionado,
+            $this->nuevoSiifDependenciaSeleccionado,
+            $this->nuevoItems
+        );
     }
 
     public function guardarNuevo(): void
@@ -249,13 +219,11 @@ trait WithNuevoCfe
 
             $this->cancelarNuevo();
 
-            $this->dispatchBrowserEvent('swal:modal', [
-                'type' => 'success',
-                'title' => 'CFE Creado',
-                'text' => "El CFE {$tipoDoc} {$serieDoc}-{$numDoc} ha sido creado correctamente.",
+            $this->dispatchBrowserEvent('swal:toast-success', [
+                'text' => "CFE {$tipoDoc} {$serieDoc}-{$numDoc} creado correctamente.",
             ]);
 
-        } catch (\InvalidArgumentException $e) {
+        } catch (CfeDuplicateException | CfeValidationException | \InvalidArgumentException $e) {
             $this->dispatchBrowserEvent('swal:toast-error', [
                 'text' => $e->getMessage(),
             ]);

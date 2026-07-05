@@ -15,13 +15,23 @@ class Multa303 extends Model
     protected $table = 'tes_multas_303_2023';
 
     protected $fillable = [
-        'grupo',
         'codigo',
         'descripcion',
+        'grupo',
+        'detalle',
+        'monto_ur',
         'valor_ur',
+        'monto_pesos',
+        'activo',
         'created_by',
         'updated_by',
         'deleted_by',
+    ];
+
+    protected $casts = [
+        'monto_ur' => 'decimal:4',
+        'monto_pesos' => 'decimal:2',
+        'activo' => 'boolean',
     ];
 
     protected $dates = ['deleted_at'];

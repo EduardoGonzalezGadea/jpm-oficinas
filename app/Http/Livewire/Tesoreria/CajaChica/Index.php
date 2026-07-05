@@ -3,6 +3,7 @@
 namespace App\Http\Livewire\Tesoreria\CajaChica;
 
 use Livewire\Component;
+use Livewire\Livewire;
 use App\Models\Tesoreria\CajaChica;
 use App\Models\Tesoreria\Pendiente;
 use App\Models\Tesoreria\Movimiento;
@@ -20,6 +21,9 @@ class Index extends Component
     public $mesActual;
     public $anioActual;
     public $fechaHasta;
+
+    // Propiedad usada para forzar re-render en Livewire 2
+    public $refreshKey = 0;
 
     public $searchPendientes = '';
     public $searchPagos = '';
@@ -43,18 +47,12 @@ class Index extends Component
         // Removido mostrarModalDependencias para evitar re-renderizado
     ];
 
-    public function mostrarAlertaSweet($data)
-    {
-        $this->dispatchBrowserEvent('swal', $data);
-    }
-
     protected $listeners = [
         'cargarDependencias',
         'fondoCreado' => 'cargarDatos',
-        'fondoActualizado' => 'cargarDatos',
         'pendienteCreado' => 'cargarDatos',
-        'pagoCreado' => 'cargarDatos',
-        'mostrarAlerta' => 'mostrarAlertaSweet',
+        'pagoCreado' => 'recargarPorEvento',
+        'datosRecargados' => 'recargarPorEvento',
         'eliminarPendiente' => 'eliminarPendiente',
         'eliminarPago' => 'eliminarPago',
     ];
@@ -77,8 +75,12 @@ class Index extends Component
     // Métodos para abrir/cerrar modales
     public function openModalDependencias()
     {
-        $this->cargarDatos();
-        $this->dispatchBrowserEvent('show-modal', ['id' => 'modalDependencias']);
+        try {
+            $this->dispatchBrowserEvent('show-modal', ['id' => 'modalDependencias']);
+        } catch (\Throwable $e) {
+            \Log::error('Error openModalDependencias: ' . $e->getMessage());
+            $this->dispatchBrowserEvent('swal:toast-error', ['text' => 'Error al cargar dependencias: ' . $e->getMessage()]);
+        }
     }
 
     public function closeModalDependencias()
@@ -92,8 +94,12 @@ class Index extends Component
 
     public function openModalAcreedores()
     {
-        $this->cargarDatos();
-        $this->dispatchBrowserEvent('show-modal', ['id' => 'modalAcreedores']);
+        try {
+            $this->dispatchBrowserEvent('show-modal', ['id' => 'modalAcreedores']);
+        } catch (\Throwable $e) {
+            \Log::error('Error openModalAcreedores: ' . $e->getMessage());
+            $this->dispatchBrowserEvent('swal:toast-error', ['text' => 'Error al cargar acreedores: ' . $e->getMessage()]);
+        }
     }
 
     public function closeModalAcreedores()
@@ -109,14 +115,24 @@ class Index extends Component
 
     public function updatedMesActual()
     {
-        $this->mesActual = strtolower($this->mesActual); // Asegurar minúsculas
-        session()->forget(['caja_chica_mes', 'caja_chica_anio']);
+        $this->mesActual = strtolower($this->mesActual);
+        session(['caja_chica_mes' => $this->mesActual, 'caja_chica_anio' => $this->anioActual]);
         $this->cargarDatos();
+        if (!$this->cajaChicaSeleccionada) {
+            $this->dispatchBrowserEvent('swal:toast-warning', [
+                'text' => 'No hay datos de Caja Chica para ' . ucfirst($this->mesActual) . ' de ' . $this->anioActual . '.',
+            ]);
+        }
     }
     public function updatedAnioActual()
     {
-        session()->forget(['caja_chica_mes', 'caja_chica_anio']);
+        session(['caja_chica_mes' => $this->mesActual, 'caja_chica_anio' => $this->anioActual]);
         $this->cargarDatos();
+        if (!$this->cajaChicaSeleccionada) {
+            $this->dispatchBrowserEvent('swal:toast-warning', [
+                'text' => 'No hay datos de Caja Chica para ' . ucfirst($this->mesActual) . ' de ' . $this->anioActual . '.',
+            ]);
+        }
     }
     public function updatedFechaHasta()
     {
@@ -151,8 +167,30 @@ class Index extends Component
 
     public function cargarDatos()
     {
-        $this->cargarTablaCajaChica();
-        $this->cargarDependenciasSinPendientes();
+        try {
+            $this->cargarTablaCajaChica();
+            $this->cargarDependenciasSinPendientes();
+        } catch (\Throwable $e) {
+            \Log::error('Error en cargarDatos (CajaChica): ' . $e->getMessage(), [
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            throw $e;
+        }
+    }
+
+    /**
+     * Recarga los datos y fuerza un re-render limpio del componente.
+     * Usado por los listeners de eventos de modales hijos.
+     * Se resetea cajaChicaSeleccionada para forzar una consulta completamente
+     * fresca a la BD, evitando cualquier caché a nivel de objeto Eloquent.
+     */
+    public function recargarPorEvento()
+    {
+        $this->refreshKey++;
+        $this->cajaChicaSeleccionada = null;
+        $this->cargarDatos();
     }
 
     public function cargarTablaCajaChica()
@@ -171,7 +209,6 @@ class Index extends Component
     // --- Métodos para el Modal de Recuperación ---
     public function openRecuperarModal()
     {
-        $this->cargarDatos();
         if (!$this->cajaChicaSeleccionada) {
             $this->dispatchBrowserEvent('swal:toast-error', [
                 'text' => 'No hay una caja chica activa para este período.'
@@ -189,7 +226,6 @@ class Index extends Component
 
     public function prepararModalNuevoPendiente()
     {
-        $this->cargarDatos();
         if ($this->cajaChicaSeleccionada) {
             $this->emitTo('tesoreria.caja-chica.modales.modal-nuevo-pendiente', 'mostrarModalNuevoPendiente', $this->cajaChicaSeleccionada->idCajaChica);
         } else {
@@ -199,7 +235,6 @@ class Index extends Component
 
     public function mostrarModalNuevoFondo()
     {
-        $this->cargarDatos();
         $this->nuevoFondo['mes'] = $this->mesActual;
         $this->nuevoFondo['anio'] = $this->anioActual;
         $this->nuevoFondo['monto'] = '0';
@@ -209,7 +244,6 @@ class Index extends Component
 
     public function prepararModalNuevoPago()
     {
-        $this->cargarDatos();
         if ($this->cajaChicaSeleccionada) {
             $this->emitTo('tesoreria.caja-chica.modales.modal-nuevo-pago', 'mostrarModalNuevoPago', $this->cajaChicaSeleccionada->idCajaChica);
         } else {
@@ -233,63 +267,6 @@ class Index extends Component
     {
         $this->fechaHasta = now()->format('Y-m-d');
         $this->cargarDatos();
-    }
-
-    public function exportarExcel()
-    {
-        $fechaHastaStr = $this->fechaHasta ? Carbon::parse($this->fechaHasta)->endOfDay()->toDateTimeString() : now()->endOfDay()->toDateTimeString();
-        $service = app(\App\Services\Tesoreria\CajaChicaService::class);
-        $pendientesSinFiltro = $service->obtenerPendientes($this->cajaChicaSeleccionada, $this->mesActual, $this->anioActual, $fechaHastaStr, '');
-        $pagosSinFiltro = $service->obtenerPagos($this->cajaChicaSeleccionada, $this->mesActual, $this->anioActual, $fechaHastaStr, '');
-        $totales = $service->calcularTotales($this->cajaChicaSeleccionada, collect($pendientesSinFiltro), collect($pagosSinFiltro));
-
-        $fileName = 'TOTALES_CAJA_CHICA_' . strtoupper($this->mesActual) . '_' . $this->anioActual . '.xls';
-        
-        $xml = '<?xml version="1.0"?>' . "\n";
-        $xml .= '<?mso-application progid="Excel.Sheet"?>' . "\n";
-        $xml .= '<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet" xmlns:html="http://www.w3.org/TR/REC-html40">' . "\n";
-        $xml .= ' <Styles>' . "\n";
-        $xml .= '  <Style ss:ID="Default" ss:Name="Normal"><Alignment ss:Vertical="Bottom"/><Borders/><Font ss:FontName="Calibri" x:Family="Swiss" ss:Size="11" ss:Color="#000000"/><Interior/><NumberFormat/><Protection/></Style>' . "\n";
-        $xml .= '  <Style ss:ID="s1"><Font ss:FontName="Calibri" x:Family="Swiss" ss:Size="11" ss:Color="#FFFFFF" ss:Bold="1"/><Interior ss:Color="#17a2b8" ss:Pattern="Solid"/></Style>' . "\n";
-        $xml .= '  <Style ss:ID="s2"><NumberFormat ss:Format="#,##0.00"/></Style>' . "\n";
-        $xml .= '  <Style ss:ID="s3"><Font ss:FontName="Calibri" x:Family="Swiss" ss:Size="11" ss:Color="#000000" ss:Bold="1"/><NumberFormat ss:Format="#,##0.00"/></Style>' . "\n";
-        $xml .= ' </Styles>' . "\n";
-        $xml .= ' <Worksheet ss:Name="Totales">' . "\n";
-        $xml .= '  <Table>' . "\n";
-        $xml .= '   <Column ss:Width="280"/>' . "\n";
-        $xml .= '   <Column ss:Width="150"/>' . "\n";
-        
-        $xml .= '   <Row>' . "\n";
-        $xml .= '    <Cell ss:StyleID="s1"><Data ss:Type="String">CONCEPTO</Data></Cell>' . "\n";
-        $xml .= '    <Cell ss:StyleID="s1"><Data ss:Type="String">MONTO ($)</Data></Cell>' . "\n";
-        $xml .= '   </Row>' . "\n";
-
-        $datos = [
-            ['Total Pendientes', $totales['Total Pendientes'] ?? 0, 's2'],
-            ['Total Rendidos', $totales['Total Rendidos'] ?? 0, 's2'],
-            ['Total Extras', $totales['Total Extras'] ?? 0, 's2'],
-            ['Pagos Sin Egreso', $totales['Pagos Sin Egreso'] ?? 0, 's2'],
-            ['Pent.+Pag. (Sin Rendir)', $totales['Pendientes y Pagos Sin Rendir'] ?? 0, 's2'],
-            ['Total Pendientes + Pagos s/eg.', ($totales['Total Pendientes'] ?? 0) + ($totales['Pagos Sin Egreso'] ?? 0), 's3'],
-            ['Saldo Pagos Directos', $totales['Saldo Pagos Directos'] ?? 0, 's2'],
-            ['Recuperar (Rendidos + Extras + Pagos Dir.)', ($totales['Total Rendidos'] ?? 0) + ($totales['Total Extras'] ?? 0) + ($totales['Saldo Pagos Directos'] ?? 0), 's3'],
-            ['Saldo Final', $totales['Saldo Total'] ?? 0, 's3'],
-        ];
-
-        foreach ($datos as $fila) {
-            $xml .= '   <Row>' . "\n";
-            $xml .= '    <Cell><Data ss:Type="String">' . htmlspecialchars($fila[0]) . '</Data></Cell>' . "\n";
-            $xml .= '    <Cell ss:StyleID="' . $fila[2] . '"><Data ss:Type="Number">' . number_format($fila[1], 2, '.', '') . '</Data></Cell>' . "\n";
-            $xml .= '   </Row>' . "\n";
-        }
-
-        $xml .= '  </Table>' . "\n";
-        $xml .= ' </Worksheet>' . "\n";
-        $xml .= '</Workbook>';
-
-        return response()->streamDownload(function () use ($xml) {
-            echo $xml;
-        }, $fileName);
     }
 
     // --- Funciones auxiliares ---
@@ -327,6 +304,8 @@ class Index extends Component
         $tablaPendientesDetalle = collect();
         $tablaPagos = collect();
         $tablaTotales = [];
+        $pendientesSinFiltro = collect();
+        $pagosSinFiltro = collect();
 
         if ($this->cajaChicaSeleccionada) {
             try {
@@ -337,16 +316,23 @@ class Index extends Component
                 $pendientesSinFiltro = $service->obtenerPendientes($this->cajaChicaSeleccionada, $this->mesActual, $this->anioActual, $fechaHastaStr, '');
                 $pagosSinFiltro = $service->obtenerPagos($this->cajaChicaSeleccionada, $this->mesActual, $this->anioActual, $fechaHastaStr, '');
                 $tablaTotales = $service->calcularTotales($this->cajaChicaSeleccionada, $pendientesSinFiltro, $pagosSinFiltro);
-            } catch (\Exception $e) {
-                // Manejar error silenciosamente o despachar alerta
+            } catch (\Throwable $e) {
+                \Log::error('Error en render (CajaChica): ' . $e->getMessage());
             }
         }
+
+        $totalPendientesEntregados = $pendientesSinFiltro->sum('montoPendientes');
+        $totalPagosDirectosOtorgados = $pagosSinFiltro->sum('montoPagos');
+        $sumaPendientesMasPagos = $totalPendientesEntregados + $totalPagosDirectosOtorgados;
 
         return view('livewire.tesoreria.caja-chica.index', [
             'tablaCajaChica' => $tablaCajaChica,
             'tablaPendientesDetalle' => $tablaPendientesDetalle,
             'tablaPagos' => $tablaPagos,
-            'tablaTotales' => $tablaTotales
+            'tablaTotales' => $tablaTotales,
+            'totalPendientesEntregados' => $totalPendientesEntregados,
+            'totalPagosDirectosOtorgados' => $totalPagosDirectosOtorgados,
+            'sumaPendientesMasPagos' => $sumaPendientesMasPagos,
         ]);
     }
 

@@ -3,14 +3,15 @@
 namespace Tests\Unit\Services\CfeExtractor;
 
 use App\Services\CfeExtractor\MultasExtractor;
+use App\DTOs\CfeExtraccionDto;
+use App\Exceptions\CfeExtraccionInvalidaException;
 use PHPUnit\Framework\TestCase;
+use Tests\Unit\Services\CfeExtractor\Helpers\WithCfeFixtures;
 
-/**
- * Tests unitarios para MultasExtractor.
- * Verifica extracción de datos y validación sin necesidad de base de datos.
- */
 class MultasExtractorTest extends TestCase
 {
+    use WithCfeFixtures;
+
     private MultasExtractor $extractor;
 
     protected function setUp(): void
@@ -18,10 +19,6 @@ class MultasExtractorTest extends TestCase
         parent::setUp();
         $this->extractor = new MultasExtractor();
     }
-
-    // -------------------------------------------------------------------------
-    // soporta()
-    // -------------------------------------------------------------------------
 
     public function test_soporta_multas_cobradas(): void
     {
@@ -45,147 +42,152 @@ class MultasExtractorTest extends TestCase
         $this->assertFalse($this->extractor->soporta('eventuales'));
     }
 
-    // -------------------------------------------------------------------------
-    // getNombreLegible()
-    // -------------------------------------------------------------------------
-
     public function test_nombre_legible(): void
     {
         $this->assertEquals('Multas Cobradas', $this->extractor->getNombreLegible());
     }
 
-    // -------------------------------------------------------------------------
-    // extraer() — campos del texto de un CFE de multa sintético
-    // -------------------------------------------------------------------------
-
-    private function textoMultaEjemplo(): string
+    public function test_extrae_datos_desde_fixture_real(): void
     {
-        return <<<'TEXT'
-e-Ticket Contado
-A 123456 Contado
-NOMBRE O DENOMINACIÓN DOMICILIO FISCAL
-JUAN PEREZ RODRIGUEZ
-INFORMACION ADICIONAL
-C.I.: 1.234.567-8
-FECHA MONEDA
-15/03/2026 Peso uruguayo
+        $texto = $this->loadMultasFixture();
+        $dto = $this->extractor->extraer($texto);
 
-DETALLE DESCRIPCIÓN CANTIDAD PRECIO UNITARIO IMPORTE
-MULTA CARECER DE SOA CORRESPONDE A INFRACCION 001 1 1.500,00 1.500,00
+        $this->assertSame('A', $dto->serie);
+        $this->assertSame('4788', $dto->numero);
+        $this->assertSame('15/03/2026', $dto->fecha);
+        $this->assertSame(1500.0, $dto->monto);
+        $this->assertSame('UYU', $dto->moneda);
+        $this->assertSame('1.234.567-8', $dto->cedula);
+        $this->assertSame('JUAN CARLOS PEREZ RODRIGUEZ', $dto->nombre);
+        $this->assertStringContainsString('Efectivo', $dto->formaPago);
+        $this->assertCount(1, $dto->items);
 
-MONTO NO FACTURABLE: 1.500,00
-TOTAL A PAGAR: 1.500,00
-Efectivo: 1.500,00
-REFERENCIAS:
-TEXT;
+        $item = $dto->items[0];
+        $this->assertSame('MULTA CARECER DE SOA', $item['detalle']);
+        $this->assertStringContainsString('CORRESPONDE A', $item['descripcion']);
+        $this->assertSame(1500.0, $item['importe']);
+
+        $this->assertStringContainsString('Recibo A-4787', $dto->referencias ?? '');
+        $this->assertStringContainsString('ING. 3020', $dto->adenda ?? '');
     }
 
-    public function test_extrae_fecha(): void
+    public function test_extraccion_lanza_excepcion_con_texto_vacio(): void
     {
-        $datos = $this->extractor->extraer($this->textoMultaEjemplo());
-        $this->assertEquals('15/03/2026', $datos['fecha']);
+        $this->expectException(CfeExtraccionInvalidaException::class);
+        $this->extractor->extraer('');
     }
-
-    public function test_extrae_serie_y_numero(): void
-    {
-        $datos = $this->extractor->extraer($this->textoMultaEjemplo());
-        $this->assertEquals('A', $datos['serie']);
-        $this->assertEquals('123456', $datos['numero']);
-    }
-
-    public function test_extrae_moneda_uyp(): void
-    {
-        $datos = $this->extractor->extraer($this->textoMultaEjemplo());
-        $this->assertEquals('UYU', $datos['moneda']);
-    }
-
-    public function test_extrae_cedula_receptor(): void
-    {
-        $datos = $this->extractor->extraer($this->textoMultaEjemplo());
-        $this->assertEquals('1.234.567-8', $datos['cedula']);
-    }
-
-    public function test_extrae_items_no_vacio(): void
-    {
-        $datos = $this->extractor->extraer($this->textoMultaEjemplo());
-        $this->assertIsArray($datos['items']);
-        $this->assertNotEmpty($datos['items']);
-    }
-
-    public function test_extrae_monto_total_como_float(): void
-    {
-        $datos = $this->extractor->extraer($this->textoMultaEjemplo());
-        $this->assertIsFloat($datos['monto_total']);
-        $this->assertEquals(1500.0, $datos['monto_total']);
-    }
-
-    // -------------------------------------------------------------------------
-    // validar()
-    // -------------------------------------------------------------------------
 
     public function test_validar_datos_completos_es_valido(): void
     {
-        $datos = [
-            'fecha'       => '15/03/2026',
-            'serie'       => 'A',
-            'numero'      => '123456',
-            'monto'       => 1500.0,  // BaseExtractor::validar() busca 'monto'
-            'monto_total' => 1500.0,
-            'items'       => [
-                ['detalle' => 'MULTA CARECER DE SOA', 'descripcion' => '', 'importe' => 1500.0],
-            ],
-        ];
-
-        $resultado = $this->extractor->validar($datos);
-        $this->assertTrue($resultado['valid']);
-        $this->assertEmpty($resultado['errors']);
+        $dto = new CfeExtraccionDto(
+            tipoCfe: 'test',
+            serie: 'A',
+            numero: '123456',
+            fecha: '15/03/2026',
+            monto: 1500.0,
+            moneda: 'UYU',
+            cedula: '1.234.567-8',
+            nombre: 'JUAN PEREZ RODRIGUEZ',
+            domicilio: null,
+            montoTotal: 1500.0,
+            formaPago: 'Efectivo',
+            adicional: null,
+            adenda: null,
+            referencias: null,
+            items: [['detalle' => 'MULTA CARECER DE SOA', 'descripcion' => '', 'importe' => 1500.0]],
+            detalle: null,
+            detalleCompleto: null,
+            tipoCfeCodigo: 'multas_cobradas',
+            extractorVersion: '1.0.0',
+        );
+        $this->extractor->validar($dto);
+        $this->assertTrue(true);
     }
 
     public function test_validar_sin_fecha_es_invalido(): void
     {
-        $datos = [
-            'fecha'       => '',
-            'serie'       => 'A',
-            'numero'      => '123456',
-            'monto'       => 1500.0,
-            'monto_total' => 1500.0,
-            'items'       => [['detalle' => 'MULTA', 'descripcion' => '', 'importe' => 1500.0]],
-        ];
+        $this->expectException(CfeExtraccionInvalidaException::class);
+        $this->expectExceptionMessage('Fecha no detectada');
 
-        $resultado = $this->extractor->validar($datos);
-        $this->assertFalse($resultado['valid']);
-        $this->assertContains('Fecha no detectada', $resultado['errors']);
+        $dto = new CfeExtraccionDto(
+            tipoCfe: 'test',
+            serie: 'A',
+            numero: '123456',
+            fecha: '',
+            monto: 1500.0,
+            moneda: 'UYU',
+            cedula: null,
+            nombre: null,
+            domicilio: null,
+            montoTotal: 1500.0,
+            formaPago: 'Efectivo',
+            adicional: null,
+            adenda: null,
+            referencias: null,
+            items: [['detalle' => 'MULTA', 'descripcion' => '', 'importe' => 1500.0]],
+            detalle: null,
+            detalleCompleto: null,
+            tipoCfeCodigo: 'multas_cobradas',
+            extractorVersion: '1.0.0',
+        );
+        $this->extractor->validar($dto);
     }
 
     public function test_validar_sin_items_es_invalido(): void
     {
-        $datos = [
-            'fecha'       => '15/03/2026',
-            'serie'       => 'A',
-            'numero'      => '123456',
-            'monto'       => 1500.0,
-            'monto_total' => 1500.0,
-            'items'       => [],
-        ];
+        $this->expectException(CfeExtraccionInvalidaException::class);
+        $this->expectExceptionMessage('No se detectaron items en el CFE');
 
-        $resultado = $this->extractor->validar($datos);
-        $this->assertFalse($resultado['valid']);
-        $this->assertContains('No se detectaron items en el CFE', $resultado['errors']);
+        $dto = new CfeExtraccionDto(
+            tipoCfe: 'test',
+            serie: 'A',
+            numero: '123456',
+            fecha: '15/03/2026',
+            monto: 1500.0,
+            moneda: 'UYU',
+            cedula: null,
+            nombre: null,
+            domicilio: null,
+            montoTotal: 1500.0,
+            formaPago: 'Efectivo',
+            adicional: null,
+            adenda: null,
+            referencias: null,
+            items: [],
+            detalle: null,
+            detalleCompleto: null,
+            tipoCfeCodigo: 'multas_cobradas',
+            extractorVersion: '1.0.0',
+        );
+        $this->extractor->validar($dto);
     }
 
     public function test_validar_inconsistencia_monto_items_es_invalido(): void
     {
-        $datos = [
-            'fecha'       => '15/03/2026',
-            'serie'       => 'A',
-            'numero'      => '123456',
-            'monto'       => 2000.0, // Para BaseExtractor
-            'monto_total' => 2000.0, // No coincide con suma de items
-            'items'       => [['detalle' => 'MULTA', 'descripcion' => '', 'importe' => 1500.0]],
-        ];
+        $this->expectException(CfeExtraccionInvalidaException::class);
+        $this->expectExceptionMessage('Inconsistencia');
 
-        $resultado = $this->extractor->validar($datos);
-        $this->assertFalse($resultado['valid']);
-        $this->assertNotEmpty(array_filter($resultado['errors'], fn($e) => str_contains($e, 'Inconsistencia')));
+        $dto = new CfeExtraccionDto(
+            tipoCfe: 'test',
+            serie: 'A',
+            numero: '123456',
+            fecha: '15/03/2026',
+            monto: 2000.0,
+            moneda: 'UYU',
+            cedula: null,
+            nombre: null,
+            domicilio: null,
+            montoTotal: 2000.0,
+            formaPago: 'Efectivo',
+            adicional: null,
+            adenda: null,
+            referencias: null,
+            items: [['detalle' => 'MULTA', 'descripcion' => '', 'importe' => 1500.0]],
+            detalle: null,
+            detalleCompleto: null,
+            tipoCfeCodigo: 'multas_cobradas',
+            extractorVersion: '1.0.0',
+        );
+        $this->extractor->validar($dto);
     }
 }

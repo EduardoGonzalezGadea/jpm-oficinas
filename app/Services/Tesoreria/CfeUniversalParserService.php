@@ -191,13 +191,13 @@ class CfeUniversalParserService
         }
 
         // Nombre Receptor
-        if (preg_match('/NOMBRE O DENOMINACI.N DOMICILIO FISCAL\s*\n\s*(.*?)(?=\s*\n\s*(?:INFORMACION ADICIONAL|DETALLE DESCRIPCIÓN|PERIODO|FECHA|$))/isu', $texto, $m)) {
+        if (preg_match('/NOMBRE O DENOMINACI.N\s*\n?\s*DOMICILIO FISCAL\s+(.*?)(?=\s*(?:INFORMACION ADICIONAL|DETALLE DESCRIPCIÓN|PERIODO|FECHA|$))/isu', $texto, $m)) {
              $lines = explode("\n", trim($m[1]));
              $datos['receptor_nombre_denominacion'] = trim($lines[0]);
              if (count($lines) > 1) {
                   $datos['receptor_domicilio_fiscal'] = trim(implode(" ", array_slice($lines, 1)));
              }
-        } elseif (preg_match('/FISCAL\s*\n(.*?)(?=\s*\n\s*(?:INFORMACION|DETALLE|PERIODO|FECHA|$))/isu', $texto, $m)) {
+        } elseif (preg_match('/(?:NOMBRE O DENOMINACI.N[\s\S]*?)?DOMICILIO\s+FISCAL\s+(.*?)(?=\s*(?:INFORMACION|DETALLE|PERIODO|FECHA|$))/isu', $texto, $m)) {
              // Otro posible formato
              $lines = explode("\n", trim($m[1]));
              $datos['receptor_nombre_denominacion'] = trim($lines[0]);

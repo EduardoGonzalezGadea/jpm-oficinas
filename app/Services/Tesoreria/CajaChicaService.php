@@ -623,9 +623,13 @@ class CajaChicaService
                 throw new \Exception('Pago no encontrado.');
             }
 
-            $saldoDisponible = $pago->saldo_pagos;
+            $rendido = $pago->rendidoPagos;
+            $recuperado = $pago->recuperadoPagos ?: 0;
+            $maxRecuperable = is_null($rendido)
+                ? max(0, round($pago->montoPagos - $recuperado, 2))
+                : max(0, round($rendido - $recuperado, 2));
 
-            if ($data['monto_recuperado'] > $saldoDisponible) {
+            if ($data['monto_recuperado'] > $maxRecuperable) {
                 throw new \Exception('El monto a recuperar no puede ser mayor que el saldo disponible del pago.');
             }
 

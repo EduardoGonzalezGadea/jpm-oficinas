@@ -6,6 +6,7 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Blade;
 use Livewire\Livewire;
+use Illuminate\Support\Facades\URL;
 
 use Illuminate\Pagination\Paginator;
 
@@ -28,6 +29,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
+        // URL::forceScheme('https');
+
         Paginator::useBootstrap();
 
         // Detectar automáticamente la URL base

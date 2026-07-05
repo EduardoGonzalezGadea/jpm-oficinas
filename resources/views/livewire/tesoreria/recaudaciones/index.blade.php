@@ -1,4 +1,57 @@
 <div class="container-fluid px-0">
+    <style>
+        .nav-tabs {
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        .nav-tabs .nav-link {
+            border: 2px solid transparent;
+            border-top-left-radius: 6px;
+            border-top-right-radius: 6px;
+            margin-bottom: -2px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            color: #495057;
+        }
+
+        .nav-tabs .nav-link:hover {
+            border-color: #e9ecef #e9ecef #dee2e6;
+            background-color: #f8f9fa;
+        }
+
+        .nav-tabs .nav-link.active {
+            border-left: 2px solid #adb5bd;
+            border-right: 2px solid #adb5bd;
+            border-top: 3px solid #17a2b8;
+            border-bottom-color: #fff;
+            background-color: #fff;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        html.dark-theme .nav-tabs {
+            border-bottom-color: rgba(255, 255, 255, 0.15);
+        }
+
+        html.dark-theme .nav-tabs .nav-link {
+            color: rgba(255, 255, 255, 0.65);
+        }
+
+        html.dark-theme .nav-tabs .nav-link:hover {
+            border-color: rgba(255, 255, 255, 0.1) rgba(255, 255, 255, 0.1) rgba(255, 255, 255, 0.15);
+            background-color: rgba(255, 255, 255, 0.05);
+            color: #fff;
+        }
+
+        html.dark-theme .nav-tabs .nav-link.active {
+            border-left-color: rgba(255, 255, 255, 0.2);
+            border-right-color: rgba(255, 255, 255, 0.2);
+            border-top-color: #5bc0de;
+            border-bottom-color: transparent;
+            background-color: transparent;
+            color: #fff;
+        }
+    </style>
     @section('title', 'Recaudaciones')
 
     <div class="card">
@@ -14,9 +67,52 @@
         </div>
         <div class="card-body">
             <div class="row mb-3 align-items-end justify-content-between">
-                <div class="col-auto">
-                    <label class="form-label small mb-1">Fecha</label>
-                    <input type="date" class="form-control form-control-sm" wire:model="fecha" wire:change="$refresh">
+                <div class="col d-flex align-items-end flex-wrap" style="gap:8px;">
+                    @if($fecha)
+                        <div>
+                            <label class="small mb-1">Fecha</label>
+                            <input type="date" class="form-control form-control-sm" wire:model="fecha" wire:change="$refresh">
+                        </div>
+                        <div>
+                            <button class="btn btn-outline-secondary btn-sm" wire:click="$set('fecha', null)" title="Cambiar a filtro por mes/año">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    @else
+                        <div>
+                            <label class="small mb-1">Mes</label>
+                            <select class="form-control form-control-sm" wire:model="filtroMes" wire:change="$refresh">
+                                @php $meses = [1 => 'Enero', 2 => 'Febrero', 3 => 'Marzo', 4 => 'Abril', 5 => 'Mayo', 6 => 'Junio', 7 => 'Julio', 8 => 'Agosto', 9 => 'Septiembre', 10 => 'Octubre', 11 => 'Noviembre', 12 => 'Diciembre']; @endphp
+                                @foreach($meses as $num => $nombre)
+                                    <option value="{{ $num }}">{{ $nombre }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div>
+                            <label class="small mb-1">Año</label>
+                            <select class="form-control form-control-sm" wire:model="filtroAno" wire:change="$refresh">
+                                @foreach($anosRegistrados as $ano)
+                                    <option value="{{ $ano }}">{{ $ano }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div>
+                            <button class="btn btn-outline-secondary btn-sm" wire:click="$set('fecha', '{{ date('Y-m-d') }}')" title="Cambiar a filtro por fecha específica">
+                                <i class="fas fa-calendar-day"></i>
+                            </button>
+                        </div>
+                    @endif
+                    <div>
+                        <label class="small mb-1">Buscar</label>
+                        <div class="input-group input-group-sm">
+                            <input type="text" class="form-control" wire:model.debounce.300ms="search" placeholder="Documento o monto..." style="min-width:180px;">
+                            <div class="input-group-append">
+                                <button class="btn btn-outline-secondary" wire:click="$set('search', '')" title="Limpiar búsqueda">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div class="col-auto">
                     <button class="btn btn-primary btn-sm" onclick="imprimirRecaudaciones()">
@@ -31,7 +127,7 @@
 
             @if($tabsConDatos->isNotEmpty())
                 @php $primerActivo = true; @endphp
-                <ul class="nav nav-tabs" id="recaudacionesTab" role="tablist">
+                <ul class="nav nav-tabs mb-0" id="recaudacionesTab" role="tablist">
                     @foreach($grupos as $key => $grupo)
                         @if($grupo['total_efectivo'] + $grupo['total_cheque'] + $grupo['total_transferencia'] + $grupo['total_pos'] > 0)
                             <li class="nav-item">
@@ -47,8 +143,9 @@
                         @endif
                     @endforeach
                 </ul>
+                <hr class="mt-0 mb-3" style="border-top: 1px solid #adb5bd; margin-top: 0 !important;">
                 @php $primerActivo = true; @endphp
-                <div class="tab-content border border-top-0 p-3" id="recaudacionesTabContent">
+                <div class="tab-content p-3" id="recaudacionesTabContent">
                     @foreach($grupos as $key => $grupo)
                         @if($grupo['total_efectivo'] + $grupo['total_cheque'] + $grupo['total_transferencia'] + $grupo['total_pos'] > 0)
                             <div class="tab-pane fade {{ $primerActivo ? 'show active' : '' }}"
@@ -56,17 +153,25 @@
                                 aria-labelledby="tab-{{ \Illuminate\Support\Str::slug($key) }}">
                                 @php $primerActivo = false; @endphp
 
-                                @foreach($grupo['distribuciones'] as $distKey => $distribucion)
-                                    @if(!empty($distribucion['items']))
-                                        <div class="card mb-3">
-                                            <div class="card-header py-1 px-2 bg-light text-center">
-                                                <strong>{{ $distribucion['concepto'] }}</strong>
+                                @foreach($grupo['fechas'] as $fechaKey => $fecha)
+                                    <div class="card mb-3">
+                                        <div class="card-header bg-info text-white py-1 px-2">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <span><i class="far fa-calendar-alt mr-1"></i> {{ $fechaKey !== 'sin-fecha' ? \Carbon\Carbon::parse($fechaKey)->format('d/m/Y') : 'Sin fecha' }}</span>
+                                                <span>Total del día: $ {{ number_format($fecha['total_efectivo'] + $fecha['total_cheque'] + $fecha['total_transferencia'] + $fecha['total_pos'], 2, ',', '.') }}</span>
                                             </div>
-                                            <div class="card-body p-0">
-                                                <div class="table-responsive">
-                                                    <table class="table table-sm table-bordered mb-0 border-top-0">
-                                                        <thead class="thead-light">
-                                                            <tr>
+                                        </div>
+                                        <div class="card-body p-2">
+                                            @foreach($fecha['distribuciones'] as $distKey => $distribucion)
+                                                @if(!empty($distribucion['items']))
+                                                    <table class="table table-sm table-bordered mt-3 mb-2">
+                                                        <thead>
+                                                            <tr class="bg-light">
+                                                                <th colspan="5" class="text-center py-1 font-weight-bold">
+                                                                    {{ $distribucion['concepto'] }}
+                                                                </th>
+                                                            </tr>
+                                                            <tr class="thead-light">
                                                                 <th class="text-nowrap align-middle">Recibo</th>
                                                                 <th class="text-right text-nowrap align-middle">Efectivo</th>
                                                                 <th class="text-right text-nowrap align-middle">Cheque</th>
@@ -105,10 +210,10 @@
                                                             </tr>
                                                         </tfoot>
                                                     </table>
-                                                </div>
-                                            </div>
+                                                @endif
+                                            @endforeach
                                         </div>
-                                    @endif
+                                    </div>
                                 @endforeach
 
                                 @php
@@ -165,7 +270,8 @@
             ventana.document.write('body{padding:20px;font-family:inherit}table{width:100%}');
             ventana.document.write('.d-print-none,.nav-tabs,.tab-pane.fade{display:none!important}');
             ventana.document.write('.tab-pane.fade.show.active{display:block!important}');
-            ventana.document.write('.card{margin-bottom:1rem;border:1px solid #dee2e6;page-break-inside:avoid}');
+            ventana.document.write('.card{margin-bottom:1rem;border:1px solid #dee2e6}');
+            ventana.document.write('.card-header,.table tr{page-break-inside:avoid}');
             ventana.document.write('.card-header{padding:.5rem;background:#f8f9fa;font-weight:700}');
             ventana.document.write('.table{width:100%;border-collapse:collapse}');
             ventana.document.write('.table td,.table th{border:1px solid #dee2e6;padding:.25rem}');

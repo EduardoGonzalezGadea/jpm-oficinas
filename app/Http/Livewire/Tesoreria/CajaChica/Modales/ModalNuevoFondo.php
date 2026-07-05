@@ -97,7 +97,7 @@ class ModalNuevoFondo extends Component
 
         if ($existe) {
             // Restaurar alerta normal con sesión
-            session()->flash('error', 'Ya existe un Fondo Permanente para este mes y año.');
+            $this->dispatchBrowserEvent('swal:toast-error', ['text' => 'Ya existe un Fondo Permanente para este mes y año.']);
             return;
         } else {
             CajaChica::create([
@@ -106,7 +106,7 @@ class ModalNuevoFondo extends Component
                 'montoCajaChica' => $this->parsearMonto($this->monto),
             ]);
 
-            session()->flash('message', 'Fondo Permanente creado correctamente.');
+            $this->dispatchBrowserEvent('swal:success', ['text' => 'Fondo Permanente creado correctamente.']);
             $this->cerrarModal();
             // Notificar al componente principal para recargar datos
             $this->emitTo('tesoreria.caja-chica.index', 'fondoCreado');

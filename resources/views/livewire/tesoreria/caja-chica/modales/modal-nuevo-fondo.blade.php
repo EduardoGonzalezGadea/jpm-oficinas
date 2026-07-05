@@ -1,4 +1,3 @@
-{{-- resources/views/livewire/tesoreria/caja-chica/modal-nuevo-fondo.blade.php --}}
 <div>
     @if ($mostrarModal)
     <div class="modal fade show d-block" id="modalNuevoFondo" tabindex="-1" role="dialog"

@@ -408,7 +408,7 @@
     <style>
         body {
             font-family: 'Nunito', sans-serif;
-            background: linear-gradient(180deg, #1e3a5f 0%, #3b6b9a 40%, #7ba3c9 70%, #a8d4f5 100%);
+            background: linear-gradient(180deg, #001a4d 0%, #0d47a1 30%, #42a5f5 65%, #90caf9 100%);
             min-height: 100vh;
         }
 

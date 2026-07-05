@@ -6,10 +6,16 @@ use App\DataTransferObjects\CfeData;
 use App\Events\Tesoreria\CfeActualizado;
 use App\Events\Tesoreria\CfeCreado;
 use App\Events\Tesoreria\CfeEliminado;
+use App\Exceptions\Tesoreria\CfeDuplicateException;
+use App\Exceptions\Tesoreria\CfeNotFoundException;
+use App\Exceptions\Tesoreria\CfeValidationException;
+use App\Helpers\TextoHelper;
 use App\Models\Tesoreria\CajaConcepto;
+use App\Models\Tesoreria\SiifDistribucion;
 use App\Models\Tesoreria\TesCfe;
 use App\Models\Tesoreria\TesCfeItem;
 use App\Models\Tesoreria\TesCfeMedioPago;
+use App\Models\TesCfePendiente;
 use Illuminate\Support\Facades\DB;
 
 class CfeCreatorService
@@ -18,7 +24,7 @@ class CfeCreatorService
     {
         $itemsRedondeados = $this->redondearYCompensarItems($data->items, $data->medios_pago);
         $this->validateTotalsMatch($itemsRedondeados, $data->medios_pago, $data->force ?? false);
-        $this->checkDocumentoDuplicado($data->documento_tipo, $data->documento_numero);
+        $this->checkDocumentoDuplicado($data->documento_tipo, $data->documento_numero, $data->documento_serie);
 
         return DB::transaction(function () use ($data, $itemsRedondeados) {
             $totalAPagar = $this->calcularTotal($itemsRedondeados, $data->medios_pago);
@@ -50,11 +56,11 @@ class CfeCreatorService
         });
     }
 
-    public function createFromPdf(CfeData $data, string $rutaArchivoTemporal): TesCfe
+    public function createFromPdf(CfeData $data, string $rutaArchivoTemporal, ?int $excludePendienteId = null): TesCfe
     {
         $itemsRedondeados = $this->redondearYCompensarItems($data->items, $data->medios_pago);
         $this->validateTotalsMatch($itemsRedondeados, $data->medios_pago, $data->force ?? false);
-        $this->checkDocumentoDuplicado($data->documento_tipo, $data->documento_numero);
+        $this->checkDocumentoDuplicado($data->documento_tipo, $data->documento_numero, $data->documento_serie, $excludePendienteId);
 
         return DB::transaction(function () use ($data, $rutaArchivoTemporal, $itemsRedondeados) {
             $cajaConcepto = CajaConcepto::find($data->tes_caja_concepto_id);
@@ -109,7 +115,12 @@ class CfeCreatorService
 
     public function updateCfe(int $cfeId, CfeData $data): TesCfe
     {
-        $cfe = TesCfe::with('items')->findOrFail($cfeId);
+        $cfe = TesCfe::with('items')->find($cfeId);
+
+        if (!$cfe) {
+            throw CfeNotFoundException::fromId($cfeId);
+        }
+
         $this->assertItemsNotInPlanilla($cfeId);
 
         return DB::transaction(function () use ($cfe, $data) {
@@ -138,7 +149,12 @@ class CfeCreatorService
 
     public function deleteCfe(int $cfeId): void
     {
-        $cfe = TesCfe::with('items')->findOrFail($cfeId);
+        $cfe = TesCfe::with('items')->find($cfeId);
+
+        if (!$cfe) {
+            throw CfeNotFoundException::fromId($cfeId);
+        }
+
         $this->assertItemsNotInPlanilla($cfeId);
 
         DB::transaction(function () use ($cfe) {
@@ -190,7 +206,7 @@ class CfeCreatorService
         $sumaMedios = collect($mediosPago)->sum(fn($mp) => (float)($mp['valor'] ?? 0));
 
         if (abs($sumaItems - $sumaMedios) > 0.01) {
-            throw new \InvalidArgumentException(
+            throw new CfeValidationException(
                 "La suma de los ítems (\${$sumaItems}) no coincide con la suma de los medios de pago (\${$sumaMedios})."
             );
         }
@@ -198,25 +214,54 @@ class CfeCreatorService
 
     public function assertItemsNotInPlanilla(int $cfeId): void
     {
-        $cfe = TesCfe::with('items')->findOrFail($cfeId);
+        $cfe = TesCfe::with('items')->find($cfeId);
+
+        if (!$cfe) {
+            throw CfeNotFoundException::fromId($cfeId);
+        }
+
         if ($cfe->items->contains(fn($i) => $i->planilla_er_id !== null)) {
-            throw new \RuntimeException('No se puede procesar este CFE porque uno o más de sus ítems ya integran una planilla.');
+            throw new CfeValidationException('No se puede procesar este CFE porque uno o más de sus ítems ya integran una planilla.');
         }
     }
 
-    public function checkDocumentoDuplicado(string $tipo, string $numero): void
+    public function checkDocumentoDuplicado(string $tipo, string $numero, ?string $serie = null, ?int $excludePendienteId = null): void
     {
         if (empty($tipo) || empty($numero)) return;
 
+        $refCompleta = $tipo . ($serie ? "-{$serie}" : "") . "-{$numero}";
+
         $existente = TesCfe::where('documento_tipo', $tipo)
             ->where('documento_numero', $numero)
+            ->where(function ($q) use ($serie) {
+                if ($serie !== null) {
+                    $q->where('documento_serie', $serie);
+                } else {
+                    $q->whereNull('documento_serie');
+                }
+            })
             ->whereNull('deleted_at')
             ->first();
 
         if ($existente) {
-            throw new \InvalidArgumentException(
-                "El documento {$tipo} {$existente->documento_serie}-{$numero} ya existe."
-            );
+            throw CfeDuplicateException::fromDocumento($tipo, $numero, $serie);
+        }
+
+        $pendiente = TesCfePendiente::where('numero', $numero)
+            ->where(function ($q) use ($serie) {
+                if ($serie !== null) {
+                    $q->where('serie', $serie);
+                } else {
+                    $q->whereNull('serie');
+                }
+            })
+            ->whereIn('estado', ['pendiente', 'en_revision'])
+            ->whereNull('deleted_at')
+            ->when($excludePendienteId !== null, fn($q) => $q->where('id', '!=', $excludePendienteId))
+            ->first();
+
+        if ($pendiente) {
+            throw CfeDuplicateException::fromPendiente($pendiente->numero, $pendiente->serie, $pendiente->estado);
         }
     }
 
@@ -226,6 +271,63 @@ class CfeCreatorService
             return collect($mediosPago)->sum(fn($mp) => (float)($mp['valor'] ?? 0));
         }
         return collect($items)->sum(fn($i) => (float)($i['importe'] ?? 0));
+    }
+
+    public function autoAsignarDistribuciones(int $cajaConceptoId, int $dependenciaId, array $items): array
+    {
+        $concepto = CajaConcepto::find($cajaConceptoId);
+        if (!$concepto || !$concepto->siif_distribucion_tipo_id) {
+            return [];
+        }
+
+        $conceptoNorm = TextoHelper::normalizarTexto($concepto->caja_concepto);
+
+        $distribucionPorConcepto = SiifDistribucion::where('tipo_id', $concepto->siif_distribucion_tipo_id)
+            ->where('dependencia_id', $dependenciaId)
+            ->whereNull('deleted_at')
+            ->get()
+            ->first(fn($d) => TextoHelper::normalizarTexto($d->concepto ?? '') === $conceptoNorm);
+
+        $distribuciones = [];
+
+        foreach ($items as $index => $item) {
+            $detalle = trim($item['detalle'] ?? '');
+            if (empty($detalle)) {
+                continue;
+            }
+
+            $ultimosItems = TesCfeItem::where('detalle', $detalle)
+                ->whereNotNull('siif_distribucion_id')
+                ->whereNull('deleted_at')
+                ->orderBy('id', 'desc')
+                ->take(10)
+                ->get();
+
+            if ($ultimosItems->isNotEmpty()) {
+                $frecuencias = $ultimosItems->groupBy('siif_distribucion_id')
+                    ->map->count()
+                    ->sortDesc();
+
+                $distribucionId = $frecuencias->keys()->first();
+
+                $existe = SiifDistribucion::where('id', $distribucionId)
+                    ->where('tipo_id', $concepto->siif_distribucion_tipo_id)
+                    ->where('dependencia_id', $dependenciaId)
+                    ->whereNull('deleted_at')
+                    ->exists();
+
+                if ($existe) {
+                    $distribuciones[$index] = (string) $distribucionId;
+                    continue;
+                }
+            }
+
+            if ($distribucionPorConcepto) {
+                $distribuciones[$index] = (string) $distribucionPorConcepto->id;
+            }
+        }
+
+        return $distribuciones;
     }
 
     private function getSiifTipoId(?int $cajaConceptoId): ?int
@@ -267,7 +369,7 @@ class CfeCreatorService
     {
         if (!$cajaConcepto) return;
 
-        if ($this->normalizarTexto($cajaConcepto->caja_concepto) === $this->normalizarTexto('ARTÍCULO 222')) {
+        if (TextoHelper::normalizarTexto($cajaConcepto->caja_concepto) === TextoHelper::normalizarTexto('ARTÍCULO 222')) {
             foreach ($items as $idx => $item) {
                 $detalle = trim($item['detalle'] ?? '');
                 $descripcion = trim($item['descripcion'] ?? '');
@@ -277,13 +379,5 @@ class CfeCreatorService
                 }
             }
         }
-    }
-
-    private function normalizarTexto(string $texto): string
-    {
-        $texto = mb_strtolower($texto, 'UTF-8');
-        $from = ['á', 'é', 'í', 'ó', 'ú', 'ü', 'ñ', 'à', 'è', 'ì', 'ò', 'ù', 'â', 'ê', 'î', 'ô', 'û'];
-        $to   = ['a', 'e', 'i', 'o', 'u', 'u', 'n', 'a', 'e', 'i', 'o', 'u', 'a', 'e', 'i', 'o', 'u'];
-        return str_replace($from, $to, $texto);
     }
 }

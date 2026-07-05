@@ -9,7 +9,7 @@ use App\Traits\WithOrdenCobroValidation;
 
 class CargarCfe extends Component
 {
-    use WithFileUploads, WithOrdenCobroValidation;
+    use WithFileUploads, WithOrdenCobroValidation, \App\Traits\WithAnulacionCfe;
 
     public $archivo;
     public $datosExtraidos = null;
@@ -95,28 +95,63 @@ class CargarCfe extends Component
         try {
             $text = app(\App\Services\CfeProcessorService::class)->parsearPdf($this->archivo->getRealPath());
 
-            // Análisis básico del texto para extraer datos de CFE
-            $datos = $this->parsearTextoCfe($text);
+            $extractor = new \App\Services\CfeExtractor\ArmasExtractor();
+            /** @var \App\DTOs\CfeExtraccionDto $dto */
+            $dto = $extractor->extraer($text);
+            $extractor->validar($dto);
 
-            // Verificar si hay un error de validación
-            if (isset($datos['error_validacion'])) {
-                $this->mensajeError = $datos['error_validacion'];
-                $this->dispatchBrowserEvent('swal:modal-error', [
-                    'title' => 'Comprobante No Válido',
-                    'text' => $datos['error_validacion']
-                ]);
+            $datos = $dto->toArray();
+
+            // Mapear campos del DTO a los que espera este componente
+            $this->datosExtraidos = [
+                'tipo_cfe' => $datos['tipo_cfe'] ?? 'Detectado',
+                'serie' => $datos['serie'] ?? '',
+                'numero' => $datos['numero'] ?? '',
+                'fecha' => $datos['fecha'] ?? '',
+                'rut_emisor' => $datos['emisor_rut'] ?? '',
+                'razon_social_emisor' => $datos['emisor_nombre'] ?? '',
+                'rut_receptor' => $datos['receptor_documento'] ?? '',
+                'razon_social_receptor' => $datos['receptor_nombre'] ?? '',
+                'monto_total' => $datos['monto'] ?? 0,
+                'subtotal' => $datos['subtotal'] ?? 0,
+                'iva' => $datos['iva'] ?? 0,
+                'moneda' => $datos['moneda'] ?? 'UYU',
+                'detalle' => $datos['detalle'] ?? '',
+                'orden_cobro' => $datos['orden_cobro'] ?? '',
+                'tramite' => $datos['tramite'] ?? '',
+                'ingreso_contabilidad' => $datos['ingreso_contabilidad'] ?? '',
+                'telefono' => $datos['telefono'] ?? ''
+            ];
+        } catch (\App\Exceptions\CfeExtraccionInvalidaException $e) {
+            $resultado = $this->handleMontoAnulacion($text, $e->getMessage());
+            if ($resultado === 'confirmar') {
                 return;
             }
-
-            if (empty($datos)) {
-                $this->mensajeError = "No se pudieron extraer datos del archivo. Asegúrate de que es un CFE válido.";
+            if ($resultado === 'inexistente') {
+                $this->mensajeError = 'Posible anulación: la e-Factura/e-Ticket referenciada (' . $this->ultimaRefEncontrada . ') no está registrada en el sistema.';
                 return;
             }
-
-            $this->datosExtraidos = $datos;
+            $this->mensajeError = $e->getMessage();
+            $this->dispatchBrowserEvent('swal:modal-error', [
+                'title' => 'Comprobante No Válido',
+                'text' => $e->getMessage()
+            ]);
         } catch (\Exception $e) {
             $this->mensajeError = "Error al procesar el PDF: " . $e->getMessage();
         }
+    }
+
+    protected function getModelClassForAnulacion(): string
+    {
+        return \App\Models\Tesoreria\TesPorteArmas::class;
+    }
+
+    protected function getModelClassesForAnulacion(): array
+    {
+        return [
+            \App\Models\Tesoreria\TesPorteArmas::class,
+            \App\Models\Tesoreria\TesTenenciaArmas::class,
+        ];
     }
 
     private function parsearTextoCfe($text)
@@ -180,7 +215,9 @@ class CargarCfe extends Component
         }
 
         // Nombre Receptor - Captura todo hasta el siguiente bloque de encabezado (usualmente INFORMACION ADICIONAL)
-        if (preg_match('/NOMBRE O DENOMINACIÓN DOMICILIO FISCAL\s*\n\s*(.*?)(?=\s*\n\s*(?:INFORMACION ADICIONAL|DETALLE DESCRIPCIÓN|PERIODO|FECHA|$))/is', $text, $matches)) {
+        if (preg_match('/NOMBRE O DENOMINACIÓN\s*\n?\s*DOMICILIO FISCAL\s+(.*?)(?=\s*(?:INFORMACION ADICIONAL|DETALLE DESCRIPCIÓN|PERIODO|FECHA|$))/isu', $text, $matches)) {
+            $datos['razon_social_receptor'] = trim(preg_replace('/\s+/', ' ', $matches[1]));
+        } elseif (preg_match('/(?:NOMBRE O DENOMINACIÓN[\s\S]*?)?DOMICILIO\s+FISCAL\s+(.*?)(?=\s*(?:INFORMACION|DETALLE|FECHA|\d{2}\/\d{2}\/\d{4}|$))/isu', $text, $matches)) {
             $datos['razon_social_receptor'] = trim(preg_replace('/\s+/', ' ', $matches[1]));
         }
 
@@ -211,7 +248,7 @@ class CargarCfe extends Component
             $datos['orden_cobro'] = $matches[1];
         }
 
-        if (preg_match('/(?:TRÁMITE|TRAMITE)(?:\s*N.?)?[:\s\t-]*([\d\/]+)/iu', $text, $matches)) {
+        if (preg_match('/(?:TR[ÁA]?M(?:ITE)?\.?)(?:\s+(?:N[º°]?|N\.?|Nro\.?|N))?[\s:\-.,]*\s*([\d][\d\/\-]+)/iu', $text, $matches)) {
             $datos['tramite'] = $matches[1];
         }
 
@@ -315,6 +352,7 @@ class CargarCfe extends Component
         $this->archivo = null;
         $this->datosExtraidos = null;
         $this->mensajeError = null;
+        $this->limpiarAnulacion();
     }
 
     public function guardarRegistro()
@@ -356,14 +394,14 @@ class CargarCfe extends Component
 
             $data = [
                 'fecha' => $fecha->format('Y-m-d'),
-                'orden_cobro' => $this->datosExtraidos['orden_cobro'] ?: null,
-                'numero_tramite' => $this->datosExtraidos['tramite'] ?: null,
-                'ingreso_contabilidad' => $this->datosExtraidos['ingreso_contabilidad'] ?: null,
+                'orden_cobro' => $this->datosExtraidos['orden_cobro'] ?? null,
+                'numero_tramite' => $this->datosExtraidos['tramite'] ?? '',
+                'ingreso_contabilidad' => $this->datosExtraidos['ingreso_contabilidad'] ?? null,
                 'recibo' => $recibo,
                 'monto' => $monto,
                 'titular' => mb_strtoupper($this->datosExtraidos['razon_social_receptor'], 'UTF-8'),
                 'cedula' => $this->datosExtraidos['rut_receptor'],
-                'telefono' => $this->datosExtraidos['telefono'] ?: null,
+                'telefono' => $this->datosExtraidos['telefono'] ?? null,
             ];
 
             // Validar que la orden de cobro no esté duplicada

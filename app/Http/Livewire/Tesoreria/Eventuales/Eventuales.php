@@ -85,7 +85,7 @@ class Eventuales extends Component
 
             $generalTotal = (float) $query->sum('monto');
 
-            $eventuales = $query->orderBy('fecha', 'desc')->orderBy('recibo', 'asc')->paginate(10);
+            $eventuales = $query->orderBy('fecha', 'desc')->orderByRaw('LENGTH(recibo) DESC, recibo DESC')->paginate(10);
 
             $subtotales = Model::whereYear('fecha', $this->year)
                 ->whereMonth('fecha', $this->mes)
