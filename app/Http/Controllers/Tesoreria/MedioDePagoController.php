@@ -51,7 +51,7 @@ class MedioDePagoController extends Controller
             'activo' => 'boolean'
         ]);
 
-        MedioDePago::create($request->all());
+        MedioDePago::create($request->only(['nombre', 'descripcion', 'activo']));
 
         Cache::flush();
 
@@ -102,7 +102,7 @@ class MedioDePagoController extends Controller
             'activo' => 'boolean'
         ]);
 
-        $medioDePago->update($request->all());
+        $medioDePago->update($request->only(['nombre', 'descripcion', 'activo']));
 
         Cache::flush();
 

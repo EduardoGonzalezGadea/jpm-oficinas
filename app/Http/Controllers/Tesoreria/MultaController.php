@@ -49,7 +49,7 @@ class MultaController extends Controller
         ]);
 
         DB::transaction(function () use ($request) {
-            Multa::create($request->all());
+            Multa::create($request->only(['articulo', 'apartado', 'descripcion', 'importe_original', 'importe_unificado', 'decreto', 'activo']));
             Cache::flush();
         });
 
@@ -98,7 +98,7 @@ class MultaController extends Controller
         ]);
 
         DB::transaction(function () use ($request, $multa) {
-            $multa->update($request->all());
+            $multa->update($request->only(['articulo', 'apartado', 'descripcion', 'importe_original', 'importe_unificado', 'decreto', 'activo']));
             Cache::flush();
         });
 

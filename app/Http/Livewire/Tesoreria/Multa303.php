@@ -31,6 +31,8 @@ class Multa303 extends Component
     public $sortDirection = 'asc';
     public $perPage = 50;
 
+    private array $allowedSortFields = ['codigo', 'grupo', 'descripcion', 'valor_ur'];
+
     protected $queryString = [
         'search' => ['except' => ''],
         'sortField' => ['except' => 'codigo'],
@@ -76,6 +78,9 @@ class Multa303 extends Component
 
     public function sortBy($field)
     {
+        if (!in_array($field, $this->allowedSortFields, true)) {
+            return;
+        }
         if ($this->sortField === $field) {
             $this->sortDirection = $this->sortDirection === 'asc' ? 'desc' : 'asc';
         } else {
@@ -211,16 +216,18 @@ class Multa303 extends Component
                 });
             }
 
+            $dir = $this->sortDirection === 'asc' ? 'asc' : 'desc';
+            $field = in_array($this->sortField, $this->allowedSortFields, true) ? $this->sortField : 'codigo';
+
             // Ordenamiento numérico para el campo codigo (separado por puntos)
-            if ($this->sortField === 'codigo') {
-                $dir = $this->sortDirection;
+            if ($field === 'codigo') {
                 $query->orderByRaw("CAST(SUBSTRING_INDEX(codigo, '.', 1) AS UNSIGNED) {$dir}")
                       ->orderByRaw("CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(codigo, '.', 2), '.', -1) AS UNSIGNED) {$dir}")
                       ->orderByRaw("CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(codigo, '.', 3), '.', -1) AS UNSIGNED) {$dir}")
                       ->orderByRaw("CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(codigo, '.', 4), '.', -1) AS UNSIGNED) {$dir}")
                       ->orderBy('codigo', $dir);
             } else {
-                $query->orderBy($this->sortField, $this->sortDirection);
+                $query->orderBy($field, $dir);
             }
 
             if ((int)$this->perPage === -1) {
