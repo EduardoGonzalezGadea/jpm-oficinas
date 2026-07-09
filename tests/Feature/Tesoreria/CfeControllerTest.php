@@ -3,6 +3,7 @@
 namespace Tests\Feature\Tesoreria;
 
 use App\Models\TesCfePendiente;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
@@ -11,10 +12,14 @@ class CfeControllerTest extends TestCase
 {
     use RefreshDatabase;
 
+    private $user;
+
     protected function setUp(): void
     {
         parent::setUp();
         Storage::fake('local');
+        $this->user = User::factory()->create();
+        $this->actingAs($this->user);
     }
 
     public function test_pendientes_returns_json_list(): void
