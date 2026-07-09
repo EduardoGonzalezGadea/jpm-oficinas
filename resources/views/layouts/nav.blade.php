@@ -25,15 +25,12 @@
                     <a class="dropdown-item" href="{{ route('tesoreria.multas-303-2023') }}">
                         <i class="fas fa-list-alt mr-2"></i> Cod. Multas Dec.303/2023
                     </a>
-                    {{-- Link Multas Cobradas (segunda opción) --}}
-                    <a class="dropdown-item" href="{{ route('tesoreria.multas-cobradas.index') }}">
-                        <i class="fas fa-receipt mr-2"></i> Multas Cobradas
-                    </a>
                     {{-- Separador --}}
                     <div class="dropdown-divider"></div>
 
                     {{-- Resto de opciones en orden alfabético --}}
                     {{-- Link Armas --}}
+                    {{-- COMENTADO TEMPORALMENTE
                     <div class="dropdown-submenu submenu-right">
                         <a class="dropdown-item dropdown-toggle" href="#" role="button">
                             <i class="fas fa-shield-alt mr-2"></i>Armas
@@ -47,6 +44,7 @@
                             </a>
                         </div>
                     </div>
+                    --}}
                     {{-- Link Arrendamientos --}}
                     <a class="dropdown-item" href="{{ route('tesoreria.arrendamientos.index') }}">
                         <i class="fas fa-file-signature mr-2"></i> Arrendamientos
@@ -83,6 +81,10 @@
                     {{-- Link Estados de Recaudación --}}
                     <a class="dropdown-item" href="{{ route('tesoreria.gestion-cfe.estados-recaudacion') }}" wire:navigate>
                         <i class="fas fa-chart-line mr-2"></i> Estados de Recaudación
+                    </a>
+                    {{-- Link Multas Cobradas --}}
+                    <a class="dropdown-item" href="{{ route('tesoreria.multas-cobradas.index') }}">
+                        <i class="fas fa-receipt mr-2"></i> Multas Cobradas
                     </a>
                     {{-- Link Prendas --}}
                     <a class="dropdown-item" href="{{ route('tesoreria.prendas.index') }}" wire:navigate>

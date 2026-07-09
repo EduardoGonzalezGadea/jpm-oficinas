@@ -175,6 +175,10 @@
                                                 <div class="card mb-3">
                                                     <div class="card-header py-1 px-2 bg-light text-center">
                                                         <strong>{{ $distribucion['concepto'] }}</strong>
+                                                        @php $docsStr = $this->formatRangoDocumentos($distribucion['items']); @endphp
+                                                        @if($docsStr)
+                                                            <br><small class="text-muted">{{ $docsStr }}</small>
+                                                        @endif
                                                     </div>
                                                     <div class="card-body p-0">
                                                         <div class="table-responsive">

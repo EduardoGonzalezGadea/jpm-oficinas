@@ -40,4 +40,22 @@ class FormatHelper
     {
         return number_format((float) $value, $decimals, ',', '.');
     }
+
+    private static array $coloresTipo = ['primary', 'secondary', 'success', 'danger', 'warning', 'info', 'dark'];
+
+    public static function colorTipo($tipoId): string
+    {
+        if (is_null($tipoId)) {
+            return 'secondary';
+        }
+        return self::$coloresTipo[((int) $tipoId - 1) % count(self::$coloresTipo)];
+    }
+
+    public static function renderTipo(string $label, $tipoId): string
+    {
+        $color = self::colorTipo($tipoId);
+        $display = preg_replace('/^Recaudación\b/', 'Rec.', $label);
+        $escaped = htmlspecialchars($display, ENT_QUOTES, 'UTF-8');
+        return '<span class="d-inline-block rounded-circle bg-'.$color.' mr-1" style="width: 10px; height: 10px; vertical-align: middle;"></span><span style="vertical-align: middle;">'.$escaped.'</span>';
+    }
 }

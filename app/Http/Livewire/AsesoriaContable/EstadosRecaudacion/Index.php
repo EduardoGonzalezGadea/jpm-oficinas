@@ -19,6 +19,7 @@ class Index extends Component
 
     public $mostrarModalDetalles = false;
     public $planillaDetalles = null;
+    public $modoAgrupacionDetalles = 'distribucion';
     public $mostrarModalPlanilla = false;
     public $planillaVer = null;
 

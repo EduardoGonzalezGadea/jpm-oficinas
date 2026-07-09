@@ -119,7 +119,7 @@ class Index extends Component
                     $efectivo += $valorProrated;
                 } elseif (str_contains($tipoStr, 'cheque')) {
                     $cheque += $valorProrated;
-                } elseif (str_contains($tipoStr, 'transferencia')) {
+                } elseif (str_contains($tipoStr, 'transferencia') || str_contains($tipoStr, 'siif')) {
                     $transferencia += $valorProrated;
                 } elseif (str_contains($tipoStr, 'tarjeta') || str_contains($tipoStr, 'debito') || str_contains($tipoStr, 'débito')) {
                     $pos += $valorProrated;

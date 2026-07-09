@@ -532,7 +532,7 @@ class Confirmar extends Component
                     $efectivo += $valorProrated;
                 } elseif (str_contains($tipoStr, 'cheque')) {
                     $cheque += $valorProrated;
-                } elseif (str_contains($tipoStr, 'transferencia')) {
+                } elseif (str_contains($tipoStr, 'transferencia') || str_contains($tipoStr, 'siif')) {
                     $transferencia += $valorProrated;
                 } elseif (str_contains($tipoStr, 'tarjeta') || str_contains($tipoStr, 'debito') || str_contains($tipoStr, 'débito')) {
                     $pos += $valorProrated;
@@ -559,5 +559,70 @@ class Confirmar extends Component
         }
 
         return $grupos;
+    }
+
+    public function formatRangoDocumentos($items): string
+    {
+        $cfes = collect($items)->pluck('cfe');
+
+        $grupos = [];
+        foreach ($cfes as $cfe) {
+            $serieCompleta = $cfe->documento_serie;
+            if (!isset($grupos[$serieCompleta])) {
+                $grupos[$serieCompleta] = [];
+            }
+            $grupos[$serieCompleta][] = (int)$cfe->documento_numero;
+        }
+
+        ksort($grupos);
+
+        $partes = [];
+        foreach ($grupos as $serie => $numeros) {
+            sort($numeros);
+            $referencias = [];
+            $i = 0;
+            $n = count($numeros);
+
+            while ($i < $n) {
+                $start = $numeros[$i];
+                $j = $i;
+                while ($j + 1 < $n && $numeros[$j + 1] == $numeros[$j] + 1) {
+                    $j++;
+                }
+                $end = $numeros[$j];
+
+                if ($start === $end) {
+                    $referencias[] = $serie . '-' . $start;
+                } else {
+                    $referencias[] = $serie . '-' . $start . '/' . $this->truncarNumero($start, $end);
+                }
+
+                $i = $j + 1;
+            }
+
+            $partes[] = implode(', ', $referencias);
+        }
+
+        return implode(', ', $partes);
+    }
+
+    private function truncarNumero(int $first, int $second): string
+    {
+        $s1 = (string)$first;
+        $s2 = (string)$second;
+
+        $commonLen = 0;
+        $maxLen = min(strlen($s1), strlen($s2));
+        for ($i = 0; $i < $maxLen; $i++) {
+            if ($s1[$i] === $s2[$i]) {
+                $commonLen++;
+            } else {
+                break;
+            }
+        }
+
+        $remaining = substr($s2, $commonLen);
+
+        return strlen($remaining) >= 2 ? $remaining : $s2;
     }
 }

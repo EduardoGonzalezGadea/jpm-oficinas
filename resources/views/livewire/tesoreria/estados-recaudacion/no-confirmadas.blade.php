@@ -35,7 +35,7 @@
                                 <td class="align-middle font-weight-bold" rowspan="{{ count($grupo['planillas']) }}">{{ $grupo['fecha_display'] }}</td>
                                 @endif
                                 <td class="align-middle">{{ $p->numero }}</td>
-                                <td class="align-middle">{{ $p->tipo->tipo ?? '—' }}</td>
+                                <td class="align-middle">{!! App\Helpers\FormatHelper::renderTipo($p->tipo->tipo ?? '—', $p->tipo_id) !!}</td>
                                 <td class="align-middle">{{ $p->dependencia->dependencia ?? '—' }}</td>
                                 <td class="align-middle">{{ $p->turno ?? '—' }}</td>
                                 <td class="align-middle text-right text-nowrap">$ {{ number_format($p->items->sum('importe'), 2, ',', '.') }}</td>

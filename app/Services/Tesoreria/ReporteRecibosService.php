@@ -157,35 +157,105 @@ class ReporteRecibosService
     }
 
     /**
+     * Mapeo de nombres de Concepto de Caja a nombres de sección del reporte.
+     * Cuando un CFE tiene un concepto de caja que mapea a una sección existente,
+     * se fusionan los registros y se deduplican por número de recibo.
+     */
+    private const MAPA_CONCEPTO_A_SECCION = [
+        'ARRENDAMIENTOS'                                         => 'Arrendamientos',
+        'CERTIFICADO DE RESIDENCIA'                               => 'Certificados de Residencia',
+        'DEPÓSITO DE VEHÍCULOS'                                   => 'Depósito de Vehículos',
+        'MULTAS DE TRÁNSITO'                                      => 'Multas varias',
+        'PORTE DE ARMAS'                                          => 'Porte de Armas',
+        'TITULO HABILITACIÓN Y TENENCIA DE ARMA (TAHTA)'          => 'Tenencia de Armas (THATA)',
+    ];
+
+    /**
      * Genera el reporte completo agrupado por sección.
      */
     public function generarReporte(Carbon $desde, Carbon $hasta): array
     {
-        $secciones = [];
+        $seccionesMap = [];
         $granTotalCantidad = 0;
         $granTotalMonto = 0.0;
 
+        // 1. Procesar secciones estándar (modelos de negocio)
         foreach ($this->getSecciones() as $config) {
             $seccion = $this->procesarSeccion($config, $desde, $hasta);
-            $secciones[] = $seccion;
-            $granTotalCantidad += $seccion['cantidad'];
-            $granTotalMonto += $seccion['monto_total'];
+            $seccionesMap[$config['nombre']] = $seccion;
         }
 
-        foreach ($this->procesarSeccionesCfe($desde, $hasta) as $seccion) {
-            $secciones[] = $seccion;
+        // 2. Procesar CFEs agrupados por concepto de caja
+        $seccionesCfe = $this->procesarSeccionesCfe($desde, $hasta);
+
+        // 3. Fusionar secciones CFE con secciones estándar que coincidan,
+        //    deduplicando por número de recibo para no contar el mismo documento dos veces.
+        foreach ($seccionesCfe as $cfeSeccion) {
+            $nombre = $cfeSeccion['nombre'];
+
+            if (isset($seccionesMap[$nombre])) {
+                // Fusionar: deduplicar por recibo
+                $seccionesMap[$nombre] = $this->fusionarSecciones(
+                    $seccionesMap[$nombre],
+                    $cfeSeccion
+                );
+            } else {
+                // Concepto sin sección estándar → se agrega como sección independiente
+                $seccionesMap[$nombre] = $cfeSeccion;
+            }
+        }
+
+        // 4. Calcular totales generales
+        foreach ($seccionesMap as $seccion) {
             $granTotalCantidad += $seccion['cantidad'];
             $granTotalMonto += $seccion['monto_total'];
         }
 
         return [
-            'secciones' => $secciones,
+            'secciones' => array_values($seccionesMap),
             'gran_total_cantidad' => $granTotalCantidad,
             'gran_total_monto' => $granTotalMonto,
             'gran_total_monto_formateado' => $this->formatearMonto($granTotalMonto),
             'fecha_desde' => $desde->format('d/m/Y'),
             'fecha_hasta' => $hasta->format('d/m/Y'),
         ];
+    }
+
+    /**
+     * Fusiona una sección CFE dentro de una sección estándar,
+     * evitando duplicados por número de recibo.
+     */
+    protected function fusionarSecciones(array $seccionDestino, array $seccionOrigen): array
+    {
+        // Recopilar números de recibo ya existentes en la sección destino (estándar)
+        $recibosExistentes = collect($seccionDestino['registros'])
+            ->pluck('recibo')
+            ->filter()
+            ->map(fn ($r) => strtoupper(trim($r)))
+            ->toArray();
+
+        // Filtrar registros CFE que no estén duplicados
+        $registrosNuevos = collect($seccionOrigen['registros'])
+            ->reject(function ($registro) use ($recibosExistentes) {
+                $recibo = strtoupper(trim($registro['recibo'] ?? ''));
+                return $recibo === '' || in_array($recibo, $recibosExistentes);
+            })
+            ->values();
+
+        $montoAdicional = $registrosNuevos->sum('monto');
+
+        $seccionDestino['registros'] = array_merge(
+            $seccionDestino['registros'],
+            $registrosNuevos->toArray()
+        );
+
+        $seccionDestino['cantidad'] = count($seccionDestino['registros']);
+        $seccionDestino['monto_total'] = (float) $seccionDestino['monto_total'] + $montoAdicional;
+        $seccionDestino['monto_total_formateado'] = $this->formatearMonto(
+            (float) $seccionDestino['monto_total']
+        );
+
+        return $seccionDestino;
     }
 
     /**
@@ -221,47 +291,16 @@ class ReporteRecibosService
         return [
             'nombre' => $config['nombre'],
             'cantidad' => count($registrosNormalizados),
-            'monto_total' => $montoTotal,
-            'monto_total_formateado' => $this->formatearMonto($montoTotal),
+            'monto_total' => (float) $montoTotal,
+            'monto_total_formateado' => $this->formatearMonto((float) $montoTotal),
             'registros' => $registrosNormalizados,
         ];
     }
 
     /**
-     * Nombre de secciones existentes que tienen un modelo de negocio dedicado.
-     * Los CFE cuyo concepto de caja coincida con alguna de estas se excluyen
-     * para evitar duplicación con los datos ya reportados por los modelos.
-     */
-    private const SECCIONES_MODELO = [
-        'Arrendamientos',
-        'Certificados de Residencia',
-        'Depósito de Vehículos',
-        'Eventuales',
-        'Multas por carecer de SOA',
-        'Multas por carecer de SOA y otras',
-        'Multas varias',
-        'Porte de Armas',
-        'Tenencia de Armas (THATA)',
-        'Prendas',
-    ];
-
-    /**
-     * Mapeo de nombres de CajaConcepto a nombres de sección del reporte.
-     * Cuando un CFE tiene un concepto de caja que mapea a una sección existente,
-     * se omite para evitar doble conteo.
-     */
-    private const MAPA_CONCEPTO_A_SECCION = [
-        'ARRENDAMIENTOS'                                         => 'Arrendamientos',
-        'CERTIFICADO DE RESIDENCIA'                               => 'Certificados de Residencia',
-        'DEPÓSITO DE VEHÍCULOS'                                   => 'Depósito de Vehículos',
-        'MULTAS DE TRÁNSITO'                                      => 'Multas varias',
-        'PORTE DE ARMAS'                                          => 'Porte de Armas',
-        'TITULO HABILITACIÓN Y TENENCIA DE ARMA (TAHTA)'          => 'Tenencia de Armas (THATA)',
-    ];
-
-    /**
      * Procesa los CFE cargados vía Gestión de CFEs agrupándolos por concepto de caja.
-     * Omite conceptos que ya tienen una sección dedicada en getSecciones().
+     * Los conceptos que mapean a una sección estándar se fusionan más arriba
+     * en generarReporte(), donde se deduplican por número de recibo.
      */
     protected function procesarSeccionesCfe(Carbon $desde, Carbon $hasta): array
     {
@@ -281,15 +320,10 @@ class ReporteRecibosService
         foreach ($agrupados as $nombreConcepto => $grupo) {
             $nombreSeccion = self::MAPA_CONCEPTO_A_SECCION[$nombreConcepto] ?? $nombreConcepto;
 
-            if (in_array($nombreSeccion, self::SECCIONES_MODELO)) {
-                continue;
-            }
-
             $registros = $grupo->map(function ($cfe) {
                 $recibo = '';
-                if ($cfe->documento_tipo) {
-                    $recibo = trim($cfe->documento_tipo . ' ' . ($cfe->documento_serie ?? ''));
-                    $recibo = trim($recibo . '-' . $cfe->documento_numero, ' -');
+                if ($cfe->documento_serie || $cfe->documento_numero) {
+                    $recibo = trim(($cfe->documento_serie ?? '') . '-' . $cfe->documento_numero, ' -');
                 } else {
                     $recibo = $cfe->documento_numero ?? '';
                 }

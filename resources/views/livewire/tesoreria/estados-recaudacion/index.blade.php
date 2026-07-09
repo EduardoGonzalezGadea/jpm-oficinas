@@ -8,6 +8,8 @@
         .modal-full-width {
             max-width: 95vw;
         }
+        .planilla-group { outline: 3px solid #1a73e8; outline-offset: -1px; }
+        .planilla-group + .planilla-group { outline: 3px solid #1a73e8; outline-offset: -1px; }
     </style>
     @section('title', 'Estados de Recaudación')
 
@@ -72,9 +74,10 @@
                                 </td>
                             </tr>
                             @foreach($planillasDelDia as $p)
+                                <tbody class="planilla-group">
                                 <tr>
                                     <td class="align-middle">{{ $p->numero }}</td>
-                                    <td class="align-middle">{{ $p->tipo->tipo ?? '—' }}</td>
+                                    <td class="align-middle">{!! \App\Helpers\FormatHelper::renderTipo($p->tipo->tipo ?? '—', $p->tipo_id) !!}</td>
                                     <td class="align-middle">{{ $p->dependencia->dependencia ?? '—' }}</td>
                                     <td class="align-middle">{{ $p->turno ?? '—' }}</td>
                                     <td class="align-middle text-right text-nowrap">$ {{ number_format($p->items->sum('importe'), 2, ',', '.') }}</td>
@@ -91,7 +94,7 @@
                                                 wire:click="verDetalles({{ $p->id }})">
                                                 <i class="fas fa-list"></i>
                                             </button>
-                                            <button class="btn btn-secondary btn-action-fixed" title="Ver Planilla"
+                                            <button class="btn btn-primary btn-action-fixed" title="Ver Planilla"
                                                 wire:click="verPlanilla({{ $p->id }})">
                                                 <i class="fas fa-file-alt"></i>
                                             </button>
@@ -118,6 +121,7 @@
                                         </div>
                                     </td>
                                 </tr>
+                                </tbody>
                             @endforeach
                         @empty
                             <tr>
@@ -162,7 +166,7 @@
                             <div class="card-header py-1 px-2 d-flex justify-content-between align-items-center
                                 {{ $grupoActivo === $grupoKey ? 'bg-primary text-white' : 'bg-light' }}">
                                 <span class="font-weight-bold small {{ $grupoActivo && $grupoActivo !== $grupoKey ? 'text-muted' : '' }}">
-                                    {{ $grupo['tipo_nombre'] }} &mdash; {{ $grupo['dependencia_nombre'] }}
+                                    {!! App\Helpers\FormatHelper::renderTipo($grupo['tipo_nombre'], $grupo['tipo_id']) !!} &mdash; {{ $grupo['dependencia_nombre'] }}
                                     @if($grupo['turno'])
                                         <span class="badge badge-dark ml-2">{{ $grupo['turno'] }}</span>
                                     @endif
@@ -266,7 +270,7 @@
                 @if($planillaDetalles)
                 <div class="modal-body p-3">
                     <div class="row mb-3 small">
-                        <div class="col-auto"><strong>Tipo:</strong> {{ $planillaDetalles->tipo->tipo ?? '—' }}</div>
+                        <div class="col-auto"><strong>Tipo:</strong> {!! App\Helpers\FormatHelper::renderTipo($planillaDetalles->tipo->tipo ?? '—', $planillaDetalles->tipo_id) !!}</div>
                         <div class="col-auto"><strong>Dependencia:</strong> {{ $planillaDetalles->dependencia->dependencia ?? '—' }}</div>
                         <div class="col-auto"><strong>Turno:</strong> {{ $planillaDetalles->turno ?? '—' }}</div>
                         <div class="col-auto"><strong>ER N°:</strong> {{ $planillaDetalles->er_numero ?? '—' }}</div>
@@ -274,14 +278,35 @@
                     </div>
 
                     @php
-                        $itemsAgrupados = $planillaDetalles->items->groupBy(function($item) {
-                            $cfe = $item->cfe;
-                            $cfeLabel = $cfe ? "{$cfe->documento_tipo} {$cfe->documento_serie}-{$cfe->documento_numero}" : '—';
-                            $distribucion = $item->siifDistribucion->concepto ?? 'Sin distribución';
-                            return $cfeLabel . '|' . $distribucion;
-                        });
+                        if ($modoAgrupacionDetalles === 'documento') {
+                            $itemsOrdenados = $planillaDetalles->items->sortBy([
+                                fn($i) => (int) ($i->cfe?->documento_serie ?? 0),
+                                fn($i) => (int) ($i->cfe?->documento_numero ?? 0),
+                                fn($i) => $i->siifDistribucion?->concepto ?? '',
+                            ])->values();
+                            $itemsAgrupados = $itemsOrdenados->groupBy(
+                                fn($item) => $item->cfe ? $item->cfe->documento_serie . '-' . $item->cfe->documento_numero : '—'
+                            );
+                        } else {
+                            $itemsOrdenados = $planillaDetalles->items->sortBy([
+                                fn($i) => $i->siifDistribucion?->concepto ?? '',
+                                fn($i) => (int) ($i->cfe?->documento_serie ?? 0),
+                                fn($i) => (int) ($i->cfe?->documento_numero ?? 0),
+                            ])->values();
+                            $itemsAgrupados = $itemsOrdenados->groupBy(
+                                fn($item) => $item->siifDistribucion?->concepto ?? 'Sin distribución'
+                            );
+                        }
                     @endphp
-                    <div class="mb-2 d-flex justify-content-end">
+                    <div class="mb-2 d-flex justify-content-between align-items-center">
+                        <div class="btn-group btn-group-sm" role="group">
+                            <button class="btn {{ $modoAgrupacionDetalles === 'distribucion' ? 'btn-primary' : 'btn-outline-primary' }}" wire:click="$set('modoAgrupacionDetalles', 'distribucion')">
+                                <i class="fas fa-layer-group mr-1"></i>Distribución SIIF
+                            </button>
+                            <button class="btn {{ $modoAgrupacionDetalles === 'documento' ? 'btn-primary' : 'btn-outline-primary' }}" wire:click="$set('modoAgrupacionDetalles', 'documento')">
+                                <i class="fas fa-file mr-1"></i>Documento
+                            </button>
+                        </div>
                         <div class="input-group input-group-sm" style="width: 280px;">
                             <input type="text" class="form-control" placeholder="Buscar en detalles..." id="buscarDetalles" onkeyup="filtrarDetalles(this)">
                             <div class="input-group-append">
@@ -303,31 +328,81 @@
                         <tbody>
                             @forelse($itemsAgrupados as $grupoKey => $grupoItems)
                                 @php
-                                    $partes = explode('|', $grupoKey);
-                                    $cfeLabel = $partes[0];
-                                    $distribucionLabel = $partes[1] ?? '—';
                                     $totalGrupo = $grupoItems->sum('importe');
+                                    if ($modoAgrupacionDetalles === 'distribucion') {
+                                        $subGrupos = $grupoItems->groupBy(fn($i) => $i->cfe ? $i->cfe->documento_serie . '-' . $i->cfe->documento_numero : '—');
+                                        $docsKeys = $subGrupos->keys()->toArray();
+                                        $porSerie = [];
+                                        foreach ($docsKeys as $k) {
+                                            $parts = explode('-', $k, 2);
+                                            $porSerie[$parts[0]][] = (int) ($parts[1] ?? 0);
+                                        }
+                                        $rangos = [];
+                                        foreach ($porSerie as $s => $nums) {
+                                            sort($nums);
+                                            $inicio = $nums[0];
+                                            $prev = $nums[0];
+                                            for ($i = 1; $i < count($nums); $i++) {
+                                                if ($nums[$i] !== $prev + 1) {
+                                                    $rangos[] = $inicio === $prev ? "$s-$inicio" : "$s-$inicio/$prev";
+                                                    $inicio = $nums[$i];
+                                                }
+                                                $prev = $nums[$i];
+                                            }
+                                            $rangos[] = $inicio === $prev ? "$s-$inicio" : "$s-$inicio/$prev";
+                                        }
+                                        $docsHeader = implode(', ', $rangos);
+                                    }
                                 @endphp
                                 <tr class="table-info font-weight-bold">
                                     <td colspan="3" class="align-middle small">
-                                        <i class="fas fa-folder-open mr-1"></i> {{ $cfeLabel }} — {{ $distribucionLabel }}
+                                        <i class="fas fa-folder-open mr-1"></i> {{ $grupoKey }}
+                                        @if($modoAgrupacionDetalles === 'distribucion' && $docsHeader)
+                                            <span class="font-weight-normal">({{ $docsHeader }})</span>
+                                        @endif
                                     </td>
                                     <td class="align-middle small text-right text-nowrap">$ {{ number_format($totalGrupo, 2, ',', '.') }}</td>
                                 </tr>
-                                @foreach($grupoItems as $item)
-                                    <tr>
-                                        <td class="align-middle small pl-4">
-                                            @if($item->cfe)
-                                                {{ $item->cfe->documento_tipo }} {{ $item->cfe->documento_serie }}-{{ $item->cfe->documento_numero }}
-                                            @else
-                                                —
-                                            @endif
-                                        </td>
-                                        <td class="align-middle small">{{ $item->detalle }}</td>
-                                        <td class="align-middle small">{{ $item->siifDistribucion->concepto ?? '—' }}</td>
-                                        <td class="align-middle small text-right text-nowrap">$ {{ number_format($item->importe, 2, ',', '.') }}</td>
-                                    </tr>
-                                @endforeach
+                                @if($modoAgrupacionDetalles === 'distribucion')
+                                    @foreach($subGrupos as $docKey => $docItems)
+                                        @php $subTotal = $docItems->sum('importe'); @endphp
+                                        <tr class="table-secondary font-weight-bold">
+                                            <td colspan="3" class="align-middle small pl-4">
+                                                <i class="fas fa-file mr-1"></i> {{ $docKey }}
+                                            </td>
+                                            <td class="align-middle small text-right text-nowrap">$ {{ number_format($subTotal, 2, ',', '.') }}</td>
+                                        </tr>
+                                        @foreach($docItems as $item)
+                                            <tr>
+                                                <td class="align-middle small pl-5">
+                                                    @if($item->cfe)
+                                                        {{ $item->cfe->documento_tipo }} {{ $item->cfe->documento_serie }}-{{ $item->cfe->documento_numero }}
+                                                    @else
+                                                        —
+                                                    @endif
+                                                </td>
+                                                <td class="align-middle small">{{ $item->detalle }}</td>
+                                                <td class="align-middle small">{{ $item->siifDistribucion->concepto ?? '—' }}</td>
+                                                <td class="align-middle small text-right text-nowrap">$ {{ number_format($item->importe, 2, ',', '.') }}</td>
+                                            </tr>
+                                        @endforeach
+                                    @endforeach
+                                @else
+                                    @foreach($grupoItems as $item)
+                                        <tr>
+                                            <td class="align-middle small pl-4">
+                                                @if($item->cfe)
+                                                    {{ $item->cfe->documento_tipo }} {{ $item->cfe->documento_serie }}-{{ $item->cfe->documento_numero }}
+                                                @else
+                                                    —
+                                                @endif
+                                            </td>
+                                            <td class="align-middle small">{{ $item->detalle }}</td>
+                                            <td class="align-middle small">{{ $item->siifDistribucion->concepto ?? '—' }}</td>
+                                            <td class="align-middle small text-right text-nowrap">$ {{ number_format($item->importe, 2, ',', '.') }}</td>
+                                        </tr>
+                                    @endforeach
+                                @endif
                             @empty
                                 <tr>
                                     <td colspan="4" class="text-center py-2">No hay ítems asociados.</td>
@@ -560,7 +635,7 @@
                     <div class="modal-body p-3">
                         <div class="small text-muted mb-3">
                             <strong>N°:</strong> {{ $planillaEditar?->numero ?? '—' }} &mdash;
-                            <strong>Tipo:</strong> {{ $planillaEditar?->tipo?->tipo ?? '—' }} &mdash;
+                            <strong>Tipo:</strong> {!! App\Helpers\FormatHelper::renderTipo($planillaEditar?->tipo?->tipo ?? '—', $planillaEditar?->tipo_id) !!} &mdash;
                             <strong>Dependencia:</strong> {{ $planillaEditar?->dependencia?->dependencia ?? '—' }} &mdash;
                             <strong>Turno:</strong> {{ $planillaEditar?->turno ?? '—' }} &mdash;
                             <strong>Fecha:</strong> {{ $planillaEditar?->fecha?->format('d/m/Y') ?? '—' }}
