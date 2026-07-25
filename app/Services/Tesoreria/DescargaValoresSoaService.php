@@ -11,11 +11,6 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Smalot\PdfParser\Parser;
 
-/**
- * Servicio para descargar y procesar valores SOA (Seguro Obligatorio de Autos) desde BCU.
- *
- * Actualiza los valores de las multas por Art. 184 basándose en el PDF publicado por el BCU.
- */
 class DescargaValoresSoaService
 {
     private const CACHE_KEY = 'valores_soa_completo';
@@ -27,18 +22,6 @@ class DescargaValoresSoaService
         $this->httpClient = $httpClient ?? app(HttpClientService::class);
     }
 
-    /**
-     * Descarga y actualiza valores SOA
-     *
-     * @return array{
-     *     success: bool,
-     *     message: string,
-     *     pdf_url: string|null,
-     *     updated_count: int,
-     *     details: array,
-     *     errors: array
-     * }
-     */
     public function descargarYActualizar(): array
     {
         $config = config('external_downloads.valores_soa', []);
@@ -55,7 +38,6 @@ class DescargaValoresSoaService
         }
 
         try {
-            // Paso 1: Obtener la URL del PDF desde la web del BCU
             $urlFuente = $config['url_source'] ?? 'https://www.bcu.gub.uy/Servicios-Financieros-SSF/Paginas/ImpPromCostoDelSOA.aspx';
             $pdfUrl = $this->obtenerUrlPdf($urlFuente, $config);
 
@@ -63,25 +45,21 @@ class DescargaValoresSoaService
                 throw new \Exception("No se encontró la URL del PDF del SOA");
             }
 
-            // Paso 2: Descargar PDF
             $pdfContent = $this->descargarPdf($pdfUrl, $config);
 
             if (!$pdfContent) {
                 throw new \Exception("No se pudo descargar el PDF del SOA");
             }
 
-            // Paso 3: Parsear PDF
             $textoPdf = $this->parsearPdf($pdfContent);
 
             if (!$textoPdf) {
                 throw new \Exception("No se pudo extraer texto del PDF del SOA");
             }
 
-            // Paso 4: Extraer valores y actualizar BD
             $resultado = $this->extraerYActualizar($textoPdf, $config);
             $resultado['pdf_url'] = $pdfUrl;
 
-            // Cachear éxito
             Cache::put(self::CACHE_KEY, $resultado, now()->addMinutes($config['cache_ttl_minutes'] ?? 10080));
 
             return $resultado;
@@ -100,15 +78,12 @@ class DescargaValoresSoaService
         }
     }
 
-    /**
-     * Obtiene la URL del PDF desde la web del BCU
-     */
     protected function obtenerUrlPdf(string $urlFuente, array $config): ?string
     {
         try {
             $response = $this->httpClient->getWithRetry(
                 $urlFuente,
-                ['timeout' => 60],
+                ['timeout' => 30],
                 $config['max_retries'] ?? 1,
                 $config['retry_delay_ms'] ?? 2000,
                 'valores_soa'
@@ -123,10 +98,8 @@ class DescargaValoresSoaService
             @$dom->loadHTML(mb_convert_encoding($html, 'HTML-ENTITIES', 'UTF-8'));
             $xpath = new DOMXPath($dom);
 
-            // Buscar enlaces al PDF
             $pdfPattern = $config['pdf_pattern'] ?? '/SOA_Prima_Promedio.*?\.pdf/i';
 
-            // Estrategia 1: Buscar en atributos href de enlaces
             $links = $xpath->query('//a[@href]');
             if ($links && $links->length > 0) {
                 foreach ($links as $link) {
@@ -137,7 +110,6 @@ class DescargaValoresSoaService
                 }
             }
 
-            // Estrategia 2: Buscar en data-href de filas
             $rows = $xpath->query('//tr[@data-href]');
             if ($rows && $rows->length > 0) {
                 foreach ($rows as $row) {
@@ -148,7 +120,6 @@ class DescargaValoresSoaService
                 }
             }
 
-            // Estrategia 3: Buscar en toda el HTML con regex
             if (preg_match('/href=["\']([^"\']*SOA_Prima_Promedio[^"\']*\.pdf)/i', $html, $matches)) {
                 return $this->normalizarUrlPdf($matches[1]);
             }
@@ -161,29 +132,22 @@ class DescargaValoresSoaService
         }
     }
 
-    /**
-     * Normaliza URL relativa del PDF
-     */
     protected function normalizarUrlPdf(string $url): string
     {
         if (strpos($url, 'http') === 0) {
             return $url;
         }
 
-        // URL relativa, agregar dominio del BCU
         $url = ltrim($url, '/');
         return 'https://www.bcu.gub.uy/' . $url;
     }
 
-    /**
-     * Descarga el contenido del PDF
-     */
     protected function descargarPdf(string $url, array $config): ?string
     {
         try {
             $response = $this->httpClient->getWithRetry(
                 $url,
-                ['timeout' => $config['timeout'] ?? 120],
+                ['timeout' => $config['timeout'] ?? 60],
                 $config['max_retries'] ?? 1,
                 $config['retry_delay_ms'] ?? 2000,
                 'valores_soa'
@@ -201,9 +165,6 @@ class DescargaValoresSoaService
         }
     }
 
-    /**
-     * Parsea el contenido del PDF y extrae texto
-     */
     protected function parsearPdf(string $pdfContent): ?string
     {
         try {
@@ -216,9 +177,6 @@ class DescargaValoresSoaService
         }
     }
 
-    /**
-     * Extrae valores del texto del PDF y actualiza BD
-     */
     protected function extraerYActualizar(string $texto, array $config): array
     {
         $categorias = [
@@ -245,20 +203,17 @@ class DescargaValoresSoaService
         $minValue = $config['validation']['min_value'] ?? 0.01;
         $maxValue = $config['validation']['max_value'] ?? 1000000;
 
-        // Usar transacción para garantizar atomicidad
         DB::beginTransaction();
 
         try {
             foreach ($categorias as $apartado => $nombrePattern) {
                 try {
-                    // Regex: nombre + números
                     $pattern = '/' . $nombrePattern . '.*?(\d{1,3}(?:\.\d{3})*(?:,\d{2})?)/isu';
 
                     if (preg_match($pattern, $texto, $matches)) {
                         $valorTexto = str_replace(['.', ','], '', $matches[1]);
                         $valorNumerico = (float) $valorTexto;
 
-                        // Validar rango
                         if ($valorNumerico < $minValue || $valorNumerico > $maxValue) {
                             $errores[] = "Apartado $apartado: valor fuera de rango ({$valorNumerico})";
                             continue;
@@ -266,7 +221,6 @@ class DescargaValoresSoaService
 
                         $nuevoImporte = $valorNumerico * $multiplier;
 
-                        // Actualizar en BD
                         $afectados = Multa::where('articulo', '184')
                             ->where('apartado', (string) $apartado)
                             ->update([
@@ -301,16 +255,13 @@ class DescargaValoresSoaService
         return [
             'success' => true,
             'message' => "Se actualizaron $actualizados registros",
-            'pdf_url' => null, // Se asigna en descargarYActualizar()
+            'pdf_url' => null,
             'updated_count' => $actualizados,
             'details' => $detalles,
             'errors' => $errores,
         ];
     }
 
-    /**
-     * Convierte mensajes técnicos a mensajes amigables para el usuario
-     */
     protected function getUsuarioFriendlyErrorMessage(string $errorTecnico): string
     {
         if (stripos($errorTecnico, 'timeout') !== false ||

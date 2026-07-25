@@ -1,0 +1,62 @@
+[
+    {
+        "migration": "2026_07_10_010000_add_distribucion_to_siif_distribucions_table",
+        "batch": 4
+    },
+    {
+        "migration": "2026_07_13_101615_add_motivo_anulacion_to_tes_planilla_ers",
+        "batch": 5
+    },
+    {
+        "migration": "2026_07_05_010000_fix_table_schemas",
+        "batch": 6
+    },
+    {
+        "migration": "2026_07_17_013444_add_descripcion_to_tes_libro_diario_table",
+        "batch": 7
+    },
+    {
+        "migration": "2026_07_17_083429_add_nombre_corto_to_tes_lb_medios_table",
+        "batch": 8
+    },
+    {
+        "migration": "2026_07_19_230220_add_cfe_id_and_es_contra_asiento_to_tes_libro_diario_table",
+        "batch": 9
+    },
+    {
+        "migration": "2026_07_22_000001_add_unified_media_fields_to_tes_medio_de_pagos_table",
+        "batch": 10
+    },
+    {
+        "migration": "2026_07_22_000002_initialize_medios_pago_catalogo",
+        "batch": 10
+    },
+    {
+        "migration": "2026_07_22_000003_migrate_libro_diario_medio_fk",
+        "batch": 10
+    },
+    {
+        "migration": "2026_07_22_000004_add_medio_pago_id_to_text_tables",
+        "batch": 10
+    },
+    {
+        "migration": "2026_07_22_000005_create_tes_multa_medios_pago_table",
+        "batch": 10
+    },
+    {
+        "migration": "2026_07_22_000006_populate_multa_medios_pago_pivot",
+        "batch": 10
+    },
+    {
+        "migration": "2026_07_22_000007_add_medio_pago_foreign_keys",
+        "batch": 10
+    },
+    {
+        "migration": "2026_07_22_234211_rename_tarjeta_debito_pos_to_tarjeta_debito",
+        "batch": 10
+    },
+    {
+        "migration": "2026_07_23_104301_renombrar_concepto_tenencia_armas_canonico",
+        "batch": 11
+    }
+]

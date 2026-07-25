@@ -192,7 +192,7 @@
             </a>
         </div>
 
-        <!-- Gestión de CFEs -->
+        <!-- Recaudaciones -->
         <div class="col-xl-3 col-lg-3 col-md-4 col-sm-6 mb-3">
             <a href="{{ route('tesoreria.gestion-cfe.index') }}" class="text-decoration-none">
                 <div class="card shadow-sm h-100 widget-card border-left-documentary">
@@ -201,7 +201,7 @@
                             <i class="fas fa-file-invoice fa-2x"></i>
                         </div>
                         <div>
-                            <div class="font-weight-bold text-body small">Gestión de CFEs</div>
+                            <div class="font-weight-bold text-body small">Recaudaciones</div>
                         </div>
                     </div>
                 </div>
@@ -292,7 +292,8 @@
             </a>
         </div>
 
-        <!-- Porte de Armas -->
+        {{-- Porte de Armas --}}
+        {{-- COMENTADO TEMPORALMENTE
         <div class="col-xl-3 col-lg-3 col-md-4 col-sm-6 mb-3">
             <a href="{{ route('tesoreria.armas.porte') }}" class="text-decoration-none">
                 <div class="card shadow-sm h-100 widget-card border-left-operational">
@@ -307,6 +308,7 @@
                 </div>
             </a>
         </div>
+        --}}
 
         <!-- Prendas -->
         <div class="col-xl-3 col-lg-3 col-md-4 col-sm-6 mb-3">

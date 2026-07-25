@@ -366,4 +366,79 @@ class CfeCreatorServiceTest extends TestCase
 
         $this->service->createManual($data);
     }
+
+    public function test_auto_asignar_distribuciones_prioritizes_100_percent_match_over_history(): void
+    {
+        $tipoId = $this->concepto->siif_distribucion_tipo_id;
+        $depId = $this->dependencia->id;
+
+        // Distribucion 1: Coincide 100% en el campo 'distribucion'
+        $distDirecta = \App\Models\Tesoreria\SiifDistribucion::create([
+            'tipo_id' => $tipoId,
+            'dependencia_id' => $depId,
+            'distribucion' => 'ARRENDAMIENTO DE LOCALES',
+            'concepto' => 'OTRO CONCEPTO',
+            'porcentaje' => 100,
+        ]);
+
+        // Distribucion 2: Distribucion historica (diferente)
+        $distHistorica = \App\Models\Tesoreria\SiifDistribucion::create([
+            'tipo_id' => $tipoId,
+            'dependencia_id' => $depId,
+            'distribucion' => 'HISTORIA DISTRIBUCION',
+            'concepto' => 'HISTORIA',
+            'porcentaje' => 100,
+        ]);
+
+        // Crear historial simulado con distHistorica para el mismo detalle
+        $cfe = TesCfe::factory()->create();
+        for ($i = 0; $i < 5; $i++) {
+            $cfe->items()->create([
+                'detalle' => 'ARRENDAMIENTO DE LOCALES',
+                'importe' => 100,
+                'siif_distribucion_id' => $distHistorica->id,
+            ]);
+        }
+
+        // Ejecutar autoAsignarDistribuciones
+        $items = [
+            ['detalle' => 'ARRENDAMIENTO DE LOCALES', 'importe' => 500],
+        ];
+
+        $resultado = $this->service->autoAsignarDistribuciones($this->concepto->id, $depId, $items);
+
+        // Debe seleccionar la distribucion directa por coincidir al 100% en lugar del historial
+        $this->assertEquals((string) $distDirecta->id, $resultado[0]);
+    }
+
+    public function test_auto_asignar_distribuciones_does_not_force_first_distribution_on_unmatched_concept(): void
+    {
+        $tipoId = $this->concepto->siif_distribucion_tipo_id;
+        $depId = $this->dependencia->id;
+
+        // Crear una distribución que no tiene nada que ver con "ARRENDAMIENTOS" (ej: Porte de Armas)
+        \App\Models\Tesoreria\SiifDistribucion::create([
+            'tipo_id' => $tipoId,
+            'dependencia_id' => $depId,
+            'distribucion' => 'Expedición de documentos varios',
+            'concepto' => 'Porte de armas',
+            'porcentaje' => 100,
+        ]);
+
+        $conceptoArrendamientos = CajaConcepto::create([
+            'caja_concepto' => 'ARRENDAMIENTOS',
+            'requiere_distribucion' => true,
+            'requiere_confirmacion' => false,
+            'siif_distribucion_tipo_id' => $tipoId,
+        ]);
+
+        $items = [
+            ['detalle' => 'Arrendamientos 26 DÍAS DE JUNIO', 'importe' => 500],
+        ];
+
+        $resultado = $this->service->autoAsignarDistribuciones($conceptoArrendamientos->id, $depId, $items);
+
+        // No debe forzar la asignación arbitraria de 'Porte de armas'
+        $this->assertEmpty($resultado);
+    }
 }

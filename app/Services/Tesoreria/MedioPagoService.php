@@ -2,7 +2,9 @@
 
 namespace App\Services\Tesoreria;
 
+use App\Models\Tesoreria\MedioDePago;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 
@@ -266,9 +268,56 @@ class MedioPagoService
         return implode('/', $partesNormalizadas);
     }
 
+    public function resolverPorTexto(?string $texto): ?MedioDePago
+    {
+        if ($texto === null || trim($texto) === '' || mb_strtoupper(trim($texto)) === 'SIN DATOS') {
+            return null;
+        }
+
+        $cacheKey = 'mp:resolver:' . md5(mb_strtolower(trim($texto)));
+
+        return Cache::remember($cacheKey, 60, function () use ($texto) {
+            $textoLower = mb_strtolower(trim($texto));
+
+            $reglas = [
+                'efectivo' => 'Efectivo',
+                'contado' => 'Efectivo',
+                'cash' => 'Efectivo',
+                'cheque' => 'Cheque',
+                'transferencia' => 'Transferencia Bancaria',
+                'transferencia bancaria' => 'Transferencia Bancaria',
+                'brou' => 'Transferencia Bancaria',
+                'deposito' => 'Transferencia Bancaria',
+                'depósito' => 'Transferencia Bancaria',
+                'siif' => 'Transferencia Bancaria',
+                'pos' => 'Tarjeta de Débito',
+                'debito' => 'Tarjeta de Débito',
+                'débito' => 'Tarjeta de Débito',
+                'tarjeta' => 'Tarjeta de Débito',
+                'tarjeta de débito' => 'Tarjeta de Débito',
+                'credito' => 'Tarjeta de Débito',
+                'crédito' => 'Tarjeta de Débito',
+            ];
+
+            if (isset($reglas[$textoLower])) {
+                return MedioDePago::where('nombre', $reglas[$textoLower])->first();
+            }
+
+            foreach ($reglas as $variant => $canon) {
+                if (str_contains($textoLower, $variant)) {
+                    return MedioDePago::where('nombre', $canon)->first();
+                }
+            }
+
+            return MedioDePago::whereRaw('LOWER(TRIM(nombre)) = ?', [$textoLower])
+                ->orWhereRaw('LOWER(TRIM(nombre_corto)) = ?', [$textoLower])
+                ->first();
+        });
+    }
+
     public function obtenerMediosDisponibles(): array
     {
-        return \App\Models\Tesoreria\MedioDePago::activos()
+        return MedioDePago::activos()
             ->ordenado()
             ->pluck('nombre')
             ->toArray();

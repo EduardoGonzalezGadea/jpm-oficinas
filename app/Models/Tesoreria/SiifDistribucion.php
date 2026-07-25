@@ -26,6 +26,7 @@ class SiifDistribucion extends Model
         'financiacion',
         'inciso',
         'unidad_ejecutora',
+        'distribucion',
         'created_by',
         'updated_by',
         'deleted_by'
@@ -54,7 +55,8 @@ class SiifDistribucion extends Model
         }
 
         return $query->where(function ($q) use ($term) {
-            $q->where('concepto', 'like', '%' . $term . '%')
+            $q->where('distribucion', 'like', '%' . $term . '%')
+              ->orWhere('concepto', 'like', '%' . $term . '%')
               ->orWhere('rubro', 'like', '%' . $term . '%')
               ->orWhere('codigo_sir', 'like', '%' . $term . '%')
               ->orWhere('recurso', 'like', '%' . $term . '%')
@@ -70,6 +72,7 @@ class SiifDistribucion extends Model
             ->join('siif_distribucion_dependencias', 'siif_distribucions.dependencia_id', '=', 'siif_distribucion_dependencias.id')
             ->orderBy('siif_distribucion_tipos.tipo')
             ->orderBy('siif_distribucion_dependencias.dependencia')
+            ->orderBy('siif_distribucions.distribucion')
             ->orderBy('siif_distribucions.concepto');
     }
 }

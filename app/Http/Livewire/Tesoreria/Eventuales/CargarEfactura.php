@@ -8,6 +8,7 @@ use Smalot\PdfParser\Parser;
 use App\Models\Tesoreria\Eventual;
 use App\Models\Tesoreria\EventualInstitucion;
 use App\Models\Tesoreria\MedioDePago;
+use App\Services\Tesoreria\MedioPagoService;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
@@ -151,41 +152,8 @@ class CargarEfactura extends Component
      */
     private function normalizarMedioPago(string $medioTexto): string
     {
-        $texto = mb_strtoupper(trim($medioTexto), 'UTF-8');
-        if (empty($texto)) {
-            $predeterminado = MedioDePago::activos()->where('nombre', 'like', '%Transferencia%')->first();
-            return $predeterminado ? mb_strtoupper($predeterminado->nombre, 'UTF-8') : 'TRANSFERENCIA';
-        }
-
-        $medios = MedioDePago::activos()->get();
-
-        // 1. Coincidencia exacta con nombre
-        foreach ($medios as $medio) {
-            $nombreUpper = mb_strtoupper($medio->nombre, 'UTF-8');
-            if ($texto === $nombreUpper) {
-                return $nombreUpper;
-            }
-        }
-
-        // 2. Coincidencia por subcadena de nombre
-        foreach ($medios as $medio) {
-            $nombreUpper = mb_strtoupper($medio->nombre, 'UTF-8');
-            if (str_contains($texto, $nombreUpper) || str_contains($nombreUpper, $texto)) {
-                return $nombreUpper;
-            }
-        }
-
-        // 3. Coincidencia por descripción
-        foreach ($medios as $medio) {
-            $descUpper = mb_strtoupper($medio->descripcion ?? '', 'UTF-8');
-            if (!empty($descUpper) && (str_contains($texto, $descUpper) || str_contains($descUpper, $texto))) {
-                return mb_strtoupper($medio->nombre, 'UTF-8');
-            }
-        }
-
-        // Fallback predeterminado
-        $predeterminado = MedioDePago::activos()->where('nombre', 'like', '%Transferencia%')->first();
-        return $predeterminado ? mb_strtoupper($predeterminado->nombre, 'UTF-8') : 'TRANSFERENCIA';
+        $medio = app(MedioPagoService::class)->resolverPorTexto($medioTexto);
+        return $medio ? mb_strtoupper($medio->nombre, 'UTF-8') : 'TRANSFERENCIA';
     }
 
     /**
@@ -354,6 +322,8 @@ class CargarEfactura extends Component
                 return;
             }
 
+            $medioResuelto = app(MedioPagoService::class)->resolverPorTexto($this->datosExtraidos['medio_de_pago'] ?? null);
+
             $nuevoEventual = Eventual::create([
                 'fecha' => $fecha,
                 'ingreso' => !empty($this->datosExtraidos['ingreso']) ? (int)$this->datosExtraidos['ingreso'] : null,
@@ -361,6 +331,7 @@ class CargarEfactura extends Component
                 'titular' => mb_strtoupper($this->datosExtraidos['titular'], 'UTF-8'),
                 'monto' => $monto,
                 'medio_de_pago' => mb_strtoupper($this->datosExtraidos['medio_de_pago'], 'UTF-8'),
+                'medio_pago_id' => $medioResuelto?->id,
                 'detalle' => mb_strtoupper($this->datosExtraidos['detalle'], 'UTF-8'),
                 'orden_cobro' => !empty($this->datosExtraidos['orden_cobro']) ? mb_strtoupper($this->datosExtraidos['orden_cobro'], 'UTF-8') : null,
                 'recibo' => mb_strtoupper($this->datosExtraidos['recibo'], 'UTF-8'),

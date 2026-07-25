@@ -114,7 +114,7 @@
             {{-- Tabla de actividades --}}
             <div class="table-responsive">
                 <table class="table table-sm table-bordered table-striped table-hover">
-                    <thead class="thead-dark align-middle">
+                    <thead class="align-middle">
                         <tr>
                             <th class="align-middle" style="width: 140px;">Fecha/Hora</th>
                             <th class="align-middle" style="width: 120px;">Evento</th>

@@ -62,13 +62,15 @@ class MultaSeeder extends Seeder
         ];
 
         foreach ($multas as $m) {
+            $moneda = ($m[4] ?? 0) > 0 ? '$' : 'UR';
+            $importe = ($m[4] ?? 0) > 0 ? $m[4] : ($m[3] ?? 0);
             Multa::create([
                 'articulo' => $m[0],
-                'literal' => $m[1],
+                'apartado' => $m[1],
                 'descripcion' => $m[2],
-                'monto_ur' => $m[3] ?? 0,
-                'monto_pesos' => $m[4] ?? 0,
-                'inciso_legal' => $m[5],
+                'moneda' => $moneda,
+                'importe_original' => $importe,
+                'decreto' => $m[5],
                 'articulo_completo' => $m[6],
             ]);
         }

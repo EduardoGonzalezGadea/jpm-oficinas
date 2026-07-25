@@ -157,7 +157,7 @@
                 {{-- Tabla de CFEs agrupados por fecha --}}
                 <div class="table-responsive">
                     <table class="table table-sm table-bordered table-striped table-hover mb-0">
-                        <thead class="thead-dark">
+                        <thead class="">
                             <tr>
                                 <th class="align-middle">Fecha</th>
                                 <th class="align-middle">Documento</th>

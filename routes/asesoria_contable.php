@@ -9,6 +9,7 @@
 
 use App\Http\Livewire\AsesoriaContable\EstadosRecaudacion\Index as EstadosRecaudacionIndex;
 use App\Http\Livewire\AsesoriaContable\PlanillasNoCompletadas\Index as PlanillasNoCompletadasIndex;
+use App\Http\Livewire\AsesoriaContable\PlanillasAnuladas\Index as PlanillasAnuladasIndex;
 use App\Http\Livewire\AsesoriaContable\ResumenRecaudaciones\Index as ResumenRecaudacionesIndex;
 use Illuminate\Support\Facades\Route;
 
@@ -21,6 +22,9 @@ Route::get('estados-recaudacion', EstadosRecaudacionIndex::class)
 
 Route::get('planillas-no-completadas', PlanillasNoCompletadasIndex::class)
     ->name('planillas-no-completadas');
+
+Route::get('planillas-anuladas', PlanillasAnuladasIndex::class)
+    ->name('planillas-anuladas');
 
 // ============================================================================
 // RESUMEN DE RECAUDACIONES

@@ -7,6 +7,7 @@ use Livewire\WithFileUploads;
 use Smalot\PdfParser\Parser;
 use App\Models\Tesoreria\TesMultasCobradas;
 use App\Models\Tesoreria\TesMultasItems;
+use App\Services\Tesoreria\MedioPagoService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
 
@@ -352,6 +353,9 @@ class CargarCfe extends Component
                 return;
             }
 
+            $formaPagoTexto = $this->datosExtraidos['forma_pago'] ?? null;
+            $medioResuelto = app(MedioPagoService::class)->resolverPorTexto($formaPagoTexto);
+
             $cobro = TesMultasCobradas::create([
                 'fecha' => $fecha->format('Y-m-d'),
                 'recibo' => $recibo,
@@ -361,7 +365,8 @@ class CargarCfe extends Component
                 'adicional' => $this->datosExtraidos['adicional'] ?? null,
                 'adenda' => $this->datosExtraidos['adenda'] ?? null,
                 'referencias' => $this->datosExtraidos['referencias'] ?? null,
-                'forma_pago' => $this->datosExtraidos['forma_pago'] ?? 'SIN DATOS',
+                'forma_pago' => $formaPagoTexto,
+                'medio_pago_id' => $medioResuelto?->id,
                 'created_by' => auth()->id(),
             ]);
 

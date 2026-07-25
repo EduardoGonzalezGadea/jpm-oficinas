@@ -37,7 +37,11 @@ trait WithConfirmacionCarga
             $this->nombreArchivoOriginal = $nombreOriginal;
             $this->rutaArchivoTemporal = $path;
 
-            $this->cajaConceptoSeleccionado = $this->detectarConceptoAutomatico($datos);
+            if (!empty($this->datosExtraidos['items'])) {
+                $this->corregirDetalleDescripcionItems($this->datosExtraidos['items']);
+            }
+
+            $this->cajaConceptoSeleccionado = $this->detectarConceptoAutomatico($this->datosExtraidos);
 
             $this->resetItemDistribuciones();
 
@@ -59,27 +63,120 @@ trait WithConfirmacionCarga
         $this->reset('archivoPdf');
     }
 
+    private function corregirDetalleDescripcionItems(array &$items): void
+    {
+        if (empty($items)) return;
+
+        $conceptos = CajaConcepto::whereNull('deleted_at')
+            ->orderByRaw('LENGTH(caja_concepto) DESC')
+            ->pluck('caja_concepto');
+
+        $metaSplit = '/\s+((?:TR[\xc1A]M(?:ITE)?\.?|ING(?:RESO)?\.?(?:\s*N[\xb0\xba]?)?|O(?:RDEN)?[\s\/]?(?:DE\s+)?C(?:OBRO)?[\s\/]?\.?|REIMPRESI[\xd3O]N)[\s\S]*)$/iu';
+
+        foreach ($items as &$item) {
+            $detalle     = trim($item['detalle'] ?? '');
+            $descripcion = trim($item['descripcion'] ?? '');
+            $textoCombinado = $detalle . ($descripcion !== '' ? ' ' . $descripcion : '');
+
+            if ($textoCombinado === '') continue;
+
+            $textoNormFlex = TextoHelper::normalizarConcepto($textoCombinado);
+
+            foreach ($conceptos as $concepto) {
+                $conceptoNormFlex = TextoHelper::normalizarConcepto(trim($concepto));
+                if ($conceptoNormFlex === '') continue;
+
+                if (!str_starts_with($textoNormFlex, $conceptoNormFlex)) continue;
+
+                // Hay match: determinar el punto de corte en el texto original
+                if (preg_match($metaSplit, $textoCombinado, $ms)) {
+                    // Cortar antes del primer token de metadata
+                    $item['detalle']     = trim(mb_substr($textoCombinado, 0, mb_strlen($textoCombinado, 'UTF-8') - mb_strlen($ms[0], 'UTF-8'), 'UTF-8'));
+                    $item['descripcion'] = trim($ms[1]);
+                } else {
+                    // Sin metadata: avanzar token a token sobre el texto original
+                    // hasta cubrir todas las palabras del concepto normalizado.
+                    $palabrasConcepto = preg_split('/\s+/u', $conceptoNormFlex, -1, PREG_SPLIT_NO_EMPTY);
+                    $nConcepto = count($palabrasConcepto);
+
+                    // Tokenizar el texto original preservando posiciones (offset en bytes)
+                    preg_match_all('/\S+/u', $textoCombinado, $tokensMatch, PREG_OFFSET_CAPTURE);
+                    $tokens = $tokensMatch[0]; // [[token, byteOffset], ...]
+
+                    // Palabras ignoradas por normalizarConcepto
+                    $ignoradas = ['de','del','la','el','las','los','y'];
+
+                    $ci = 0;       // índice en palabrasConcepto
+                    $lastCharPos = 0;
+                    foreach ($tokens as [$tok, $byteOffset]) {
+                        if ($ci >= $nConcepto) break;
+                        $tokNorm = TextoHelper::normalizarConcepto($tok);
+                        // Convertir byteOffset a charOffset
+                        $charOffset = mb_strlen(mb_substr($textoCombinado, 0, $byteOffset, 'UTF-8'), 'UTF-8');
+                        $tokLen = mb_strlen($tok, 'UTF-8');
+                        if ($tokNorm === '' || in_array($tokNorm, $ignoradas, true)) {
+                            $lastCharPos = $charOffset + $tokLen;
+                            continue;
+                        }
+                        if ($tokNorm === $palabrasConcepto[$ci]) {
+                            $ci++;
+                            $lastCharPos = $charOffset + $tokLen;
+                        } else {
+                            break;
+                        }
+                    }
+
+                    if ($ci >= $nConcepto && $lastCharPos > 0) {
+                        $item['detalle']     = trim(mb_substr($textoCombinado, 0, $lastCharPos, 'UTF-8'));
+                        $item['descripcion'] = trim(mb_substr($textoCombinado, $lastCharPos, null, 'UTF-8'));
+                    } else {
+                        $item['detalle']     = $textoCombinado;
+                        $item['descripcion'] = '';
+                    }
+                }
+                break;
+            }
+        }
+        unset($item);
+    }
+
     private function detectarConceptoAutomatico(array $datos): ?int
     {
-        $primerDetalle = trim($datos['items'][0]['detalle'] ?? '');
+        $primerItem = $datos['items'][0] ?? [];
+        $detalle = trim($primerItem['detalle'] ?? '');
+        $descripcion = trim($primerItem['descripcion'] ?? '');
+        $textoCombinado = $detalle . ($descripcion !== '' ? ' ' . $descripcion : '');
 
-        if (empty($primerDetalle)) {
+        if (empty($textoCombinado)) {
             return null;
         }
 
-        $conceptos = CajaConcepto::whereNull('deleted_at')->get();
-        $detalleNorm = TextoHelper::normalizarTexto($primerDetalle);
+        $conceptos = CajaConcepto::whereNull('deleted_at')
+            ->orderByRaw('LENGTH(caja_concepto) DESC')
+            ->get();
+        $textoNorm = TextoHelper::normalizarTexto($textoCombinado);
 
         foreach ($conceptos as $concepto) {
             $conceptoNorm = TextoHelper::normalizarTexto($concepto->caja_concepto);
 
-            if ($detalleNorm === $conceptoNorm || str_contains($detalleNorm, $conceptoNorm)) {
+            if ($textoNorm === $conceptoNorm || str_contains($textoNorm, $conceptoNorm)) {
+                return $concepto->id;
+            }
+        }
+
+        // Flexible matching con normalizarConcepto (maneja DE, plurales, paréntesis)
+        $textoNormFlex = TextoHelper::normalizarConcepto($textoCombinado);
+
+        foreach ($conceptos as $concepto) {
+            $conceptoNormFlex = TextoHelper::normalizarConcepto($concepto->caja_concepto);
+
+            if ($conceptoNormFlex !== '' && ($textoNormFlex === $conceptoNormFlex || str_contains($textoNormFlex, $conceptoNormFlex))) {
                 return $concepto->id;
             }
         }
 
         $ultimosItems = TesCfeItem::with('cfe')
-            ->where('detalle', $primerDetalle)
+            ->where('detalle', $detalle)
             ->whereHas('cfe', fn($q) => $q->whereNotNull('tes_caja_concepto_id')->whereNull('deleted_at'))
             ->whereNull('deleted_at')
             ->orderBy('id', 'desc')

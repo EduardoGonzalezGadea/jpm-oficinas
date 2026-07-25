@@ -21,6 +21,7 @@ class Eventual extends Model
         'titular',
         'monto',
         'medio_de_pago',
+        'medio_pago_id',
         'detalle',
         'orden_cobro',
         'recibo',
@@ -28,11 +29,16 @@ class Eventual extends Model
         'planilla_id'
     ];
 
-    protected $dates = ['fecha'];
+    protected $casts = ['fecha' => 'datetime'];
 
     public function planilla()
     {
         return $this->belongsTo(EventualPlanilla::class, 'planilla_id');
+    }
+
+    public function medioPago()
+    {
+        return $this->belongsTo(MedioDePago::class, 'medio_pago_id');
     }
 
     public function getMontoFormateadoAttribute()

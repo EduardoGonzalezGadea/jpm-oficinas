@@ -5,35 +5,39 @@ namespace App\Http\Controllers;
 use App\Services\SincronizacionHoraService;
 use App\Services\Tesoreria\DescargaValoresSoaService;
 use App\Services\ValorUrService;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
 class UtilidadController extends Controller
 {
-    /**
-     * Obtiene el valor de la Unidad Reajustable (UR) desde el sitio del BPS.
-     */
     public function getValorUr(ValorUrService $valorUrService)
     {
-        return response()->json($valorUrService->obtener());
+        $resultado = $valorUrService->obtener();
+        return response()->json($resultado);
     }
 
-    /**
-     * Obtiene la hora actual sincronizada de Uruguay desde APIs públicas.
-     */
     public function getHoraUruguay(SincronizacionHoraService $sincronizacionHoraService)
     {
-        return response()->json($sincronizacionHoraService->obtener());
+        $resultado = $sincronizacionHoraService->obtener();
+        return response()->json($resultado);
     }
 
-    /**
-     * Actualiza los valores de las multas por carecer de SOA (Art. 184)
-     * basándose en el PDF publicado por el BCU.
-     */
     public function actualizarValoresSoa(DescargaValoresSoaService $descargaValoresSoaService)
     {
         $resultado = $descargaValoresSoaService->descargarYActualizar();
 
         $statusCode = $resultado['success'] ? 200 : 500;
         return response()->json($resultado, $statusCode);
+    }
+
+    public function fallback()
+    {
+        if (request()->expectsJson()) {
+            return response()->json(['message' => 'Ruta no encontrada'], 404);
+        }
+
+        return auth()->check()
+            ? response()->view('errors.404', [], 404)
+            : redirect()->route('login');
     }
 }

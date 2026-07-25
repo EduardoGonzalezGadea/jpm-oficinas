@@ -87,8 +87,8 @@ class ValorUrService
             $response = $this->httpClient->getWithRetry(
                 $url,
                 ['timeout' => $timeout],
-                $maxRetries,
-                $config['retry_delay_ms'] ?? 1000,
+                $config['max_retries'] ?? 2,
+                $config['retry_delay_ms'] ?? 500,
                 'valor_ur'
             );
         } catch (\Throwable $e) {

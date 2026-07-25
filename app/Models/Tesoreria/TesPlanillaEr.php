@@ -27,6 +27,7 @@ class TesPlanillaEr extends Model
         'transferencia_fecha',
         'transferencia_confirmacion',
         'confirmada',
+        'motivo_anulacion',
         'created_by',
         'updated_by',
         'deleted_by',

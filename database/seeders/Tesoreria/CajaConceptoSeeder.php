@@ -57,7 +57,7 @@ class CajaConceptoSeeder extends Seeder
             ],
             [
                 'id'                        => 6,
-                'caja_concepto'             => 'TITULO HABILITACIÓN Y TENENCIA DE ARMA (TAHTA)',
+                'caja_concepto'             => 'TÍTULO DE HABILITACIÓN Y TENENCIA DE ARMAS (THATA)',
                 'requiere_confirmacion'     => false,
                 'requiere_distribucion'     => true,
                 'permite_planilla'          => true,

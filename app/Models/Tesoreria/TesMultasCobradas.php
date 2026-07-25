@@ -23,6 +23,7 @@ class TesMultasCobradas extends Model
         'fecha',
         'monto',
         'forma_pago',
+        'medio_pago_id',
         'referencias',
         'adenda',
         'created_by',
@@ -30,11 +31,21 @@ class TesMultasCobradas extends Model
         'deleted_by',
     ];
 
-    protected $dates = ['fecha'];
+    protected $casts = ['fecha' => 'datetime'];
 
     public function items()
     {
         return $this->hasMany(TesMultasItems::class, 'tes_multas_cobradas_id');
+    }
+
+    public function medioPago()
+    {
+        return $this->belongsTo(MedioDePago::class, 'medio_pago_id');
+    }
+
+    public function mediosPago()
+    {
+        return $this->hasMany(TesMultaMedioPago::class, 'multa_id');
     }
 
     public function creator()

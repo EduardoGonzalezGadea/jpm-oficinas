@@ -11,8 +11,10 @@ use App\Exceptions\Tesoreria\CfeNotFoundException;
 use App\Exceptions\Tesoreria\CfeValidationException;
 use App\Helpers\TextoHelper;
 use App\Models\Tesoreria\CajaConcepto;
+use App\Models\Tesoreria\MedioDePago;
 use App\Models\Tesoreria\SiifDistribucion;
 use App\Models\Tesoreria\TesCfe;
+use App\Models\Tesoreria\LibroDiario;
 use App\Models\Tesoreria\TesCfeItem;
 use App\Models\Tesoreria\TesCfeMedioPago;
 use App\Models\TesCfePendiente;
@@ -20,6 +22,10 @@ use Illuminate\Support\Facades\DB;
 
 class CfeCreatorService
 {
+    public function __construct(
+        private ?LibroDiarioService $libroDiarioService = null,
+    ) {}
+
     public function createManual(CfeData $data): TesCfe
     {
         $itemsRedondeados = $this->redondearYCompensarItems($data->items, $data->medios_pago);
@@ -43,7 +49,6 @@ class CfeCreatorService
                 'referencias' => $data->referencias ?: null,
                 'adenda' => $data->adenda ?: null,
                 'tes_caja_concepto_id' => $data->tes_caja_concepto_id,
-                'siif_distribucion_tipo_id' => $this->getSiifTipoId($data->tes_caja_concepto_id),
                 'siif_distribucion_dependencia_id' => $data->siif_distribucion_dependencia_id,
             ]);
 
@@ -64,7 +69,6 @@ class CfeCreatorService
 
         return DB::transaction(function () use ($data, $rutaArchivoTemporal, $itemsRedondeados) {
             $cajaConcepto = CajaConcepto::find($data->tes_caja_concepto_id);
-            $siifTipoId = $cajaConcepto ? $cajaConcepto->siif_distribucion_tipo_id : null;
 
             $hayMediosPago = !empty($data->medios_pago);
             $totalAPagar = $hayMediosPago
@@ -98,7 +102,6 @@ class CfeCreatorService
                 'adenda' => $data->adenda ?? null,
                 'archivo_pdf_path' => $rutaArchivoTemporal,
                 'tes_caja_concepto_id' => $data->tes_caja_concepto_id,
-                'siif_distribucion_tipo_id' => $siifTipoId,
                 'siif_distribucion_dependencia_id' => $data->siif_distribucion_dependencia_id,
             ]);
 
@@ -124,13 +127,9 @@ class CfeCreatorService
         $this->assertItemsNotInPlanilla($cfeId);
 
         return DB::transaction(function () use ($cfe, $data) {
-            $cajaConcepto = CajaConcepto::find($data->tes_caja_concepto_id);
-            $siifTipoId = $cajaConcepto ? $cajaConcepto->siif_distribucion_tipo_id : null;
-
             $cfe->update([
                 'fecha' => $data->fecha ?: null,
                 'tes_caja_concepto_id' => $data->tes_caja_concepto_id,
-                'siif_distribucion_tipo_id' => $siifTipoId,
                 'siif_distribucion_dependencia_id' => $data->siif_distribucion_dependencia_id,
             ]);
 
@@ -160,6 +159,48 @@ class CfeCreatorService
         DB::transaction(function () use ($cfe) {
             $cfe->delete();
             CfeEliminado::dispatch($cfe);
+        });
+    }
+
+    public function countLibroDiarioEntries(int $cfeId): int
+    {
+        return LibroDiario::where('cfe_id', $cfeId)->count();
+    }
+
+    public function deleteCfeWithLibroDiarioEntries(int $cfeId): void
+    {
+        $cfe = TesCfe::with('items')->find($cfeId);
+
+        if (!$cfe) {
+            throw CfeNotFoundException::fromId($cfeId);
+        }
+
+        $this->assertItemsNotInPlanilla($cfeId);
+
+        DB::transaction(function () use ($cfe) {
+            $asientos = LibroDiario::where('cfe_id', $cfe->id)->get();
+
+            $subcuentas = $asientos->map(fn($e) => [
+                'medio_id' => $e->medio_id,
+                'concepto_id' => $e->concepto_id,
+                'detalle_id' => $e->detalle_id,
+            ])->unique(function ($item) {
+                return $item['medio_id'] . '-' . $item['concepto_id'] . '-' . $item['detalle_id'];
+            });
+
+            LibroDiario::where('cfe_id', $cfe->id)->delete();
+
+            $cfe->delete();
+
+            if ($this->libroDiarioService) {
+                foreach ($subcuentas as $subcuenta) {
+                    $this->libroDiarioService->recalcularSaldosSubcuenta(
+                        $subcuenta['medio_id'],
+                        $subcuenta['concepto_id'],
+                        $subcuenta['detalle_id']
+                    );
+                }
+            }
         });
     }
 
@@ -280,13 +321,29 @@ class CfeCreatorService
             return [];
         }
 
-        $conceptoNorm = TextoHelper::normalizarTexto($concepto->caja_concepto);
+        $conceptoNorm = TextoHelper::normalizarConcepto($concepto->caja_concepto);
 
-        $distribucionPorConcepto = SiifDistribucion::where('tipo_id', $concepto->siif_distribucion_tipo_id)
+        $distribucionesDisponibles = SiifDistribucion::where('tipo_id', $concepto->siif_distribucion_tipo_id)
             ->where('dependencia_id', $dependenciaId)
             ->whereNull('deleted_at')
-            ->get()
-            ->first(fn($d) => TextoHelper::normalizarTexto($d->concepto ?? '') === $conceptoNorm);
+            ->get();
+
+        $distribucionPorConcepto = $distribucionesDisponibles
+            ->first(fn($d) => !empty(trim($d->concepto ?? '')) && TextoHelper::normalizarConcepto($d->concepto) === $conceptoNorm);
+
+        if (!$distribucionPorConcepto) {
+            $distribucionPorConcepto = $distribucionesDisponibles
+                ->first(fn($d) => !empty(trim($d->distribucion ?? '')) && TextoHelper::normalizarConcepto($d->distribucion) === $conceptoNorm);
+        }
+
+        if (!$distribucionPorConcepto && $conceptoNorm !== '') {
+            $distribucionPorConcepto = $distribucionesDisponibles->first(function ($d) use ($conceptoNorm) {
+                $cNorm = TextoHelper::normalizarConcepto($d->concepto ?? '');
+                $distNorm = TextoHelper::normalizarConcepto($d->distribucion ?? '');
+                return ($cNorm !== '' && (str_starts_with($conceptoNorm, $cNorm) || str_contains($conceptoNorm, $cNorm)))
+                    || ($distNorm !== '' && (str_starts_with($conceptoNorm, $distNorm) || str_contains($conceptoNorm, $distNorm)));
+            });
+        }
 
         $distribuciones = [];
 
@@ -296,6 +353,33 @@ class CfeCreatorService
                 continue;
             }
 
+            $detalleNorm = TextoHelper::normalizarConcepto($detalle);
+
+            // 1a. Coincidencia directa detalle ↔ concepto o distribución SIIF disponible (100%)
+            $directo = $distribucionesDisponibles
+                ->first(fn($d) => !empty(trim($d->concepto ?? '')) && TextoHelper::normalizarConcepto($d->concepto) === $detalleNorm);
+
+            if (!$directo) {
+                $directo = $distribucionesDisponibles
+                    ->first(fn($d) => !empty(trim($d->distribucion ?? '')) && TextoHelper::normalizarConcepto($d->distribucion) === $detalleNorm);
+            }
+
+            // 1b. Coincidencia por prefijo / contención del concepto o distribución en el detalle del ítem
+            if (!$directo && $detalleNorm !== '') {
+                $directo = $distribucionesDisponibles->first(function ($d) use ($detalleNorm) {
+                    $cNorm = TextoHelper::normalizarConcepto($d->concepto ?? '');
+                    $distNorm = TextoHelper::normalizarConcepto($d->distribucion ?? '');
+                    return ($cNorm !== '' && (str_starts_with($detalleNorm, $cNorm) || str_contains($detalleNorm, $cNorm)))
+                        || ($distNorm !== '' && (str_starts_with($detalleNorm, $distNorm) || str_contains($detalleNorm, $distNorm)));
+                });
+            }
+
+            if ($directo) {
+                $distribuciones[$index] = (string) $directo->id;
+                continue;
+            }
+
+            // 2. Historial: distribución más frecuente en las últimas 10 ocurrencias del mismo detalle
             $ultimosItems = TesCfeItem::where('detalle', $detalle)
                 ->whereNotNull('siif_distribucion_id')
                 ->whereNull('deleted_at')
@@ -322,19 +406,13 @@ class CfeCreatorService
                 }
             }
 
+            // 3. Fallback: sólo si el concepto de caja (cabecera CFE) coincide con una distribución SIIF
             if ($distribucionPorConcepto) {
                 $distribuciones[$index] = (string) $distribucionPorConcepto->id;
             }
         }
 
         return $distribuciones;
-    }
-
-    private function getSiifTipoId(?int $cajaConceptoId): ?int
-    {
-        if (!$cajaConceptoId) return null;
-        $concepto = CajaConcepto::find($cajaConceptoId);
-        return $concepto ? $concepto->siif_distribucion_tipo_id : null;
     }
 
     private function createItems(TesCfe $cfe, array $items, array $distribuciones): void
@@ -356,11 +434,16 @@ class CfeCreatorService
 
     private function createMediosPago(TesCfe $cfe, array $mediosPago): void
     {
+        $medioPagoService = app(MedioPagoService::class);
+
         foreach ($mediosPago as $mp) {
+            $medio = $medioPagoService->resolverPorTexto($mp['tipo'] ?? '');
+
             TesCfeMedioPago::create([
                 'tes_cfe_id' => $cfe->id,
                 'medio_pago_tipo' => $mp['tipo'] ?: 'Desconocido',
                 'medio_pago_valor' => (float)($mp['valor'] ?? 0),
+                'medio_pago_id' => $medio?->id,
             ]);
         }
     }

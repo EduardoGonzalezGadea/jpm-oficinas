@@ -49,7 +49,7 @@
     <!-- Tabla -->
     <div class="table-responsive">
         <table class="table table-striped table-hover table-vmiddle">
-            <thead class="thead-dark">
+            <thead class="">
                 <tr>
                     <th>Nombre</th>
                     <th>Teléfono</th>
@@ -125,11 +125,11 @@
 
                             <!-- Botón para restablecer contraseña -->
                             @if ($user->id !== 1)
-                            <button type="button" class="btn btn-sm btn-secondary"
+                            <button type="button" class="btn btn-sm btn-warning"
                                 title="Restablecer contraseña"
                                 data-action="reset-password"
                                 data-user-id="{{ $user->id }}">
-                                <i class="fas fa-key"></i>
+                                <i class="fas fa-unlock-alt"></i>
                             </button>
                             @endif
 

@@ -2,9 +2,11 @@
 
 namespace App\Http\Livewire\Tesoreria\EstadosRecaudacion;
 
+use App\Helpers\TextoHelper;
 use App\Models\Tesoreria\SiifDistribucion;
 use App\Models\Tesoreria\TesCfeItem;
 use App\Models\Tesoreria\TesPlanillaEr;
+use App\Services\Tesoreria\AnularPlanillaService;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 
@@ -12,19 +14,27 @@ class Confirmar extends Component
 {
     public TesPlanillaEr $planilla;
 
-    protected $listeners = ['$refresh', 'eliminarPlanilla'];
+    public string $busqueda = '';
+
+    public string $filtroDistribucion = '';
+
+    protected $listeners = ['$refresh', 'anularPlanilla', 'limpiarFiltros'];
 
     public function mount(TesPlanillaEr $planilla)
     {
         $this->planilla = $planilla->load([
             'tipo', 'dependencia',
+            'items.cfe.cajaConcepto.siifDistribucionTipo',
             'items.cfe.cajaConcepto',
             'items.cfe.siifDistribucionDependencia',
-            'items.cfe.siifDistribucionTipo',
             'items.cfe.mediosPago',
             'items.cfe.items',
             'items.siifDistribucion',
         ]);
+
+        if (!$this->planilla->confirmada) {
+            $this->autoAsignarDistribucionesPendientes();
+        }
     }
 
     public function cambiarDistribucion(int $itemId, int $siifDistribucionId)
@@ -49,7 +59,7 @@ class Confirmar extends Component
         }
 
         $distribucion = SiifDistribucion::findOrFail($siifDistribucionId);
-        $concepto = mb_strtolower($distribucion->concepto);
+        $concepto = mb_strtolower($distribucion->distribucion);
         $esNocturno = str_contains($concepto, 'nocturno');
         $planillaEsNocturna = mb_strtolower(trim($this->planilla->turno ?? '')) === 'nocturno';
 
@@ -78,7 +88,7 @@ class Confirmar extends Component
 
                 if ($incluirAdicionales) {
                     $distribucion = SiifDistribucion::findOrFail($distribucionId);
-                    $esNocturno = str_contains(mb_strtolower($distribucion->concepto), 'nocturno');
+                    $esNocturno = str_contains(mb_strtolower($distribucion->distribucion), 'nocturno');
                     $otrosIds = $this->buscarOtrosItemsPendientes($item, $esNocturno)->pluck('id')->toArray();
 
                     if (!empty($otrosIds)) {
@@ -145,11 +155,12 @@ class Confirmar extends Component
 
     private function refrescarPlanilla()
     {
-        $this->planilla = TesPlanillaEr::with([
+        $this->planilla = TesPlanillaEr::withTrashed()->with([
             'tipo', 'dependencia',
+            'items' => fn($q) => $q->withTrashed(),
+            'items.cfe.cajaConcepto.siifDistribucionTipo',
             'items.cfe.cajaConcepto',
             'items.cfe.siifDistribucionDependencia',
-            'items.cfe.siifDistribucionTipo',
             'items.cfe.mediosPago',
             'items.cfe.items',
             'items.siifDistribucion',
@@ -276,13 +287,13 @@ class Confirmar extends Component
     private function crearNuevaPlanilla(int $distribucionId): TesPlanillaEr
     {
         $distribucion = SiifDistribucion::findOrFail($distribucionId);
-        $esNocturno = str_contains(mb_strtolower($distribucion->concepto), 'nocturno');
+        $esNocturno = str_contains(mb_strtolower($distribucion->distribucion), 'nocturno');
         $turno = $esNocturno ? 'Nocturno' : null;
 
         $fechaCarbon = \Carbon\Carbon::parse($this->planilla->fecha);
         $prefijo = $fechaCarbon->format('d-m-Y');
 
-        $ultimo = TesPlanillaEr::whereYear('fecha', $fechaCarbon->year)
+        $ultimo = TesPlanillaEr::withTrashed()->whereYear('fecha', $fechaCarbon->year)
             ->whereMonth('fecha', $fechaCarbon->month)
             ->where('numero', 'like', $prefijo . '-%')
             ->orderBy('id', 'desc')
@@ -315,37 +326,46 @@ class Confirmar extends Component
             })
             ->whereHas('siifDistribucion', function ($q) use ($nocturno) {
                 if ($nocturno) {
-                    $q->whereRaw('LOWER(concepto) LIKE ?', ['%nocturno%']);
+                    $q->whereRaw('LOWER(distribucion) LIKE ?', ['%nocturno%']);
                 } else {
-                    $q->whereRaw('LOWER(concepto) NOT LIKE ?', ['%nocturno%']);
+                    $q->whereRaw('LOWER(distribucion) NOT LIKE ?', ['%nocturno%']);
                 }
             })
             ->get();
     }
 
-    public function eliminarPlanilla(int $id)
+    public function limpiarFiltros()
+    {
+        $this->busqueda = '';
+        $this->filtroDistribucion = '';
+    }
+
+    public function anularPlanilla(int $id, string $motivo)
     {
         if ($id !== $this->planilla->id) {
             abort(403);
         }
 
-        $user = auth()->user();
-        if (!$user || !$user->hasAnyPermission(['tesoreria.supervisar'])) {
+        $motivo = trim($motivo);
+        if (strlen($motivo) < 3) {
             $this->dispatchBrowserEvent('swal:toast-error', [
-                'text' => 'No tiene permisos para eliminar planillas.',
+                'text' => 'El motivo debe tener al menos 3 caracteres.',
+            ]);
+            return;
+        }
+
+        if ($this->planilla->confirmada) {
+            $this->dispatchBrowserEvent('swal:toast-error', [
+                'text' => 'No se puede anular una planilla que ha sido confirmada.',
             ]);
             return;
         }
 
         try {
-            DB::beginTransaction();
-            $this->planilla->items()->update(['planilla_er_id' => null]);
-            $this->planilla->delete();
-            DB::commit();
+            app(AnularPlanillaService::class)->anular($this->planilla, $motivo);
         } catch (\Exception $e) {
-            DB::rollBack();
             $this->dispatchBrowserEvent('swal:toast-error', [
-                'text' => 'Error al eliminar la planilla: ' . $e->getMessage(),
+                'text' => 'Error al anular la planilla: ' . $e->getMessage(),
             ]);
             return;
         }
@@ -406,9 +426,50 @@ class Confirmar extends Component
         $this->planilla->update(['confirmada' => !$this->planilla->confirmada]);
         $this->planilla = $this->planilla->fresh([
             'tipo', 'dependencia',
+            'items.cfe.cajaConcepto.siifDistribucionTipo',
             'items.cfe.cajaConcepto',
             'items.cfe.siifDistribucionDependencia',
-            'items.cfe.siifDistribucionTipo',
+            'items.cfe.mediosPago',
+            'items.cfe.items',
+            'items.siifDistribucion',
+        ]);
+    }
+
+    private function autoAsignarDistribucionesPendientes(): void
+    {
+        $itemsSinDist = $this->planilla->items->filter(
+            fn($i) => !$i->siif_distribucion_id && $i->cfe && $i->cfe->cajaConcepto
+        );
+
+        $itemsSinDist->each(function ($item) {
+            $cfe = $item->cfe;
+            if (!$cfe->cajaConcepto->siif_distribucion_tipo_id || !$cfe->siif_distribucion_dependencia_id) return;
+
+            $conceptoNorm = TextoHelper::normalizarConcepto($cfe->cajaConcepto->caja_concepto);
+
+            $distribuciones = SiifDistribucion::where('tipo_id', $cfe->cajaConcepto->siif_distribucion_tipo_id)
+                ->where('dependencia_id', $cfe->siif_distribucion_dependencia_id)
+                ->whereNull('deleted_at')
+                ->get();
+
+            $distribucion = $distribuciones
+                ->first(fn($d) => !empty(trim($d->concepto ?? '')) && TextoHelper::normalizarConcepto($d->concepto) === $conceptoNorm);
+
+            if (!$distribucion) {
+                $distribucion = $distribuciones
+                    ->first(fn($d) => !empty(trim($d->distribucion ?? '')) && TextoHelper::normalizarConcepto($d->distribucion) === $conceptoNorm);
+            }
+
+            if ($distribucion) {
+                $item->update(['siif_distribucion_id' => $distribucion->id]);
+            }
+        });
+
+        $this->planilla = $this->planilla->fresh([
+            'tipo', 'dependencia',
+            'items.cfe.cajaConcepto.siifDistribucionTipo',
+            'items.cfe.cajaConcepto',
+            'items.cfe.siifDistribucionDependencia',
             'items.cfe.mediosPago',
             'items.cfe.items',
             'items.siifDistribucion',
@@ -419,8 +480,33 @@ class Confirmar extends Component
     {
         $planillaItemIds = $this->planilla->items->pluck('id')->toArray();
 
+        $distribucionesPlanilla = $this->planilla->items
+            ->pluck('siifDistribucion.distribucion')
+            ->filter()
+            ->unique()
+            ->values()
+            ->toArray();
+
+        $itemsCollection = $this->planilla->items;
+        if ($this->busqueda !== '') {
+            $busqueda = mb_strtolower($this->busqueda);
+            $itemsCollection = $itemsCollection->filter(function ($item) use ($busqueda) {
+                $cfe = $item->cfe;
+                if (!$cfe) return false;
+                $receptor = mb_strtolower($cfe->receptor_nombre_denominacion ?? '');
+                $documento = mb_strtolower("{$cfe->documento_tipo} {$cfe->documento_serie}-{$cfe->documento_numero}");
+                return str_contains($receptor, $busqueda) || str_contains($documento, $busqueda);
+            });
+        }
+        if ($this->filtroDistribucion !== '') {
+            $itemsCollection = $itemsCollection->filter(function ($item) use ($planillaItemIds) {
+                if (!in_array($item->id, $planillaItemIds)) return false;
+                return $item->siifDistribucion?->distribucion === $this->filtroDistribucion;
+            });
+        }
+
         $itemsPorCfe = [];
-        foreach ($this->planilla->items as $itemPlanilla) {
+        foreach ($itemsCollection as $itemPlanilla) {
             $cfe = $itemPlanilla->cfe;
             if (!$cfe) continue;
 
@@ -436,23 +522,56 @@ class Confirmar extends Component
         }
 
         $paresUnicos = [];
+        $conceptosNorm = [];
         foreach ($this->planilla->items as $item) {
             $cfe = $item->cfe;
-            if (!$cfe || !$cfe->siif_distribucion_tipo_id || !$cfe->siif_distribucion_dependencia_id) continue;
-            $key = $cfe->siif_distribucion_tipo_id . '-' . $cfe->siif_distribucion_dependencia_id;
-            $paresUnicos[$key] = [
-                'tipo_id' => $cfe->siif_distribucion_tipo_id,
-                'dependencia_id' => $cfe->siif_distribucion_dependencia_id,
-            ];
+            if (!$cfe || !$cfe->cajaConcepto || !$cfe->cajaConcepto->siif_distribucion_tipo_id || !$cfe->siif_distribucion_dependencia_id) continue;
+            $tipoId = $cfe->cajaConcepto->siif_distribucion_tipo_id;
+            $key = $tipoId . '-' . $cfe->siif_distribucion_dependencia_id;
+            if (!isset($paresUnicos[$key])) {
+                $paresUnicos[$key] = [
+                    'tipo_id' => $tipoId,
+                    'dependencia_id' => $cfe->siif_distribucion_dependencia_id,
+                ];
+            }
+            if ($cfe->cajaConcepto) {
+                $conceptosNorm[$key][] = TextoHelper::normalizarConcepto($cfe->cajaConcepto->caja_concepto);
+            }
         }
 
         $opcionesPorTipoDep = [];
         foreach ($paresUnicos as $key => $par) {
-            $opcionesPorTipoDep[$key] = SiifDistribucion::where('tipo_id', $par['tipo_id'])
+            $assignedDistIds = $this->planilla->items
+                ->filter(fn($i) => $i->cfe && $i->cfe?->cajaConcepto?->siif_distribucion_tipo_id == $par['tipo_id'] && $i->cfe->siif_distribucion_dependencia_id == $par['dependencia_id'])
+                ->pluck('siif_distribucion_id')
+                ->filter()
+                ->unique()
+                ->toArray();
+
+            $distribuciones = SiifDistribucion::where('tipo_id', $par['tipo_id'])
                 ->where('dependencia_id', $par['dependencia_id'])
                 ->whereNull('deleted_at')
-                ->get()
-                ->unique(fn($d) => $d->tipo_id . '-' . $d->dependencia_id . '-' . $d->concepto)
+                ->get();
+
+            $conceptosNormKey = array_unique($conceptosNorm[$key] ?? []);
+
+            $opcionesPorTipoDep[$key] = $distribuciones
+                ->groupBy('distribucion')
+                ->flatMap(function ($group) use ($assignedDistIds, $conceptosNormKey) {
+                    $asignadas = $group->filter(fn($d) => in_array($d->id, $assignedDistIds));
+                    if ($asignadas->isNotEmpty()) {
+                        return $asignadas->values();
+                    }
+                    $matchConc = $group->first(fn($d) => in_array(TextoHelper::normalizarConcepto($d->concepto ?? ''), $conceptosNormKey));
+                    if ($matchConc) {
+                        return collect([$matchConc]);
+                    }
+                    $matchDist = $group->first(fn($d) => in_array(TextoHelper::normalizarConcepto($d->distribucion ?? ''), $conceptosNormKey));
+                    if ($matchDist) {
+                        return collect([$matchDist]);
+                    }
+                    return collect([$group->first()]);
+                })
                 ->values();
         }
 
@@ -461,7 +580,7 @@ class Confirmar extends Component
         $totalGeneral = $this->planilla->items->sum('importe');
 
         return view('livewire.tesoreria.estados-recaudacion.confirmar', compact(
-            'itemsPorCfe', 'opcionesPorTipoDep', 'gruposRecaudacion', 'totalGeneral'
+            'itemsPorCfe', 'opcionesPorTipoDep', 'gruposRecaudacion', 'totalGeneral', 'distribucionesPlanilla'
         ))->extends('layouts.app')->section('content');
     }
 
@@ -476,10 +595,10 @@ class Confirmar extends Component
             if (!$cfe) continue;
 
             $dep = $cfe->siifDistribucionDependencia;
-            $tipo = $cfe->siifDistribucionTipo;
+            $tipo = $cfe->cajaConcepto?->siifDistribucionTipo;
             $tabKey = ($dep?->id ?? 'X') . '-' . ($tipo?->id ?? 'X');
             $label = ($dep?->abreviatura ?? 'S/D') . ' — ' . ($tipo?->tipo ?? 'S/T');
-            $distKey = $item->siifDistribucion?->concepto ?? $cfe->cajaConcepto?->caja_concepto ?? 'Sin distribución';
+            $distKey = $item->siifDistribucion?->distribucion ?? $cfe->cajaConcepto?->caja_concepto ?? 'Sin distribución';
             $cfeKey = $item->tes_cfe_id;
             $uniq = "{$tabKey}|{$distKey}|{$cfeKey}";
 
@@ -496,7 +615,7 @@ class Confirmar extends Component
 
             if (!isset($grupos[$tabKey]['distribuciones'][$distKey])) {
                 $grupos[$tabKey]['distribuciones'][$distKey] = [
-                    'concepto' => $distKey,
+                    'distribucion' => $distKey,
                     'items' => [],
                     'total_efectivo' => 0,
                     'total_cheque' => 0,
@@ -525,22 +644,20 @@ class Confirmar extends Component
             $efectivo = 0; $cheque = 0; $transferencia = 0; $pos = 0;
 
             foreach ($cfe->mediosPago as $mp) {
-                $tipoStr = mb_strtolower($mp->medio_pago_tipo);
                 $valorProrated = round($mp->medio_pago_valor * $proporcion, 2);
 
-                if (str_contains($tipoStr, 'efectivo')) {
-                    $efectivo += $valorProrated;
-                } elseif (str_contains($tipoStr, 'cheque')) {
-                    $cheque += $valorProrated;
-                } elseif (str_contains($tipoStr, 'transferencia') || str_contains($tipoStr, 'siif')) {
-                    $transferencia += $valorProrated;
-                } elseif (str_contains($tipoStr, 'tarjeta') || str_contains($tipoStr, 'debito') || str_contains($tipoStr, 'débito')) {
-                    $pos += $valorProrated;
-                }
+                match ($mp->medioPago?->nombre) {
+                    'Efectivo' => $efectivo += $valorProrated,
+                    'Cheque' => $cheque += $valorProrated,
+                    'Transferencia Bancaria' => $transferencia += $valorProrated,
+                    'Tarjeta de Débito' => $pos += $valorProrated,
+                    default => null,
+                };
             }
 
             $rowData = [
                 'cfe' => $cfe,
+                'concepto' => $cfe->cajaConcepto?->caja_concepto ?? '—',
                 'efectivo' => $efectivo,
                 'cheque' => $cheque,
                 'transferencia' => $transferencia,

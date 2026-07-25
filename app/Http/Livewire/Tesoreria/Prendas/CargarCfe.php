@@ -7,6 +7,7 @@ use Livewire\WithFileUploads;
 use Smalot\PdfParser\Parser;
 use App\Models\Tesoreria\Prenda;
 use App\Models\Tesoreria\MedioDePago;
+use App\Services\Tesoreria\MedioPagoService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
 use App\Traits\WithOrdenCobroValidation;
@@ -285,7 +286,8 @@ class CargarCfe extends Component
         }
 
         // Si se pagó por transferencia, concatenar la información del pago al detalle
-        if (stripos($datos['forma_pago'], 'Transferencia') !== false) {
+        $medioResuelto = app(MedioPagoService::class)->resolverPorTexto($datos['forma_pago'] ?? null);
+        if ($medioResuelto && $medioResuelto->nombre === 'Transferencia Bancaria') {
             $datos['detalle'] .= ' - ' . $datos['forma_pago'];
         }
 
@@ -331,27 +333,9 @@ class CargarCfe extends Component
                 return;
             }
 
-            // Determinar medio de pago
-            $medioPagoNombre = $this->datosExtraidos['forma_pago'] ?? 'SIN DATOS';
-            $medioPagoId = null;
-
-            if (stripos($medioPagoNombre, 'Transferencia') !== false) {
-                $medio = MedioDePago::activos()
-                    ->where('nombre', 'like', '%Transferencia%')
-                    ->first();
-                $medioPagoId = $medio ? $medio->id : null;
-            } elseif (stripos($medioPagoNombre, 'Efectivo') !== false) {
-                $medio = MedioDePago::activos()
-                    ->where('nombre', 'like', '%Efectivo%')
-                    ->first();
-                $medioPagoId = $medio ? $medio->id : null;
-            }
-
-            // Si no se encontró, buscar el primer medio de pago activo
-            if (!$medioPagoId) {
-                $medio = MedioDePago::activos()->first();
-                $medioPagoId = $medio ? $medio->id : null;
-            }
+            // Determinar medio de pago via normalización
+            $medioResuelto = app(MedioPagoService::class)->resolverPorTexto($this->datosExtraidos['forma_pago'] ?? null);
+            $medioPagoId = $medioResuelto?->id;
 
             // Determinar concepto (detalle del CFE)
             $concepto = mb_strtoupper($this->datosExtraidos['detalle'], 'UTF-8');
@@ -359,9 +343,10 @@ class CargarCfe extends Component
             // Determinar transferencia
             $transferencia = null;
             $transferenciaFecha = null;
-            if (stripos($medioPagoNombre, 'Transferencia') !== false) {
+            if ($medioResuelto && $medioResuelto->nombre === 'Transferencia Bancaria') {
                 // Intentar extraer número de transferencia del detalle de pago
-                if (preg_match('/Transferencia[^:]*:\s*([\d\.,]+)/i', $medioPagoNombre, $tMatch)) {
+                $formaPagoTexto = $this->datosExtraidos['forma_pago'] ?? '';
+                if (preg_match('/Transferencia[^:]*:\s*([\d\.,]+)/i', $formaPagoTexto, $tMatch)) {
                     $transferencia = 'CFE ' . $serie . '-' . $numero;
                 }
                 $transferenciaFecha = $fecha->format('Y-m-d');

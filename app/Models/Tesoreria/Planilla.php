@@ -24,7 +24,7 @@ class Planilla extends Model
         'deleted_by',
     ];
 
-    protected $dates = ['fecha_creacion'];
+    protected $casts = ['fecha_creacion' => 'datetime'];
 
     public function arrendamientos()
     {

@@ -79,13 +79,14 @@
 
             <div class="table-responsive">
                 <table class="table table-sm table-bordered table-striped table-hover">
-                    <thead class="thead-dark align-middle">
+                    <thead class="align-middle">
                         <tr>
                             <th>Fecha</th>
                             <th>N°</th>
                             <th>Tipo</th>
                             <th>Dependencia</th>
                             <th>Turno</th>
+                            <th class="text-center">Confirmada</th>
                             <th class="text-right">Total</th>
                         </tr>
                     </thead>
@@ -100,18 +101,25 @@
                                 <td class="align-middle">{{ $p->tipo->tipo ?? '—' }}</td>
                                 <td class="align-middle">{{ $p->dependencia->dependencia ?? '—' }}</td>
                                 <td class="align-middle">{{ $p->turno ?? '—' }}</td>
+                                <td class="align-middle text-center">
+                                    @if($p->confirmada)
+                                        <i class="fas fa-check-circle text-success" title="Confirmada"></i>
+                                    @else
+                                        <i class="fas fa-times-circle text-danger" title="No confirmada"></i>
+                                    @endif
+                                </td>
                                 <td class="align-middle text-right text-nowrap">$ {{ number_format($totalesAjustados[$p->id] ?? 0, 2, ',', '.') }}</td>
                             </tr>
                             @endforeach
                             @if($grupo['mostrar_total'])
                             <tr class="bg-light font-weight-bold">
-                                <td colspan="5" class="text-right align-middle">Total del {{ $grupo['fecha_display'] }}</td>
+                                <td colspan="6" class="text-right align-middle">Total del {{ $grupo['fecha_display'] }}</td>
                                 <td class="align-middle text-right text-nowrap">$ {{ number_format($grupo['total_dia'], 2, ',', '.') }}</td>
                             </tr>
                             @endif
                         @empty
                             <tr>
-                                <td colspan="6" class="text-center py-3 text-muted">
+                                <td colspan="7" class="text-center py-3 text-muted">
                                     <i class="fas fa-info-circle mr-1"></i> No hay planillas incompletas.
                                 </td>
                             </tr>

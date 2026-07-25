@@ -16,33 +16,47 @@ class MedioDePago extends Model
 
     protected $fillable = [
         'nombre',
+        'nombre_corto',
         'descripcion',
         'activo',
         'contado',
         'codigo_soniar',
+        'es_libro_diario',
+        'es_recaudacion',
+        'orden',
         'created_by',
         'updated_by',
-        'deleted_by'
+        'deleted_by',
     ];
 
     protected $casts = [
         'activo' => 'boolean',
         'contado' => 'boolean',
+        'es_libro_diario' => 'boolean',
+        'es_recaudacion' => 'boolean',
+        'orden' => 'integer',
     ];
 
-    // Scope para obtener solo medios de pago activos
     public function scopeActivos($query)
     {
         return $query->where('activo', true);
     }
 
-    // Scope para ordenar por nombre
     public function scopeOrdenado($query)
     {
-        return $query->orderBy('nombre');
+        return $query->orderBy('orden')->orderBy('nombre');
     }
 
-    // Scope para búsqueda
+    public function scopeLibroDiario($query)
+    {
+        return $query->where('es_libro_diario', true);
+    }
+
+    public function scopeRecaudacion($query)
+    {
+        return $query->where('es_recaudacion', true);
+    }
+
     public function scopeSearch($query, $term)
     {
         if (empty($term)) {
@@ -51,6 +65,7 @@ class MedioDePago extends Model
 
         return $query->where(function ($query) use ($term) {
             $query->where('nombre', 'like', '%' . $term . '%')
+                ->orWhere('nombre_corto', 'like', '%' . $term . '%')
                 ->orWhere('descripcion', 'like', '%' . $term . '%');
         });
     }

@@ -2,33 +2,18 @@
 
 namespace App\Providers;
 
-use App\Models\User;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Gate;
-use Spatie\Permission\Models\Permission;
 
 class AuthServiceProvider extends ServiceProvider
 {
-    /**
-     * The policy mappings for the application.
-     *
-     * @var array<class-string, class-string>
-     */
     protected $policies = [
         // 'App\Models\Model' => 'App\Policies\ModelPolicy',
     ];
 
-    /**
-     * Register any authentication / authorization services.
-     *
-     * @return void
-     */
     public function boot()
     {
         $this->registerPolicies();
-
-        // Definir Gates automáticamente para todos los permisos
-        $this->registerPermissionGates();
 
         Gate::before(function ($user, $ability) {
             if ($user && $user->hasPermissionTo($ability)) {
@@ -37,25 +22,5 @@ class AuthServiceProvider extends ServiceProvider
 
             return null;
         });
-    }
-
-    /**
-     * Registra automáticamente Gates para todos los permisos de Spatie
-     */
-    protected function registerPermissionGates()
-    {
-        try {
-            // Obtener todos los permisos existentes
-            $permissions = Permission::all();
-
-            foreach ($permissions as $permission) {
-                Gate::define($permission->name, function ($user) use ($permission) {
-                    return $user->hasPermissionTo($permission->name);
-                });
-            }
-        } catch (\Exception $e) {
-            // En caso de que las tablas aún no existan (durante migraciones)
-            // No hacer nada
-        }
     }
 }

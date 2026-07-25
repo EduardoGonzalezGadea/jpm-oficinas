@@ -98,7 +98,7 @@ class Index extends Component
             $query->where('estado', $this->estado);
         }
 
-        $tarjetas = $query->orderBy('fecha_recibido', 'desc')->paginate(10);
+        $tarjetas = $query->orderBy('fecha_recibido', 'desc')->paginate(50);
 
         $totalRegistros = $query->count();
 

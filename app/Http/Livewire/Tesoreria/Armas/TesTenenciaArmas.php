@@ -47,7 +47,7 @@ class TesTenenciaArmas extends Component
         $this->showModal = false;
         $this->showDeleteModal = false;
         $this->editMode = false;
-        $this->selectedRegistro = TesTenenciaArmasModel::findOrFail($id);
+        $this->selectedRegistro = TesTenenciaArmasModel::with('planilla')->findOrFail($id);
         $this->showDetailModal = true;
     }
 

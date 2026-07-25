@@ -46,7 +46,7 @@ class Index extends Component
     public function resetearBusqueda(): void
     {
         $this->search = '';
-        $this->filtroMeses = [];
+        $this->filtroMeses = [(int) date('m')];
         $this->filtroAno = (int) date('Y');
     }
 
@@ -132,8 +132,8 @@ class Index extends Component
             foreach ($p->items as $item) {
                 if ($item->siifDistribucion) {
                     $sd = $item->siifDistribucion;
-                    $key = $sd->tipo_id . '|' . $sd->dependencia_id . '|' . ($sd->concepto ?? '');
-                    $combos[$key] = ['tipo_id' => $sd->tipo_id, 'dependencia_id' => $sd->dependencia_id, 'concepto' => $sd->concepto];
+                    $key = $sd->tipo_id . '|' . $sd->dependencia_id . '|' . ($sd->distribucion ?? '');
+                    $combos[$key] = ['tipo_id' => $sd->tipo_id, 'dependencia_id' => $sd->dependencia_id, 'distribucion' => $sd->distribucion];
                 }
             }
         }
@@ -144,45 +144,54 @@ class Index extends Component
                 ->where(function ($q) use ($combos) {
                     $first = true;
                     foreach ($combos as $key => $c) {
-                        if (empty($c['concepto'])) {
+                        if (empty($c['distribucion'])) {
                             continue;
                         }
                         if ($first) {
                             $q->where('tipo_id', $c['tipo_id'])
                               ->where('dependencia_id', $c['dependencia_id'])
-                              ->where('concepto', $c['concepto']);
+                              ->where('distribucion', $c['distribucion']);
                             $first = false;
                         } else {
                             $q->orWhere(function ($q2) use ($c) {
                                 $q2->where('tipo_id', $c['tipo_id'])
                                    ->where('dependencia_id', $c['dependencia_id'])
-                                   ->where('concepto', $c['concepto']);
+                                   ->where('distribucion', $c['distribucion']);
                             });
                         }
                     }
                 })
                 ->get()
-                ->groupBy(fn($d) => $d->tipo_id . '|' . $d->dependencia_id . '|' . ($d->concepto ?? ''));
+                ->groupBy(fn($d) => $d->tipo_id . '|' . $d->dependencia_id . '|' . ($d->distribucion ?? ''));
         }
 
         $totales = [];
         foreach ($planillas as $p) {
-            $itemsPorConcepto = $p->items->groupBy(fn($i) => $i->siifDistribucion?->concepto ?? 'Sin distribución');
+            $itemsPorDistribucion = $p->items->groupBy(fn($i) => $i->siifDistribucion?->distribucion ?? 'Sin distribución');
             $total = 0;
-            foreach ($itemsPorConcepto as $concepto => $items) {
+            foreach ($itemsPorDistribucion as $distribucionLabel => $items) {
                 $grupoTotal = $items->sum('importe');
-                if ($concepto !== 'Sin distribución' && $items->first()->siifDistribucion) {
+                if ($distribucionLabel !== 'Sin distribución' && $items->first()->siifDistribucion) {
                     $sd = $items->first()->siifDistribucion;
-                    $key = $sd->tipo_id . '|' . $sd->dependencia_id . '|' . $sd->concepto;
+                    $key = $sd->tipo_id . '|' . $sd->dependencia_id . '|' . $sd->distribucion;
                     $distGrupo = $distribucionesPorCombo->get($key, collect());
                     if ($distGrupo->isNotEmpty()) {
-                        $dg = $distGrupo->groupBy(fn($d) => ($d->financiacion ?? '—') . '|' . ($d->inciso ?? '—') . '|' . ($d->unidad_ejecutora ?? '—'))
+                        $dgStep1 = $distGrupo->groupBy(fn($d) => ($d->recurso ?? '—') . '|' . ($d->financiacion ?? '—') . '|' . ($d->inciso ?? '—') . '|' . ($d->unidad_ejecutora ?? '—') . '|' . ($d->porcentaje ?? '0'))
                             ->map(function ($g) use ($grupoTotal) {
                                 $primer = $g->first();
                                 return (object) [
-                                    'importe_raw' => $grupoTotal * ($g->sum('porcentaje') / 100),
+                                    'importe_raw' => $grupoTotal * ($primer->porcentaje / 100),
                                     'inciso' => $primer->inciso,
                                     'unidad_ejecutora' => $primer->unidad_ejecutora,
+                                ];
+                            });
+
+                        $dg = $dgStep1->groupBy(fn($d) => ($d->inciso ?? '—') . '|' . ($d->unidad_ejecutora ?? '—'))
+                            ->map(function ($g) {
+                                return (object) [
+                                    'importe_raw' => $g->sum('importe_raw'),
+                                    'inciso' => $g->first()->inciso,
+                                    'unidad_ejecutora' => $g->first()->unidad_ejecutora,
                                 ];
                             });
 

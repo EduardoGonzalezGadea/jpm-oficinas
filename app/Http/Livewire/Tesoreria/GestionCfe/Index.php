@@ -24,7 +24,7 @@ class Index extends Component
     use WithEdicionCfe;
     use WithNuevoCfe;
 
-    protected $listeners = ['borrarCfe'];
+    protected $listeners = ['borrarCfe', 'confirmarBorrarCfeConAsientos'];
 
     protected CfeCreatorService $cfeCreator;
 
@@ -70,6 +70,15 @@ class Index extends Component
         $this->resetPage();
     }
 
+    public function limpiarFiltros(): void
+    {
+        $this->search = '';
+        $this->filtroConcepto = null;
+        $this->filtroMeses = [];
+        $this->filtroAno = (int) date('Y');
+        $this->resetPage();
+    }
+
     public function limpiarFiltroMeses(): void
     {
         $this->filtroMeses = [];
@@ -79,10 +88,49 @@ class Index extends Component
     public function borrarCfe(int $cfeId): void
     {
         try {
-            $this->cfeCreator->deleteCfe($cfeId);
+            $cfe = \App\Models\Tesoreria\TesCfe::with('items')->find($cfeId);
+
+            if (!$cfe) {
+                throw new \RuntimeException('CFE no encontrado.');
+            }
+
+            $itemsEnPlanilla = $cfe->items->contains(fn($i) => $i->planilla_er_id !== null);
+            if ($itemsEnPlanilla) {
+                throw new \App\Exceptions\Tesoreria\CfeValidationException('No se puede procesar este CFE porque uno o más de sus ítems ya integran una planilla.');
+            }
+
+            $cantAsientos = $this->cfeCreator->countLibroDiarioEntries($cfeId);
+
+            if ($cantAsientos > 0) {
+                $this->dispatchBrowserEvent('swal:confirmar-eliminar-cfe-con-asientos', [
+                    'cfeId' => $cfeId,
+                    'cantidad' => $cantAsientos,
+                ]);
+            } else {
+                $this->cfeCreator->deleteCfe($cfeId);
+
+                $this->dispatchBrowserEvent('swal:toast-success', [
+                    'text' => 'CFE eliminado correctamente.',
+                ]);
+            }
+        } catch (CfeValidationException $e) {
+            $this->dispatchBrowserEvent('swal:toast-error', [
+                'text' => $e->getMessage(),
+            ]);
+        } catch (\RuntimeException $e) {
+            $this->dispatchBrowserEvent('swal:toast-error', [
+                'text' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    public function confirmarBorrarCfeConAsientos(int $cfeId): void
+    {
+        try {
+            $this->cfeCreator->deleteCfeWithLibroDiarioEntries($cfeId);
 
             $this->dispatchBrowserEvent('swal:toast-success', [
-                'text' => 'CFE eliminado correctamente.',
+                'text' => 'CFE y asientos del Libro Diario eliminados correctamente. Saldos recalculados.',
             ]);
         } catch (CfeNotFoundException | CfeValidationException $e) {
             $this->dispatchBrowserEvent('swal:toast-error', [
@@ -127,13 +175,15 @@ class Index extends Component
 
     private function doRender()
     {
-        $cfes = TesCfe::with(['items.planillaEr', 'mediosPago', 'cajaConcepto', 'siifDistribucionTipo', 'siifDistribucionDependencia'])
+        $cfes = TesCfe::with(['items.planillaEr', 'mediosPago', 'cajaConcepto.siifDistribucionTipo', 'cajaConcepto', 'siifDistribucionDependencia'])
             ->withCount(['items as items_en_planilla_count' => fn($q) => $q->whereNotNull('planilla_er_id')])
             ->where(function ($query) {
                 $query->where('emisor_nombre', 'like', '%' . $this->search . '%')
                     ->orWhere('documento_numero', 'like', '%' . $this->search . '%')
                     ->orWhere('receptor_documento_ruc', 'like', '%' . $this->search . '%')
                     ->orWhere('receptor_nombre_denominacion', 'like', '%' . $this->search . '%')
+                    ->orWhere('adenda', 'like', '%' . $this->search . '%')
+                    ->orWhereHas('items', fn($q) => $q->where('descripcion', 'like', '%' . $this->search . '%'))
                     ->orWhereHas('items.planillaEr', fn($q) => $q->where('numero', 'like', '%' . $this->search . '%'));
             });
 
@@ -154,7 +204,7 @@ class Index extends Component
         }
 
         $cfes = $cfes->orderBy('fecha', 'desc')->orderBy('documento_numero', 'desc')
-            ->paginate(15);
+            ->paginate(50);
 
         $cajaConceptos = Cache::remember('cfe_caja_conceptos', 300, fn() =>
             CajaConcepto::whereNull('deleted_at')->ordenado()->get()

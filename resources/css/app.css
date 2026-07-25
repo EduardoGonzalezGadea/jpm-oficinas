@@ -302,13 +302,20 @@ label {
 }
 
 .navbar .nav-link,
-.navbar .dropdown-item {
+.navbar .dropdown-item,
+.card-header .dropdown-item,
+.card-header .btn {
     border: 1px solid transparent !important;
 }
 
 .navbar .nav-link:hover,
 .navbar .dropdown-item:hover,
-.navbar .dropdown-item.active {
+.navbar .dropdown-item.active,
+.card-header .dropdown-item:hover,
+.card-header .dropdown-item.active,
+.card-header .btn:hover,
+.card-header .btn:focus,
+.card-header .btn.show {
     border: 1px solid var(--color-accent) !important;
     border-radius: 4px;
 }
@@ -323,7 +330,8 @@ label {
     background-color: rgba(255, 255, 255, 0.1);
 }
 
-.navbar .dropdown-menu {
+.navbar .dropdown-menu,
+.card-header .dropdown-menu {
     border: 2px solid var(--color-brand-mid) !important;
     border-radius: 12px !important;
     box-shadow: var(--shadow-lg);
@@ -401,7 +409,8 @@ label {
     display: flex;
 }
 
-.navbar .dropdown-item {
+.navbar .dropdown-item,
+.card-header .dropdown-item {
     padding: 0.6rem 1rem !important;
     border-radius: 4px;
     font-size: 0.9rem;
@@ -409,7 +418,9 @@ label {
 }
 
 .navbar .dropdown-menu .dropdown-item:hover,
-.navbar .dropdown-menu .dropdown-item.active {
+.navbar .dropdown-menu .dropdown-item.active,
+.card-header .dropdown-menu .dropdown-item:hover,
+.card-header .dropdown-menu .dropdown-item.active {
     background: var(--color-brand-dark) !important;
     color: #ffffff !important;
     text-decoration: underline !important;

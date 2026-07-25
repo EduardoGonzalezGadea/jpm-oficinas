@@ -28,20 +28,20 @@ use Illuminate\Support\Facades\Route;
 // RUTAS PÚBLICAS (sin autenticación)
 // ============================================================================
 
-Route::get('/', fn () => view('welcome'))->name('home');
+Route::view('/', 'welcome')->name('home');
 
 // Descarga de extensiones del navegador
 Route::get('/download-extension',              [ExtensionController::class, 'downloadCfeDetect'])   ->name('extension.download');
 Route::get('/download-text-replacer-extension', [ExtensionController::class, 'downloadTextReplacer'])->name('extension.text-replacer.download');
 
 // Acceso público unificado
-Route::get('/acceso-publico', fn () => view('tesoreria.acceso-publico'))->name('acceso-publico');
+Route::view('/acceso-publico', 'tesoreria.acceso-publico')->name('acceso-publico');
 
 // Vista pública de multas de tránsito
-Route::get('/multas-transito-publico', fn () => view('tesoreria.multas-publico'))->name('multas-transito-publico');
+Route::view('/multas-transito-publico', 'tesoreria.multas-publico')->name('multas-transito-publico');
 
 // Vista pública de códigos de multas CPT Dec. 303/2023
-Route::get('/multas-303-publico', fn () => view('tesoreria.multas-303-publico'))->name('multas-303-publico');
+Route::view('/multas-303-publico', 'tesoreria.multas-303-publico')->name('multas-303-publico');
 
 // Tema (debe funcionar sin autenticar para el formulario de login)
 Route::post('/tema/cambiar', [ThemeController::class, 'switchTheme'])->name('theme.switch');
@@ -141,13 +141,5 @@ Route::middleware(['web', 'jwt.verify', 'two-factor'])->group(function () {
 // ============================================================================
 
 if (!app()->runningUnitTests()) {
-    Route::fallback(function () {
-        if (request()->expectsJson()) {
-            return response()->json(['message' => 'Ruta no encontrada'], 404);
-        }
-
-        return auth()->check()
-            ? response()->view('errors.404', [], 404)
-            : redirect()->route('login');
-    });
+    Route::fallback([UtilidadController::class, 'fallback']);
 }

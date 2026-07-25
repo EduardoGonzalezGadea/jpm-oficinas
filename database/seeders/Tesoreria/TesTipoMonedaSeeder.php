@@ -17,15 +17,11 @@ class TesTipoMonedaSeeder extends Seeder
     {
         $tiposMonedas = [
             [
-                'codigo' => 'BILLETES',
                 'nombre' => 'Billetes',
-                'simbolo' => null,
                 'activo' => true,
             ],
             [
-                'codigo' => 'MONEDAS',
                 'nombre' => 'Monedas',
-                'simbolo' => null,
                 'activo' => true,
             ],
         ];

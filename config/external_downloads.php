@@ -30,10 +30,10 @@ return [
         'verify_ssl' => env('EXTERNAL_DOWNLOADS_VERIFY_SSL', false),
 
         // Timeout por defecto (segundos) para cualquier request
-        'timeout_default' => env('EXTERNAL_DOWNLOADS_TIMEOUT', 15),
+        'timeout_default' => env('EXTERNAL_DOWNLOADS_TIMEOUT', 8),
 
         // Connect timeout (segundos)
-        'connect_timeout' => env('EXTERNAL_DOWNLOADS_CONNECT_TIMEOUT', 10),
+        'connect_timeout' => env('EXTERNAL_DOWNLOADS_CONNECT_TIMEOUT', 5),
 
         // User-Agent simulado para evitar bloqueos
         'user_agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
@@ -65,6 +65,15 @@ return [
 
         'auto_detect' => true,
         'cache_detection' => true, // cachear detección por 1 hora
+
+        // Validación de conectividad del proxy detectado
+        'validation' => [
+            'enabled' => true, // false = salta validación, asume proxy válido
+            'url' => env('PROXY_VALIDATION_URL', 'https://www.google.com'),
+            'timeout' => 5, // timeout por intento de validación (segundos)
+            'connect_timeout' => 3,
+            'cache_ttl_seconds' => 1800, // 30 min entre validaciones
+        ],
     ],
 
     /**
@@ -79,11 +88,11 @@ return [
         ),
 
         // Timeout específico para esta descarga
-        'timeout' => 45,
+        'timeout' => 60,
 
-        // Reintentos: 3 intentos totales, cada uno intenta sin proxy y luego con proxy
+        // Reintentos: 3 intentos
         'max_retries' => 3,
-        'retry_delay_ms' => 1000, // milisegundos entre reintentos (exponencial)
+        'retry_delay_ms' => 1000,
 
         // Caché: 4 horas (UR no cambia mucho)
         'cache_ttl_minutes' => 240,
@@ -115,17 +124,19 @@ return [
 
         // URLs de APIs de tiempo (en orden de preferencia)
         'urls' => [
+            'https://time.you/developer/api/timezone/America/Montevideo',
+            'https://worldontime.app/api/v1/time?timezone=America/Montevideo',
             'https://worldtimeapi.org/api/timezone/America/Montevideo',
             'https://timeapi.io/api/Time/current/zone?timeZone=America/Montevideo',
-            'http://worldtimeapi.org/api/timezone/America/Montevideo', // fallback HTTP
+            'http://worldtimeapi.org/api/timezone/America/Montevideo',
         ],
 
         // Timeout específico para esta descarga
-        'timeout' => 20, // Aumentado a 20s (APIs de tiempo pueden ser lentas)
+        'timeout' => 30,
 
-        // Reintentos: 2 intentos (+ fallback automático de HttpClientService)
-        'max_retries' => 2,
-        'retry_delay_ms' => 1000, // Aumentado a 1s entre reintentos
+        // Reintentos: hasta 5 intentos por API antes de pasar a la siguiente
+        'max_retries' => 5,
+        'retry_delay_ms' => 1000,
 
         // Caché: 10 minutos (compromiso entre actualización y evitar reintentos constantes)
         'cache_ttl_minutes' => 10,
@@ -161,8 +172,8 @@ return [
         // Timeout específico para esta descarga (pueden ser archivos grandes)
         'timeout' => 120,
 
-        // Reintentos: 1 solo (descargas de PDF son costosas)
-        'max_retries' => 1,
+        // Reintentos: 3 intentos (descargas de PDF son costosas pero a veces lentas)
+        'max_retries' => 3,
         'retry_delay_ms' => 2000,
 
         // Caché: 7 días (SOA cambia semanalmente aprox)

@@ -39,8 +39,6 @@ class Multas303Seeder extends Seeder
                 'codigo' => trim($multa['codigo']),
                 'descripcion' => trim($multa['descripcion']),
                 'grupo' => trim($multa['grupo'] ?? ''),
-                'detalle' => trim($multa['descripcion']),
-                'monto_ur' => $numericUr,
                 'valor_ur' => $rawValor,
             ]);
             $count++;

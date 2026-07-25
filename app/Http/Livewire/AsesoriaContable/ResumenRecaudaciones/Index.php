@@ -46,15 +46,16 @@ class Index extends Component
     public function resetearBusqueda(): void
     {
         $this->search = '';
-        $this->filtroMeses = [];
+        $this->filtroMeses = [(int) date('m')];
         $this->filtroAno = (int) date('Y');
     }
 
     public function render()
     {
-        $tiposConDatos = TesCfe::whereNotNull('siif_distribucion_tipo_id')
+        $tiposConDatos = TesCfe::join('tes_caja_conceptos', 'tes_cfes.tes_caja_concepto_id', '=', 'tes_caja_conceptos.id')
+            ->whereNotNull('tes_caja_conceptos.siif_distribucion_tipo_id')
             ->distinct()
-            ->pluck('siif_distribucion_tipo_id');
+            ->pluck('tes_caja_conceptos.siif_distribucion_tipo_id');
 
         $tiposDistribucion = SiifDistribucionTipo::whereIn('id', $tiposConDatos)
             ->ordenado()
@@ -65,7 +66,7 @@ class Index extends Component
             $this->tabActivo = $primerTipo?->id;
         }
 
-        $anosRegistrados = TesCfe::whereNotNull('siif_distribucion_tipo_id')
+        $anosRegistrados = TesCfe::whereHas('cajaConcepto', fn($q) => $q->whereNotNull('siif_distribucion_tipo_id'))
             ->whereNotNull('fecha')
             ->selectRaw('YEAR(fecha) as year')
             ->distinct()
@@ -84,8 +85,8 @@ class Index extends Component
         $totalGeneralPorMedioPago = collect();
 
         if ($this->tabActivo) {
-            $cfes = TesCfe::with(['siifDistribucionTipo', 'siifDistribucionDependencia', 'mediosPago', 'cajaConcepto'])
-                ->where('siif_distribucion_tipo_id', $this->tabActivo)
+            $cfes = TesCfe::with(['cajaConcepto.siifDistribucionTipo', 'siifDistribucionDependencia', 'mediosPago', 'cajaConcepto'])
+                ->whereHas('cajaConcepto', fn($q) => $q->where('siif_distribucion_tipo_id', $this->tabActivo))
                 ->when($this->search, function ($query) {
                     $query->where(function ($q) {
                         $q->where('documento_numero', 'like', '%' . $this->search . '%')

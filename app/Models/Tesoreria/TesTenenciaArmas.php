@@ -31,7 +31,7 @@ class TesTenenciaArmas extends Model
         'deleted_by',
     ];
 
-    protected $dates = ['fecha'];
+    protected $casts = ['fecha' => 'datetime'];
 
     public function getMontoFormateadoAttribute()
     {

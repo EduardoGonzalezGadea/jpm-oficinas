@@ -51,6 +51,11 @@ class TesCfeMedioPago extends Model
         return $this->belongsTo(TesCfe::class, 'tes_cfe_id');
     }
 
+    public function medioPago()
+    {
+        return $this->belongsTo(MedioDePago::class, 'medio_pago_id');
+    }
+
     public function createdBy()
     {
         return $this->belongsTo(User::class, 'created_by');
@@ -66,4 +71,3 @@ class TesCfeMedioPago extends Model
         return $this->belongsTo(User::class, 'deleted_by');
     }
 }
-

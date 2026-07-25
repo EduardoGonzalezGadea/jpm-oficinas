@@ -32,7 +32,7 @@ class Cheque extends Model
         'updated_by'
     ];
 
-    protected $dates = ['fecha_emision', 'fecha_anulacion', 'fecha_planilla_anulada'];
+    protected $casts = ['fecha_emision' => 'datetime', 'fecha_anulacion' => 'datetime', 'fecha_planilla_anulada' => 'datetime'];
 
     /**
      * Campos que deben convertirse a mayúsculas (excluyendo estados)

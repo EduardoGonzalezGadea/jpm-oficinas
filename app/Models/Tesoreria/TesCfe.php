@@ -96,9 +96,22 @@ class TesCfe extends Model
         return $this->belongsTo(CajaConcepto::class, 'tes_caja_concepto_id');
     }
 
-    public function siifDistribucionTipo()
+    /**
+     * @deprecated El campo siif_distribucion_tipo_id en BD será eliminado.
+     * Usar $this->cajaConcepto?->siifDistribucionTipo en su lugar.
+     */
+    public function getSiifDistribucionTipoAttribute()
     {
-        return $this->belongsTo(SiifDistribucionTipo::class, 'siif_distribucion_tipo_id');
+        return $this->cajaConcepto?->siifDistribucionTipo;
+    }
+
+    /**
+     * @deprecated El campo siif_distribucion_tipo_id en BD será eliminado.
+     * Usar $this->cajaConcepto?->siif_distribucion_tipo_id en su lugar.
+     */
+    public function getSiifDistribucionTipoIdAttribute()
+    {
+        return $this->cajaConcepto?->siif_distribucion_tipo_id;
     }
 
     public function siifDistribucionDependencia()

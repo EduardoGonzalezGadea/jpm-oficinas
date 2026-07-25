@@ -10,7 +10,6 @@
     <title>Tesorería | Oficinas</title>
 
     <!-- Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
 
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="{{ asset('libs/bootstrap-4.6.2-dist/css/bootstrap.min.css') }}">
@@ -407,7 +406,7 @@
 
     <style>
         body {
-            font-family: 'Nunito', sans-serif;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             background: linear-gradient(180deg, #001a4d 0%, #0d47a1 30%, #42a5f5 65%, #90caf9 100%);
             min-height: 100vh;
         }

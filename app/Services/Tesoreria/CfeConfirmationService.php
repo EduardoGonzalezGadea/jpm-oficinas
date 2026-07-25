@@ -3,6 +3,7 @@
 namespace App\Services\Tesoreria;
 
 use App\Models\TesCfePendiente;
+use App\Models\Tesoreria\CajaConcepto;
 use App\Models\Tesoreria\TesCfe;
 use App\DataTransferObjects\CfeData;
 use Illuminate\Support\Facades\DB;
@@ -119,6 +120,19 @@ class CfeConfirmationService
         return $tipo;
     }
 
+    private function resolverConceptoCaja(string $nombreCanonico): ?CajaConcepto
+    {
+        $busquedaExacta = CajaConcepto::where('caja_concepto', $nombreCanonico)->first();
+        if ($busquedaExacta) {
+            return $busquedaExacta;
+        }
+
+        $normCanonico = \App\Helpers\TextoHelper::normalizarConcepto($nombreCanonico);
+
+        return CajaConcepto::all()
+            ->first(fn ($c) => \App\Helpers\TextoHelper::normalizarConcepto($c->caja_concepto) === $normCanonico);
+    }
+
     /**
      * Rechaza un CFE pendiente.
      *
@@ -167,18 +181,18 @@ class CfeConfirmationService
         $tipoCfe = $pendiente->tipo_cfe;
 
         $mapaConceptos = [
-            'multas_cobradas' => 'Multas de Tránsito',
-            'eventuales' => 'Servicios Eventuales',
-            'prendas' => 'Prendas',
-            'arrendamientos' => 'Arrendamientos',
-            'certificado_residencia' => 'Certificados de Residencia',
-            'tenencia_armas' => 'Tenencia de Armas',
-            'porte_armas' => 'Porte de Armas',
+            'multas_cobradas' => 'MULTAS DE TRÁNSITO',
+            'eventuales' => 'SERVICIOS EVENTUALES',
+            'prendas' => 'PRENDAS',
+            'arrendamientos' => 'ARRENDAMIENTOS',
+            'certificado_residencia' => 'CERTIFICADO DE RESIDENCIA',
+            'tenencia_armas' => 'TÍTULO DE HABILITACIÓN Y TENENCIA DE ARMAS (THATA)',
+            'porte_armas' => 'PORTE DE ARMAS',
             'generico' => 'Genérico',
         ];
 
         $conceptoNombre = $mapaConceptos[$tipoCfe] ?? 'Genérico';
-        $concepto = \App\Models\Tesoreria\CajaConcepto::where('caja_concepto', $conceptoNombre)->first();
+        $concepto = $this->resolverConceptoCaja($conceptoNombre);
         $dependenciaId = isset($datos['siif_distribucion_dependencia_id'])
             ? (int) $datos['siif_distribucion_dependencia_id']
             : 1;
@@ -192,6 +206,14 @@ class CfeConfirmationService
         if (!empty($datos['forma_pago']) && $datos['forma_pago'] !== 'SIN DATOS') {
             $mediosPago[] = ['tipo' => $datos['forma_pago'], 'valor' => $pendiente->monto];
         }
+
+        $itemDistribuciones = $concepto?->id
+            ? $this->cfeCreator->autoAsignarDistribuciones(
+                $concepto->id,
+                $dependenciaId,
+                $items
+            )
+            : [];
 
         return new CfeData(
             documento_tipo: $datos['tipo_cfe'] ?? 'e-Ticket',
@@ -211,7 +233,7 @@ class CfeConfirmationService
             siif_distribucion_dependencia_id: $dependenciaId,
             items: $items,
             medios_pago: $mediosPago,
-            item_distribuciones: [],
+            item_distribuciones: $itemDistribuciones,
             emisor_nombre: 'Jefatura de Policía de Montevideo',
             emisor_ruc: '214988770019',
             emisor_direccion: 'Av. 18 de Julio 1234',

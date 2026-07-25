@@ -7,6 +7,7 @@ use Livewire\WithFileUploads;
 use Smalot\PdfParser\Parser;
 use App\Models\Tesoreria\Arrendamiento;
 use App\Models\Tesoreria\MedioDePago;
+use App\Services\Tesoreria\MedioPagoService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
 use App\Traits\WithOrdenCobroValidation;
@@ -164,14 +165,10 @@ $this->mensajeError = "Error al procesar el PDF: " . $e->getMessage();
                 return;
             }
 
-            // Determinar medio de pago
-            $medioPago = $this->datosExtraidos['forma_pago'] ?? 'SIN DATOS';
-            // Intentar mapear a medio de pago del sistema
-            if (stripos($medioPago, 'Transferencia') !== false) {
-                $medioPago = $this->getDefaultMedioDePago('Transferencia');
-            } elseif (stripos($medioPago, 'Efectivo') !== false) {
-                $medioPago = $this->getDefaultMedioDePago('Efectivo');
-            }
+            // Determinar medio de pago via normalización
+            $medioResuelto = app(MedioPagoService::class)->resolverPorTexto($this->datosExtraidos['forma_pago'] ?? null);
+            $medioPagoNombre = $medioResuelto?->nombre ?? 'SIN DATOS';
+            $medioPagoId = $medioResuelto?->id;
 
             // Determinar detalle
             $detalle = mb_strtoupper($this->datosExtraidos['detalle'], 'UTF-8');
@@ -185,7 +182,8 @@ $this->mensajeError = "Error al procesar el PDF: " . $e->getMessage();
                 'detalle' => $detalle,
                 'orden_cobro' => $this->datosExtraidos['orden_cobro'] ?? null,
                 'recibo' => $recibo,
-                'medio_de_pago' => $medioPago,
+                'medio_de_pago' => $medioPagoNombre,
+                'medio_pago_id' => $medioPagoId,
             ]);
 
             DB::commit();
@@ -200,17 +198,6 @@ $this->mensajeError = "Error al procesar el PDF: " . $e->getMessage();
             DB::rollBack();
             $this->mensajeError = "Error al guardar el registro: " . $e->getMessage();
         }
-    }
-
-    /**
-     * Busca un medio de pago activo que coincida con el término dado.
-     */
-    private function getDefaultMedioDePago(string $termino): string
-    {
-        $medio = MedioDePago::activos()
-            ->where('nombre', 'like', "%{$termino}%")
-            ->first();
-        return $medio ? $medio->nombre : $termino;
     }
 
     public function limpiar()

@@ -236,60 +236,82 @@ class CfeUniversalParserService
         if (preg_match('/DETALLE DESCRIPCI.N CANT\. PRECIO DESC\. REC\. IMPORTE\s*\n(.*?)(?=\s*\n\s*MONTO (?:NO FACTURABLE|TOTAL))/isu', $texto, $m)) {
             $itemsBlock = trim($m[1]);
             $lines = explode("\n", $itemsBlock);
-            
-            $currentItem = null;
+
+            // Patrón de línea de metadata (TRÁMITE, ING, O/C, REIMPRESION)
+            $metaPattern = '/^(?:TR[\xc1A]M(?:ITE)?\.?|ING(?:RESO)?\.?(?:\s*N[\xb0\xba]?)?|O(?:RDEN)?[\s\/]?(?:DE\s+)?C(?:OBRO)?[\s\/]?\.?|REIMPRESI[\xd3O]N)/iu';
+
+            $bufferDesc = [];  // líneas de descripción real
+            $bufferMeta = [];  // líneas de metadata (se descartan del detalle/descripción)
+
             foreach ($lines as $line) {
                 $line = trim($line);
                 if (empty($line)) continue;
-                
-                // Tratar de hacer match al final de la línea que contiene los montos
-                // Ej: "1,000 (Unid) 7.392,00 7.392,00" o "1,000 (Unid) 589,00 -179.056,00"
-                if (preg_match('/(-?\d[\d\.,]*)(?:\s+\(([^)]+)\))?\s+(-?\d[\d\.,]*)(?:\s+(-?\d[\d\.,]*))?(?:\s+(-?\d[\d\.,]*))?\s+(-?\d[\d\.,]*)$/u', $line, $im)) {
-                     // The match $im has the amounts. 
-                     $cantidad = $this->parseMonto($im[1]);
-                     // The text before the quantity is the part of description or it was on previous lines
-                     $prefix = trim(substr($line, 0, strpos($line, $im[1])));
-                     
-                     if ($currentItem === null) {
-                         $currentItem = ['detalle' => $prefix, 'descripcion' => '', 'cantidad' => $cantidad, 'precio' => 0, 'descuento' => 0, 'recargo' => 0, 'importe' => 0];
-                     } else {
-                         if (!empty($prefix)) {
-                             $currentItem['descripcion'] .= " " . $prefix;
-                         }
-                         $currentItem['cantidad'] = $cantidad;
-                     }
-                     
-                     // Resolving parsed amounts
-                     $matchesCount = count($im) - 1;
-                     $currentItem['importe'] = $this->parseMonto($im[$matchesCount]);
-                     
-                     if ($matchesCount == 6) { // cantidad, uni, precio, desc, rec, importe
-                         $currentItem['precio'] = $this->parseMonto($im[3]);
-                         $currentItem['descuento'] = $this->parseMonto($im[4]);
-                         $currentItem['recargo'] = $this->parseMonto($im[5]);
-                     } elseif ($matchesCount == 5) {
-                         $currentItem['precio'] = $this->parseMonto($im[3]);
-                         $currentItem['descuento'] = $this->parseMonto($im[4]);
-                     } elseif ($matchesCount == 4) {
-                         $currentItem['precio'] = $this->parseMonto($im[3]);
-                     }
-                     
-                     $currentItem['descripcion'] = trim($currentItem['descripcion']);
-                     $datos['items'][] = $currentItem;
-                     $currentItem = null; // reset
+
+                // Línea que termina con el patrón de cantidades/precios
+                if (preg_match('/^(.*?)(\d[\d\.,]*(?:\s*\([^)]+\))?\s+\d[\d\.,]*\s+\d[\d\.,]*)\s*$/u', $line, $im)) {
+                    $prefix = trim($im[1]);
+
+                        // El prefix puede ser: solo metadata, solo descripción, o "descripción + metadata" mezclados
+                    if (!empty($prefix)) {
+                        // Intentar separar: buscar dónde empieza la metadata dentro del prefix
+                        if (preg_match('/^(.*?)\s+((?:TR[\xc1A]M(?:ITE)?\.?|ING(?:RESO)?\.?(?:\s*N[\xb0\xba]?)?|O(?:RDEN)?[\s\/]?(?:DE\s+)?C(?:OBRO)?[\s\/]?\.?|REIMPRESI[\xd3O]N).*)$/iu', $prefix, $split)) {
+                            // Hay parte descriptiva antes de la metadata
+                            if (!empty(trim($split[1]))) {
+                                $bufferDesc[] = trim($split[1]);
+                            }
+                            $bufferMeta[] = trim($split[2]);
+                        } elseif (preg_match($metaPattern, $prefix)) {
+                            // Todo el prefix es metadata
+                            $bufferMeta[] = $prefix;
+                        } else {
+                            // Todo el prefix es descripción real
+                            $bufferDesc[] = $prefix;
+                        }
+                    }
+
+                    $detalle     = trim(implode(' ', $bufferDesc));
+                    $descripcion = trim(implode(' ', $bufferMeta));
+
+                    // Parsear montos
+                    $montos = preg_split('/\s+/', trim($im[2]));
+                    $nMontos = count($montos);
+                    $cantidad = $this->parseMonto($montos[0] ?? '0');
+                    $precio   = $nMontos >= 2 ? $this->parseMonto($montos[$nMontos - 2]) : 0;
+                    $importe  = $nMontos >= 3 ? $this->parseMonto($montos[$nMontos - 1]) : $precio;
+
+                    $datos['items'][] = [
+                        'detalle'     => $detalle,
+                        'descripcion' => $descripcion,
+                        'cantidad'    => $cantidad,
+                        'precio'      => $precio,
+                        'descuento'   => 0,
+                        'recargo'     => 0,
+                        'importe'     => $importe,
+                    ];
+
+                    $bufferDesc = [];
+                    $bufferMeta = [];
+
+                } elseif (preg_match($metaPattern, $line)) {
+                    // Línea de metadata suelta: guardar para descripción
+                    $bufferMeta[] = $line;
                 } else {
-                     // Lína de texto descriptivo
-                     if ($currentItem === null) {
-                         $currentItem = ['detalle' => $line, 'descripcion' => '', 'cantidad' => 1, 'precio' => 0, 'descuento' => 0, 'recargo' => 0, 'importe' => 0];
-                     } else {
-                         $currentItem['descripcion'] .= " " . $line;
-                     }
+                    // Línea de descripción real
+                    $bufferDesc[] = $line;
                 }
             }
-            if ($currentItem !== null) {
-                // If the loop ended with an incomplete item, just add it
-                $currentItem['descripcion'] = trim($currentItem['descripcion']);
-                $datos['items'][] = $currentItem;
+
+            // Ítem incompleto sin línea de números
+            if (!empty($bufferDesc)) {
+                $datos['items'][] = [
+                    'detalle'     => trim(implode(' ', $bufferDesc)),
+                    'descripcion' => '',
+                    'cantidad'    => 1,
+                    'precio'      => 0,
+                    'descuento'   => 0,
+                    'recargo'     => 0,
+                    'importe'     => 0,
+                ];
             }
         }
 

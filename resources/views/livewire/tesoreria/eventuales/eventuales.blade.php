@@ -1,532 +1,532 @@
 <div wire:init="checkEditId">
-    <style>
-        .text-nowrap-custom {
-            white-space: nowrap;
-        }
+  <style>
+    .text-nowrap-custom {
+      white-space: nowrap;
+    }
 
-        .btn-action-fixed {
-            width: 30px;
-            padding-left: 0;
-            padding-right: 0;
-        }
-    </style>
-    <div class="row">
-        <div class="col-md-12">
-            <div class="card">
-                <div class="card-header bg-info text-white card-header-gradient py-2 px-3 d-flex justify-content-between align-items-center">
-                    <h4 class="mb-0"><strong><i class="fas fa-hand-holding-usd mr-2"></i>Eventuales</strong></h4>
-                    <div class="btn-group d-print-none">
-                        <a href="{{ route('tesoreria.eventuales.reportes') }}" class="btn btn-secondary">
-                            <i class="fas fa-filter"></i> Filtrar
-                        </a>
-                        <a href="{{ route('tesoreria.eventuales.instituciones') }}" class="btn btn-dark">
-                            <i class="fas fa-building"></i> Instituciones
-                        </a>
-                        <a href="{{ route('tesoreria.eventuales.imprimir-detalles', ['year' => $year, 'mes' => $mes]) }}" target="_blank" class="btn btn-info">
-                            <i class="fas fa-print"></i> Detalles
-                        </a>
-                        <a href="{{ route('tesoreria.eventuales.imprimir', ['year' => $year, 'mes' => $mes]) }}" target="_blank" class="btn btn-success">
-                            <i class="fas fa-print"></i> Imprimir
-                        </a>
-                        <a href="{{ route('tesoreria.eventuales.cargar-efactura') }}" class="btn btn-warning">
-                            <i class="fas fa-file-invoice-dollar"></i> Cargar eFactura
-                        </a>
-                        <button type="button" class="btn btn-primary" wire:click.prevent="create">
-                            <i class="fas fa-plus"></i> Nuevo
-                        </button>
-                    </div>
+    .btn-action-fixed {
+      width: 30px;
+      padding-left: 0;
+      padding-right: 0;
+    }
+  </style>
+  <div class="row">
+    <div class="col-md-12">
+      <div class="card">
+        <div class="card-header bg-info text-white card-header-gradient py-2 px-3 d-flex justify-content-between align-items-center">
+          <h4 class="mb-0"><strong><i class="fas fa-hand-holding-usd mr-2"></i>Eventuales</strong></h4>
+          <div class="btn-group d-print-none">
+            <a href="{{ route('tesoreria.eventuales.reportes') }}" class="btn btn-secondary">
+              <i class="fas fa-filter"></i> Filtrar
+            </a>
+            <a href="{{ route('tesoreria.eventuales.instituciones') }}" class="btn btn-dark">
+              <i class="fas fa-building"></i> Instituciones
+            </a>
+            <a href="{{ route('tesoreria.eventuales.imprimir-detalles', ['year' => $year, 'mes' => $mes]) }}" target="_blank" class="btn btn-info">
+              <i class="fas fa-print"></i> Detalles
+            </a>
+            <a href="{{ route('tesoreria.eventuales.imprimir', ['year' => $year, 'mes' => $mes]) }}" target="_blank" class="btn btn-success">
+              <i class="fas fa-print"></i> Imprimir
+            </a>
+            <a href="{{ route('tesoreria.eventuales.cargar-efactura') }}" class="btn btn-warning">
+              <i class="fas fa-file-invoice-dollar"></i> Cargar eFactura
+            </a>
+            <button type="button" class="btn btn-primary" wire:click.prevent="create">
+              <i class="fas fa-plus"></i> Nuevo
+            </button>
+          </div>
+        </div>
+        <div class="card-body p-2">
+          @if ($totalesPorInstitucion->isNotEmpty())
+          <div class="mb-2 p-2 border rounded bg-light">
+            <h6 class="mb-2 text-center font-weight-bold">Totales por Institución</h6>
+            <div class="d-flex flex-wrap justify-content-around">
+              @foreach ($totalesPorInstitucion as $total)
+              <div class="p-2 text-center flex-fill">
+                <strong>{{ $total->institucion ?: 'SIN DATO' }}</strong><br>
+                $ {{ number_format((float) $total->total_monto, 2, ',', '.') }}
+              </div>
+              @endforeach
+            </div>
+          </div>
+          @endif
+          <!-- Selector de Fecha/Mes/Año -->
+          <div class="form-row mb-2">
+            <div class="col-md-5">
+              <div class="input-group input-group-sm">
+                <div class="input-group-prepend">
+                  <span class="input-group-text">Mes y Año</span>
                 </div>
-                <div class="card-body p-2">
-                    @if ($totalesPorInstitucion->isNotEmpty())
-                    <div class="mb-2 p-2 border rounded bg-light">
-                        <h6 class="mb-2 text-center font-weight-bold">Totales por Institución</h6>
-                        <div class="d-flex flex-wrap justify-content-around">
-                            @foreach ($totalesPorInstitucion as $total)
-                            <div class="p-2 text-center flex-fill">
-                                <strong>{{ $total->institucion ?: 'SIN DATO' }}</strong><br>
-                                $ {{ number_format((float) $total->total_monto, 2, ',', '.') }}
-                            </div>
-                            @endforeach
-                        </div>
-                    </div>
+                <select id="mesSelector" class="form-control form-control-sm" wire:model="mes">
+                  <option value="1">Enero</option>
+                  <option value="2">Febrero</option>
+                  <option value="3">Marzo</option>
+                  <option value="4">Abril</option>
+                  <option value="5">Mayo</option>
+                  <option value="6">Junio</option>
+                  <option value="7">Julio</option>
+                  <option value="8">Agosto</option>
+                  <option value="9">Septiembre</option>
+                  <option value="10">Octubre</option>
+                  <option value="11">Noviembre</option>
+                  <option value="12">Diciembre</option>
+                </select>
+                <input type="number" id="anioSelector" class="form-control form-control-sm" wire:model="year">
+              </div>
+            </div>
+            <div class="col-md-7 align-self-end d-print-none">
+              <div class="btn-group d-flex" role="group">
+                <div class="input-group input-group-sm">
+                  <input type="text" wire:model="search" id="search"
+                    class="form-control form-control-sm"
+                    placeholder="Buscar por ingreso, monto, O/C o recibo...">
+                  <div class="input-group-append">
+                    <button class="btn btn-outline-danger btn-sm" type="button" wire:click="$set('search', '')" title="Limpiar filtro">
+                      <i class="fas fa-times"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table class="table table-bordered table-sm">
+              <thead>
+                <tr>
+                  <th class="text-center align-middle">Fecha</th>
+                  <th class="text-center align-middle">Ingreso</th>
+                  <th class="text-center align-middle">Institución</th>
+                  <th class="text-center align-middle">Monto</th>
+                  <th class="text-center align-middle">O/C</th>
+                  <th class="text-center align-middle">Recibo</th>
+                  <th class="text-center align-middle">Medio de Pago</th>
+                  <th class="text-center align-middle"></th>
+                  @can('tesoreria.supervisar')
+                  <th class="text-center align-middle d-print-none">Confirmado</th>
+                  @endcan
+                  <th class="text-center align-middle d-print-none">Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                @forelse ($eventuales as $eventual)
+                <tr>
+                  <td class="text-center align-middle">{{ $eventual->fecha->format('d/m/Y') }}
+                  </td>
+                  <td class="text-right align-middle">
+                    {{ is_numeric($eventual->ingreso) ? number_format($eventual->ingreso, 0, ',', '.') : $eventual->ingreso }}
+                  </td>
+                  <td class="text-center align-middle">{{ $eventual->institucion ?: 'SIN DATO' }}</td>
+                  <td class="text-right align-middle"><span
+                      class="text-nowrap-custom">{{ $eventual->monto_formateado }}</span></td>
+                  <td class="text-right align-middle">
+                    {{ is_numeric($eventual->orden_cobro) ? number_format($eventual->orden_cobro, 0, ',', '.') : $eventual->orden_cobro }}
+                  </td>
+                  <td class="text-right align-middle">{{ is_numeric($eventual->recibo) ? number_format($eventual->recibo, 0, ',', '.') : $eventual->recibo }}</td>
+                  <td class="text-center align-middle">{{ $eventual->medio_de_pago }}</td>
+                  <td class="text-center align-middle">
+                    @if($eventual->planilla_id)
+                    <i class="fas fa-check-circle text-success" title="En planilla"></i>
+                    @else
+                    <i class="fas fa-times-circle text-danger" title="No en planilla"></i>
                     @endif
-                    <!-- Selector de Fecha/Mes/Año -->
-                    <div class="form-row mb-2">
-                        <div class="col-md-5">
-                            <div class="input-group input-group-sm">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text">Mes y Año</span>
-                                </div>
-                                <select id="mesSelector" class="form-control form-control-sm" wire:model="mes">
-                                    <option value="1">Enero</option>
-                                    <option value="2">Febrero</option>
-                                    <option value="3">Marzo</option>
-                                    <option value="4">Abril</option>
-                                    <option value="5">Mayo</option>
-                                    <option value="6">Junio</option>
-                                    <option value="7">Julio</option>
-                                    <option value="8">Agosto</option>
-                                    <option value="9">Septiembre</option>
-                                    <option value="10">Octubre</option>
-                                    <option value="11">Noviembre</option>
-                                    <option value="12">Diciembre</option>
-                                </select>
-                                <input type="number" id="anioSelector" class="form-control form-control-sm" wire:model="year">
-                            </div>
-                        </div>
-                        <div class="col-md-7 align-self-end d-print-none">
-                            <div class="btn-group d-flex" role="group">
-                                <div class="input-group input-group-sm">
-                                    <input type="text" wire:model="search" id="search"
-                                        class="form-control form-control-sm"
-                                        placeholder="Buscar por ingreso, monto, O/C o recibo...">
-                                    <div class="input-group-append">
-                                        <button class="btn btn-outline-danger btn-sm" type="button" wire:click="$set('search', '')" title="Limpiar filtro">
-                                            <i class="fas fa-times"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                  </td>
+                  @can('tesoreria.supervisar')
+                  <td
+                    class="text-center{{ !$eventual->confirmado ? ' table-warning' : '' }} align-middle d-print-none">
+                    <div class="custom-control custom-switch" style="transform: scale(0.8);">
+                      <input type="checkbox" class="custom-control-input"
+                        id="confirmado-{{ $eventual->id }}"
+                        wire:click.prevent="toggleConfirmado({{ $eventual->id }})"
+                        {{ $eventual->confirmado ? 'checked' : '' }}>
+                      <label class="custom-control-label"
+                        for="confirmado-{{ $eventual->id }}"></label>
                     </div>
-
-                    <div class="table-responsive">
-                        <table class="table table-bordered table-sm">
-                            <thead>
-                                <tr>
-                                    <th class="text-center align-middle">Fecha</th>
-                                    <th class="text-center align-middle">Ingreso</th>
-                                    <th class="text-center align-middle">Institución</th>
-                                    <th class="text-center align-middle">Monto</th>
-                                    <th class="text-center align-middle">O/C</th>
-                                    <th class="text-center align-middle">Recibo</th>
-                                    <th class="text-center align-middle">Medio de Pago</th>
-                                    <th class="text-center align-middle"></th>
-                                    @can('tesoreria.supervisar')
-                                    <th class="text-center align-middle d-print-none">Confirmado</th>
-                                    @endcan
-                                    <th class="text-center align-middle d-print-none">Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse ($eventuales as $eventual)
-                                <tr>
-                                    <td class="text-center align-middle">{{ $eventual->fecha->format('d/m/Y') }}
-                                    </td>
-                                    <td class="text-right align-middle">
-                                        {{ is_numeric($eventual->ingreso) ? number_format($eventual->ingreso, 0, ',', '.') : $eventual->ingreso }}
-                                    </td>
-                                    <td class="text-center align-middle">{{ $eventual->institucion ?: 'SIN DATO' }}</td>
-                                    <td class="text-right align-middle"><span
-                                            class="text-nowrap-custom">{{ $eventual->monto_formateado }}</span></td>
-                                    <td class="text-right align-middle">
-                                        {{ is_numeric($eventual->orden_cobro) ? number_format($eventual->orden_cobro, 0, ',', '.') : $eventual->orden_cobro }}
-                                    </td>
-                                    <td class="text-right align-middle">{{ is_numeric($eventual->recibo) ? number_format($eventual->recibo, 0, ',', '.') : $eventual->recibo }}</td>
-                                    <td class="text-center align-middle">{{ $eventual->medio_de_pago }}</td>
-                                    <td class="text-center align-middle">
-                                        @if($eventual->planilla_id)
-                                        <i class="fas fa-check-circle text-success" title="En planilla"></i>
-                                        @else
-                                        <i class="fas fa-times-circle text-danger" title="No en planilla"></i>
-                                        @endif
-                                    </td>
-                                    @can('tesoreria.supervisar')
-                                    <td
-                                        class="text-center{{ !$eventual->confirmado ? ' table-warning' : '' }} align-middle d-print-none">
-                                        <div class="custom-control custom-switch" style="transform: scale(0.8);">
-                                            <input type="checkbox" class="custom-control-input"
-                                                id="confirmado-{{ $eventual->id }}"
-                                                wire:click.prevent="toggleConfirmado({{ $eventual->id }})"
-                                                {{ $eventual->confirmado ? 'checked' : '' }}>
-                                            <label class="custom-control-label"
-                                                for="confirmado-{{ $eventual->id }}"></label>
-                                        </div>
-                                    </td>
-                                    @endcan
-                                    <td class="text-center align-middle d-print-none text-nowrap">
-                                        <button wire:click="showDetails({{ $eventual->id }})"
-                                            class="btn btn-sm btn-info btn-action-fixed" data-toggle="modal"
-                                            data-target="#detailsModal" title="Detalles"><i
-                                                class="fas fa-eye"></i></button>
-                                        <button wire:click="editIngreso({{ $eventual->id }})"
-                                            class="btn btn-sm btn-success btn-action-fixed" title="Ingreso"><i
-                                                class="fas fa-file-invoice-dollar"></i></button>
-                                        <button wire:click="edit({{ $eventual->id }})"
-                                            class="btn btn-sm btn-primary btn-action-fixed" title="Editar"><i
-                                                class="fas fa-edit"></i></button>
-                                        <button
-                                            data-swal-confirm="true"
-                                            data-swal-title="¿Estás seguro?"
-                                            data-swal-text="¡No podrás revertir esto!"
-                                            data-swal-method="destroy"
-                                            data-swal-id="{{ $eventual->id }}"
-                                            data-swal-confirm-btn="Sí, elimínalo"
-                                            class="btn btn-sm btn-danger btn-action-fixed" title="Eliminar"><i
-                                                class="fas fa-trash-alt"></i></button>
-                                    </td>
-                                </tr>
-                                @empty
-                                <tr>
-                                    <td colspan="@can('tesoreria.supervisar') 10 @else 9 @endcan"
-                                        class="text-center">No hay registros para el mes y año seleccionados.</td>
-                                </tr>
-                                @endforelse
-                            </tbody>
-                            <tfoot>
-                                @foreach ($subtotales as $subtotal)
-                                <tr>
-                                    <td colspan="3" class="text-right align-middle"><strong>Total
-                                            {{ $subtotal->medio_de_pago }}:</strong></td>
-                                    <td class="text-right align-middle"><strong><span class="text-nowrap-custom">$
-                                                {{ number_format($subtotal->total_submonto, 2, ',', '.') }}</span></strong>
-                                    </td>
-                                    <td colspan="@can('tesoreria.supervisar') 6 @else 5 @endcan"
-                                        class="align-middle"></td>
-                                </tr>
-                                @endforeach
-                                <tr>
-                                    <td colspan="3" class="text-right align-middle"><strong>Total General:</strong>
-                                    </td>
-                                    <td class="text-right align-middle"><strong><span class="text-nowrap-custom">$
-                                                {{ number_format($generalTotal, 2, ',', '.') }}</span></strong></td>
-                                    <td
-                                        colspan="@can('tesoreria.supervisar') 6 @else 5 @endcan">
-                                    </td>
-                                </tr>
-                            </tfoot>
-                        </table>
-                    </div>
-                    <div class="d-flex justify-content-center">
-                        @if($eventuales instanceof \Illuminate\Pagination\LengthAwarePaginator)
-                        {{ $eventuales->links() }}
-                        @endif
-                    </div>
-                </div>
-            </div>
+                  </td>
+                  @endcan
+                  <td class="text-center align-middle d-print-none text-nowrap">
+                    <button wire:click="showDetails({{ $eventual->id }})"
+                      class="btn btn-sm btn-info btn-action-fixed" data-toggle="modal"
+                      data-target="#detailsModal" title="Detalles"><i
+                        class="fas fa-eye"></i></button>
+                    <button wire:click="editIngreso({{ $eventual->id }})"
+                      class="btn btn-sm btn-success btn-action-fixed" title="Ingreso"><i
+                        class="fas fa-file-invoice-dollar"></i></button>
+                    <button wire:click="edit({{ $eventual->id }})"
+                      class="btn btn-sm btn-primary btn-action-fixed" title="Editar"><i
+                        class="fas fa-edit"></i></button>
+                    <button
+                      data-swal-confirm="true"
+                      data-swal-title="¿Estás seguro?"
+                      data-swal-text="¡No podrás revertir esto!"
+                      data-swal-method="destroy"
+                      data-swal-id="{{ $eventual->id }}"
+                      data-swal-confirm-btn="Sí, elimínalo"
+                      class="btn btn-sm btn-danger btn-action-fixed" title="Eliminar"><i
+                        class="fas fa-trash-alt"></i></button>
+                  </td>
+                </tr>
+                @empty
+                <tr>
+                  <td colspan="@can('tesoreria.supervisar') 10 @else 9 @endcan"
+                    class="text-center">No hay registros para el mes y año seleccionados.</td>
+                </tr>
+                @endforelse
+              </tbody>
+              <tfoot>
+                @foreach ($subtotales as $subtotal)
+                <tr>
+                  <td colspan="3" class="text-right align-middle"><strong>Total
+                      {{ $subtotal->medio_de_pago }}:</strong></td>
+                  <td class="text-right align-middle"><strong><span class="text-nowrap-custom">$
+                        {{ number_format($subtotal->total_submonto, 2, ',', '.') }}</span></strong>
+                  </td>
+                  <td colspan="@can('tesoreria.supervisar') 6 @else 5 @endcan"
+                    class="align-middle"></td>
+                </tr>
+                @endforeach
+                <tr>
+                  <td colspan="3" class="text-right align-middle"><strong>Total General:</strong>
+                  </td>
+                  <td class="text-right align-middle"><strong><span class="text-nowrap-custom">$
+                        {{ number_format($generalTotal, 2, ',', '.') }}</span></strong></td>
+                  <td
+                    colspan="@can('tesoreria.supervisar') 6 @else 5 @endcan">
+                  </td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+          <div class="d-flex justify-content-center">
+            @if($eventuales instanceof \Illuminate\Pagination\LengthAwarePaginator)
+            {{ $eventuales->links() }}
+            @endif
+          </div>
         </div>
+      </div>
     </div>
+  </div>
 
-    <!-- Create/Edit Modal -->
-    <div wire:ignore.self class="modal fade" id="eventualModal" tabindex="-1" role="dialog"
-        aria-labelledby="eventualModalLabel" aria-hidden="true">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="eventualModalLabel">{{ $eventual_id ? 'Editar' : 'Crear' }} Eventual
-                    </h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <form>
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="fecha">Fecha</label>
-                                    <input type="date" wire:model.defer="fecha" id="fecha"
-                                        class="form-control form-control-sm">
-                                    @error('fecha')
-                                    <span class="text-danger">{{ $message }}</span>
-                                    @enderror
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="ingreso">Ingreso</label>
-                                    <input type="text" wire:model.defer="ingreso" id="ingreso"
-                                        class="form-control form-control-sm">
-                                    @error('ingreso')
-                                    <span class="text-danger">{{ $message }}</span>
-                                    @enderror
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="institucion">Institución</label>
-                                    <select wire:model.defer="institucion" id="institucion"
-                                        class="form-control form-control-sm">
-                                        <option value="">Seleccione...</option>
-                                        @foreach($instituciones as $inst)
-                                        <option value="{{ mb_strtoupper($inst->nombre, 'UTF-8') }}">{{ $inst->nombre }}</option>
-                                        @endforeach
-                                    </select>
-                                    @error('institucion')
-                                    <span class="text-danger">{{ $message }}</span>
-                                    @enderror
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="titular">Titular</label>
-                                    <input type="text" wire:model.defer="titular" id="titular"
-                                        class="form-control form-control-sm">
-                                    @error('titular')
-                                    <span class="text-danger">{{ $message }}</span>
-                                    @enderror
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="medio_de_pago">Medio de Pago</label>
-                                    <select wire:model.defer="medio_de_pago" id="medio_de_pago"
-                                        class="form-control form-control-sm">
-                                        <option value="">Seleccione...</option>
-                                        @foreach($mediosDePago as $medio)
-                                        <option value="{{ mb_strtoupper($medio->nombre, 'UTF-8') }}">{{ $medio->nombre }}</option>
-                                        @endforeach
-                                    </select>
-                                    @error('medio_de_pago')
-                                    <span class="text-danger">{{ $message }}</span>
-                                    @enderror
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="monto">Monto</label>
-                                    <input type="number" step="0.01" wire:model.defer="monto" id="monto"
-                                        class="form-control form-control-sm">
-                                    @error('monto')
-                                    <span class="text-danger">{{ $message }}</span>
-                                    @enderror
-                                </div>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label for="detalle">Detalle</label>
-                            <textarea wire:model.defer="detalle" id="detalle" class="form-control form-control-sm"></textarea>
-                            @error('detalle')
-                            <span class="text-danger">{{ $message }}</span>
-                            @enderror
-                        </div>
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="orden_cobro">Orden de Cobro</label>
-                                    <input type="text" wire:model.defer="orden_cobro" id="orden_cobro"
-                                        class="form-control form-control-sm">
-                                    @error('orden_cobro')
-                                    <span class="text-danger">{{ $message }}</span>
-                                    @enderror
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="recibo">Recibo</label>
-                                    <input type="text" wire:model.defer="recibo" id="recibo"
-                                        class="form-control form-control-sm">
-                                    @error('recibo')
-                                    <span class="text-danger">{{ $message }}</span>
-                                    @enderror
-                                </div>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
-                    <button type="button" wire:click.prevent="{{ $eventual_id ? 'update()' : 'store()' }}"
-                        class="btn btn-primary">Guardar</button>
-                </div>
-            </div>
+  <!-- Create/Edit Modal -->
+  <div wire:ignore.self class="modal fade" id="eventualModal" tabindex="-1" role="dialog"
+    aria-labelledby="eventualModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="eventualModalLabel">{{ $eventual_id ? 'Editar' : 'Crear' }} Eventual
+          </h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
         </div>
-    </div>
-
-    <!-- Details Modal -->
-    <div wire:ignore.self class="modal fade" id="detailsModal" tabindex="-1" role="dialog"
-        aria-labelledby="detailsModalLabel" aria-hidden="true">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="detailsModalLabel">Detalles del Eventual</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"
-                        wire:click="resetDetails()">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
+        <div class="modal-body">
+          <form>
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="fecha">Fecha</label>
+                  <input type="date" wire:model.defer="fecha" id="fecha"
+                    class="form-control form-control-sm">
+                  @error('fecha')
+                  <span class="text-danger">{{ $message }}</span>
+                  @enderror
                 </div>
-                <div class="modal-body">
-                    @if ($selectedEventual)
-                    <p class="mb-0"><strong>Fecha:</strong> {{ $selectedEventual->fecha->format('d/m/Y') }}</p>
-                    <p class="mb-0"><strong>Ingreso:</strong> {{ $selectedEventual->ingreso }}</p>
-                    <p class="mb-0"><strong>Institución:</strong> {{ $selectedEventual->institucion }}</p>
-                    <p class="mb-0"><strong>Titular:</strong> {{ $selectedEventual->titular }}</p>
-                    <p class="mb-0"><strong>Medio de Pago:</strong> {{ $selectedEventual->medio_de_pago }}</p>
-                    <p class="mb-0"><strong>Monto:</strong> <span
-                            class="text-nowrap-custom">{{ $selectedEventual->monto_formateado }}</span></p>
-                    <p class="mb-0"><strong>Detalle:</strong> {{ $selectedEventual->detalle }}</p>
-                    <p class="mb-0"><strong>Orden de Cobro:</strong> {{ $selectedEventual->orden_cobro }}</p>
-                    <p class="mb-0"><strong>Recibo:</strong> {{ $selectedEventual->recibo }}</p>
-                    @endif
+              </div>
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="ingreso">Ingreso</label>
+                  <input type="text" wire:model.defer="ingreso" id="ingreso"
+                    class="form-control form-control-sm">
+                  @error('ingreso')
+                  <span class="text-danger">{{ $message }}</span>
+                  @enderror
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal"
-                        wire:click="resetDetails()">Cerrar</button>
-                </div>
+              </div>
             </div>
-        </div>
-    </div>
-
-    <!-- Ingreso Modal -->
-    <div wire:ignore.self class="modal fade" id="ingresoModal" tabindex="-1" role="dialog"
-        aria-labelledby="ingresoModalLabel" aria-hidden="true">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="ingresoModalLabel">Registrar Ingreso</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="institucion">Institución</label>
+                  <select wire:model.defer="institucion" id="institucion"
+                    class="form-control form-control-sm">
+                    <option value="">Seleccione...</option>
+                    @foreach($instituciones as $inst)
+                    <option value="{{ mb_strtoupper($inst->nombre, 'UTF-8') }}">{{ $inst->nombre }}</option>
+                    @endforeach
+                  </select>
+                  @error('institucion')
+                  <span class="text-danger">{{ $message }}</span>
+                  @enderror
                 </div>
-                <div class="modal-body">
-                    <form>
-                        <dl class="row">
-                            <dt class="col-sm-3">Titular</dt>
-                            <dd class="col-sm-9">{{ $titular }}</dd>
-
-                            <dt class="col-sm-3">Monto</dt>
-                            <dd class="col-sm-9">{{ $monto }}</dd>
-
-                            <dt class="col-sm-3">O/C</dt>
-                            <dd class="col-sm-9">{{ $orden_cobro }}</dd>
-
-                            <dt class="col-sm-3">Recibo</dt>
-                            <dd class="col-sm-9">{{ $recibo }}</dd>
-                        </dl>
-                        <div class="form-group">
-                            <label for="ingreso_input">Ingreso</label>
-                            <input type="text" wire:model.defer="ingreso" id="ingreso_input"
-                                class="form-control form-control-sm">
-                            @error('ingreso')
-                            <span class="text-danger">{{ $message }}</span>
-                            @enderror
-                        </div>
-                    </form>
+              </div>
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="titular">Titular</label>
+                  <input type="text" wire:model.defer="titular" id="titular"
+                    class="form-control form-control-sm">
+                  @error('titular')
+                  <span class="text-danger">{{ $message }}</span>
+                  @enderror
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
-                    <button type="button" wire:click.prevent="updateIngreso()"
-                        class="btn btn-primary">Guardar</button>
-                </div>
+              </div>
             </div>
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="medio_de_pago">Medio de Pago</label>
+                  <select wire:model.defer="medio_de_pago" id="medio_de_pago"
+                    class="form-control form-control-sm">
+                    <option value="">Seleccione...</option>
+                    @foreach($mediosDePago as $medio)
+                    <option value="{{ mb_strtoupper($medio->nombre, 'UTF-8') }}">{{ $medio->nombre }}</option>
+                    @endforeach
+                  </select>
+                  @error('medio_de_pago')
+                  <span class="text-danger">{{ $message }}</span>
+                  @enderror
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="monto">Monto</label>
+                  <input type="number" step="0.01" wire:model.defer="monto" id="monto"
+                    class="form-control form-control-sm">
+                  @error('monto')
+                  <span class="text-danger">{{ $message }}</span>
+                  @enderror
+                </div>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="detalle">Detalle</label>
+              <textarea wire:model.defer="detalle" id="detalle" class="form-control form-control-sm"></textarea>
+              @error('detalle')
+              <span class="text-danger">{{ $message }}</span>
+              @enderror
+            </div>
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="orden_cobro">Orden de Cobro</label>
+                  <input type="text" wire:model.defer="orden_cobro" id="orden_cobro"
+                    class="form-control form-control-sm">
+                  @error('orden_cobro')
+                  <span class="text-danger">{{ $message }}</span>
+                  @enderror
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="recibo">Recibo</label>
+                  <input type="text" wire:model.defer="recibo" id="recibo"
+                    class="form-control form-control-sm">
+                  @error('recibo')
+                  <span class="text-danger">{{ $message }}</span>
+                  @enderror
+                </div>
+              </div>
+            </div>
+          </form>
         </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+          <button type="button" wire:click.prevent="{{ $eventual_id ? 'update()' : 'store()' }}"
+            class="btn btn-primary">Guardar</button>
+        </div>
+      </div>
     </div>
+  </div>
 
-    <livewire:tesoreria.eventuales.planillas-manager :mes="$mes" :year="$year" :key="$mes . $year" />
+  <!-- Details Modal -->
+  <div wire:ignore.self class="modal fade" id="detailsModal" tabindex="-1" role="dialog"
+    aria-labelledby="detailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="detailsModalLabel">Detalles del Eventual</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close"
+            wire:click="resetDetails()">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          @if ($selectedEventual)
+          <p class="mb-0"><strong>Fecha:</strong> {{ $selectedEventual->fecha->format('d/m/Y') }}</p>
+          <p class="mb-0"><strong>Ingreso:</strong> {{ $selectedEventual->ingreso }}</p>
+          <p class="mb-0"><strong>Institución:</strong> {{ $selectedEventual->institucion }}</p>
+          <p class="mb-0"><strong>Titular:</strong> {{ $selectedEventual->titular }}</p>
+          <p class="mb-0"><strong>Medio de Pago:</strong> {{ $selectedEventual->medio_de_pago }}</p>
+          <p class="mb-0"><strong>Monto:</strong> <span
+              class="text-nowrap-custom">{{ $selectedEventual->monto_formateado }}</span></p>
+          <p class="mb-0"><strong>Detalle:</strong> {{ $selectedEventual->detalle }}</p>
+          <p class="mb-0"><strong>Orden de Cobro:</strong> {{ $selectedEventual->orden_cobro }}</p>
+          <p class="mb-0"><strong>Recibo:</strong> {{ $selectedEventual->recibo }}</p>
+          @endif
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal"
+            wire:click="resetDetails()">Cerrar</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
-    @push('scripts')
-    <script>
-        // Listener swal:confirm eliminado (ya gestionado globalmente en app.blade.php)
+  <!-- Ingreso Modal -->
+  <div wire:ignore.self class="modal fade" id="ingresoModal" tabindex="-1" role="dialog"
+    aria-labelledby="ingresoModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="ingresoModalLabel">Registrar Ingreso</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <form>
+            <dl class="row">
+              <dt class="col-sm-3">Titular</dt>
+              <dd class="col-sm-9">{{ $titular }}</dd>
 
-        window.addEventListener('revertCheckbox', event => {
-            const checkbox = document.getElementById('confirmado-' + event.detail.id);
-            if (checkbox) {
-                checkbox.checked = event.detail.checked;
-            }
+              <dt class="col-sm-3">Monto</dt>
+              <dd class="col-sm-9">{{ $monto }}</dd>
+
+              <dt class="col-sm-3">O/C</dt>
+              <dd class="col-sm-9">{{ $orden_cobro }}</dd>
+
+              <dt class="col-sm-3">Recibo</dt>
+              <dd class="col-sm-9">{{ $recibo }}</dd>
+            </dl>
+            <div class="form-group">
+              <label for="ingreso_input">Ingreso</label>
+              <input type="text" wire:model.defer="ingreso" id="ingreso_input"
+                class="form-control form-control-sm">
+              @error('ingreso')
+              <span class="text-danger">{{ $message }}</span>
+              @enderror
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+          <button type="button" wire:click.prevent="updateIngreso()"
+            class="btn btn-primary">Guardar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <livewire:tesoreria.eventuales.planillas-manager :mes="$mes" :year="$year" :key="$mes . $year" />
+
+  @push('scripts')
+  <script>
+    // Listener swal:confirm eliminado (ya gestionado globalmente en app.blade.php)
+
+    window.addEventListener('revertCheckbox', event => {
+      const checkbox = document.getElementById('confirmado-' + event.detail.id);
+      if (checkbox) {
+        checkbox.checked = event.detail.checked;
+      }
+    });
+
+    window.addEventListener('close-modal', event => {
+      $('#eventualModal').modal('hide');
+    });
+
+    window.addEventListener('alert', event => {
+      const type = event.detail.type;
+      const message = event.detail.message;
+      const isToast = event.detail.toast || false; // Get toast property, default to false
+
+      if (isToast) {
+        Swal.fire({
+          toast: true,
+          position: 'top-end', // Position for toast
+          showConfirmButton: false,
+          timer: 3000, // Longer timer for toast
+          timerProgressBar: true,
+          icon: type,
+          title: message,
         });
-
-        window.addEventListener('close-modal', event => {
-            $('#eventualModal').modal('hide');
+      } else {
+        Swal.fire({
+          icon: type,
+          title: message,
+          showConfirmButton: false,
+          timer: 1500
         });
+      }
+    });
 
-        window.addEventListener('alert', event => {
-            const type = event.detail.type;
-            const message = event.detail.message;
-            const isToast = event.detail.toast || false; // Get toast property, default to false
+    // Manejar redirección cuando el JWT expire
+    window.addEventListener('redirect-to-login', event => {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Sesión Expirada',
+        text: event.detail.message,
+        showConfirmButton: true,
+        confirmButtonText: 'Ir al Login',
+        allowOutsideClick: false,
+        allowEscapeKey: false
+      }).then((result) => {
+        if (result.isConfirmed) {
+          // Limpiar tokens locales si existieran
+          try {
+            localStorage.removeItem('jwt_token');
+            sessionStorage.removeItem('jwt_token');
+          } catch (e) {}
 
-            if (isToast) {
-                Swal.fire({
-                    toast: true,
-                    position: 'top-end', // Position for toast
-                    showConfirmButton: false,
-                    timer: 3000, // Longer timer for toast
-                    timerProgressBar: true,
-                    icon: type,
-                    title: message,
-                });
+          // Redirigir al login
+          window.location.href = '{{ route("login") }}';
+        }
+      });
+    });
+
+    window.livewire.on('eventualStore', () => {
+      $('#eventualModal').modal('hide');
+    });
+
+    window.livewire.on('eventualUpdate', () => {
+      $('#eventualModal').modal('hide');
+      $('#ingresoModal').modal('hide');
+    });
+
+    $(document).ready(function() {
+      $('#eventualModal').on('hidden.bs.modal', function() {
+        window.livewire.emit('resetForm');
+      });
+
+      $('#ingresoModal').on('hidden.bs.modal', function() {
+        window.livewire.emit('resetForm');
+      });
+
+      $('#eventualModal').on('shown.bs.modal', function() {
+        $('#ingreso').focus();
+
+        const form = $(this).find('form');
+        const inputs = form.find('input:not([type="hidden"]), textarea, select');
+
+        inputs.off('keydown').on('keydown', function(e) {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+
+            const currentIndex = inputs.index(this);
+            const nextIndex = currentIndex + 1;
+
+            if (nextIndex < inputs.length) {
+              $(inputs[nextIndex]).focus();
             } else {
-                Swal.fire({
-                    icon: type,
-                    title: message,
-                    showConfirmButton: false,
-                    timer: 1500
-                });
+              form.closest('.modal-content').find('.btn-primary').focus();
             }
+          }
         });
+      });
 
-        // Manejar redirección cuando el JWT expire
-        window.addEventListener('redirect-to-login', event => {
-            Swal.fire({
-                icon: 'warning',
-                title: 'Sesión Expirada',
-                text: event.detail.message,
-                showConfirmButton: true,
-                confirmButtonText: 'Ir al Login',
-                allowOutsideClick: false,
-                allowEscapeKey: false
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    // Limpiar tokens locales si existieran
-                    try {
-                        localStorage.removeItem('jwt_token');
-                        sessionStorage.removeItem('jwt_token');
-                    } catch (e) {}
-
-                    // Redirigir al login
-                    window.location.href = '{{ route("login") }}';
-                }
-            });
-        });
-
-        window.livewire.on('eventualStore', () => {
-            $('#eventualModal').modal('hide');
-        });
-
-        window.livewire.on('eventualUpdate', () => {
-            $('#eventualModal').modal('hide');
-            $('#ingresoModal').modal('hide');
-        });
-
-        $(document).ready(function() {
-            $('#eventualModal').on('hidden.bs.modal', function() {
-                window.livewire.emit('resetForm');
-            });
-
-            $('#ingresoModal').on('hidden.bs.modal', function() {
-                window.livewire.emit('resetForm');
-            });
-
-            $('#eventualModal').on('shown.bs.modal', function() {
-                $('#ingreso').focus();
-
-                const form = $(this).find('form');
-                const inputs = form.find('input:not([type="hidden"]), textarea, select');
-
-                inputs.off('keydown').on('keydown', function(e) {
-                    if (e.key === 'Enter') {
-                        e.preventDefault();
-
-                        const currentIndex = inputs.index(this);
-                        const nextIndex = currentIndex + 1;
-
-                        if (nextIndex < inputs.length) {
-                            $(inputs[nextIndex]).focus();
-                        } else {
-                            form.closest('.modal-content').find('.btn-primary').focus();
-                        }
-                    }
-                });
-            });
-
-            $('#ingresoModal').on('shown.bs.modal', function() {
-                $('#ingreso_input').focus();
-            });
-        });
-    </script>
-    @endpush
+      $('#ingresoModal').on('shown.bs.modal', function() {
+        $('#ingreso_input').focus();
+      });
+    });
+  </script>
+  @endpush
 
 </div>

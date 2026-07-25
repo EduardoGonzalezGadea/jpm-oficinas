@@ -24,7 +24,7 @@ class PlanillaCheque extends Model
         'updated_by'
     ];
 
-    protected $dates = ['fecha_generacion', 'fecha_anulacion'];
+    protected $casts = ['fecha_generacion' => 'datetime', 'fecha_anulacion' => 'datetime'];
 
     public function cheques()
     {

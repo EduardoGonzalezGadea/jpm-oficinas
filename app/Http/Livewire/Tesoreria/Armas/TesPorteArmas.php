@@ -46,7 +46,7 @@ class TesPorteArmas extends Component
         $this->showModal = false;
         $this->showDeleteModal = false;
         $this->editMode = false;
-        $this->selectedRegistro = TesPorteArmasModel::findOrFail($id);
+        $this->selectedRegistro = TesPorteArmasModel::with('planilla')->findOrFail($id);
         $this->showDetailModal = true;
     }
 

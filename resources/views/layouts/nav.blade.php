@@ -54,6 +54,12 @@
                     <a class="dropdown-item" href="{{ route('tesoreria.caja-chica.index') }}" wire:navigate>
                         <i class="fas fa-coins mr-2"></i>Caja Chica
                     </a>
+                    {{-- Link Caja Diaria (solo administradores) --}}
+                    @if(auth()->user()->esAdministrador())
+                    <a class="dropdown-item" href="{{ route('tesoreria.caja-diaria.index') }}" wire:navigate>
+                        <i class="fas fa-cash-register mr-2"></i> Caja Diaria
+                    </a>
+                    @endif
                     {{-- Link Certificados de Residencia --}}
                     <a class="dropdown-item" href="{{ route('tesoreria.certificados-residencia.index') }}" wire:navigate>
                         <i class="fas fa-file-alt mr-2"></i> Certificados de Residencia
@@ -74,14 +80,20 @@
                     <a class="dropdown-item" href="{{ route('tesoreria.eventuales.index') }}">
                         <i class="fas fa-hand-holding-usd mr-2"></i> Eventuales
                     </a>
-                    {{-- Link Gestión de CFEs --}}
+                    {{-- Link Gestión de Recaudaciones --}}
                     <a class="dropdown-item" href="{{ route('tesoreria.gestion-cfe.index') }}" wire:navigate>
-                        <i class="fas fa-file-invoice mr-2"></i> Gestión de CFEs
+                        <i class="fas fa-file-invoice mr-2"></i> Gestión de Recaudaciones
                     </a>
                     {{-- Link Estados de Recaudación --}}
                     <a class="dropdown-item" href="{{ route('tesoreria.gestion-cfe.estados-recaudacion') }}" wire:navigate>
                         <i class="fas fa-chart-line mr-2"></i> Estados de Recaudación
                     </a>
+                    {{-- Link Libro Diario (solo administradores) --}}
+                    @if(auth()->user()->esAdministrador())
+                    <a class="dropdown-item" href="{{ route('tesoreria.libro-diario.index') }}" wire:navigate>
+                        <i class="fas fa-book mr-2"></i> Libro Diario
+                    </a>
+                    @endif
                     {{-- Link Multas Cobradas --}}
                     <a class="dropdown-item" href="{{ route('tesoreria.multas-cobradas.index') }}">
                         <i class="fas fa-receipt mr-2"></i> Multas Cobradas
@@ -128,7 +140,7 @@
             $sistemaItems = 0;
             if (auth()->user()->esAdministrador() || auth()->user()->moduloClave() === 'tesoreria') $sistemaItems++; // Respaldos
             if (auth()->user()->esAdministrador() || (auth()->user()->moduloClave() === 'tesoreria' && in_array(auth()->user()->nivelActual(), ['supervisor', 'gerente']))) $sistemaItems++; // Auditoría
-            if (auth()->user()->moduloClave() === 'tesoreria' || auth()->user()->esAdministrador()) $sistemaItems += 2; // Pendrive + Opciones
+            if (auth()->user()->moduloClave() === 'tesoreria' || auth()->user()->esAdministrador()) $sistemaItems += 3; // Pendrive + Opciones + Históricos
             $sistemaItems++; // Estilos (siempre visible)
         @endphp
         <ul class="navbar-nav">
@@ -178,9 +190,6 @@
                                 <a class="dropdown-item" href="{{ route('tesoreria.configuracion.tes-tipos-monedas.index') }}">
                                     <i class="fas fa-money-bill-wave mr-2"></i>Tipos de Monedas
                                 </a>
-                                <a class="dropdown-item" href="{{ route('tesoreria.configuracion.tes-denominaciones-monedas.index') }}">
-                                    <i class="fas fa-coins mr-2"></i>Denominaciones
-                                </a>
                                 <a class="dropdown-item" href="{{ route('tesoreria.bancos.index') }}">
                                     <i class="fas fa-university mr-2"></i>Bancos
                                 </a>
@@ -202,6 +211,20 @@
                                     <i class="fas fa-project-diagram mr-2"></i>Distribuciones SIIF
                                 </a>
                             </div>
+                        </div>
+                    </div>
+                    {{-- Históricos --}}
+                    <div class="dropdown-submenu submenu-left">
+                        <a class="dropdown-item dropdown-toggle" href="#">
+                            <i class="fas fa-archive mr-2"></i>Históricos
+                        </a>
+                        <div class="dropdown-menu">
+                            <a class="dropdown-item" href="{{ route('tesoreria.armas.porte') }}" wire:navigate>
+                                <i class="fas fa-id-badge mr-2"></i>Porte de Armas
+                            </a>
+                            <a class="dropdown-item" href="{{ route('tesoreria.armas.tenencia') }}" wire:navigate>
+                                <i class="fas fa-address-card mr-2"></i>Tenencia de Armas
+                            </a>
                         </div>
                     </div>
                     <div class="dropdown-divider"></div>
@@ -338,5 +361,67 @@
 
         dividers.forEach(function(d) { menu.appendChild(d); });
     }
+</script>
+
+<script>
+    $(function () {
+        function showSpinner() {
+            if ($('#nav-spinner-overlay').length === 0) {
+                $('body').append(
+                    '<div id="nav-spinner-overlay" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(255,255,255,0.7); z-index:9999;">' +
+                    '  <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%;">' +
+                    '    <div class="spinner-border text-primary" style="width:4rem; height:4rem;" role="status"></div>' +
+                    '    <div class="mt-3 text-dark font-weight-bold">Procesando, por favor espere...</div>' +
+                    '  </div>' +
+                    '</div>'
+                );
+            }
+            $('#nav-spinner-overlay').fadeIn(200);
+        }
+
+        function hideSpinner() {
+            $('#nav-spinner-overlay').fadeOut(200);
+        }
+
+        $(document).on('click', '#btn-crear-respaldo-menu', function (e) {
+            e.preventDefault();
+
+            Swal.fire({
+                title: '¿Crear nuevo respaldo?',
+                text: 'Esto puede tardar unos minutos. ¿Desea continuar?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, crear respaldo',
+                cancelButtonText: 'Cancelar'
+            }).then(function (result) {
+                if (!result.isConfirmed) return;
+
+                showSpinner();
+                $.ajax({
+                    url: '{{ route('system.backups.create') }}',
+                    method: 'GET',
+                    success: function (data) {
+                        hideSpinner();
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Respaldo creado',
+                            text: data.message || 'El respaldo se ha creado correctamente.',
+                            confirmButtonText: 'Aceptar'
+                        });
+                    },
+                    error: function (xhr) {
+                        hideSpinner();
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: (xhr.responseJSON && xhr.responseJSON.message) ||
+                                'Ocurrió un error al crear el respaldo.',
+                            confirmButtonText: 'Aceptar'
+                        });
+                    }
+                });
+            });
+        });
+    });
 </script>
 @endpush

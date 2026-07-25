@@ -4,6 +4,7 @@ namespace App\Http\Livewire\Tesoreria\Arrendamientos;
 
 use App\Models\Tesoreria\Arrendamiento as Model;
 use App\Models\Tesoreria\MedioDePago;
+use App\Services\Tesoreria\MedioPagoService;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Carbon\Carbon;
@@ -339,13 +340,11 @@ class Arrendamiento extends Component
         $this->medio_de_pago = $this->getDefaultMedioDePago();
     }
 
-    private function getDefaultMedioDePago()
+    private function getDefaultMedioDePago(): string
     {
         return Cache::remember('default_medio_de_pago_transferencia', now()->addDay(), function () {
-            $medio = MedioDePago::activos()
-                ->where('nombre', 'like', '%Transferencia%')
-                ->first();
-            return $medio ? $medio->nombre : 'Transferencia';
+            $medio = app(MedioPagoService::class)->resolverPorTexto('Transferencia');
+            return $medio?->nombre ?? 'Transferencia';
         });
     }
 

@@ -28,6 +28,7 @@ class Arrendamiento extends Model
         'orden_cobro',
         'recibo',
         'medio_de_pago',
+        'medio_pago_id',
         'confirmado',
         'planilla_id'
     ];
@@ -45,9 +46,11 @@ class Arrendamiento extends Model
         return $this->belongsTo(Planilla::class, 'planilla_id');
     }
 
-    /**
-     * Scope for searching
-     */
+    public function medioPago()
+    {
+        return $this->belongsTo(MedioDePago::class, 'medio_pago_id');
+    }
+
     public function scopeSearch($query, $term)
     {
         return $query->where(function ($query) use ($term) {
@@ -60,20 +63,14 @@ class Arrendamiento extends Model
         });
     }
 
-    /**
-     * Scope for confirmed and not in a planilla
-     */
     public function scopeConfirmedAndNotInPlanilla($query)
     {
         return $query->where('confirmado', true)
             ->whereNull('planilla_id');
     }
 
-    /**
-     * Accessor for formatted amount
-     */
     public function getMontoFormateadoAttribute()
     {
         return '$ ' . number_format($this->monto, 2, ',', '.');
     }
-};
+}

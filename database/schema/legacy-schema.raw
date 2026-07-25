@@ -1,0 +1,1853 @@
+-- MariaDB dump 10.19  Distrib 10.4.32-MariaDB, for Win64 (AMD64)
+-- Regenerado el 2026-07-23 12:27:57 desde la BD tesoreria_oficinas
+--
+/*!40101 SET NAMES utf8mb4 */;
+/*!40014 SET FOREIGN_KEY_CHECKS=0 */;
+
+--
+-- Table structure for table `activity_log`
+--
+DROP TABLE IF EXISTS `activity_log`;
+CREATE TABLE `activity_log` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `log_name` varchar(255) DEFAULT NULL,
+  `description` text NOT NULL,
+  `subject_type` varchar(255) DEFAULT NULL,
+  `event` varchar(255) DEFAULT NULL,
+  `subject_id` bigint(20) unsigned DEFAULT NULL,
+  `causer_type` varchar(255) DEFAULT NULL,
+  `causer_id` bigint(20) unsigned DEFAULT NULL,
+  `properties` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`properties`)),
+  `batch_uuid` char(36) DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `subject` (`subject_type`,`subject_id`),
+  KEY `causer` (`causer_type`,`causer_id`),
+  KEY `activity_log_log_name_index` (`log_name`)
+) ENGINE=InnoDB AUTO_INCREMENT=16347 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Table structure for table `external_download_logs`
+--
+DROP TABLE IF EXISTS `external_download_logs`;
+CREATE TABLE `external_download_logs` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `service_name` varchar(255) NOT NULL,
+  `url` varchar(255) NOT NULL,
+  `status` varchar(255) NOT NULL,
+  `http_status` int(11) DEFAULT NULL,
+  `duration_ms` int(11) DEFAULT NULL,
+  `content_length` int(11) DEFAULT NULL,
+  `proxy_used` varchar(255) DEFAULT NULL,
+  `cache_hit` tinyint(1) NOT NULL DEFAULT 0,
+  `error_message` text DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `external_download_logs_service_name_index` (`service_name`),
+  KEY `external_download_logs_status_index` (`status`),
+  KEY `external_download_logs_created_at_index` (`created_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Table structure for table `failed_jobs`
+--
+DROP TABLE IF EXISTS `failed_jobs`;
+CREATE TABLE `failed_jobs` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `uuid` varchar(255) NOT NULL,
+  `connection` text NOT NULL,
+  `queue` text NOT NULL,
+  `payload` longtext NOT NULL,
+  `exception` longtext NOT NULL,
+  `failed_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `failed_jobs_uuid_unique` (`uuid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Table structure for table `model_has_permissions`
+--
+DROP TABLE IF EXISTS `model_has_permissions`;
+CREATE TABLE `model_has_permissions` (
+  `permission_id` bigint(20) unsigned NOT NULL,
+  `model_type` varchar(255) NOT NULL,
+  `model_id` bigint(20) unsigned NOT NULL,
+  PRIMARY KEY (`permission_id`,`model_id`,`model_type`),
+  KEY `model_has_permissions_model_id_model_type_index` (`model_id`,`model_type`),
+  CONSTRAINT `model_has_permissions_permission_id_foreign` FOREIGN KEY (`permission_id`) REFERENCES `permissions` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Table structure for table `model_has_roles`
+--
+DROP TABLE IF EXISTS `model_has_roles`;
+CREATE TABLE `model_has_roles` (
+  `role_id` bigint(20) unsigned NOT NULL,
+  `model_type` varchar(255) NOT NULL,
+  `model_id` bigint(20) unsigned NOT NULL,
+  PRIMARY KEY (`role_id`,`model_id`,`model_type`),
+  KEY `model_has_roles_model_id_model_type_index` (`model_id`,`model_type`),
+  CONSTRAINT `model_has_roles_role_id_foreign` FOREIGN KEY (`role_id`) REFERENCES `roles` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Table structure for table `modulos`
+--
+DROP TABLE IF EXISTS `modulos`;
+CREATE TABLE `modulos` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `nombre` varchar(255) NOT NULL,
+  `clave` varchar(50) DEFAULT NULL,
+  `descripcion` varchar(255) DEFAULT NULL,
+  `activo` tinyint(1) NOT NULL DEFAULT 1,
+  `deleted_at` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `created_by` int(10) unsigned DEFAULT NULL,
+  `updated_by` int(10) unsigned DEFAULT NULL,
+  `deleted_by` int(10) unsigned DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `modulos_clave_unique` (`clave`),
+  KEY `modulos_created_by_index` (`created_by`),
+  KEY `modulos_updated_by_index` (`updated_by`),
+  KEY `modulos_deleted_by_index` (`deleted_by`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Table structure for table `password_resets`
+--
+DROP TABLE IF EXISTS `password_resets`;
+CREATE TABLE `password_resets` (
+  `email` varchar(255) NOT NULL,
+  `token` varchar(255) NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  KEY `password_resets_email_index` (`email`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Table structure for table `permissions`
+--
+DROP TABLE IF EXISTS `permissions`;
+CREATE TABLE `permissions` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) NOT NULL,
+  `guard_name` varchar(255) NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `permissions_name_guard_name_unique` (`name`,`guard_name`)
+) ENGINE=InnoDB AUTO_INCREMENT=112 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Table structure for table `personal_access_tokens`
+--
+DROP TABLE IF EXISTS `personal_access_tokens`;
+CREATE TABLE `personal_access_tokens` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `tokenable_type` varchar(255) NOT NULL,
+  `tokenable_id` bigint(20) unsigned NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `token` varchar(64) NOT NULL,
+  `abilities` text DEFAULT NULL,
+  `last_used_at` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `personal_access_tokens_token_unique` (`token`),
+  KEY `personal_access_tokens_tokenable_type_tokenable_id_index` (`tokenable_type`,`tokenable_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Table structure for table `role_has_permissions`
+--
+DROP TABLE IF EXISTS `role_has_permissions`;
+CREATE TABLE `role_has_permissions` (
+  `permission_id` bigint(20) unsigned NOT NULL,
+  `role_id` bigint(20) unsigned NOT NULL,
+  PRIMARY KEY (`permission_id`,`role_id`),
+  KEY `role_has_permissions_role_id_foreign` (`role_id`),
+  CONSTRAINT `role_has_permissions_permission_id_foreign` FOREIGN KEY (`permission_id`) REFERENCES `permissions` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `role_has_permissions_role_id_foreign` FOREIGN KEY (`role_id`) REFERENCES `roles` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Table structure for table `roles`
+--
+DROP TABLE IF EXISTS `roles`;
+CREATE TABLE `roles` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) NOT NULL,
+  `guard_name` varchar(255) NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `roles_name_guard_name_unique` (`name`,`guard_name`)
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Table structure for table `sessions`
+--
+DROP TABLE IF EXISTS `sessions`;
+CREATE TABLE `sessions` (
+  `id` varchar(255) NOT NULL,
+  `user_id` bigint(20) unsigned DEFAULT NULL,
+  `ip_address` varchar(45) DEFAULT NULL,
+  `user_agent` text DEFAULT NULL,
+  `payload` longtext NOT NULL,
+  `last_activity` int(11) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `sessions_user_id_index` (`user_id`),
+  KEY `sessions_last_activity_index` (`last_activity`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Table structure for table `siif_distribucion_dependencias`
+--
+DROP TABLE IF EXISTS `siif_distribucion_dependencias`;
+CREATE TABLE `siif_distribucion_dependencias` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `dependencia` varchar(255) NOT NULL,
+  `abreviatura` varchar(255) NOT NULL,
+  `created_by` int(10) unsigned DEFAULT NULL,
+  `updated_by` int(10) unsigned DEFAULT NULL,
+  `deleted_by` int(10) unsigned DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `deleted_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `siif_distribucion_dependencias_created_by_foreign` (`created_by`),
+  KEY `siif_distribucion_dependencias_updated_by_foreign` (`updated_by`),
+  KEY `siif_distribucion_dependencias_deleted_by_foreign` (`deleted_by`),
+  CONSTRAINT `siif_distribucion_dependencias_created_by_foreign` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `siif_distribucion_dependencias_deleted_by_foreign` FOREIGN KEY (`deleted_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `siif_distribucion_dependencias_updated_by_foreign` FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Table structure for table `siif_distribucion_tipos`
+--
+DROP TABLE IF EXISTS `siif_distribucion_tipos`;
+CREATE TABLE `siif_distribucion_tipos` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `tipo` varchar(255) NOT NULL,
+  `created_by` int(10) unsigned DEFAULT NULL,
+  `updated_by` int(10) unsigned DEFAULT NULL,
+  `deleted_by` int(10) unsigned DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `deleted_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `siif_distribucion_tipos_created_by_foreign` (`created_by`),
+  KEY `siif_distribucion_tipos_updated_by_foreign` (`updated_by`),
+  KEY `siif_distribucion_tipos_deleted_by_foreign` (`deleted_by`),
+  CONSTRAINT `siif_distribucion_tipos_created_by_foreign` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `siif_distribucion_tipos_deleted_by_foreign` FOREIGN KEY (`deleted_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `siif_distribucion_tipos_updated_by_foreign` FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Table structure for table `siif_distribucions`
+--
+DROP TABLE IF EXISTS `siif_distribucions`;
+CREATE TABLE `siif_distribucions` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `tipo_id` bigint(20) unsigned NOT NULL,
+  `dependencia_id` bigint(20) unsigned NOT NULL,
+  `rubro` varchar(255) DEFAULT NULL,
+  `sub_rubro` varchar(255) DEFAULT NULL,
+  `recurso` varchar(255) DEFAULT NULL,
+  `concepto` varchar(255) DEFAULT NULL,
+  `codigo_sir` varchar(255) DEFAULT NULL,
+  `porcentaje` decimal(6,3) NOT NULL,
+  `financiacion` varchar(255) DEFAULT NULL,
+  `inciso` varchar(255) DEFAULT NULL,
+  `unidad_ejecutora` varchar(255) DEFAULT NULL,
+  `distribucion` varchar(255) DEFAULT NULL,
+  `created_by` int(10) unsigned DEFAULT NULL,
+  `updated_by` int(10) unsigned DEFAULT NULL,
+  `deleted_by` int(10) unsigned DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `deleted_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `siif_distribucions_tipo_id_foreign` (`tipo_id`),
+  KEY `siif_distribucions_dependencia_id_foreign` (`dependencia_id`),
+  KEY `siif_distribucions_created_by_foreign` (`created_by`),
+  KEY `siif_distribucions_updated_by_foreign` (`updated_by`),
+  KEY `siif_distribucions_deleted_by_foreign` (`deleted_by`),
+  CONSTRAINT `siif_distribucions_created_by_foreign` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `siif_distribucions_deleted_by_foreign` FOREIGN KEY (`deleted_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `siif_distribucions_dependencia_id_foreign` FOREIGN KEY (`dependencia_id`) REFERENCES `siif_distribucion_dependencias` (`id`),
+  CONSTRAINT `siif_distribucions_tipo_id_foreign` FOREIGN KEY (`tipo_id`) REFERENCES `siif_distribucion_tipos` (`id`),
+  CONSTRAINT `siif_distribucions_updated_by_foreign` FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB AUTO_INCREMENT=145 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Table structure for table `tes_anulaciones`
+--
+DROP TABLE IF EXISTS `tes_anulaciones`;
+CREATE TABLE `tes_anulaciones` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `anulable_type` varchar(255) NOT NULL,
+  `anulable_id` bigint(20) unsigned NOT NULL,
+  `datos_originales` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL CHECK (json_valid(`datos_originales`)),
+  `motivo` text NOT NULL,
+  `anulado_por` int(10) unsigned NOT NULL,
+  `fecha_anulacion` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `created_at` timestamp NULL DEFAULT NULL,
+  `created_by` int(10) unsigned DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `updated_by` int(10) unsigned DEFAULT NULL,
+  `deleted_at` timestamp NULL DEFAULT NULL,
+  `deleted_by` int(10) unsigned DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `tes_anulaciones_anulable_type_anulable_id_index` (`anulable_type`,`anulable_id`),
+  KEY `tes_anulaciones_anulado_por_foreign` (`anulado_por`),
+  KEY `tes_anulaciones_anulado_por_index` (`anulado_por`),
+  KEY `tes_anulaciones_created_by_foreign` (`created_by`),
+  KEY `tes_anulaciones_updated_by_foreign` (`updated_by`),
+  KEY `tes_anulaciones_deleted_by_foreign` (`deleted_by`),
+  CONSTRAINT `tes_anulaciones_anulado_por_foreign` FOREIGN KEY (`anulado_por`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `tes_anulaciones_created_by_foreign` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `tes_anulaciones_deleted_by_foreign` FOREIGN KEY (`deleted_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `tes_anulaciones_updated_by_foreign` FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Table structure for table `tes_arr_planillas`
+--
+DROP TABLE IF EXISTS `tes_arr_planillas`;
+CREATE TABLE `tes_arr_planillas` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `numero` varchar(255) NOT NULL,
+  `fecha_creacion` date NOT NULL,
+  `user_id` int(10) unsigned DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `created_by` int(10) unsigned DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `updated_by` int(10) unsigned DEFAULT NULL,
+  `deleted_at` timestamp NULL DEFAULT NULL,
+  `deleted_by` int(10) unsigned DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `tes_arr_planillas_numero_deleted_at_unique` (`numero`,`deleted_at`),
+  KEY `tes_arr_planillas_user_id_foreign` (`user_id`),
+  KEY `tes_arr_planillas_user_id_index` (`user_id`),
+  KEY `tes_arr_planillas_created_by_foreign` (`created_by`),
+  KEY `tes_arr_planillas_updated_by_foreign` (`updated_by`),
+  KEY `tes_arr_planillas_deleted_by_foreign` (`deleted_by`),
+  CONSTRAINT `tes_arr_planillas_created_by_foreign` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `tes_arr_planillas_deleted_by_foreign` FOREIGN KEY (`deleted_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `tes_arr_planillas_updated_by_foreign` FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `tes_arr_planillas_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB AUTO_INCREMENT=89 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Table structure for table `tes_arrendamientos`
+--
+DROP TABLE IF EXISTS `tes_arrendamientos`;
+CREATE TABLE `tes_arrendamientos` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `fecha` date NOT NULL,
+  `ingreso` int(11) DEFAULT NULL,
+  `nombre` varchar(255) DEFAULT NULL,
+  `cedula` varchar(255) DEFAULT NULL,
+  `telefono` varchar(255) DEFAULT NULL,
+  `monto` decimal(10,2) NOT NULL,
+  `detalle` text DEFAULT NULL,
+  `orden_cobro` varchar(255) DEFAULT NULL,
+  `recibo` varchar(255) DEFAULT NULL,
+  `medio_de_pago` varchar(255) NOT NULL DEFAULT 'Transferencia' COMMENT 'Medios de pago: Efectivo, Transferencia, POS, Cheque',
+  `medio_pago_id` bigint(20) unsigned DEFAULT NULL,
+  `confirmado` tinyint(1) NOT NULL DEFAULT 0,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `created_by` int(10) unsigned DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `updated_by` int(10) unsigned DEFAULT NULL,
+  `deleted_at` timestamp NULL DEFAULT NULL,
+  `deleted_by` int(10) unsigned DEFAULT NULL,
+  `planilla_id` bigint(20) unsigned DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `tes_arrendamientos_planilla_id_foreign` (`planilla_id`),
+  KEY `tes_arrendamientos_created_by_foreign` (`created_by`),
+  KEY `tes_arrendamientos_updated_by_foreign` (`updated_by`),
+  KEY `tes_arrendamientos_deleted_by_foreign` (`deleted_by`),
+  KEY `tes_arrendamientos_medio_pago_id_foreign` (`medio_pago_id`),
+  CONSTRAINT `tes_arrendamientos_created_by_foreign` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `tes_arrendamientos_deleted_by_foreign` FOREIGN KEY (`deleted_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `tes_arrendamientos_medio_pago_id_foreign` FOREIGN KEY (`medio_pago_id`) REFERENCES `tes_medio_de_pagos` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `tes_arrendamientos_planilla_id_foreign` FOREIGN KEY (`planilla_id`) REFERENCES `tes_arr_planillas` (`id`),
+  CONSTRAINT `tes_arrendamientos_updated_by_foreign` FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB AUTO_INCREMENT=438 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Table structure for table `tes_bancos`
+--
+DROP TABLE IF EXISTS `tes_bancos`;
+CREATE TABLE `tes_bancos` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `nombre` varchar(100) NOT NULL,
+  `codigo` varchar(20) NOT NULL,
+  `observaciones` text DEFAULT NULL,
+  `created_by` int(10) unsigned DEFAULT NULL,
+  `updated_by` int(10) unsigned DEFAULT NULL,
+  `deleted_by` int(10) unsigned DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `deleted_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `tes_bancos_codigo_unique` (`codigo`),
+  KEY `tes_bancos_created_by_foreign` (`created_by`),
+  KEY `tes_bancos_updated_by_foreign` (`updated_by`),
+  KEY `tes_bancos_deleted_by_foreign` (`deleted_by`),
+  KEY `tes_bancos_created_by_index` (`created_by`),
+  KEY `tes_bancos_updated_by_index` (`updated_by`),
+  KEY `tes_bancos_deleted_by_index` (`deleted_by`),
+  CONSTRAINT `tes_bancos_created_by_foreign` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `tes_bancos_deleted_by_foreign` FOREIGN KEY (`deleted_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `tes_bancos_updated_by_foreign` FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Table structure for table `tes_caja_chica`
+--
+DROP TABLE IF EXISTS `tes_caja_chica`;
+CREATE TABLE `tes_caja_chica` (
+  `idCajaChica` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `mes` varchar(20) NOT NULL,
+  `anio` int(11) NOT NULL,
+  `montoCajaChica` decimal(15,2) NOT NULL DEFAULT 0.00,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `created_by` int(10) unsigned DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `updated_by` int(10) unsigned DEFAULT NULL,
+  `deleted_at` timestamp NULL DEFAULT NULL,
+  `deleted_by` int(10) unsigned DEFAULT NULL,
+  PRIMARY KEY (`idCajaChica`),
+  KEY `tes_caja_chica_created_by_foreign` (`created_by`),
+  KEY `tes_caja_chica_updated_by_foreign` (`updated_by`),
+  KEY `tes_caja_chica_deleted_by_foreign` (`deleted_by`),
+  CONSTRAINT `tes_caja_chica_created_by_foreign` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `tes_caja_chica_deleted_by_foreign` FOREIGN KEY (`deleted_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `tes_caja_chica_updated_by_foreign` FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB AUTO_INCREMENT=102 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Table structure for table `tes_caja_conceptos`
+--
+DROP TABLE IF EXISTS `tes_caja_conceptos`;
+CREATE TABLE `tes_caja_conceptos` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `caja_concepto` varchar(255) NOT NULL,
+  `requiere_confirmacion` tinyint(1) NOT NULL DEFAULT 0,
+  `requiere_distribucion` tinyint(1) NOT NULL DEFAULT 0,
+  `permite_planilla` tinyint(1) NOT NULL DEFAULT 0,
+  `requiere_organismo` tinyint(1) NOT NULL DEFAULT 0 COMMENT 'Indica si el concepto requiere seleccionar un organismo/entidad',
+  `siif_distribucion_tipo_id` bigint(20) unsigned DEFAULT NULL COMMENT 'Tipo de distribución SIIF asociado a este concepto',
+  `created_by` bigint(20) unsigned DEFAULT NULL,
+  `updated_by` bigint(20) unsigned DEFAULT NULL,
+  `deleted_by` bigint(20) unsigned DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `deleted_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `tes_caja_conceptos_created_by_index` (`created_by`),
+  KEY `tes_caja_conceptos_updated_by_index` (`updated_by`),
+  KEY `tes_caja_conceptos_deleted_by_index` (`deleted_by`),
+  KEY `tes_caja_conceptos_siif_distribucion_tipo_id_foreign` (`siif_distribucion_tipo_id`),
+  CONSTRAINT `tes_caja_conceptos_siif_distribucion_tipo_id_foreign` FOREIGN KEY (`siif_distribucion_tipo_id`) REFERENCES `siif_distribucion_tipos` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Table structure for table `tes_cch_acreedores`
+--
+DROP TABLE IF EXISTS `tes_cch_acreedores`;
+CREATE TABLE `tes_cch_acreedores` (
+  `idAcreedores` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `acreedor` varchar(255) NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `created_by` int(10) unsigned DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `updated_by` int(10) unsigned DEFAULT NULL,
+  `deleted_at` timestamp NULL DEFAULT NULL,
+  `deleted_by` int(10) unsigned DEFAULT NULL,
+  PRIMARY KEY (`idAcreedores`),
+  KEY `tes_cch_acreedores_created_by_foreign` (`created_by`),
+  KEY `tes_cch_acreedores_updated_by_foreign` (`updated_by`),
+  KEY `tes_cch_acreedores_deleted_by_foreign` (`deleted_by`),
+  CONSTRAINT `tes_cch_acreedores_created_by_foreign` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `tes_cch_acreedores_deleted_by_foreign` FOREIGN KEY (`deleted_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `tes_cch_acreedores_updated_by_foreign` FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Table structure for table `tes_cch_dependencias`
+--
+DROP TABLE IF EXISTS `tes_cch_dependencias`;
+CREATE TABLE `tes_cch_dependencias` (
+  `idDependencias` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `dependencia` varchar(255) NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `created_by` int(10) unsigned DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `updated_by` int(10) unsigned DEFAULT NULL,
+  `deleted_at` timestamp NULL DEFAULT NULL,
+  `deleted_by` int(10) unsigned DEFAULT NULL,
+  PRIMARY KEY (`idDependencias`),
+  KEY `tes_cch_dependencias_created_by_foreign` (`created_by`),
+  KEY `tes_cch_dependencias_updated_by_foreign` (`updated_by`),
+  KEY `tes_cch_dependencias_deleted_by_foreign` (`deleted_by`),
+  CONSTRAINT `tes_cch_dependencias_created_by_foreign` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `tes_cch_dependencias_deleted_by_foreign` FOREIGN KEY (`deleted_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `tes_cch_dependencias_updated_by_foreign` FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB AUTO_INCREMENT=26 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Table structure for table `tes_cch_movimientos`
+--
+DROP TABLE IF EXISTS `tes_cch_movimientos`;
+CREATE TABLE `tes_cch_movimientos` (
+  `idMovimientos` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `relPendiente` bigint(20) unsigned NOT NULL,
+  `fechaMovimientos` date NOT NULL,
+  `documentos` varchar(255) DEFAULT NULL,
+  `rendido` decimal(15,2) NOT NULL DEFAULT 0.00,
+  `reintegrado` decimal(15,2) NOT NULL DEFAULT 0.00,
+  `recuperado` decimal(15,2) NOT NULL DEFAULT 0.00,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `created_by` int(10) unsigned DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `updated_by` int(10) unsigned DEFAULT NULL,
+  `deleted_at` timestamp NULL DEFAULT NULL,
+  `deleted_by` int(10) unsigned DEFAULT NULL,
+  PRIMARY KEY (`idMovimientos`),
+  KEY `tes_cch_movimientos_relpendiente_foreign` (`relPendiente`),
+  KEY `tes_cch_movimientos_relpendiente_index` (`relPendiente`),
+  KEY `tes_cch_movimientos_created_by_foreign` (`created_by`),
+  KEY `tes_cch_movimientos_updated_by_foreign` (`updated_by`),
+  KEY `tes_cch_movimientos_deleted_by_foreign` (`deleted_by`),
+  CONSTRAINT `tes_cch_movimientos_created_by_foreign` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `tes_cch_movimientos_deleted_by_foreign` FOREIGN KEY (`deleted_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `tes_cch_movimientos_relpendiente_foreign` FOREIGN KEY (`relPendiente`) REFERENCES `tes_cch_pendientes` (`idPendientes`) ON DELETE CASCADE,
+  CONSTRAINT `tes_cch_movimientos_updated_by_foreign` FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB AUTO_INCREMENT=2827 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Table structure for table `tes_cch_pagos`
+--
+DROP TABLE IF EXISTS `tes_cch_pagos`;
+CREATE TABLE `tes_cch_pagos` (
+  `idPagos` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `relCajaChica_Pagos` bigint(20) unsigned NOT NULL,
+  `fechaEgresoPagos` date NOT NULL,
+  `egresoPagos` varchar(50) DEFAULT NULL,
+  `fechaEgresoEfectivoPagos` date DEFAULT NULL,
+  `relAcreedores` bigint(20) unsigned DEFAULT NULL,
+  `conceptoPagos` varchar(255) NOT NULL,
+  `montoPagos` decimal(15,2) NOT NULL,
+  `rendidoPagos` decimal(15,2) DEFAULT NULL,
+  `reintegradoPagos` decimal(15,2) DEFAULT NULL,
+  `ingresoReintegroPagos` varchar(255) DEFAULT NULL,
+  `fechaRendicionPagos` date DEFAULT NULL,
+  `fechaIngresoPagos` date DEFAULT NULL,
+  `ingresoPagos` varchar(50) DEFAULT NULL,
+  `ingresoPagosBSE` varchar(50) DEFAULT NULL,
+  `fechaIngresoBSEPagos` date DEFAULT NULL,
+  `recuperadoPagos` decimal(15,2) NOT NULL DEFAULT 0.00,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `created_by` int(10) unsigned DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `updated_by` int(10) unsigned DEFAULT NULL,
+  `deleted_at` timestamp NULL DEFAULT NULL,
+  `deleted_by` int(10) unsigned DEFAULT NULL,
+  PRIMARY KEY (`idPagos`),
+  KEY `tes_cch_pagos_relcajachica_pagos_foreign` (`relCajaChica_Pagos`),
+  KEY `tes_cch_pagos_relacreedores_foreign` (`relAcreedores`),
+  KEY `tes_cch_pagos_relcajachica_pagos_index` (`relCajaChica_Pagos`),
+  KEY `tes_cch_pagos_relacreedores_index` (`relAcreedores`),
+  KEY `tes_cch_pagos_created_by_foreign` (`created_by`),
+  KEY `tes_cch_pagos_updated_by_foreign` (`updated_by`),
+  KEY `tes_cch_pagos_deleted_by_foreign` (`deleted_by`),
+  CONSTRAINT `tes_cch_pagos_created_by_foreign` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `tes_cch_pagos_deleted_by_foreign` FOREIGN KEY (`deleted_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `tes_cch_pagos_relacreedores_foreign` FOREIGN KEY (`relAcreedores`) REFERENCES `tes_cch_acreedores` (`idAcreedores`) ON DELETE SET NULL,
+  CONSTRAINT `tes_cch_pagos_relcajachica_pagos_foreign` FOREIGN KEY (`relCajaChica_Pagos`) REFERENCES `tes_caja_chica` (`idCajaChica`) ON DELETE CASCADE,
+  CONSTRAINT `tes_cch_pagos_updated_by_foreign` FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB AUTO_INCREMENT=240 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Table structure for table `tes_cch_pendientes`
+--
+DROP TABLE IF EXISTS `tes_cch_pendientes`;
+CREATE TABLE `tes_cch_pendientes` (
+  `idPendientes` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `relCajaChica` bigint(20) unsigned NOT NULL,
+  `pendiente` int(11) NOT NULL,
+  `fechaPendientes` date NOT NULL,
+  `relDependencia` bigint(20) unsigned NOT NULL,
+  `montoPendientes` decimal(15,2) NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `created_by` int(10) unsigned DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `updated_by` int(10) unsigned DEFAULT NULL,
+  `deleted_at` timestamp NULL DEFAULT NULL,
+  `deleted_by` int(10) unsigned DEFAULT NULL,
+  PRIMARY KEY (`idPendientes`),
+  KEY `tes_cch_pendientes_relcajachica_foreign` (`relCajaChica`),
+  KEY `tes_cch_pendientes_reldependencia_foreign` (`relDependencia`),
+  KEY `tes_cch_pendientes_relcajachica_index` (`relCajaChica`),
+  KEY `tes_cch_pendientes_reldependencia_index` (`relDependencia`),
+  KEY `tes_cch_pendientes_created_by_foreign` (`created_by`),
+  KEY `tes_cch_pendientes_updated_by_foreign` (`updated_by`),
+  KEY `tes_cch_pendientes_deleted_by_foreign` (`deleted_by`),
+  CONSTRAINT `tes_cch_pendientes_created_by_foreign` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `tes_cch_pendientes_deleted_by_foreign` FOREIGN KEY (`deleted_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `tes_cch_pendientes_relcajachica_foreign` FOREIGN KEY (`relCajaChica`) REFERENCES `tes_caja_chica` (`idCajaChica`) ON DELETE CASCADE,
+  CONSTRAINT `tes_cch_pendientes_reldependencia_foreign` FOREIGN KEY (`relDependencia`) REFERENCES `tes_cch_dependencias` (`idDependencias`) ON DELETE CASCADE,
+  CONSTRAINT `tes_cch_pendientes_updated_by_foreign` FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB AUTO_INCREMENT=1626 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Table structure for table `tes_certificados_residencia`
+--
+DROP TABLE IF EXISTS `tes_certificados_residencia`;
+CREATE TABLE `tes_certificados_residencia` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `fecha_recibido` date NOT NULL,
+  `receptor_id` int(10) unsigned NOT NULL,
+  `titular_nombre` varchar(255) NOT NULL,
+  `titular_apellido` varchar(255) NOT NULL,
+  `titular_tipo_documento` enum('Cédula','Cédula Extranjera','Pasaporte','Otro') NOT NULL,
+  `titular_nro_documento` varchar(255) NOT NULL,
+  `fecha_entregado` date DEFAULT NULL,
+  `entregador_id` int(10) unsigned DEFAULT NULL,
+  `retira_nombre` varchar(255) DEFAULT NULL,
+  `retira_apellido` varchar(255) DEFAULT NULL,
+  `retira_tipo_documento` enum('Cédula','Cédula Extranjera','Pasaporte','Otro') DEFAULT NULL,
+  `retira_nro_documento` varchar(255) DEFAULT NULL,
+  `retira_telefono` varchar(255) DEFAULT NULL,
+  `numero_recibo` varchar(255) DEFAULT NULL,
+  `monto` decimal(12,2) DEFAULT NULL,
+  `fecha_devuelto` date DEFAULT NULL,
+  `devolucion_user_id` int(10) unsigned DEFAULT NULL,
+  `estado` enum('Recibido','Entregado','Devuelto') NOT NULL DEFAULT 'Recibido',
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `deleted_at` timestamp NULL DEFAULT NULL,
+  `created_by` int(10) unsigned DEFAULT NULL,
+  `updated_by` int(10) unsigned DEFAULT NULL,
+  `deleted_by` int(10) unsigned DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `tes_certificados_residencia_receptor_id_foreign` (`receptor_id`),
+  KEY `tes_certificados_residencia_entregador_id_foreign` (`entregador_id`),
+  KEY `tes_certificados_residencia_devolucion_user_id_foreign` (`devolucion_user_id`),
+  KEY `tes_certificados_residencia_created_by_foreign` (`created_by`),
+  KEY `tes_certificados_residencia_updated_by_foreign` (`updated_by`),
+  KEY `tes_certificados_residencia_deleted_by_foreign` (`deleted_by`),
+  KEY `tes_certificados_residencia_receptor_id_index` (`receptor_id`),
+  KEY `tes_certificados_residencia_entregador_id_index` (`entregador_id`),
+  KEY `tes_certificados_residencia_devolucion_user_id_index` (`devolucion_user_id`),
+  KEY `tes_certificados_residencia_created_by_index` (`created_by`),
+  KEY `tes_certificados_residencia_updated_by_index` (`updated_by`),
+  KEY `tes_certificados_residencia_deleted_by_index` (`deleted_by`),
+  CONSTRAINT `tes_certificados_residencia_created_by_foreign` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`),
+  CONSTRAINT `tes_certificados_residencia_deleted_by_foreign` FOREIGN KEY (`deleted_by`) REFERENCES `users` (`id`),
+  CONSTRAINT `tes_certificados_residencia_devolucion_user_id_foreign` FOREIGN KEY (`devolucion_user_id`) REFERENCES `users` (`id`),
+  CONSTRAINT `tes_certificados_residencia_entregador_id_foreign` FOREIGN KEY (`entregador_id`) REFERENCES `users` (`id`),
+  CONSTRAINT `tes_certificados_residencia_receptor_id_foreign` FOREIGN KEY (`receptor_id`) REFERENCES `users` (`id`),
+  CONSTRAINT `tes_certificados_residencia_updated_by_foreign` FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=212 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Table structure for table `tes_cfe_items`
+--
+DROP TABLE IF EXISTS `tes_cfe_items`;
+CREATE TABLE `tes_cfe_items` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `tes_cfe_id` bigint(20) unsigned NOT NULL,
+  `siif_distribucion_id` bigint(20) unsigned DEFAULT NULL,
+  `detalle` text NOT NULL,
+  `descripcion` text DEFAULT NULL,
+  `cantidad` decimal(10,2) NOT NULL DEFAULT 1.00,
+  `precio` decimal(12,2) NOT NULL DEFAULT 0.00,
+  `descuento` decimal(12,2) NOT NULL DEFAULT 0.00,
+  `recargo` decimal(12,2) NOT NULL DEFAULT 0.00,
+  `importe` decimal(12,2) NOT NULL DEFAULT 0.00,
+  `confirmado` tinyint(1) NOT NULL DEFAULT 0,
+  `planilla_er_id` bigint(20) unsigned DEFAULT NULL,
+  `deleted_at` timestamp NULL DEFAULT NULL,
+  `deleted_by` int(10) unsigned DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `created_by` int(10) unsigned DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `updated_by` int(10) unsigned DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `tes_cfe_items_tes_cfe_id_foreign` (`tes_cfe_id`),
+  KEY `tes_cfe_items_siif_distribucion_id_foreign` (`siif_distribucion_id`),
+  KEY `tes_cfe_items_planilla_er_id_foreign` (`planilla_er_id`),
+  CONSTRAINT `tes_cfe_items_planilla_er_id_foreign` FOREIGN KEY (`planilla_er_id`) REFERENCES `tes_planilla_ers` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `tes_cfe_items_siif_distribucion_id_foreign` FOREIGN KEY (`siif_distribucion_id`) REFERENCES `siif_distribucions` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `tes_cfe_items_tes_cfe_id_foreign` FOREIGN KEY (`tes_cfe_id`) REFERENCES `tes_cfes` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=781 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Table structure for table `tes_cfe_medios_pago`
+--
+DROP TABLE IF EXISTS `tes_cfe_medios_pago`;
+CREATE TABLE `tes_cfe_medios_pago` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `tes_cfe_id` bigint(20) unsigned NOT NULL,
+  `medio_pago_tipo` varchar(255) NOT NULL,
+  `medio_pago_id` bigint(20) unsigned DEFAULT NULL,
+  `medio_pago_valor` decimal(12,2) NOT NULL DEFAULT 0.00,
+  `deleted_at` timestamp NULL DEFAULT NULL,
+  `deleted_by` int(10) unsigned DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `created_by` int(10) unsigned DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `updated_by` int(10) unsigned DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `tes_cfe_medios_pago_tes_cfe_id_foreign` (`tes_cfe_id`),
+  KEY `tes_cfe_medios_pago_medio_pago_id_foreign` (`medio_pago_id`),
+  CONSTRAINT `tes_cfe_medios_pago_medio_pago_id_foreign` FOREIGN KEY (`medio_pago_id`) REFERENCES `tes_medio_de_pagos` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `tes_cfe_medios_pago_tes_cfe_id_foreign` FOREIGN KEY (`tes_cfe_id`) REFERENCES `tes_cfes` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=288 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Table structure for table `tes_cfe_pendientes`
+--
+DROP TABLE IF EXISTS `tes_cfe_pendientes`;
+CREATE TABLE `tes_cfe_pendientes` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `tipo_cfe` enum('certificado_residencia','multas_cobradas','porte_armas','tenencia_armas','desconocido') NOT NULL,
+  `serie` varchar(255) DEFAULT NULL,
+  `numero` varchar(255) DEFAULT NULL,
+  `fecha` date DEFAULT NULL,
+  `monto` decimal(10,2) DEFAULT NULL,
+  `moneda` varchar(3) NOT NULL DEFAULT 'UYU',
+  `datos_extraidos` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL CHECK (json_valid(`datos_extraidos`)),
+  `datos_modificados` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`datos_modificados`)),
+  `pdf_path` varchar(255) DEFAULT NULL,
+  `source_url` varchar(255) DEFAULT NULL,
+  `pdf_hash` char(64) DEFAULT NULL,
+  `extractor_version` varchar(50) DEFAULT NULL,
+  `estado` enum('pendiente','en_proceso','en_revision','confirmado','rechazado','procesado','expirado','error') NOT NULL DEFAULT 'pendiente',
+  `motivo_rechazo` text DEFAULT NULL,
+  `user_id` int(10) unsigned DEFAULT NULL,
+  `procesado_por` int(10) unsigned DEFAULT NULL,
+  `procesado_at` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `created_by` int(10) unsigned DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `updated_by` int(10) unsigned DEFAULT NULL,
+  `deleted_at` timestamp NULL DEFAULT NULL,
+  `deleted_by` int(10) unsigned DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `tes_cfe_pendientes_pdf_hash_unique` (`pdf_hash`),
+  KEY `tes_cfe_pendientes_user_id_foreign` (`user_id`),
+  KEY `tes_cfe_pendientes_procesado_por_foreign` (`procesado_por`),
+  KEY `tes_cfe_pendientes_tipo_cfe_estado_index` (`tipo_cfe`,`estado`),
+  KEY `tes_cfe_pendientes_serie_numero_fecha_index` (`serie`,`numero`,`fecha`),
+  KEY `tes_cfe_pendientes_created_by_foreign` (`created_by`),
+  KEY `tes_cfe_pendientes_updated_by_foreign` (`updated_by`),
+  KEY `tes_cfe_pendientes_deleted_by_foreign` (`deleted_by`),
+  CONSTRAINT `tes_cfe_pendientes_created_by_foreign` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `tes_cfe_pendientes_deleted_by_foreign` FOREIGN KEY (`deleted_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `tes_cfe_pendientes_procesado_por_foreign` FOREIGN KEY (`procesado_por`) REFERENCES `users` (`id`),
+  CONSTRAINT `tes_cfe_pendientes_updated_by_foreign` FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `tes_cfe_pendientes_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Table structure for table `tes_cfes`
+--
+DROP TABLE IF EXISTS `tes_cfes`;
+CREATE TABLE `tes_cfes` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `emisor_nombre` varchar(255) DEFAULT NULL,
+  `emisor_direccion` varchar(255) DEFAULT NULL,
+  `emisor_localidad` varchar(255) DEFAULT NULL,
+  `emisor_telefono` varchar(255) DEFAULT NULL,
+  `emisor_correo` varchar(255) DEFAULT NULL,
+  `emisor_ruc` varchar(255) DEFAULT NULL,
+  `documento_tipo` varchar(255) DEFAULT NULL,
+  `documento_serie` varchar(255) DEFAULT NULL,
+  `documento_numero` varchar(255) DEFAULT NULL,
+  `forma_pago` varchar(255) DEFAULT NULL,
+  `vencimiento` date DEFAULT NULL,
+  `comprobante_tipo` varchar(255) DEFAULT NULL,
+  `receptor_documento_ruc` varchar(255) DEFAULT NULL,
+  `receptor_nombre_denominacion` varchar(255) DEFAULT NULL,
+  `receptor_domicilio_fiscal` varchar(255) DEFAULT NULL,
+  `periodo` varchar(255) DEFAULT NULL,
+  `nro_compra` varchar(255) DEFAULT NULL,
+  `fecha` date DEFAULT NULL,
+  `moneda` varchar(10) NOT NULL DEFAULT 'UYU',
+  `monto_no_facturable` decimal(12,2) NOT NULL DEFAULT 0.00,
+  `monto_total` decimal(12,2) NOT NULL DEFAULT 0.00,
+  `total_a_pagar` decimal(12,2) NOT NULL DEFAULT 0.00,
+  `referencias` text DEFAULT NULL,
+  `adenda` text DEFAULT NULL,
+  `archivo_pdf_path` varchar(255) DEFAULT NULL,
+  `tes_caja_concepto_id` bigint(20) unsigned DEFAULT NULL,
+  `siif_distribucion_tipo_id` bigint(20) unsigned DEFAULT NULL,
+  `siif_distribucion_dependencia_id` bigint(20) unsigned DEFAULT NULL,
+  `deleted_at` timestamp NULL DEFAULT NULL,
+  `deleted_by` int(10) unsigned DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `created_by` int(10) unsigned DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `updated_by` int(10) unsigned DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `tes_cfes_tes_caja_concepto_id_foreign` (`tes_caja_concepto_id`),
+  KEY `tes_cfes_siif_distribucion_tipo_id_foreign` (`siif_distribucion_tipo_id`),
+  KEY `tes_cfes_siif_distribucion_dependencia_id_foreign` (`siif_distribucion_dependencia_id`),
+  KEY `idx_tes_cfes_documento` (`documento_tipo`,`documento_numero`),
+  KEY `idx_tes_cfes_fecha` (`fecha`),
+  KEY `idx_tes_cfes_receptor_ruc` (`receptor_documento_ruc`),
+  KEY `idx_tes_cfes_comprobante_tipo` (`comprobante_tipo`),
+  KEY `idx_tes_cfes_deleted_at` (`deleted_at`),
+  KEY `tes_cfes_documento_serie_index` (`documento_serie`),
+  KEY `tes_cfes_emisor_ruc_index` (`emisor_ruc`),
+  KEY `tes_cfes_vencimiento_index` (`vencimiento`),
+  CONSTRAINT `tes_cfes_siif_distribucion_dependencia_id_foreign` FOREIGN KEY (`siif_distribucion_dependencia_id`) REFERENCES `siif_distribucion_dependencias` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `tes_cfes_siif_distribucion_tipo_id_foreign` FOREIGN KEY (`siif_distribucion_tipo_id`) REFERENCES `siif_distribucion_tipos` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `tes_cfes_tes_caja_concepto_id_foreign` FOREIGN KEY (`tes_caja_concepto_id`) REFERENCES `tes_caja_conceptos` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB AUTO_INCREMENT=288 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Table structure for table `tes_cheques`
+--
+DROP TABLE IF EXISTS `tes_cheques`;
+CREATE TABLE `tes_cheques` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `cuenta_bancaria_id` bigint(20) unsigned NOT NULL,
+  `serie` varchar(20) DEFAULT NULL,
+  `numero_cheque` varchar(20) NOT NULL,
+  `documento_tipo` varchar(255) DEFAULT NULL,
+  `documento_numero` varchar(255) DEFAULT NULL,
+  `fecha_emision` date DEFAULT NULL,
+  `beneficiario` varchar(150) DEFAULT NULL,
+  `monto` decimal(15,2) DEFAULT NULL,
+  `concepto` text DEFAULT NULL,
+  `estado` enum('disponible','emitido','anulado','en_planilla') NOT NULL DEFAULT 'disponible',
+  `planilla_id` bigint(20) unsigned DEFAULT NULL,
+  `fecha_anulacion` date DEFAULT NULL,
+  `motivo_anulacion` text DEFAULT NULL,
+  `fecha_planilla_anulada` date DEFAULT NULL,
+  `planilla_anulada_por` int(10) unsigned DEFAULT NULL,
+  `emitido_por` int(10) unsigned DEFAULT NULL,
+  `anulado_por` int(10) unsigned DEFAULT NULL,
+  `created_by` int(10) unsigned DEFAULT NULL,
+  `updated_by` int(10) unsigned DEFAULT NULL,
+  `deleted_by` int(10) unsigned DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `deleted_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `tes_cheques_cuenta_bancaria_id_foreign` (`cuenta_bancaria_id`),
+  KEY `tes_cheques_estado_numero_cheque_index` (`estado`,`numero_cheque`),
+  KEY `tes_cheques_planilla_anulada_por_foreign` (`planilla_anulada_por`),
+  KEY `tes_cheques_emitido_por_foreign` (`emitido_por`),
+  KEY `tes_cheques_anulado_por_foreign` (`anulado_por`),
+  KEY `tes_cheques_created_by_foreign` (`created_by`),
+  KEY `tes_cheques_updated_by_foreign` (`updated_by`),
+  KEY `tes_cheques_deleted_by_foreign` (`deleted_by`),
+  KEY `tes_cheques_planilla_id_foreign` (`planilla_id`),
+  KEY `tes_cheques_emitido_por_index` (`emitido_por`),
+  KEY `tes_cheques_anulado_por_index` (`anulado_por`),
+  KEY `tes_cheques_created_by_index` (`created_by`),
+  KEY `tes_cheques_updated_by_index` (`updated_by`),
+  KEY `tes_cheques_deleted_by_index` (`deleted_by`),
+  KEY `tes_cheques_planilla_anulada_por_index` (`planilla_anulada_por`),
+  CONSTRAINT `tes_cheques_anulado_por_foreign` FOREIGN KEY (`anulado_por`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `tes_cheques_created_by_foreign` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `tes_cheques_cuenta_bancaria_id_foreign` FOREIGN KEY (`cuenta_bancaria_id`) REFERENCES `tes_cuentas_bancarias` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `tes_cheques_deleted_by_foreign` FOREIGN KEY (`deleted_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `tes_cheques_emitido_por_foreign` FOREIGN KEY (`emitido_por`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `tes_cheques_planilla_anulada_por_foreign` FOREIGN KEY (`planilla_anulada_por`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `tes_cheques_planilla_id_foreign` FOREIGN KEY (`planilla_id`) REFERENCES `tes_planillas_cheques` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `tes_cheques_updated_by_foreign` FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB AUTO_INCREMENT=2322 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Table structure for table `tes_cuentas_bancarias`
+--
+DROP TABLE IF EXISTS `tes_cuentas_bancarias`;
+CREATE TABLE `tes_cuentas_bancarias` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `banco_id` bigint(20) unsigned NOT NULL,
+  `numero_cuenta` varchar(50) NOT NULL,
+  `tipo` varchar(20) NOT NULL,
+  `activa` tinyint(1) NOT NULL DEFAULT 1,
+  `observaciones` text DEFAULT NULL,
+  `created_by` int(10) unsigned DEFAULT NULL,
+  `updated_by` int(10) unsigned DEFAULT NULL,
+  `deleted_by` int(10) unsigned DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `deleted_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `tes_cuentas_bancarias_banco_id_foreign` (`banco_id`),
+  KEY `tes_cuentas_bancarias_created_by_foreign` (`created_by`),
+  KEY `tes_cuentas_bancarias_updated_by_foreign` (`updated_by`),
+  KEY `tes_cuentas_bancarias_deleted_by_foreign` (`deleted_by`),
+  KEY `tes_cuentas_bancarias_created_by_index` (`created_by`),
+  KEY `tes_cuentas_bancarias_updated_by_index` (`updated_by`),
+  KEY `tes_cuentas_bancarias_deleted_by_index` (`deleted_by`),
+  CONSTRAINT `tes_cuentas_bancarias_banco_id_foreign` FOREIGN KEY (`banco_id`) REFERENCES `tes_bancos` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `tes_cuentas_bancarias_created_by_foreign` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `tes_cuentas_bancarias_deleted_by_foreign` FOREIGN KEY (`deleted_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `tes_cuentas_bancarias_updated_by_foreign` FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Table structure for table `tes_deposito_vehiculo_planillas`
+--
+DROP TABLE IF EXISTS `tes_deposito_vehiculo_planillas`;
+CREATE TABLE `tes_deposito_vehiculo_planillas` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `numero` varchar(255) NOT NULL,
+  `fecha` date NOT NULL,
+  `anulada` tinyint(1) NOT NULL DEFAULT 0,
+  `anulada_fecha` datetime DEFAULT NULL,
+  `anulada_by` bigint(20) unsigned DEFAULT NULL,
+  `created_by` bigint(20) unsigned DEFAULT NULL,
+  `updated_by` bigint(20) unsigned DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `deleted_by` int(10) unsigned DEFAULT NULL,
+  `deleted_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `tes_deposito_vehiculo_planillas_numero_unique` (`numero`),
+  KEY `tes_deposito_vehiculo_planillas_fecha_index` (`fecha`),
+  KEY `tes_deposito_vehiculo_planillas_anulada_index` (`anulada`),
+  KEY `tes_deposito_vehiculo_planillas_anulada_by_index` (`anulada_by`),
+  KEY `tes_deposito_vehiculo_planillas_created_by_index` (`created_by`),
+  KEY `tes_deposito_vehiculo_planillas_updated_by_index` (`updated_by`),
+  KEY `tes_deposito_vehiculo_planillas_deleted_by_foreign` (`deleted_by`),
+  CONSTRAINT `tes_deposito_vehiculo_planillas_deleted_by_foreign` FOREIGN KEY (`deleted_by`) REFERENCES `users` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Table structure for table `tes_deposito_vehiculos`
+--
+DROP TABLE IF EXISTS `tes_deposito_vehiculos`;
+CREATE TABLE `tes_deposito_vehiculos` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `titular` varchar(255) NOT NULL,
+  `cedula` varchar(255) NOT NULL,
+  `telefono` varchar(255) DEFAULT NULL,
+  `recibo_serie` varchar(255) NOT NULL,
+  `recibo_numero` varchar(255) NOT NULL,
+  `recibo_fecha` date NOT NULL,
+  `orden_cobro` varchar(255) DEFAULT NULL,
+  `medio_pago_id` bigint(20) unsigned NOT NULL,
+  `monto` decimal(10,2) NOT NULL,
+  `concepto` text NOT NULL,
+  `planilla_id` bigint(20) unsigned DEFAULT NULL,
+  `created_by` bigint(20) unsigned DEFAULT NULL,
+  `updated_by` bigint(20) unsigned DEFAULT NULL,
+  `deleted_by` bigint(20) unsigned DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `deleted_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `unique_recibo` (`recibo_serie`,`recibo_numero`),
+  KEY `tes_deposito_vehiculos_medio_pago_id_foreign` (`medio_pago_id`),
+  KEY `tes_deposito_vehiculos_recibo_fecha_index` (`recibo_fecha`),
+  KEY `tes_deposito_vehiculos_planilla_id_index` (`planilla_id`),
+  KEY `tes_deposito_vehiculos_created_by_index` (`created_by`),
+  KEY `tes_deposito_vehiculos_updated_by_index` (`updated_by`),
+  KEY `tes_deposito_vehiculos_deleted_by_index` (`deleted_by`),
+  CONSTRAINT `tes_deposito_vehiculos_medio_pago_id_foreign` FOREIGN KEY (`medio_pago_id`) REFERENCES `tes_medio_de_pagos` (`id`),
+  CONSTRAINT `tes_deposito_vehiculos_planilla_id_foreign` FOREIGN KEY (`planilla_id`) REFERENCES `tes_deposito_vehiculo_planillas` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Table structure for table `tes_entregas_libretas_valores`
+--
+DROP TABLE IF EXISTS `tes_entregas_libretas_valores`;
+CREATE TABLE `tes_entregas_libretas_valores` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `libreta_valor_id` bigint(20) unsigned NOT NULL,
+  `servicio_id` bigint(20) unsigned NOT NULL,
+  `numero_recibo_entrega` varchar(255) NOT NULL,
+  `fecha_entrega` date NOT NULL,
+  `observaciones` text DEFAULT NULL,
+  `estado` varchar(255) NOT NULL DEFAULT 'activo',
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `deleted_at` timestamp NULL DEFAULT NULL,
+  `created_by` int(10) unsigned DEFAULT NULL,
+  `updated_by` int(10) unsigned DEFAULT NULL,
+  `deleted_by` int(10) unsigned DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `tes_entregas_libretas_valores_libreta_valor_id_foreign` (`libreta_valor_id`),
+  KEY `tes_entregas_libretas_valores_servicio_id_foreign` (`servicio_id`),
+  KEY `tes_entregas_libretas_valores_created_by_index` (`created_by`),
+  KEY `tes_entregas_libretas_valores_updated_by_index` (`updated_by`),
+  KEY `tes_entregas_libretas_valores_deleted_by_index` (`deleted_by`),
+  CONSTRAINT `tes_entregas_libretas_valores_created_by_foreign` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `tes_entregas_libretas_valores_deleted_by_foreign` FOREIGN KEY (`deleted_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `tes_entregas_libretas_valores_libreta_valor_id_foreign` FOREIGN KEY (`libreta_valor_id`) REFERENCES `tes_libretas_valores` (`id`),
+  CONSTRAINT `tes_entregas_libretas_valores_servicio_id_foreign` FOREIGN KEY (`servicio_id`) REFERENCES `tes_servicios` (`id`),
+  CONSTRAINT `tes_entregas_libretas_valores_updated_by_foreign` FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB AUTO_INCREMENT=39 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Table structure for table `tes_eventuales`
+--
+DROP TABLE IF EXISTS `tes_eventuales`;
+CREATE TABLE `tes_eventuales` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `fecha` date NOT NULL,
+  `ingreso` int(11) DEFAULT NULL,
+  `institucion` varchar(255) DEFAULT NULL,
+  `titular` varchar(255) DEFAULT NULL,
+  `monto` decimal(10,2) NOT NULL,
+  `medio_de_pago` varchar(255) NOT NULL,
+  `medio_pago_id` bigint(20) unsigned DEFAULT NULL,
+  `detalle` text DEFAULT NULL,
+  `orden_cobro` varchar(255) DEFAULT NULL,
+  `recibo` varchar(255) DEFAULT NULL,
+  `confirmado` tinyint(1) NOT NULL DEFAULT 0,
+  `planilla_id` bigint(20) unsigned DEFAULT NULL,
+  `deleted_at` timestamp NULL DEFAULT NULL,
+  `deleted_by` int(10) unsigned DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `created_by` int(10) unsigned DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `updated_by` int(10) unsigned DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `tes_eventuales_planilla_id_foreign` (`planilla_id`),
+  KEY `tes_eventuales_created_by_foreign` (`created_by`),
+  KEY `tes_eventuales_updated_by_foreign` (`updated_by`),
+  KEY `tes_eventuales_deleted_by_foreign` (`deleted_by`),
+  KEY `tes_eventuales_medio_pago_id_foreign` (`medio_pago_id`),
+  CONSTRAINT `tes_eventuales_created_by_foreign` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `tes_eventuales_deleted_by_foreign` FOREIGN KEY (`deleted_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `tes_eventuales_medio_pago_id_foreign` FOREIGN KEY (`medio_pago_id`) REFERENCES `tes_medio_de_pagos` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `tes_eventuales_planilla_id_foreign` FOREIGN KEY (`planilla_id`) REFERENCES `tes_eventuales_planillas` (`id`),
+  CONSTRAINT `tes_eventuales_updated_by_foreign` FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB AUTO_INCREMENT=382 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Table structure for table `tes_eventuales_instituciones`
+--
+DROP TABLE IF EXISTS `tes_eventuales_instituciones`;
+CREATE TABLE `tes_eventuales_instituciones` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `nombre` varchar(255) NOT NULL,
+  `descripcion` varchar(255) DEFAULT NULL,
+  `activa` tinyint(1) NOT NULL DEFAULT 1,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `created_by` int(10) unsigned DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `updated_by` int(10) unsigned DEFAULT NULL,
+  `deleted_at` timestamp NULL DEFAULT NULL,
+  `deleted_by` int(10) unsigned DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `tes_eventuales_instituciones_nombre_unique` (`nombre`),
+  KEY `tes_eventuales_instituciones_created_by_foreign` (`created_by`),
+  KEY `tes_eventuales_instituciones_updated_by_foreign` (`updated_by`),
+  KEY `tes_eventuales_instituciones_deleted_by_foreign` (`deleted_by`),
+  CONSTRAINT `tes_eventuales_instituciones_created_by_foreign` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `tes_eventuales_instituciones_deleted_by_foreign` FOREIGN KEY (`deleted_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `tes_eventuales_instituciones_updated_by_foreign` FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Table structure for table `tes_eventuales_planillas`
+--
+DROP TABLE IF EXISTS `tes_eventuales_planillas`;
+CREATE TABLE `tes_eventuales_planillas` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `numero` varchar(255) NOT NULL,
+  `fecha_creacion` date NOT NULL,
+  `user_id` int(10) unsigned DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `created_by` int(10) unsigned DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `updated_by` int(10) unsigned DEFAULT NULL,
+  `deleted_at` timestamp NULL DEFAULT NULL,
+  `deleted_by` int(10) unsigned DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `tes_eventuales_planillas_numero_unique` (`numero`),
+  KEY `tes_eventuales_planillas_user_id_foreign` (`user_id`),
+  KEY `tes_eventuales_planillas_user_id_index` (`user_id`),
+  KEY `tes_eventuales_planillas_created_by_foreign` (`created_by`),
+  KEY `tes_eventuales_planillas_updated_by_foreign` (`updated_by`),
+  KEY `tes_eventuales_planillas_deleted_by_foreign` (`deleted_by`),
+  CONSTRAINT `tes_eventuales_planillas_created_by_foreign` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `tes_eventuales_planillas_deleted_by_foreign` FOREIGN KEY (`deleted_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `tes_eventuales_planillas_updated_by_foreign` FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `tes_eventuales_planillas_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB AUTO_INCREMENT=37 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Table structure for table `tes_lb_conceptos`
+--
+DROP TABLE IF EXISTS `tes_lb_conceptos`;
+CREATE TABLE `tes_lb_conceptos` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `nombre` varchar(100) NOT NULL,
+  `created_by` int(10) unsigned DEFAULT NULL,
+  `updated_by` int(10) unsigned DEFAULT NULL,
+  `deleted_by` int(10) unsigned DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `deleted_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `tes_lb_conceptos_created_by_index` (`created_by`),
+  KEY `tes_lb_conceptos_updated_by_index` (`updated_by`),
+  KEY `tes_lb_conceptos_deleted_by_index` (`deleted_by`)
+) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Table structure for table `tes_lb_detalle`
+--
+DROP TABLE IF EXISTS `tes_lb_detalle`;
+CREATE TABLE `tes_lb_detalle` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `concepto_id` bigint(20) unsigned NOT NULL,
+  `nombre` varchar(100) NOT NULL,
+  `created_by` int(10) unsigned DEFAULT NULL,
+  `updated_by` int(10) unsigned DEFAULT NULL,
+  `deleted_by` int(10) unsigned DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `deleted_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `tes_lb_detalle_concepto_id_foreign` (`concepto_id`),
+  KEY `tes_lb_detalle_created_by_index` (`created_by`),
+  KEY `tes_lb_detalle_updated_by_index` (`updated_by`),
+  KEY `tes_lb_detalle_deleted_by_index` (`deleted_by`),
+  CONSTRAINT `tes_lb_detalle_concepto_id_foreign` FOREIGN KEY (`concepto_id`) REFERENCES `tes_lb_conceptos` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=79 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Table structure for table `tes_lb_medios`
+--
+DROP TABLE IF EXISTS `tes_lb_medios`;
+CREATE TABLE `tes_lb_medios` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `nombre` varchar(100) NOT NULL,
+  `nombre_corto` varchar(100) NOT NULL DEFAULT '',
+  `created_by` int(10) unsigned DEFAULT NULL,
+  `updated_by` int(10) unsigned DEFAULT NULL,
+  `deleted_by` int(10) unsigned DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `deleted_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `tes_lb_medios_created_by_index` (`created_by`),
+  KEY `tes_lb_medios_updated_by_index` (`updated_by`),
+  KEY `tes_lb_medios_deleted_by_index` (`deleted_by`)
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Table structure for table `tes_lb_tipos`
+--
+DROP TABLE IF EXISTS `tes_lb_tipos`;
+CREATE TABLE `tes_lb_tipos` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `nombre` varchar(100) NOT NULL,
+  `signo` tinyint(4) NOT NULL,
+  `created_by` int(10) unsigned DEFAULT NULL,
+  `updated_by` int(10) unsigned DEFAULT NULL,
+  `deleted_by` int(10) unsigned DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `deleted_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `tes_lb_tipos_nombre_unique` (`nombre`),
+  KEY `tes_lb_tipos_created_by_index` (`created_by`),
+  KEY `tes_lb_tipos_updated_by_index` (`updated_by`),
+  KEY `tes_lb_tipos_deleted_by_index` (`deleted_by`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Table structure for table `tes_libretas_valores`
+--
+DROP TABLE IF EXISTS `tes_libretas_valores`;
+CREATE TABLE `tes_libretas_valores` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `tipo_libreta_id` bigint(20) unsigned NOT NULL,
+  `serie` varchar(255) DEFAULT NULL,
+  `numero_inicial` int(11) NOT NULL,
+  `numero_final` int(11) NOT NULL,
+  `fecha_recepcion` date NOT NULL,
+  `estado` varchar(255) NOT NULL DEFAULT 'en_stock',
+  `proximo_recibo_disponible` int(11) DEFAULT NULL,
+  `servicio_asignado_id` bigint(20) unsigned DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `deleted_at` timestamp NULL DEFAULT NULL,
+  `created_by` int(10) unsigned DEFAULT NULL,
+  `updated_by` int(10) unsigned DEFAULT NULL,
+  `deleted_by` int(10) unsigned DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `tes_libretas_valores_tipo_libreta_id_foreign` (`tipo_libreta_id`),
+  KEY `tes_libretas_valores_servicio_asignado_id_foreign` (`servicio_asignado_id`),
+  KEY `tes_libretas_valores_created_by_index` (`created_by`),
+  KEY `tes_libretas_valores_updated_by_index` (`updated_by`),
+  KEY `tes_libretas_valores_deleted_by_index` (`deleted_by`),
+  CONSTRAINT `tes_libretas_valores_created_by_foreign` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `tes_libretas_valores_deleted_by_foreign` FOREIGN KEY (`deleted_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `tes_libretas_valores_servicio_asignado_id_foreign` FOREIGN KEY (`servicio_asignado_id`) REFERENCES `tes_servicios` (`id`),
+  CONSTRAINT `tes_libretas_valores_tipo_libreta_id_foreign` FOREIGN KEY (`tipo_libreta_id`) REFERENCES `tes_tipos_libretas` (`id`),
+  CONSTRAINT `tes_libretas_valores_updated_by_foreign` FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB AUTO_INCREMENT=199 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Table structure for table `tes_libro_diario`
+--
+DROP TABLE IF EXISTS `tes_libro_diario`;
+CREATE TABLE `tes_libro_diario` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `fecha` date NOT NULL,
+  `tipo_id` bigint(20) unsigned NOT NULL,
+  `numero` int(11) NOT NULL,
+  `signo_efectivo` tinyint(4) NOT NULL,
+  `identidad` varchar(255) DEFAULT NULL,
+  `denominacion` varchar(255) DEFAULT NULL,
+  `descripcion` text DEFAULT NULL,
+  `concepto_id` bigint(20) unsigned NOT NULL,
+  `detalle_id` bigint(20) unsigned NOT NULL,
+  `medio_id` bigint(20) unsigned DEFAULT NULL,
+  `monto` decimal(12,2) NOT NULL,
+  `saldo` decimal(12,2) NOT NULL,
+  `asociar` bigint(20) unsigned DEFAULT NULL,
+  `grupo_redistribucion_id` bigint(20) unsigned DEFAULT NULL,
+  `cfe_id` bigint(20) unsigned DEFAULT NULL,
+  `es_contra_asiento` tinyint(1) NOT NULL DEFAULT 0,
+  `created_by` int(10) unsigned DEFAULT NULL,
+  `updated_by` int(10) unsigned DEFAULT NULL,
+  `deleted_by` int(10) unsigned DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `deleted_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `tes_libro_diario_fecha_index` (`fecha`),
+  KEY `tes_libro_diario_numero_index` (`numero`),
+  KEY `tes_libro_diario_concepto_id_index` (`concepto_id`),
+  KEY `tes_libro_diario_detalle_id_index` (`detalle_id`),
+  KEY `tes_libro_diario_asociar_index` (`asociar`),
+  KEY `tes_libro_diario_tipo_id_deleted_at_index` (`tipo_id`,`deleted_at`),
+  KEY `tes_libro_diario_grupo_redistribucion_id_index` (`grupo_redistribucion_id`),
+  KEY `tes_libro_diario_created_by_index` (`created_by`),
+  KEY `tes_libro_diario_updated_by_index` (`updated_by`),
+  KEY `tes_libro_diario_deleted_by_index` (`deleted_by`),
+  KEY `tes_libro_diario_cfe_id_foreign` (`cfe_id`),
+  KEY `tes_libro_diario_medio_id_foreign` (`medio_id`),
+  CONSTRAINT `tes_libro_diario_asociar_foreign` FOREIGN KEY (`asociar`) REFERENCES `tes_libro_diario` (`id`),
+  CONSTRAINT `tes_libro_diario_cfe_id_foreign` FOREIGN KEY (`cfe_id`) REFERENCES `tes_cfes` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `tes_libro_diario_concepto_id_foreign` FOREIGN KEY (`concepto_id`) REFERENCES `tes_lb_conceptos` (`id`),
+  CONSTRAINT `tes_libro_diario_detalle_id_foreign` FOREIGN KEY (`detalle_id`) REFERENCES `tes_lb_detalle` (`id`),
+  CONSTRAINT `tes_libro_diario_medio_id_foreign` FOREIGN KEY (`medio_id`) REFERENCES `tes_medio_de_pagos` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `tes_libro_diario_tipo_id_foreign` FOREIGN KEY (`tipo_id`) REFERENCES `tes_lb_tipos` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=49 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Table structure for table `tes_medio_de_pagos`
+--
+DROP TABLE IF EXISTS `tes_medio_de_pagos`;
+CREATE TABLE `tes_medio_de_pagos` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `nombre` varchar(255) NOT NULL,
+  `nombre_corto` varchar(100) NOT NULL DEFAULT '',
+  `descripcion` varchar(255) DEFAULT NULL,
+  `activo` tinyint(1) NOT NULL DEFAULT 1,
+  `codigo_soniar` varchar(50) DEFAULT NULL,
+  `contado` tinyint(1) NOT NULL DEFAULT 0,
+  `es_libro_diario` tinyint(1) NOT NULL DEFAULT 1,
+  `es_recaudacion` tinyint(1) NOT NULL DEFAULT 1,
+  `orden` int(11) NOT NULL DEFAULT 0,
+  `created_by` int(10) unsigned DEFAULT NULL,
+  `updated_by` int(10) unsigned DEFAULT NULL,
+  `deleted_by` int(10) unsigned DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `deleted_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `tes_medio_de_pagos_created_by_index` (`created_by`),
+  KEY `tes_medio_de_pagos_updated_by_index` (`updated_by`),
+  KEY `tes_medio_de_pagos_deleted_by_index` (`deleted_by`)
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Table structure for table `tes_multa_medios_pago`
+--
+DROP TABLE IF EXISTS `tes_multa_medios_pago`;
+CREATE TABLE `tes_multa_medios_pago` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `multa_id` bigint(20) unsigned NOT NULL,
+  `medio_pago_id` bigint(20) unsigned NOT NULL,
+  `monto` decimal(12,2) NOT NULL DEFAULT 0.00,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `tes_multa_medios_pago_multa_id_medio_pago_id_unique` (`multa_id`,`medio_pago_id`),
+  KEY `tes_multa_medios_pago_medio_pago_id_foreign` (`medio_pago_id`),
+  CONSTRAINT `tes_multa_medios_pago_medio_pago_id_foreign` FOREIGN KEY (`medio_pago_id`) REFERENCES `tes_medio_de_pagos` (`id`),
+  CONSTRAINT `tes_multa_medios_pago_multa_id_foreign` FOREIGN KEY (`multa_id`) REFERENCES `tes_multas_cobradas` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=1715 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Table structure for table `tes_multas`
+--
+DROP TABLE IF EXISTS `tes_multas`;
+CREATE TABLE `tes_multas` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `articulo` int(11) NOT NULL,
+  `apartado` varchar(10) DEFAULT NULL,
+  `articulo_completo` varchar(20) DEFAULT NULL,
+  `descripcion` text NOT NULL,
+  `moneda` varchar(3) NOT NULL DEFAULT 'UR',
+  `importe_original` decimal(10,2) NOT NULL,
+  `importe_unificado` decimal(10,2) DEFAULT NULL,
+  `decreto` varchar(100) DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `created_by` int(10) unsigned DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `updated_by` int(10) unsigned DEFAULT NULL,
+  `deleted_at` timestamp NULL DEFAULT NULL,
+  `deleted_by` int(10) unsigned DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `tes_multas_articulo_apartado_index` (`articulo`,`apartado`),
+  KEY `idx_multas_articulo_apartado` (`articulo`,`apartado`),
+  KEY `idx_multas_descripcion` (`descripcion`(50)),
+  KEY `idx_multas_deleted_at` (`deleted_at`),
+  KEY `idx_multas_importe_original` (`importe_original`),
+  KEY `idx_multas_importe_unificado` (`importe_unificado`),
+  KEY `idx_multas_articulo_completo` (`articulo_completo`),
+  KEY `tes_multas_created_by_foreign` (`created_by`),
+  KEY `tes_multas_updated_by_foreign` (`updated_by`),
+  KEY `tes_multas_deleted_by_foreign` (`deleted_by`),
+  CONSTRAINT `tes_multas_created_by_foreign` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `tes_multas_deleted_by_foreign` FOREIGN KEY (`deleted_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `tes_multas_updated_by_foreign` FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB AUTO_INCREMENT=193 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Table structure for table `tes_multas_303_2023`
+--
+DROP TABLE IF EXISTS `tes_multas_303_2023`;
+CREATE TABLE `tes_multas_303_2023` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `grupo` varchar(255) NOT NULL,
+  `codigo` varchar(50) NOT NULL,
+  `descripcion` text NOT NULL,
+  `valor_ur` varchar(100) NOT NULL,
+  `created_by` bigint(20) unsigned DEFAULT NULL,
+  `updated_by` bigint(20) unsigned DEFAULT NULL,
+  `deleted_by` bigint(20) unsigned DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `deleted_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `tes_multas_303_2023_grupo_index` (`grupo`),
+  KEY `tes_multas_303_2023_codigo_index` (`codigo`)
+) ENGINE=InnoDB AUTO_INCREMENT=219 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Table structure for table `tes_multas_cobradas`
+--
+DROP TABLE IF EXISTS `tes_multas_cobradas`;
+CREATE TABLE `tes_multas_cobradas` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `recibo` varchar(255) NOT NULL,
+  `cedula` varchar(255) DEFAULT NULL,
+  `nombre` varchar(255) DEFAULT NULL,
+  `domicilio` varchar(255) DEFAULT NULL,
+  `adicional` varchar(255) DEFAULT NULL,
+  `fecha` date NOT NULL,
+  `monto` decimal(15,2) NOT NULL,
+  `forma_pago` text NOT NULL DEFAULT 'SIN DATOS',
+  `medio_pago_id` bigint(20) unsigned DEFAULT NULL,
+  `referencias` text DEFAULT NULL,
+  `adenda` text DEFAULT NULL,
+  `created_by` int(10) unsigned DEFAULT NULL,
+  `updated_by` int(10) unsigned DEFAULT NULL,
+  `deleted_by` int(10) unsigned DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `deleted_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `tes_multas_cobradas_created_by_foreign` (`created_by`),
+  KEY `tes_multas_cobradas_updated_by_foreign` (`updated_by`),
+  KEY `tes_multas_cobradas_deleted_by_foreign` (`deleted_by`),
+  KEY `tes_multas_cobradas_medio_pago_id_foreign` (`medio_pago_id`),
+  CONSTRAINT `tes_multas_cobradas_created_by_foreign` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`),
+  CONSTRAINT `tes_multas_cobradas_deleted_by_foreign` FOREIGN KEY (`deleted_by`) REFERENCES `users` (`id`),
+  CONSTRAINT `tes_multas_cobradas_medio_pago_id_foreign` FOREIGN KEY (`medio_pago_id`) REFERENCES `tes_medio_de_pagos` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `tes_multas_cobradas_updated_by_foreign` FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=1623 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Table structure for table `tes_multas_items`
+--
+DROP TABLE IF EXISTS `tes_multas_items`;
+CREATE TABLE `tes_multas_items` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `tes_multas_cobradas_id` bigint(20) unsigned DEFAULT NULL,
+  `detalle` varchar(255) NOT NULL,
+  `descripcion` text DEFAULT NULL,
+  `importe` decimal(15,2) NOT NULL,
+  `created_by` int(10) unsigned DEFAULT NULL,
+  `updated_by` int(10) unsigned DEFAULT NULL,
+  `deleted_by` int(10) unsigned DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `deleted_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `tes_multas_items_created_by_foreign` (`created_by`),
+  KEY `tes_multas_items_updated_by_foreign` (`updated_by`),
+  KEY `tes_multas_items_deleted_by_foreign` (`deleted_by`),
+  KEY `tes_multas_items_tes_multas_cobradas_id_foreign` (`tes_multas_cobradas_id`),
+  KEY `tes_multas_items_deleted_at_index` (`deleted_at`),
+  CONSTRAINT `tes_multas_items_created_by_foreign` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`),
+  CONSTRAINT `tes_multas_items_deleted_by_foreign` FOREIGN KEY (`deleted_by`) REFERENCES `users` (`id`),
+  CONSTRAINT `tes_multas_items_tes_multas_cobradas_id_foreign` FOREIGN KEY (`tes_multas_cobradas_id`) REFERENCES `tes_multas_cobradas` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `tes_multas_items_updated_by_foreign` FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=3131 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Table structure for table `tes_planilla_ers`
+--
+DROP TABLE IF EXISTS `tes_planilla_ers`;
+CREATE TABLE `tes_planilla_ers` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `fecha` date NOT NULL,
+  `numero` varchar(255) NOT NULL,
+  `tipo_id` bigint(20) unsigned NOT NULL,
+  `dependencia_id` bigint(20) unsigned NOT NULL,
+  `turno` varchar(255) DEFAULT NULL,
+  `er_numero` varchar(255) DEFAULT NULL,
+  `egresos_numero` varchar(255) DEFAULT NULL,
+  `ingresos_numero` varchar(255) DEFAULT NULL,
+  `transferencia_fecha` date DEFAULT NULL,
+  `transferencia_confirmacion` varchar(255) DEFAULT NULL,
+  `confirmada` tinyint(1) NOT NULL DEFAULT 0,
+  `motivo_anulacion` text DEFAULT NULL,
+  `created_by` int(10) unsigned DEFAULT NULL,
+  `updated_by` int(10) unsigned DEFAULT NULL,
+  `deleted_by` int(10) unsigned DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `deleted_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `tes_planilla_ers_tipo_id_foreign` (`tipo_id`),
+  KEY `tes_planilla_ers_dependencia_id_foreign` (`dependencia_id`),
+  KEY `tes_planilla_ers_created_by_foreign` (`created_by`),
+  KEY `tes_planilla_ers_updated_by_foreign` (`updated_by`),
+  KEY `tes_planilla_ers_deleted_by_foreign` (`deleted_by`),
+  CONSTRAINT `tes_planilla_ers_created_by_foreign` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `tes_planilla_ers_deleted_by_foreign` FOREIGN KEY (`deleted_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `tes_planilla_ers_dependencia_id_foreign` FOREIGN KEY (`dependencia_id`) REFERENCES `siif_distribucion_dependencias` (`id`),
+  CONSTRAINT `tes_planilla_ers_tipo_id_foreign` FOREIGN KEY (`tipo_id`) REFERENCES `siif_distribucion_tipos` (`id`),
+  CONSTRAINT `tes_planilla_ers_updated_by_foreign` FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB AUTO_INCREMENT=68 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Table structure for table `tes_planillas_cheques`
+--
+DROP TABLE IF EXISTS `tes_planillas_cheques`;
+CREATE TABLE `tes_planillas_cheques` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `numero_planilla` varchar(20) NOT NULL,
+  `fecha_generacion` date NOT NULL,
+  `estado` enum('generada','anulada') NOT NULL DEFAULT 'generada',
+  `fecha_anulacion` date DEFAULT NULL,
+  `motivo_anulacion` text DEFAULT NULL,
+  `generada_por` int(10) unsigned NOT NULL,
+  `anulada_por` int(10) unsigned DEFAULT NULL,
+  `created_by` int(10) unsigned DEFAULT NULL,
+  `updated_by` int(10) unsigned DEFAULT NULL,
+  `deleted_by` int(10) unsigned DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `deleted_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `tes_planillas_cheques_generada_por_foreign` (`generada_por`),
+  KEY `tes_planillas_cheques_anulada_por_foreign` (`anulada_por`),
+  KEY `tes_planillas_cheques_created_by_foreign` (`created_by`),
+  KEY `tes_planillas_cheques_updated_by_foreign` (`updated_by`),
+  KEY `tes_planillas_cheques_deleted_by_foreign` (`deleted_by`),
+  KEY `tes_planillas_cheques_generada_por_index` (`generada_por`),
+  KEY `tes_planillas_cheques_anulada_por_index` (`anulada_por`),
+  KEY `tes_planillas_cheques_created_by_index` (`created_by`),
+  KEY `tes_planillas_cheques_updated_by_index` (`updated_by`),
+  KEY `tes_planillas_cheques_deleted_by_index` (`deleted_by`),
+  CONSTRAINT `tes_planillas_cheques_anulada_por_foreign` FOREIGN KEY (`anulada_por`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `tes_planillas_cheques_created_by_foreign` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `tes_planillas_cheques_deleted_by_foreign` FOREIGN KEY (`deleted_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `tes_planillas_cheques_generada_por_foreign` FOREIGN KEY (`generada_por`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `tes_planillas_cheques_updated_by_foreign` FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB AUTO_INCREMENT=3187 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Table structure for table `tes_porte_armas`
+--
+DROP TABLE IF EXISTS `tes_porte_armas`;
+CREATE TABLE `tes_porte_armas` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `planilla_id` bigint(20) unsigned DEFAULT NULL,
+  `fecha` date NOT NULL,
+  `orden_cobro` varchar(255) NOT NULL,
+  `numero_tramite` varchar(255) NOT NULL,
+  `ingreso_contabilidad` varchar(255) DEFAULT NULL,
+  `recibo` varchar(255) NOT NULL,
+  `monto` decimal(10,2) NOT NULL,
+  `titular` varchar(255) NOT NULL,
+  `cedula` varchar(255) NOT NULL,
+  `telefono` varchar(255) DEFAULT NULL,
+  `created_by` int(10) unsigned DEFAULT NULL,
+  `updated_by` int(10) unsigned DEFAULT NULL,
+  `deleted_by` int(10) unsigned DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `deleted_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `tes_porte_armas_created_by_foreign` (`created_by`),
+  KEY `tes_porte_armas_updated_by_foreign` (`updated_by`),
+  KEY `tes_porte_armas_deleted_by_foreign` (`deleted_by`),
+  KEY `tes_porte_armas_created_by_index` (`created_by`),
+  KEY `tes_porte_armas_updated_by_index` (`updated_by`),
+  KEY `tes_porte_armas_deleted_by_index` (`deleted_by`),
+  KEY `tes_porte_armas_planilla_id_foreign` (`planilla_id`),
+  CONSTRAINT `tes_porte_armas_created_by_foreign` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`),
+  CONSTRAINT `tes_porte_armas_deleted_by_foreign` FOREIGN KEY (`deleted_by`) REFERENCES `users` (`id`),
+  CONSTRAINT `tes_porte_armas_planilla_id_foreign` FOREIGN KEY (`planilla_id`) REFERENCES `tes_porte_armas_planillas` (`id`),
+  CONSTRAINT `tes_porte_armas_updated_by_foreign` FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=190 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Table structure for table `tes_porte_armas_planillas`
+--
+DROP TABLE IF EXISTS `tes_porte_armas_planillas`;
+CREATE TABLE `tes_porte_armas_planillas` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `fecha` date NOT NULL,
+  `numero` varchar(255) NOT NULL,
+  `anulada_fecha` timestamp NULL DEFAULT NULL,
+  `anulada_user_id` int(10) unsigned DEFAULT NULL,
+  `created_by` int(10) unsigned DEFAULT NULL,
+  `updated_by` int(10) unsigned DEFAULT NULL,
+  `deleted_at` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `deleted_by` int(10) unsigned DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `tes_porte_armas_planillas_numero_unique` (`numero`),
+  KEY `tes_porte_armas_planillas_anulada_user_id_foreign` (`anulada_user_id`),
+  KEY `tes_porte_armas_planillas_created_by_foreign` (`created_by`),
+  KEY `tes_porte_armas_planillas_updated_by_foreign` (`updated_by`),
+  KEY `tes_porte_armas_planillas_deleted_by_foreign` (`deleted_by`),
+  CONSTRAINT `tes_porte_armas_planillas_anulada_user_id_foreign` FOREIGN KEY (`anulada_user_id`) REFERENCES `users` (`id`),
+  CONSTRAINT `tes_porte_armas_planillas_created_by_foreign` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`),
+  CONSTRAINT `tes_porte_armas_planillas_deleted_by_foreign` FOREIGN KEY (`deleted_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `tes_porte_armas_planillas_updated_by_foreign` FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Table structure for table `tes_prendas`
+--
+DROP TABLE IF EXISTS `tes_prendas`;
+CREATE TABLE `tes_prendas` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `planilla_id` bigint(20) unsigned DEFAULT NULL,
+  `recibo_serie` varchar(255) NOT NULL,
+  `recibo_numero` varchar(255) NOT NULL,
+  `recibo_fecha` date NOT NULL,
+  `orden_cobro` varchar(255) NOT NULL,
+  `titular_nombre` varchar(255) NOT NULL,
+  `titular_cedula` varchar(255) DEFAULT NULL,
+  `titular_telefono` varchar(255) NOT NULL,
+  `medio_pago_id` bigint(20) unsigned NOT NULL,
+  `monto` decimal(10,2) NOT NULL,
+  `concepto` varchar(255) NOT NULL,
+  `transferencia` varchar(255) DEFAULT NULL,
+  `transferencia_fecha` date DEFAULT NULL,
+  `created_by` int(10) unsigned DEFAULT NULL,
+  `updated_by` int(10) unsigned DEFAULT NULL,
+  `deleted_by` int(10) unsigned DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `deleted_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `tes_prendas_medio_pago_id_foreign` (`medio_pago_id`),
+  KEY `tes_prendas_created_by_foreign` (`created_by`),
+  KEY `tes_prendas_updated_by_foreign` (`updated_by`),
+  KEY `tes_prendas_deleted_by_foreign` (`deleted_by`),
+  KEY `tes_prendas_planilla_id_index` (`planilla_id`),
+  CONSTRAINT `tes_prendas_created_by_foreign` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`),
+  CONSTRAINT `tes_prendas_deleted_by_foreign` FOREIGN KEY (`deleted_by`) REFERENCES `users` (`id`),
+  CONSTRAINT `tes_prendas_medio_pago_id_foreign` FOREIGN KEY (`medio_pago_id`) REFERENCES `tes_medio_de_pagos` (`id`),
+  CONSTRAINT `tes_prendas_planilla_id_foreign` FOREIGN KEY (`planilla_id`) REFERENCES `tes_prendas_planillas` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `tes_prendas_updated_by_foreign` FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=64 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Table structure for table `tes_prendas_planillas`
+--
+DROP TABLE IF EXISTS `tes_prendas_planillas`;
+CREATE TABLE `tes_prendas_planillas` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `fecha` date NOT NULL,
+  `numero` varchar(255) NOT NULL,
+  `anulada_fecha` datetime DEFAULT NULL,
+  `anulada_user_id` int(10) unsigned DEFAULT NULL,
+  `created_by` int(10) unsigned DEFAULT NULL,
+  `updated_by` int(10) unsigned DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `deleted_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `tes_prendas_planillas_numero_unique` (`numero`),
+  KEY `tes_prendas_planillas_anulada_user_id_foreign` (`anulada_user_id`),
+  KEY `tes_prendas_planillas_created_by_foreign` (`created_by`),
+  KEY `tes_prendas_planillas_updated_by_foreign` (`updated_by`),
+  KEY `tes_prendas_planillas_fecha_index` (`fecha`),
+  KEY `tes_prendas_planillas_numero_index` (`numero`),
+  CONSTRAINT `tes_prendas_planillas_anulada_user_id_foreign` FOREIGN KEY (`anulada_user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `tes_prendas_planillas_created_by_foreign` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `tes_prendas_planillas_updated_by_foreign` FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB AUTO_INCREMENT=35 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Table structure for table `tes_servicio_tipo_libreta`
+--
+DROP TABLE IF EXISTS `tes_servicio_tipo_libreta`;
+CREATE TABLE `tes_servicio_tipo_libreta` (
+  `servicio_id` bigint(20) unsigned NOT NULL,
+  `tipo_libreta_id` bigint(20) unsigned NOT NULL,
+  PRIMARY KEY (`servicio_id`,`tipo_libreta_id`),
+  KEY `tes_servicio_tipo_libreta_servicio_id_index` (`servicio_id`),
+  KEY `tes_servicio_tipo_libreta_tipo_libreta_id_index` (`tipo_libreta_id`),
+  CONSTRAINT `tes_servicio_tipo_libreta_servicio_id_foreign` FOREIGN KEY (`servicio_id`) REFERENCES `tes_servicios` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `tes_servicio_tipo_libreta_tipo_libreta_id_foreign` FOREIGN KEY (`tipo_libreta_id`) REFERENCES `tes_tipos_libretas` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Table structure for table `tes_servicios`
+--
+DROP TABLE IF EXISTS `tes_servicios`;
+CREATE TABLE `tes_servicios` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `nombre` varchar(255) NOT NULL,
+  `valor_ui` decimal(8,2) DEFAULT NULL,
+  `activo` tinyint(1) NOT NULL DEFAULT 1,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `deleted_at` timestamp NULL DEFAULT NULL,
+  `created_by` int(10) unsigned DEFAULT NULL,
+  `updated_by` int(10) unsigned DEFAULT NULL,
+  `deleted_by` int(10) unsigned DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `tes_servicios_nombre_unique` (`nombre`),
+  KEY `tes_servicios_created_by_index` (`created_by`),
+  KEY `tes_servicios_updated_by_index` (`updated_by`),
+  KEY `tes_servicios_deleted_by_index` (`deleted_by`),
+  CONSTRAINT `tes_servicios_created_by_foreign` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `tes_servicios_deleted_by_foreign` FOREIGN KEY (`deleted_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `tes_servicios_updated_by_foreign` FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB AUTO_INCREMENT=26 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Table structure for table `tes_tarjetas_cobro_brou`
+--
+DROP TABLE IF EXISTS `tes_tarjetas_cobro_brou`;
+CREATE TABLE `tes_tarjetas_cobro_brou` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `fecha_recibido` date NOT NULL,
+  `receptor_id` int(10) unsigned NOT NULL,
+  `titular_cedula` varchar(255) NOT NULL,
+  `titular_nombre` varchar(255) NOT NULL,
+  `titular_apellido` varchar(255) NOT NULL,
+  `numero_tarjeta` varchar(255) NOT NULL,
+  `fecha_entregado` date DEFAULT NULL,
+  `entregador_id` int(10) unsigned DEFAULT NULL,
+  `fecha_devuelto` date DEFAULT NULL,
+  `devolucion_user_id` int(10) unsigned DEFAULT NULL,
+  `observaciones` text DEFAULT NULL,
+  `estado` enum('Recibido','Entregado','Devuelto') NOT NULL DEFAULT 'Recibido',
+  `created_by` int(10) unsigned DEFAULT NULL,
+  `updated_by` int(10) unsigned DEFAULT NULL,
+  `deleted_by` int(10) unsigned DEFAULT NULL,
+  `deleted_at` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `tes_tarjetas_cobro_brou_receptor_id_foreign` (`receptor_id`),
+  KEY `tes_tarjetas_cobro_brou_entregador_id_foreign` (`entregador_id`),
+  KEY `tes_tarjetas_cobro_brou_devolucion_user_id_foreign` (`devolucion_user_id`),
+  KEY `tes_tarjetas_cobro_brou_created_by_foreign` (`created_by`),
+  KEY `tes_tarjetas_cobro_brou_updated_by_foreign` (`updated_by`),
+  KEY `tes_tarjetas_cobro_brou_deleted_by_foreign` (`deleted_by`),
+  CONSTRAINT `tes_tarjetas_cobro_brou_created_by_foreign` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`),
+  CONSTRAINT `tes_tarjetas_cobro_brou_deleted_by_foreign` FOREIGN KEY (`deleted_by`) REFERENCES `users` (`id`),
+  CONSTRAINT `tes_tarjetas_cobro_brou_devolucion_user_id_foreign` FOREIGN KEY (`devolucion_user_id`) REFERENCES `users` (`id`),
+  CONSTRAINT `tes_tarjetas_cobro_brou_entregador_id_foreign` FOREIGN KEY (`entregador_id`) REFERENCES `users` (`id`),
+  CONSTRAINT `tes_tarjetas_cobro_brou_receptor_id_foreign` FOREIGN KEY (`receptor_id`) REFERENCES `users` (`id`),
+  CONSTRAINT `tes_tarjetas_cobro_brou_updated_by_foreign` FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=51 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Table structure for table `tes_tenencia_armas`
+--
+DROP TABLE IF EXISTS `tes_tenencia_armas`;
+CREATE TABLE `tes_tenencia_armas` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `planilla_id` bigint(20) unsigned DEFAULT NULL,
+  `fecha` date NOT NULL,
+  `orden_cobro` varchar(255) NOT NULL,
+  `numero_tramite` varchar(255) NOT NULL,
+  `ingreso_contabilidad` varchar(255) DEFAULT NULL,
+  `recibo` varchar(255) NOT NULL,
+  `monto` decimal(10,2) NOT NULL,
+  `titular` varchar(255) NOT NULL,
+  `cedula` varchar(255) NOT NULL,
+  `telefono` varchar(255) DEFAULT NULL,
+  `created_by` int(10) unsigned DEFAULT NULL,
+  `updated_by` int(10) unsigned DEFAULT NULL,
+  `deleted_by` int(10) unsigned DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `deleted_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `tes_tenencia_armas_created_by_foreign` (`created_by`),
+  KEY `tes_tenencia_armas_updated_by_foreign` (`updated_by`),
+  KEY `tes_tenencia_armas_deleted_by_foreign` (`deleted_by`),
+  KEY `tes_tenencia_armas_created_by_index` (`created_by`),
+  KEY `tes_tenencia_armas_updated_by_index` (`updated_by`),
+  KEY `tes_tenencia_armas_deleted_by_index` (`deleted_by`),
+  KEY `tes_tenencia_armas_planilla_id_foreign` (`planilla_id`),
+  CONSTRAINT `tes_tenencia_armas_created_by_foreign` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`),
+  CONSTRAINT `tes_tenencia_armas_deleted_by_foreign` FOREIGN KEY (`deleted_by`) REFERENCES `users` (`id`),
+  CONSTRAINT `tes_tenencia_armas_planilla_id_foreign` FOREIGN KEY (`planilla_id`) REFERENCES `tes_tenencia_armas_planillas` (`id`),
+  CONSTRAINT `tes_tenencia_armas_updated_by_foreign` FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=1037 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Table structure for table `tes_tenencia_armas_planillas`
+--
+DROP TABLE IF EXISTS `tes_tenencia_armas_planillas`;
+CREATE TABLE `tes_tenencia_armas_planillas` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `fecha` date NOT NULL,
+  `numero` varchar(255) NOT NULL,
+  `anulada_fecha` timestamp NULL DEFAULT NULL,
+  `anulada_user_id` int(10) unsigned DEFAULT NULL,
+  `created_by` int(10) unsigned DEFAULT NULL,
+  `updated_by` int(10) unsigned DEFAULT NULL,
+  `deleted_at` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `deleted_by` int(10) unsigned DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `tes_tenencia_armas_planillas_numero_unique` (`numero`),
+  KEY `tes_tenencia_armas_planillas_anulada_user_id_foreign` (`anulada_user_id`),
+  KEY `tes_tenencia_armas_planillas_created_by_foreign` (`created_by`),
+  KEY `tes_tenencia_armas_planillas_updated_by_foreign` (`updated_by`),
+  KEY `tes_tenencia_armas_planillas_deleted_by_foreign` (`deleted_by`),
+  CONSTRAINT `tes_tenencia_armas_planillas_anulada_user_id_foreign` FOREIGN KEY (`anulada_user_id`) REFERENCES `users` (`id`),
+  CONSTRAINT `tes_tenencia_armas_planillas_created_by_foreign` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`),
+  CONSTRAINT `tes_tenencia_armas_planillas_deleted_by_foreign` FOREIGN KEY (`deleted_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `tes_tenencia_armas_planillas_updated_by_foreign` FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Table structure for table `tes_tipos_libretas`
+--
+DROP TABLE IF EXISTS `tes_tipos_libretas`;
+CREATE TABLE `tes_tipos_libretas` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `nombre` varchar(255) NOT NULL,
+  `cantidad_recibos` int(11) NOT NULL,
+  `stock_minimo_recibos` int(11) NOT NULL DEFAULT 0,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `deleted_at` timestamp NULL DEFAULT NULL,
+  `created_by` int(10) unsigned DEFAULT NULL,
+  `updated_by` int(10) unsigned DEFAULT NULL,
+  `deleted_by` int(10) unsigned DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `tes_tipos_libretas_nombre_unique` (`nombre`),
+  KEY `tes_tipos_libretas_created_by_index` (`created_by`),
+  KEY `tes_tipos_libretas_updated_by_index` (`updated_by`),
+  KEY `tes_tipos_libretas_deleted_by_index` (`deleted_by`),
+  CONSTRAINT `tes_tipos_libretas_created_by_foreign` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `tes_tipos_libretas_deleted_by_foreign` FOREIGN KEY (`deleted_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `tes_tipos_libretas_updated_by_foreign` FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Table structure for table `tes_tipos_monedas`
+--
+DROP TABLE IF EXISTS `tes_tipos_monedas`;
+CREATE TABLE `tes_tipos_monedas` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `nombre` varchar(255) NOT NULL,
+  `descripcion` varchar(255) DEFAULT NULL,
+  `activo` tinyint(1) NOT NULL DEFAULT 1,
+  `created_by` int(10) unsigned DEFAULT NULL,
+  `updated_by` int(10) unsigned DEFAULT NULL,
+  `deleted_by` int(10) unsigned DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `deleted_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `tes_tipos_monedas_created_by_foreign` (`created_by`),
+  KEY `tes_tipos_monedas_updated_by_foreign` (`updated_by`),
+  KEY `tes_tipos_monedas_deleted_by_foreign` (`deleted_by`),
+  KEY `tes_tipos_monedas_created_by_index` (`created_by`),
+  KEY `tes_tipos_monedas_updated_by_index` (`updated_by`),
+  KEY `tes_tipos_monedas_deleted_by_index` (`deleted_by`),
+  CONSTRAINT `tes_tipos_monedas_created_by_foreign` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`),
+  CONSTRAINT `tes_tipos_monedas_deleted_by_foreign` FOREIGN KEY (`deleted_by`) REFERENCES `users` (`id`),
+  CONSTRAINT `tes_tipos_monedas_updated_by_foreign` FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Table structure for table `users`
+--
+DROP TABLE IF EXISTS `users`;
+CREATE TABLE `users` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `nombre` varchar(255) NOT NULL,
+  `apellido` varchar(255) NOT NULL,
+  `email` varchar(255) NOT NULL,
+  `theme` varchar(255) NOT NULL DEFAULT 'default',
+  `telefono` varchar(255) DEFAULT NULL,
+  `direccion` text DEFAULT NULL,
+  `cedula` varchar(255) DEFAULT NULL,
+  `email_verified_at` timestamp NULL DEFAULT NULL,
+  `password` varchar(255) NOT NULL,
+  `two_factor_secret` text DEFAULT NULL,
+  `two_factor_recovery_codes` text DEFAULT NULL,
+  `two_factor_confirmed_at` timestamp NULL DEFAULT NULL,
+  `activo` tinyint(1) NOT NULL DEFAULT 1,
+  `remember_token` varchar(100) DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `deleted_at` timestamp NULL DEFAULT NULL,
+  `modulo_id` bigint(20) unsigned DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `users_email_unique` (`email`),
+  UNIQUE KEY `users_cedula_unique` (`cedula`),
+  KEY `users_modulo_id_foreign` (`modulo_id`),
+  KEY `users_activo_index` (`activo`),
+  KEY `users_deleted_at_index` (`deleted_at`),
+  CONSTRAINT `users_modulo_id_foreign` FOREIGN KEY (`modulo_id`) REFERENCES `modulos` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Migraciones legacy previas al squashed schema (marcadas como aplicadas
+-- por la migración 2026_07_03_200000_create_all_tables, no desde este dump).
+-- Se conservan aquí como referencia; el INSERT lo gestiona la migración.
+--
+-- 15 migraciones posteriores al squashed a registrar.
+
+/*!40014 SET FOREIGN_KEY_CHECKS=1 */;

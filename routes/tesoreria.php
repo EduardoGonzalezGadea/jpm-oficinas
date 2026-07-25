@@ -5,6 +5,7 @@
  *
  * Rutas del módulo de Tesorería.
  * Se incluye dentro del grupo JWT + prefix('tesoreria') de web.php.
+ * Sin closures — compatible con route:cache.
  */
 
 use App\Http\Controllers\Tesoreria\ArmasController;
@@ -22,6 +23,7 @@ use App\Http\Controllers\Tesoreria\ReporteRecibosController;
 use App\Http\Controllers\Tesoreria\StockChequesController;
 use App\Http\Controllers\Tesoreria\StockReporteController;
 use App\Http\Controllers\Tesoreria\TesoreriaController;
+use App\Http\Controllers\Tesoreria\ViewController;
 use App\Http\Livewire\Tesoreria\Arrendamientos\PrintArrendamientos;
 use App\Http\Livewire\Tesoreria\Arrendamientos\PrintArrendamientosFull;
 use App\Http\Livewire\Tesoreria\Eventuales\PrintEventuales;
@@ -51,7 +53,7 @@ Route::get('cuentas-bancarias', [CuentaBancariaController::class, 'index'])
 // ============================================================================
 
 Route::prefix('cheques')->name('cheques.')->group(function () {
-    Route::get('/', fn () => view('tesoreria.cheques.index'))->name('index');
+    Route::view('/', 'tesoreria.cheques.index')->name('index');
     Route::get('libreta',                   [ChequeController::class, 'libreta'])         ->name('libreta');
     Route::get('emitir',                    [ChequeController::class, 'emitir'])           ->name('emitir');
     Route::get('planilla/generar',          [ChequeController::class, 'planillaGenerar'])  ->name('planilla.generar');
@@ -67,8 +69,8 @@ Route::get('cheques/reportes/download-stock/{filename}',   [StockChequesControll
 // MULTAS DE TRÁNSITO (vista pública dentro del área autenticada)
 // ============================================================================
 
-Route::get('multas-transito', fn () => view('tesoreria.multas'))->name('multas-transito');
-Route::get('multas-303-2023', fn () => view('tesoreria.multas-303-2023'))->name('multas-303-2023');
+Route::view('multas-transito', 'tesoreria.multas')->name('multas-transito');
+Route::view('multas-303-2023', 'tesoreria.multas-303-2023')->name('multas-303-2023');
 Route::get('multas-transito/exportar-pdf',
     \App\Http\Livewire\Tesoreria\PrintMultasArticulos::class
 )->name('multas-transito.exportar-pdf');
@@ -78,8 +80,8 @@ Route::get('multas-transito/exportar-pdf',
 // ============================================================================
 
 Route::prefix('multas-cobradas')->name('multas-cobradas.')->middleware(['modulo:tesoreria'])->group(function () {
-    Route::get('/',         fn () => view('tesoreria.multas-cobradas.index'))     ->name('index');
-    Route::get('cargar-cfe', fn () => view('tesoreria.multas-cobradas.cargar-cfe')) ->name('cargar-cfe');
+    Route::view('/', 'tesoreria.multas-cobradas.index')->name('index');
+    Route::view('cargar-cfe', 'tesoreria.multas-cobradas.cargar-cfe')->name('cargar-cfe');
 
     Route::get('imprimir-detalles/{fechaDesde}/{fechaHasta}',
         \App\Http\Livewire\Tesoreria\MultasCobradas\PrintMultasCobradasFull::class
@@ -103,13 +105,10 @@ Route::prefix('multas-cobradas')->name('multas-cobradas.')->middleware(['modulo:
 // ============================================================================
 
 Route::prefix('eventuales')->name('eventuales.')->group(function () {
-    Route::get('/',          fn () => view('tesoreria.eventuales.index'))        ->name('index');
-    Route::get('instituciones', fn () => view('tesoreria.eventuales.instituciones')) ->name('instituciones');
+    Route::view('/', 'tesoreria.eventuales.index')->name('index');
+    Route::view('instituciones', 'tesoreria.eventuales.instituciones')->name('instituciones');
 
-    Route::get('planillas/imprimir/{id}', function ($id) {
-        $planilla = \App\Models\Tesoreria\EventualPlanilla::findOrFail($id);
-        return view('tesoreria.eventuales.planillas-print', compact('planilla'));
-    })->name('planillas-print');
+    Route::get('planillas/imprimir/{id}', [ViewController::class, 'eventualPlanillaPrint'])->name('planillas-print');
 
     Route::get('imprimir/{year}/{mes}',         PrintEventuales::class)    ->name('imprimir');
     Route::get('imprimir-detalles/{year}/{mes}', PrintEventualesFull::class) ->name('imprimir-detalles');
@@ -131,12 +130,9 @@ Route::prefix('eventuales')->name('eventuales.')->group(function () {
 
 Route::prefix('arrendamientos')->name('arrendamientos.')->group(function () {
     Route::get('/', [ArrendamientoController::class, 'index'])->name('index');
-    Route::get('cargar-cfe', fn () => view('tesoreria.arrendamientos.cargar-cfe'))->name('cargar-cfe');
+    Route::view('cargar-cfe', 'tesoreria.arrendamientos.cargar-cfe')->name('cargar-cfe');
 
-    Route::get('planillas/imprimir/{id}', function ($id) {
-        $planilla = \App\Models\Tesoreria\Planilla::findOrFail($id);
-        return view('tesoreria.arrendamientos.planillas-print', compact('planilla'));
-    })->name('planillas-print');
+    Route::get('planillas/imprimir/{id}', [ViewController::class, 'arrendamientoPlanillaPrint'])->name('planillas-print');
 
     Route::get('imprimir/{year}/{mes}',      PrintArrendamientos::class)     ->name('imprimir');
     Route::get('imprimir-todo/{year}/{mes}', PrintArrendamientosFull::class) ->name('imprimir-todo');
@@ -197,7 +193,7 @@ Route::prefix('armas')->name('armas.')->group(function () {
 
 Route::prefix('certificados-residencia')->name('certificados-residencia.')->group(function () {
     Route::get('/', \App\Http\Livewire\Tesoreria\CertificadosResidencia\Index::class)->name('index');
-    Route::get('cargar-cfe', fn () => view('tesoreria.certificados-residencia.cargar-cfe'))->name('cargar-cfe');
+    Route::view('cargar-cfe', 'tesoreria.certificados-residencia.cargar-cfe')->name('cargar-cfe');
 
     Route::get('reportes',
         \App\Http\Livewire\Tesoreria\CertificadosResidencia\CertificadosReporte::class
@@ -239,6 +235,29 @@ Route::prefix('gestion-cfe')->name('gestion-cfe.')->group(function () {
         ->name('recaudaciones');
 });
 
+Route::prefix('libro-diario')->name('libro-diario.')->group(function () {
+    Route::get('/', \App\Http\Livewire\Tesoreria\LibroDiario\Index::class)
+        ->name('index');
+    Route::redirect('asientos', '/tesoreria/libro-diario')
+        ->name('asientos');
+
+    Route::view('lb-tipos', 'tesoreria.libro-diario.lb-tipos.index-livewire')
+        ->name('lb-tipos.index');
+    Route::view('lb-conceptos', 'tesoreria.libro-diario.lb-conceptos.index-livewire')
+        ->name('lb-conceptos.index');
+    Route::view('lb-detalle', 'tesoreria.libro-diario.lb-detalle.index-livewire')
+        ->name('lb-detalle.index');
+    Route::view('lb-medios', 'tesoreria.libro-diario.lb-medios.index-livewire')
+        ->name('lb-medios.index');
+
+    Route::get('/carga-masiva-haberes', \App\Http\Livewire\Tesoreria\CargaMasivaHaberes\Index::class)
+        ->name('carga-masiva-haberes');
+});
+
+Route::prefix('caja-diaria')->name('caja-diaria.')->middleware(['modulo:tesoreria'])->group(function () {
+    Route::get('/', \App\Http\Livewire\Tesoreria\CajaDiaria\Index::class)->name('index');
+});
+
 Route::prefix('cfe')->name('cfe.')->group(function () {
     Route::get('/pendientes', \App\Http\Livewire\CfePendientesIndex::class)->name('pendientes');
     Route::get('/monitoring', \App\Http\Livewire\Tesoreria\CfeMonitoring\Index::class)->name('monitoring');
@@ -250,7 +269,7 @@ Route::prefix('cfe')->name('cfe.')->group(function () {
 
 Route::prefix('prendas')->name('prendas.')->group(function () {
     Route::get('/', \App\Http\Livewire\Tesoreria\Prendas\Index::class)->name('index');
-    Route::get('cargar-cfe', fn () => view('tesoreria.prendas.cargar-cfe'))->name('cargar-cfe');
+    Route::view('cargar-cfe', 'tesoreria.prendas.cargar-cfe')->name('cargar-cfe');
 
     Route::get('reportes',
         \App\Http\Livewire\Tesoreria\Prendas\PrendasReporte::class
@@ -263,10 +282,7 @@ Route::prefix('prendas')->name('prendas.')->group(function () {
     Route::prefix('planillas')->name('planillas.')->group(function () {
         Route::get('/',              \App\Http\Livewire\Tesoreria\Prendas\Planillas\Index::class) ->name('index');
         Route::get('/{id}',          \App\Http\Livewire\Tesoreria\Prendas\Planillas\Show::class)  ->name('show');
-        Route::get('/{id}/imprimir', function ($id) {
-            $planilla = \App\Models\Tesoreria\PrendaPlanilla::findOrFail($id);
-            return view('tesoreria.prendas.planillas-print', compact('planilla'));
-        })->name('print');
+        Route::get('/{id}/imprimir', [ViewController::class, 'prendaPlanillaPrint'])->name('print');
     });
 });
 
@@ -281,7 +297,7 @@ Route::prefix('deposito-vehiculos')->name('deposito-vehiculos.')->group(function
         \App\Http\Livewire\Tesoreria\DepositoVehiculos\DepositoVehiculosReporte::class
     )->name('reportes');
 
-    Route::get('imprimir-avanzado', fn () => 'Impresión Avanzada No Implementada aún')
+    Route::get('imprimir-avanzado', [ViewController::class, 'imprimirAvanzadoNoImplementado'])
         ->name('imprimir-avanzado');
 });
 
@@ -296,33 +312,23 @@ Route::prefix('deposito-vehiculos/planillas')->name('deposito-vehiculos.planilla
 // ============================================================================
 
 Route::prefix('configuracion')->name('configuracion.')->middleware('modulo:tesoreria')->group(function () {
-    Route::get('medios-de-pago',
-        fn () => view('tesoreria.configuracion.medios-de-pago.index-livewire')
-    )->name('medios-de-pago.index');
+    Route::view('medios-de-pago', 'tesoreria.configuracion.medios-de-pago.index-livewire')
+        ->name('medios-de-pago.index');
 
-    Route::get('tipos-monedas',
-        fn () => view('tesoreria.configuracion.tes-tipos-monedas.index-livewire')
-    )->name('tes-tipos-monedas.index');
+    Route::view('tipos-monedas', 'tesoreria.configuracion.tes-tipos-monedas.index-livewire')
+        ->name('tes-tipos-monedas.index');
 
-    Route::get('denominaciones-monedas',
-        fn () => view('tesoreria.configuracion.tes-denominaciones-monedas.index-livewire')
-    )->name('tes-denominaciones-monedas.index');
+    Route::view('caja-conceptos', 'tesoreria.configuracion.caja-conceptos.index-livewire')
+        ->name('caja-conceptos.index');
 
-    Route::get('caja-conceptos',
-        fn () => view('tesoreria.configuracion.caja-conceptos.index-livewire')
-    )->name('caja-conceptos.index');
+    Route::view('siif-distribucion-dependencias', 'tesoreria.configuracion.siif-distribucion-dependencias.index-livewire')
+        ->name('siif-distribucion-dependencias.index');
 
-    Route::get('siif-distribucion-dependencias',
-        fn () => view('tesoreria.configuracion.siif-distribucion-dependencias.index-livewire')
-    )->name('siif-distribucion-dependencias.index');
+    Route::view('siif-distribucion-tipos', 'tesoreria.configuracion.siif-distribucion-tipos.index-livewire')
+        ->name('siif-distribucion-tipos.index');
 
-    Route::get('siif-distribucion-tipos',
-        fn () => view('tesoreria.configuracion.siif-distribucion-tipos.index-livewire')
-    )->name('siif-distribucion-tipos.index');
-
-    Route::get('siif-distribuciones',
-        fn () => view('tesoreria.configuracion.siif-distribuciones.index-livewire')
-    )->name('siif-distribuciones.index');
+    Route::view('siif-distribuciones', 'tesoreria.configuracion.siif-distribuciones.index-livewire')
+        ->name('siif-distribuciones.index');
 });
 // ============================================================================
 // CAJA CHICA

@@ -8,7 +8,6 @@ use App\Models\Tesoreria\SiifDistribucionDependencia;
 use App\Models\Tesoreria\TesCfeItem;
 use Livewire\Component;
 use Livewire\WithPagination;
-use Illuminate\Validation\Rule;
 
 class SiifDistribuciones extends Component
 {
@@ -28,6 +27,7 @@ class SiifDistribuciones extends Component
     public $sub_rubro;
     public $recurso;
     public $concepto;
+    public $distribucion;
     public $codigo_sir;
     public $porcentaje;
     public $financiacion;
@@ -42,13 +42,14 @@ class SiifDistribuciones extends Component
             ->paginate(15);
 
         $subtotalesConcepto = $this->queryBase()
-            ->selectRaw('tipo_id, dependencia_id, concepto, SUM(porcentaje) as total, COUNT(*) as cantidad')
-            ->groupBy('tipo_id', 'dependencia_id', 'concepto')
+            ->selectRaw('tipo_id, dependencia_id, concepto, distribucion, SUM(porcentaje) as total, COUNT(*) as cantidad')
+            ->groupBy('tipo_id', 'dependencia_id', 'concepto', 'distribucion')
             ->get()
             ->mapWithKeys(fn($row) => [
-                $row->tipo_id . '-' . $row->dependencia_id . '-' . ($row->concepto ?? '_sin_concepto_') => [
+                $row->tipo_id . '-' . $row->dependencia_id . '-' . ($row->concepto ?? '_sin_concepto_') . '-' . ($row->distribucion ?? '_sin_dist_') => [
                     'total' => $row->total,
                     'cantidad' => $row->cantidad,
+                    'distribucion' => $row->distribucion,
                 ]
             ]);
 
@@ -92,11 +93,8 @@ class SiifDistribuciones extends Component
             'rubro' => 'nullable|string|max:255',
             'sub_rubro' => 'nullable|string|max:255',
             'recurso' => 'nullable|string|max:255',
-            'concepto' => ['nullable', 'string', 'max:255',
-                Rule::unique('siif_distribucions', 'concepto')
-                    ->where('tipo_id', $this->tipo_id)
-                    ->where('dependencia_id', $this->dependencia_id),
-            ],
+            'concepto' => 'nullable|string|max:255',
+            'distribucion' => 'nullable|string|max:255',
             'codigo_sir' => 'nullable|string|max:255',
             'porcentaje' => 'required|numeric|min:0|max:100',
             'financiacion' => 'nullable|string|max:255',
@@ -111,6 +109,7 @@ class SiifDistribuciones extends Component
             'sub_rubro' => $this->sub_rubro,
             'recurso' => $this->recurso,
             'concepto' => $this->concepto,
+            'distribucion' => $this->distribucion,
             'codigo_sir' => $this->codigo_sir,
             'porcentaje' => $this->porcentaje,
             'financiacion' => $this->financiacion,
@@ -134,6 +133,7 @@ class SiifDistribuciones extends Component
         $this->sub_rubro = $d->sub_rubro;
         $this->recurso = $d->recurso;
         $this->concepto = $d->concepto;
+        $this->distribucion = $d->distribucion;
         $this->codigo_sir = $d->codigo_sir;
         $this->porcentaje = $d->porcentaje;
         $this->financiacion = $d->financiacion;
@@ -151,12 +151,8 @@ class SiifDistribuciones extends Component
             'rubro' => 'nullable|string|max:255',
             'sub_rubro' => 'nullable|string|max:255',
             'recurso' => 'nullable|string|max:255',
-            'concepto' => ['nullable', 'string', 'max:255',
-                Rule::unique('siif_distribucions', 'concepto')
-                    ->where('tipo_id', $this->tipo_id)
-                    ->where('dependencia_id', $this->dependencia_id)
-                    ->ignore($this->siif_distribucion_id),
-            ],
+            'concepto' => 'nullable|string|max:255',
+            'distribucion' => 'nullable|string|max:255',
             'codigo_sir' => 'nullable|string|max:255',
             'porcentaje' => 'required|numeric|min:0|max:100',
             'financiacion' => 'nullable|string|max:255',
@@ -173,6 +169,7 @@ class SiifDistribuciones extends Component
                 'sub_rubro' => $this->sub_rubro,
                 'recurso' => $this->recurso,
                 'concepto' => $this->concepto,
+                'distribucion' => $this->distribucion,
                 'codigo_sir' => $this->codigo_sir,
                 'porcentaje' => $this->porcentaje,
                 'financiacion' => $this->financiacion,
@@ -251,6 +248,7 @@ class SiifDistribuciones extends Component
         $this->sub_rubro = null;
         $this->recurso = null;
         $this->concepto = null;
+        $this->distribucion = null;
         $this->codigo_sir = null;
         $this->porcentaje = null;
         $this->financiacion = null;

@@ -138,6 +138,29 @@ class ArmasExtractorTest extends TestCase
         $this->assertTrue(true);
     }
 
+    public function test_tahta_detalle_no_incluye_metadata_tramite(): void
+    {
+        $texto = $this->loadArmasFixture('tahta_tramite_en_detalle.txt');
+        $dto = $this->extractor->extraer($texto);
+
+        // El detalle debe contener el nombre del concepto
+        $this->assertStringContainsStringIgnoringCase('Tenencia', $dto->detalle ?? '');
+        // El número de trámite debe estar en tramite, no pegado al detalle
+        $this->assertSame('2026/54321', $dto->tramite ?? '');
+        // El detalle no debe contener el número del trámite
+        $this->assertStringNotContainsString('2026/54321', $dto->detalle ?? '');
+    }
+
+    public function test_porte_detalle_no_incluye_tramite(): void
+    {
+        $texto = $this->loadArmasFixture('porte_tramite_en_detalle.txt');
+        $dto = $this->extractor->extraer($texto);
+
+        $this->assertStringNotContainsStringIgnoringCase('TRAMITE', $dto->detalle ?? '');
+        $this->assertStringContainsStringIgnoringCase('Porte', $dto->detalle ?? '');
+        $this->assertSame('2026/65432', $dto->tramite ?? '');
+    }
+
     public function test_validar_monto_cero_es_invalido(): void
     {
         $this->expectException(\App\Exceptions\CfeExtraccionInvalidaException::class);

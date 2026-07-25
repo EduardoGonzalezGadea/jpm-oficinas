@@ -25,16 +25,16 @@ class Index extends Component
         $items = TesCfeItem::select('tes_cfe_items.*')
             ->join('tes_cfes', 'tes_cfe_items.tes_cfe_id', '=', 'tes_cfes.id')
             ->with([
+                'cfe.cajaConcepto.siifDistribucionTipo',
                 'cfe.cajaConcepto',
                 'cfe.siifDistribucionDependencia',
-                'cfe.siifDistribucionTipo',
                 'cfe.mediosPago',
                 'cfe.items',
                 'siifDistribucion',
             ])
             ->whereNull('tes_cfe_items.deleted_at')
             ->whereNull('tes_cfes.deleted_at')
-            ->whereNotNull('tes_cfes.siif_distribucion_tipo_id')
+            ->whereHas('cfe.cajaConcepto', fn($q) => $q->whereNotNull('siif_distribucion_tipo_id'))
             ->whereNotNull('tes_cfes.siif_distribucion_dependencia_id');
 
         if ($this->fecha) {
@@ -50,7 +50,9 @@ class Index extends Component
                 $q->where('tes_cfes.documento_tipo', 'like', "%{$term}%")
                   ->orWhere('tes_cfes.documento_serie', 'like', "%{$term}%")
                   ->orWhere('tes_cfes.documento_numero', 'like', "%{$term}%")
-                  ->orWhereRaw("CONCAT(tes_cfes.documento_tipo, ' ', tes_cfes.documento_serie, '-', tes_cfes.documento_numero) LIKE ?", ["%{$term}%"]);
+                  ->orWhereRaw("CONCAT(tes_cfes.documento_tipo, ' ', tes_cfes.documento_serie, '-', tes_cfes.documento_numero) LIKE ?", ["%{$term}%"])
+                  ->orWhere('tes_cfes.adenda', 'like', "%{$term}%")
+                  ->orWhere('tes_cfe_items.descripcion', 'like', "%{$term}%");
 
                 if (is_numeric(str_replace(['.', ','], '', $term))) {
                     $monto = (float) str_replace(',', '.', str_replace('.', '', $term));
@@ -72,7 +74,7 @@ class Index extends Component
             $tipo = $cfe->siifDistribucionTipo;
             $tabKey = ($dep?->id ?? 'X') . '-' . ($tipo?->id ?? 'X');
             $label = ($dep?->abreviatura ?? 'S/D') . ' — ' . ($tipo?->tipo ?? 'S/T');
-            $distKey = $item->siifDistribucion?->concepto ?? $item->cfe->cajaConcepto?->caja_concepto ?? 'Sin distribución';
+            $distKey = $item->siifDistribucion?->distribucion ?? $item->cfe->cajaConcepto?->caja_concepto ?? 'Sin distribución';
             $cfeKey = $item->tes_cfe_id;
             $uniq = "{$tabKey}|{$distKey}|{$cfeKey}";
 
@@ -112,18 +114,15 @@ class Index extends Component
             $pos = 0;
 
             foreach ($cfe->mediosPago as $mp) {
-                $tipoStr = mb_strtolower($mp->medio_pago_tipo);
                 $valorProrated = round($mp->medio_pago_valor * $proporcion, 2);
 
-                if (str_contains($tipoStr, 'efectivo')) {
-                    $efectivo += $valorProrated;
-                } elseif (str_contains($tipoStr, 'cheque')) {
-                    $cheque += $valorProrated;
-                } elseif (str_contains($tipoStr, 'transferencia') || str_contains($tipoStr, 'siif')) {
-                    $transferencia += $valorProrated;
-                } elseif (str_contains($tipoStr, 'tarjeta') || str_contains($tipoStr, 'debito') || str_contains($tipoStr, 'débito')) {
-                    $pos += $valorProrated;
-                }
+                match ($mp->medioPago?->nombre) {
+                    'Efectivo' => $efectivo += $valorProrated,
+                    'Cheque' => $cheque += $valorProrated,
+                    'Transferencia Bancaria' => $transferencia += $valorProrated,
+                    'Tarjeta de Débito' => $pos += $valorProrated,
+                    default => null,
+                };
             }
 
             $rowData = [
@@ -149,7 +148,7 @@ class Index extends Component
 
             if (!isset($grupos[$tabKey]['fechas'][$fechaKey]['distribuciones'][$distKey])) {
                 $grupos[$tabKey]['fechas'][$fechaKey]['distribuciones'][$distKey] = [
-                    'concepto' => $distKey,
+                    'distribucion' => $distKey,
                     'items' => [],
                     'total_efectivo' => 0,
                     'total_cheque' => 0,
@@ -173,7 +172,7 @@ class Index extends Component
             $grupos[$tabKey]['total_pos'] += $pos;
         }
 
-        $anosRegistrados = TesCfe::whereNotNull('siif_distribucion_tipo_id')
+        $anosRegistrados = TesCfe::whereHas('cajaConcepto', fn($q) => $q->whereNotNull('siif_distribucion_tipo_id'))
             ->whereNotNull('siif_distribucion_dependencia_id')
             ->whereNotNull('fecha')
             ->whereNull('deleted_at')

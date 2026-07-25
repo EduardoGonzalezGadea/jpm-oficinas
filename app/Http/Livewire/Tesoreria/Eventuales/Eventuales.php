@@ -5,11 +5,12 @@ namespace App\Http\Livewire\Tesoreria\Eventuales;
 use App\Models\Tesoreria\Eventual as Model;
 use App\Models\Tesoreria\EventualInstitucion;
 use App\Models\Tesoreria\MedioDePago;
+use App\Services\Tesoreria\MedioPagoService;
 use Livewire\Component;
 use Livewire\WithPagination;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Cache;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use App\Traits\ConvertirMayusculas;
 use App\Traits\WithOrdenCobroValidation;
 
@@ -378,14 +379,11 @@ class Eventuales extends Component
         $this->orden_cobro = null;
         $this->recibo = null;
     }
-    private function getDefaultMedioDePago()
+    private function getDefaultMedioDePago(): string
     {
         return Cache::remember('default_medio_de_pago_transferencia', now()->addDay(), function () {
-            $medio = MedioDePago::activos()
-                ->where('nombre', 'like', '%Transferencia%')
-                ->first();
-            $nombre = $medio ? $medio->nombre : 'Transferencia';
-            return mb_strtoupper($nombre, 'UTF-8');
+            $medio = app(MedioPagoService::class)->resolverPorTexto('Transferencia');
+            return mb_strtoupper($medio?->nombre ?? 'Transferencia', 'UTF-8');
         });
     }
 

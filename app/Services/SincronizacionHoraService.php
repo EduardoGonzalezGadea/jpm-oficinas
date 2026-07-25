@@ -7,16 +7,10 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
-/**
- * Servicio para sincronizar fecha y hora desde APIs públicas.
- *
- * Intenta múltiples APIs en orden de preferencia y cachea el resultado.
- * Si todas fallan, retorna la hora del servidor local.
- */
 class SincronizacionHoraService
 {
     private const CACHE_KEY = 'sincronizacion_hora_actual';
-    private const CACHE_TTL_MINUTES = 5;
+    private const CACHE_TTL_MINUTES = 10;
 
     private HttpClientService $httpClient;
 
@@ -25,25 +19,10 @@ class SincronizacionHoraService
         $this->httpClient = $httpClient ?? app(HttpClientService::class);
     }
 
-    /**
-     * Obtiene la hora sincronizada de Uruguay
-     *
-     * @return array{
-     *     success: bool,
-     *     datetime: string,
-     *     timezone: string,
-     *     source: string,
-     *     synced: bool,
-     *     drift_seconds: int|null
-     * }
-     */
     public function obtener(): array
     {
-        // Verificar caché
         $cached = Cache::get(self::CACHE_KEY);
         if (is_array($cached)) {
-            Log::debug("SincronizacionHoraService: Retornando resultado en caché");
-            // Siempre retornar la hora actual, no el datetime stale del caché
             $cached['datetime'] = now('America/Montevideo')->toIso8601String();
             $cached['drift_seconds'] = 0;
             return $cached;
@@ -58,15 +37,10 @@ class SincronizacionHoraService
             'http://worldtimeapi.org/api/timezone/America/Montevideo',
         ];
 
-        // Intentar cada API
-        $total = count($urls);
-        foreach ($urls as $idx => $url) {
-            $intento = $idx + 1;
-            Log::debug("SincronizacionHoraService: URL intento {$intento}/{$total}: {$url}");
-            $resultado = $this->intentarApi($url, $idx, $config);
+        foreach ($urls as $url) {
+            $resultado = $this->intentarApi($url, $config);
             if ($resultado['synced']) {
-                Log::info("SincronizacionHoraService: ✅ Hora sincronizada exitosamente desde {$resultado['source']}");
-                // Cachear resultado exitoso
+                Log::info("SincronizacionHoraService: Hora sincronizada exitosamente desde {$resultado['source']}");
                 Cache::put(
                     self::CACHE_KEY,
                     $resultado,
@@ -76,8 +50,7 @@ class SincronizacionHoraService
             }
         }
 
-        // Fallback: hora del servidor
-        Log::warning("SincronizacionHoraService: ⚠️  Todas las APIs fallaron, usando hora del servidor como fallback");
+        Log::warning("SincronizacionHoraService: Todas las APIs fallaron, usando hora del servidor como fallback");
         $resultado = $this->fallbackServidorLocal();
         Cache::put(
             self::CACHE_KEY,
@@ -88,20 +61,13 @@ class SincronizacionHoraService
         return $resultado;
     }
 
-    /**
-     * Intenta obtener la hora desde una API
-     */
-    protected function intentarApi(string $url, int $idx, array $config): array
+    protected function intentarApi(string $url, array $config): array
     {
         try {
-            // Resetear circuit breaker para que cada URL se intente independientemente
-            $this->httpClient->resetCircuitBreaker('sincronizacion_hora');
-            Log::debug("SincronizacionHoraService: Intentando obtener hora desde {$url}");
-
             $response = $this->httpClient->getWithRetry(
                 $url,
-                ['timeout' => $config['timeout'] ?? 15],
-                2, // Aumentado a 2 reintentos (es 3 intentos totales: 1 sin retry + 2 reintentos)
+                ['timeout' => $config['timeout'] ?? 10],
+                $config['max_retries'] ?? 1,
                 $config['retry_delay_ms'] ?? 500,
                 'sincronizacion_hora'
             );
@@ -117,7 +83,6 @@ class SincronizacionHoraService
                 return $this->buildResult('server', false);
             }
 
-            // Detectar tipo de respuesta y procesar
             if ($this->isWorldTimeApiResponse($data)) {
                 Log::debug("SincronizacionHoraService: Respuesta WorldTimeAPI detectada");
                 return $this->processWorldTimeApi($data, $config);
@@ -138,25 +103,16 @@ class SincronizacionHoraService
         return $this->buildResult('server', false);
     }
 
-    /**
-     * Identifica si es respuesta de WorldTimeAPI
-     */
     protected function isWorldTimeApiResponse(array $data): bool
     {
         return isset($data['datetime']) && isset($data['timezone']);
     }
 
-    /**
-     * Identifica si es respuesta de TimeAPI.io
-     */
     protected function isTimeApiIoResponse(array $data): bool
     {
         return isset($data['year']) && isset($data['month']) && isset($data['day']) && isset($data['hour']);
     }
 
-    /**
-     * Procesa respuesta de WorldTimeAPI
-     */
     protected function processWorldTimeApi(array $data, array $config): array
     {
         try {
@@ -184,9 +140,6 @@ class SincronizacionHoraService
         }
     }
 
-    /**
-     * Procesa respuesta de TimeAPI.io
-     */
     protected function processTimeApiIo(array $data, array $config): array
     {
         try {
@@ -219,9 +172,6 @@ class SincronizacionHoraService
         }
     }
 
-    /**
-     * Fallback: usar hora del servidor local
-     */
     protected function fallbackServidorLocal(): array
     {
         Log::info('Usando hora local del servidor como fallback tras fallar todas las APIs');
@@ -233,9 +183,6 @@ class SincronizacionHoraService
         );
     }
 
-    /**
-     * Construye el resultado de sincronización
-     */
     protected function buildResult(
         string $source,
         bool $synced,

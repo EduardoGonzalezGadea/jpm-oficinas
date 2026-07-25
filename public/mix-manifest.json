@@ -1,5 +1,6 @@
 {
     "/js/app.js": "/js/app.js",
     "/js/session-expired.js": "/js/session-expired.js",
+    "/js/app-layout.js": "/js/app-layout.js",
     "/css/app.css": "/css/app.css"
 }

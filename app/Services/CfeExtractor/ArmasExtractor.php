@@ -142,6 +142,9 @@ class ArmasExtractor extends BaseExtractor
             }
         }
 
+        // Corregir partición detalle/descripción según concepto de caja conocido
+        $this->corregirDetallePorConcepto($datos);
+
         // Orden de Cobro desde adenda
         if (empty($datos['orden_cobro']) && !empty($datos['adenda'])) {
             $datos['orden_cobro'] = $this->extraerOrdenCobroAdenda($datos['adenda']);
@@ -188,55 +191,79 @@ class ArmasExtractor extends BaseExtractor
     /**
      * Parsea los items del detalle, separando descripción de cantidades/precios
      * y extrayendo el número de trámite de las descripciones.
+     *
+     * Maneja dos estructuras reales del PDF:
+     *   A) TRAMITE / ING en líneas propias, luego línea solo con números
+     *   B) TRAMITE pegado a los números en la misma línea
      */
     private function extraerItems(string $texto, array &$datos): void
     {
-        if (!preg_match('/DETALLE\s+DESCRIPCI[^\n]*\n\s*(.*?)(?=\s*(?:IMPORTE|MONTO|$))/isu', $texto, $matches)) {
+        if (!preg_match('/DETALLE\s+DESCRIPCI[^\n]*\n\s*(.*?)(?=\s*(?:MONTO|TOTAL|$))/isu', $texto, $matches)) {
             return;
         }
 
         $bloqueItems = trim($matches[1]);
-        $lineas = explode("\n", $bloqueItems);
+        $lineas      = explode("\n", $bloqueItems);
         $descripciones = [];
-        $bufferLinea = [];
+        $bufferDesc    = [];   // solo líneas de descripción real
+
+        // Patrón que identifica una línea de metadata (trámite, ingreso, orden de cobro, anotaciones)
+        $metaPattern = '/^(?:TR[ÁA]M(?:ITE)?\.?|ING(?:RESO)?\.?(?:\s*N[°º]?)?|O(?:RDEN)?[\s\/]?(?:DE\s+)?C(?:OBRO)?[\s\/]?\.?|REIMPRESI[ÓO]N)[\s:\-]*(.*)$/iu';
 
         foreach ($lineas as $linea) {
             $linea = trim($linea);
-            if (empty($linea)) {
-                continue;
-            }
+            if (empty($linea)) continue;
 
-            if (preg_match('/^(.*?)([\d\.,]+(?:\s*\(Unid\))?\s*[\d\.,]+\s+([\d\.,]+))$/i', $linea, $m)) {
+            // Línea que termina con el patrón de cantidades/precios
+            if (preg_match('/^(.*?)(\d[\d\.,]*(?:\s*\(Unid\))?\s+[\d\.,]+\s+[\d\.,]+)\s*$/i', $linea, $m)) {
                 $restoDesc = trim($m[1]);
+
+                // El "resto" antes de los números puede contener el trámite (Estructura B)
                 if (!empty($restoDesc)) {
-                    $bufferLinea[] = $restoDesc;
-                }
-
-                $fullDesc = trim(preg_replace('/\s+/', ' ', implode(' ', $bufferLinea)));
-                if (!empty($fullDesc)) {
-                    $descripciones[] = $fullDesc;
-
-                    if (empty($datos['tramite'])) {
-                        if (preg_match(self::TRAMITE_PATTERN, $fullDesc, $tramMatch)) {
-                            $datos['tramite'] = $tramMatch[1];
+                    if (preg_match($metaPattern, $restoDesc, $metaM)) {
+                        // Es metadata: extraer trámite si aplica
+                        if (empty($datos['tramite']) && preg_match(self::TRAMITE_PATTERN, $restoDesc, $tramM)) {
+                            $datos['tramite'] = $tramM[1];
                         }
+                    } else {
+                        $bufferDesc[] = $restoDesc;
                     }
                 }
 
-                $bufferLinea = [];
+                $fullDesc = trim(preg_replace('/\s+/', ' ', implode(' ', $bufferDesc)));
+                if (!empty($fullDesc)) {
+                    $descripciones[] = $fullDesc;
+                }
+
+                $bufferDesc = [];
+
+            } elseif (preg_match($metaPattern, $linea, $metaM)) {
+                // Línea de metadata suelta (Estructura A): extraer trámite/ingreso/OC
+                if (empty($datos['tramite']) && preg_match(self::TRAMITE_PATTERN, $linea, $tramM)) {
+                    $datos['tramite'] = $tramM[1];
+                }
+                // ING suelto
+                if (empty($datos['ingreso_contabilidad']) && preg_match('/^ING(?:RESO)?\.?(?:\s*N[°º]?)?[:\s\-]*(\d+)/iu', $linea, $ingM)) {
+                    $datos['ingreso_contabilidad'] = $ingM[1];
+                }
+
             } else {
-                $bufferLinea[] = $linea;
+                // Línea de descripción normal
+                $bufferDesc[] = $linea;
             }
         }
 
-        if (!empty($bufferLinea)) {
-            $fullDesc = trim(preg_replace('/\s+/', ' ', implode(' ', $bufferLinea)));
+        // Buffer sin cerrar (item sin línea de números)
+        if (!empty($bufferDesc)) {
+            $fullDesc = trim(preg_replace('/\s+/', ' ', implode(' ', $bufferDesc)));
             if (!empty($fullDesc)) {
                 $descripciones[] = $fullDesc;
             }
         }
 
-        $datos['detalle'] = implode(' | ', $descripciones);
+        if (!empty($descripciones)) {
+            $datos['detalle'] = implode(' | ', $descripciones);
+        }
     }
 
     /**
@@ -251,6 +278,29 @@ class ArmasExtractor extends BaseExtractor
             return $matches[1];
         }
         return '';
+    }
+
+    /**
+     * Corrige la particion detalle/descripcion separando el tramite del detalle.
+     * El patron TRAMITE/TRÁMITE actúa como delimitador entre el detalle real y la descripción.
+     */
+    private function corregirDetallePorConcepto(array &$datos): void
+    {
+        $detalle = $datos['detalle'] ?? '';
+        if (empty($detalle)) return;
+
+        // Separar en el punto donde aparece el patrón de trámite
+        if (preg_match('/^(.*?)\s+(?:TR[ÁA]M(?:ITE)?\.?(?:\s+(?:DE|NRO?\.?|N[°º]?))*\s*(?:[:\-]?\s*)?[\d\/\-]+.*)/iu', $detalle, $m)) {
+            $parteDetalle = trim($m[1]);
+            $parteDesc    = trim(mb_substr($detalle, mb_strlen($parteDetalle, 'UTF-8'), null, 'UTF-8'));
+
+            if ($parteDetalle !== '') {
+                $datos['detalle'] = $parteDetalle;
+                if ($parteDesc !== '' && empty($datos['descripcion'])) {
+                    $datos['descripcion'] = $parteDesc;
+                }
+            }
+        }
     }
 
     /**

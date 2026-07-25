@@ -34,9 +34,6 @@ class JWTVerify
 
             Auth::guard('web')->login($user);
             Auth::setUser($user);
-
-            app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
-            $user->load(['roles.permissions', 'permissions']);
         } catch (TokenExpiredException $e) {
             return $this->unauthorized($request, 'La sesión ha expirado. Por favor, inicie sesión de nuevo.');
         } catch (TokenInvalidException | JWTException $e) {
