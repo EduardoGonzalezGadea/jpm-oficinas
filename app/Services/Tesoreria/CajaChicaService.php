@@ -7,6 +7,7 @@ use App\Models\Tesoreria\Pendiente;
 use App\Models\Tesoreria\Movimiento;
 use App\Models\Tesoreria\Pago;
 use App\Models\Tesoreria\Dependencia;
+use App\Services\Tesoreria\CajaChicaAsientosService;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -525,6 +526,7 @@ class CajaChicaService
                 $nroIngreso = "INGRESO " . $nroIngreso;
             }
 
+            $asientosService = app(CajaChicaAsientosService::class);
             $itemsCollection = collect($itemsParaRecuperar);
 
             foreach ($itemsSeleccionados as $itemId) {
@@ -533,7 +535,7 @@ class CajaChicaService
                 if (!$item) continue;
 
                 if ($item['origen_type'] === Pendiente::class) {
-                    Movimiento::create([
+                    $movimiento = Movimiento::create([
                         'relPendiente' => $item['origen_id'],
                         'fechaMovimientos' => $fechaRecuperacion,
                         'recuperado' => $item['saldo'],
@@ -541,6 +543,7 @@ class CajaChicaService
                         'rendido' => 0,
                         'reintegrado' => 0,
                     ]);
+                    $asientosService->registrarAsientosRecuperacion($movimiento);
                 } elseif ($item['origen_type'] === Pago::class) {
                     $pago = Pago::find($item['origen_id']);
                     if ($pago) {
@@ -548,6 +551,7 @@ class CajaChicaService
                         $pago->fechaIngresoPagos = $fechaRecuperacion;
                         $pago->ingresoPagos = $nroIngreso;
                         $pago->save();
+                        $asientosService->registrarAsientosRecuperacionPago($pago, (float) $item['saldo']);
                     }
                 }
             }
@@ -593,15 +597,17 @@ class CajaChicaService
                 throw new \Exception('El monto a recuperar no puede ser mayor que el saldo rendido actual del pendiente.');
             }
 
-            Movimiento::create([
+            $movimiento = Movimiento::create([
                 'relPendiente' => $data['relPendiente'],
                 'fechaMovimientos' => $data['fecha'],
-                'documentoMovimiento' => $data['documentos'],
+                'documentos' => $data['documentos'],
                 'rendido' => 0,
                 'reintegrado' => 0,
                 'recuperado' => $data['monto_recuperado'],
-                'saldo' => 0,
             ]);
+
+            $asientosService = app(CajaChicaAsientosService::class);
+            $asientosService->registrarAsientosRecuperacion($movimiento);
 
             DB::commit();
         } catch (\Exception $e) {
@@ -646,11 +652,47 @@ class CajaChicaService
 
             $pago->update($updateData);
 
+            if (!$this->esPagoBSEConCamposBSE($pago, $data)) {
+                $asientosService = app(CajaChicaAsientosService::class);
+                $asientosService->registrarAsientosRecuperacionPago($pago, (float) $data['monto_recuperado']);
+            }
+
             DB::commit();
         } catch (\Exception $e) {
             DB::rollBack();
             throw $e;
         }
+    }
+
+    /**
+     * Determina si un pago del Banco de Seguros del Estado (BSE) fue
+     * recuperado completando los campos específicos del BSE. En ese caso
+     * no debe generarse asiento en el Libro Diario (la recuperación se
+     * registra contra el propio BSE, sin movimiento de caja).
+     *
+     * @param Pago $pago  Pago directo (debe tener el acreedor cargado).
+     * @param array $data Datos del formulario (numero_ingreso_bse,
+     *                    fecha_ingreso_bse, ingresoPagosBSE, fechaIngresoBSEPagos).
+     */
+    private function esPagoBSEConCamposBSE(Pago $pago, array $data = []): bool
+    {
+        $esBancoDeSeguros = ($pago->acreedor->acreedor ?? '') === 'Banco de Seguros del Estado';
+
+        if (!$esBancoDeSeguros) {
+            return false;
+        }
+
+        // Campos BSE persistidos en el pago (recuperación ya registrada).
+        $tieneCamposEnPago = !empty($pago->ingresoPagosBSE)
+            || !empty($pago->fechaIngresoBSEPagos);
+
+        // Campos BSE enviados por el formulario.
+        $tieneCamposEnData = !empty($data['numero_ingreso_bse'])
+            || !empty($data['fecha_ingreso_bse'])
+            || !empty($data['ingresoPagosBSE'])
+            || !empty($data['fechaIngresoBSEPagos']);
+
+        return $tieneCamposEnPago || $tieneCamposEnData;
     }
 
     /**
@@ -677,6 +719,11 @@ class CajaChicaService
                 'fechaRendicionPagos' => $data['fecha_rendicion'] ?? now()->format('Y-m-d'),
             ]);
 
+            if (($rendido > 0) || ($reintegrado > 0)) {
+                $asientosService = app(CajaChicaAsientosService::class);
+                $asientosService->registrarAsientosRendicionPago($pago);
+            }
+
             DB::commit();
         } catch (\Exception $e) {
             DB::rollBack();
@@ -699,6 +746,20 @@ class CajaChicaService
 
         $fondo->montoCajaChica = $montoNuevo;
         $fondo->save();
+
+        try {
+            $asientosService = app(CajaChicaAsientosService::class);
+            $asientosService->registrarAjusteFondoFijoPorSaldoLibroDiario(
+                $fondo,
+                $montoNuevo,
+                now()->toDateString()
+            );
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::warning('CajaChicaService: no se pudo registrar asiento de ajuste de fondo fijo', [
+                'caja_chica_id' => $idCajaChica,
+                'error' => $e->getMessage(),
+            ]);
+        }
 
         return [
             'montoAnterior' => $montoAnterior,
@@ -762,6 +823,280 @@ class CajaChicaService
         return strtr($string, $replacements);
     }
 
+    public function actualizarPendiente(int $id, array $data): Pendiente
+    {
+        $pendiente = Pendiente::findOrFail($id);
+        $montoAnterior = (float) $pendiente->montoPendientes;
+
+        $pendiente->pendiente = $data['pendiente'];
+        $pendiente->fechaPendientes = $data['fechaPendientes'];
+        $pendiente->relDependencia = $data['relDependencia'];
+        $pendiente->montoPendientes = $data['montoPendientes'];
+
+        DB::transaction(function () use ($pendiente, $montoAnterior) {
+            $montoCambio = abs((float) $pendiente->montoPendientes - $montoAnterior) >= 0.01;
+
+            if ($montoCambio) {
+                $asientosService = app(CajaChicaAsientosService::class);
+                $asientosService->reemplazarRedistribucionPendiente($pendiente, $montoAnterior);
+            }
+
+            $pendiente->save();
+        });
+
+        return $pendiente->fresh();
+    }
+
+    public function crearPendiente(array $data): Pendiente
+    {
+        return DB::transaction(function () use ($data) {
+            $pendiente = Pendiente::create([
+                'relCajaChica' => $data['relCajaChica'],
+                'pendiente' => $data['pendiente'],
+                'fechaPendientes' => $data['fechaPendientes'],
+                'relDependencia' => $data['relDependencia'],
+                'montoPendientes' => $data['montoPendientes'],
+            ]);
+
+            $asientosService = app(CajaChicaAsientosService::class);
+            $asientosService->registrarRedistribucionPendiente($pendiente);
+
+            return $pendiente;
+        });
+    }
+
+    public function crearPago(array $data): Pago
+    {
+        return DB::transaction(function () use ($data) {
+            $pago = Pago::create([
+                'relCajaChica_Pagos' => $data['relCajaChica_Pagos'] ?? $data['relCajaChica'] ?? null,
+                'fechaEgresoPagos' => $data['fechaEgresoPagos'],
+                'egresoPagos' => $data['egresoPagos'] ?? null,
+                'relAcreedores' => $data['relAcreedores'] ?? null,
+                'conceptoPagos' => $data['conceptoPagos'],
+                'montoPagos' => $data['montoPagos'],
+            ]);
+
+            $asientosService = app(CajaChicaAsientosService::class);
+            $asientosService->registrarRedistribucionPago($pago);
+
+            return $pago;
+        });
+    }
+
+    public function crearFondo(array $data): CajaChica
+    {
+        return DB::transaction(function () use ($data) {
+            $cajaChica = CajaChica::create([
+                'mes' => $data['mes'],
+                'anio' => $data['anio'],
+                'montoCajaChica' => $data['montoCajaChica'],
+            ]);
+
+            try {
+                $asientosService = app(CajaChicaAsientosService::class);
+                $asientosService->registrarAjusteFondoFijoPorSaldoLibroDiario(
+                    $cajaChica,
+                    (float) $cajaChica->montoCajaChica,
+                    now()->toDateString()
+                );
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::warning('CajaChicaService: no se pudo registrar asiento de fondo fijo al crear fondo', [
+                    'caja_chica_id' => $cajaChica->idCajaChica,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+
+            return $cajaChica;
+        });
+    }
+
+    public function crearMovimiento(array $data): Movimiento
+    {
+        return DB::transaction(function () use ($data) {
+            $movimiento = Movimiento::create([
+                'relPendiente' => $data['relPendiente'],
+                'fechaMovimientos' => $data['fechaMovimientos'],
+                'documentos' => $data['documentos'] ?? null,
+                'rendido' => $data['rendido'] ?? 0,
+                'reintegrado' => $data['reintegrado'] ?? 0,
+                'recuperado' => $data['recuperado'] ?? 0,
+            ]);
+
+            $asientosService = app(CajaChicaAsientosService::class);
+            $rendido = (float) ($movimiento->rendido ?? 0);
+            $reintegrado = (float) ($movimiento->reintegrado ?? 0);
+            $recuperado = (float) ($movimiento->recuperado ?? 0);
+
+            if ($rendido > 0 || $reintegrado > 0) {
+                $asientosService->registrarAsientosRendicionPendiente($movimiento);
+            }
+            if ($recuperado > 0) {
+                $asientosService->registrarAsientosRecuperacion($movimiento);
+            }
+
+            return $movimiento;
+        });
+    }
+
+    public function eliminarMovimiento(int $id): void
+    {
+        DB::transaction(function () use ($id) {
+            $asientosService = app(CajaChicaAsientosService::class);
+            $asientosService->eliminarAsientosPorOrigen('movimiento', $id);
+
+            $movimiento = Movimiento::findOrFail($id);
+            $movimiento->delete();
+        });
+    }
+
+    public function actualizarMovimiento(int $id, array $data): Movimiento
+    {
+        $movimiento = Movimiento::findOrFail($id);
+
+        DB::transaction(function () use ($movimiento, $data, $id) {
+            $asientosService = app(CajaChicaAsientosService::class);
+            $asientosService->eliminarAsientosPorOrigen('movimiento', $id);
+
+            $movimiento->fechaMovimientos = $data['fechaMovimientos'];
+            $movimiento->documentos = $data['documentos'] ?? null;
+            $movimiento->rendido = $data['rendido'] ?? 0;
+            $movimiento->reintegrado = $data['reintegrado'] ?? 0;
+            $movimiento->recuperado = $data['recuperado'] ?? 0;
+            $movimiento->save();
+
+            $rendido = (float) ($movimiento->rendido ?? 0);
+            $recuperado = (float) ($movimiento->recuperado ?? 0);
+
+            if ($rendido > 0) {
+                $asientosService->registrarAsientosRendicionPendiente($movimiento);
+            }
+            if ($recuperado > 0) {
+                $asientosService->registrarAsientosRecuperacion($movimiento);
+            }
+        });
+
+        return $movimiento->fresh();
+    }
+
+    public function actualizarPago(int $id, array $data): Pago
+    {
+        $pago = Pago::findOrFail($id);
+        $montoAnterior = (float) $pago->montoPagos;
+        $teniaRendicion = $pago->tieneDatosRendicion();
+
+        // La recuperación del BSE (acreedor BSE + campos BSE) NO genera asientos
+        // en el Libro Diario. Por lo tanto, al editar un pago BSE no debe tocarse
+        // la redistribución ni la recuperación (evita el error "monto a
+        // redistribuir supera el saldo disponible del flujo de origen").
+        $esBSE = $this->esPagoBSEConCamposBSE($pago, $data);
+
+        DB::transaction(function () use ($pago, $data, $montoAnterior, $teniaRendicion, $esBSE) {
+            $asientosService = app(CajaChicaAsientosService::class);
+
+            if (!$esBSE && $teniaRendicion) {
+                $asientosService->eliminarAsientosPorOrigen('pago', $pago->idPagos);
+            }
+
+            $pago->fechaEgresoPagos = $data['fechaEgresoPagos'];
+            $pago->fechaEgresoEfectivoPagos = $data['fechaEgresoEfectivoPagos'] ?? null;
+            $pago->egresoPagos = $data['egresoPagos'] ?? null;
+            $pago->relAcreedores = $data['relAcreedores'] ?? null;
+            $pago->conceptoPagos = $data['conceptoPagos'];
+            $pago->montoPagos = $data['montoPagos'];
+            $pago->rendidoPagos = $data['rendidoPagos'] ?? null;
+            $pago->reintegradoPagos = $data['reintegradoPagos'] ?? null;
+            $pago->recuperadoPagos = $data['recuperadoPagos'] ?? 0;
+            $pago->fechaIngresoPagos = $data['fechaIngresoPagos'] ?? null;
+            $pago->ingresoPagos = $data['ingresoPagos'] ?? null;
+            $pago->ingresoReintegroPagos = $data['ingresoReintegroPagos'] ?? null;
+            $pago->ingresoPagosBSE = $data['ingresoPagosBSE'] ?? null;
+            $pago->fechaIngresoBSEPagos = $data['fechaIngresoBSEPagos'] ?? null;
+            $pago->fechaRendicionPagos = $data['fechaRendicionPagos'] ?? null;
+            $pago->save();
+
+            if ($esBSE) {
+                return;
+            }
+
+            $montoCambio = abs((float) $pago->montoPagos - $montoAnterior) >= 0.01;
+            $rendido = (float) ($pago->rendidoPagos ?? 0);
+            $recuperado = (float) ($pago->recuperadoPagos ?? 0);
+
+            if ($teniaRendicion) {
+                $asientosService->registrarRedistribucionPago($pago);
+            } elseif ($montoCambio) {
+                $asientosService->reemplazarRedistribucionPago($pago, $montoAnterior);
+            }
+
+            if ($rendido > 0) {
+                $asientosService->registrarAsientosRendicionPago($pago);
+            }
+            if ($recuperado > 0 && !$this->esPagoBSEConCamposBSE($pago, $data)) {
+                $asientosService->registrarAsientosRecuperacionPago($pago, $recuperado);
+            }
+        });
+
+        return $pago->fresh();
+    }
+
+    public function eliminarRendicionPago(int $id): void
+    {
+        $pago = Pago::findOrFail($id);
+
+        if (($pago->recuperadoPagos ?? 0) > 0 || $pago->fechaIngresoPagos || $pago->ingresoPagos) {
+            throw new \Exception('No se puede eliminar la rendición porque existen datos de recuperación.');
+        }
+
+        DB::transaction(function () use ($pago) {
+            $asientosService = app(CajaChicaAsientosService::class);
+            $asientosService->eliminarAsientosPorOrigen('pago', $pago->idPagos);
+
+            $asientosService->registrarRedistribucionPago($pago);
+
+            $pago->update([
+                'rendidoPagos' => null,
+                'reintegradoPagos' => null,
+                'ingresoReintegroPagos' => null,
+                'fechaRendicionPagos' => null,
+            ]);
+        });
+    }
+
+    public function eliminarRecuperacionPago(int $id): void
+    {
+        $pago = Pago::findOrFail($id);
+
+        DB::transaction(function () use ($pago) {
+            $asientosService = app(CajaChicaAsientosService::class);
+            $asientosService->eliminarAsientosPorOrigen('pago', $pago->idPagos);
+
+            $pago->update([
+                'recuperadoPagos' => 0,
+                'fechaIngresoPagos' => null,
+                'ingresoPagos' => null,
+            ]);
+
+            $rendido = (float) ($pago->rendidoPagos ?? 0);
+
+            $asientosService->registrarRedistribucionPago($pago);
+
+            if ($rendido > 0) {
+                $asientosService->registrarAsientosRendicionPago($pago);
+            }
+        });
+    }
+
+    public function eliminarBSEPago(int $id): void
+    {
+        $pago = Pago::findOrFail($id);
+
+        $pago->update([
+            'ingresoPagosBSE' => null,
+            'fechaIngresoBSEPagos' => null,
+        ]);
+    }
+
     /**
      * Elimina un pendiente siempre que no tenga movimientos asociados.
      * @throws \Exception
@@ -777,7 +1112,12 @@ class CajaChicaService
             throw new \Exception('No se puede eliminar el pendiente porque tiene movimientos asociados.');
         }
 
-        $pendiente->delete();
+        DB::transaction(function () use ($pendiente, $id) {
+            $asientosService = app(CajaChicaAsientosService::class);
+            $asientosService->eliminarAsientosPorOrigen('pendiente', $id);
+
+            $pendiente->delete();
+        });
     }
 
     /**
@@ -795,6 +1135,11 @@ class CajaChicaService
             throw new \Exception('No se puede eliminar el pago porque tiene datos de rendición o recuperación registrados.');
         }
 
-        $pago->delete();
+        DB::transaction(function () use ($pago, $id) {
+            $asientosService = app(CajaChicaAsientosService::class);
+            $asientosService->eliminarAsientosPorOrigen('pago', $id);
+
+            $pago->delete();
+        });
     }
 }

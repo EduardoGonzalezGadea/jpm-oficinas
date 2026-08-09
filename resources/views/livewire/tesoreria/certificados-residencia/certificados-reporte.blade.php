@@ -9,7 +9,7 @@
           </a>
         </div>
         <div class="card-body py-2">
-          <form wire:submit.prevent="buscar">
+          <form wire:submit="buscar">
             <div class="row">
               <!-- Grupo 1: Cronología y Fechas (Ancho Total) -->
               <div class="col-md-12">
@@ -25,13 +25,13 @@
                           <div class="col-6 mb-1">
                             <div class="input-group input-group-sm">
                               <div class="input-group-prepend"><span class="input-group-text">Desde</span></div>
-                              <input type="date" class="form-control" wire:model.defer="filters.fecha_desde">
+                              <input type="date" class="form-control" wire:model="filters.fecha_desde">
                             </div>
                           </div>
                           <div class="col-6 mb-1">
                             <div class="input-group input-group-sm">
                               <div class="input-group-prepend"><span class="input-group-text">Hasta</span></div>
-                              <input type="date" class="form-control" wire:model.defer="filters.fecha_hasta">
+                              <input type="date" class="form-control" wire:model="filters.fecha_hasta">
                             </div>
                           </div>
                         </div>
@@ -42,13 +42,13 @@
                           <div class="col-6 mb-1">
                             <div class="input-group input-group-sm">
                               <div class="input-group-prepend"><span class="input-group-text">Desde</span></div>
-                              <input type="date" class="form-control" wire:model.defer="filters.fecha_entregado_desde">
+                              <input type="date" class="form-control" wire:model="filters.fecha_entregado_desde">
                             </div>
                           </div>
                           <div class="col-6 mb-1">
                             <div class="input-group input-group-sm">
                               <div class="input-group-prepend"><span class="input-group-text">Hasta</span></div>
-                              <input type="date" class="form-control" wire:model.defer="filters.fecha_entregado_hasta">
+                              <input type="date" class="form-control" wire:model="filters.fecha_entregado_hasta">
                             </div>
                           </div>
                         </div>
@@ -59,13 +59,13 @@
                           <div class="col-6 mb-1">
                             <div class="input-group input-group-sm">
                               <div class="input-group-prepend"><span class="input-group-text">Desde</span></div>
-                              <input type="date" class="form-control" wire:model.defer="filters.fecha_devuelto_desde">
+                              <input type="date" class="form-control" wire:model="filters.fecha_devuelto_desde">
                             </div>
                           </div>
                           <div class="col-6 mb-1">
                             <div class="input-group input-group-sm">
                               <div class="input-group-prepend"><span class="input-group-text">Hasta</span></div>
-                              <input type="date" class="form-control" wire:model.defer="filters.fecha_devuelto_hasta">
+                              <input type="date" class="form-control" wire:model="filters.fecha_devuelto_hasta">
                             </div>
                           </div>
                         </div>
@@ -74,7 +74,7 @@
                     <div class="form-row border-top mt-2 pt-2">
                       <div class="col-md-3 mb-1">
                         <label class="mb-0 small">Mes Referencia</label>
-                        <select class="form-control form-control-sm" wire:model.defer="filters.mes">
+                        <select class="form-control form-control-sm" wire:model="filters.mes">
                           <option value="">Todos</option>
                           @foreach(range(1, 12) as $m)
                           <option value="{{ $m }}">{{ \Carbon\Carbon::create()->month($m)->monthName }}</option>
@@ -83,11 +83,11 @@
                       </div>
                       <div class="col-md-2 mb-1">
                         <label class="mb-0 small">Año</label>
-                        <input type="number" class="form-control form-control-sm" wire:model.defer="filters.year">
+                        <input type="number" class="form-control form-control-sm" wire:model="filters.year">
                       </div>
                       <div class="col-md-3 mb-1">
                         <label class="mb-0 small">Estado Actual</label>
-                        <select class="form-control form-control-sm" wire:model.defer="filters.estado">
+                        <select class="form-control form-control-sm" wire:model="filters.estado">
                           <option value="">TODOS</option>
                           <option value="Recibido">RECIBIDO</option>
                           <option value="Entregado">ENTREGADO</option>
@@ -96,7 +96,7 @@
                       </div>
                       <div class="col-md-4 mb-1">
                         <label class="mb-0 small">Nro. Recibo de Cobro</label>
-                        <input type="text" class="form-control form-control-sm" placeholder="Buscar por número de recibo..." wire:model.defer="filters.numero_recibo">
+                        <input type="text" class="form-control form-control-sm" placeholder="Buscar por número de recibo..." wire:model="filters.numero_recibo">
                       </div>
                     </div>
                   </div>
@@ -116,13 +116,13 @@
                         <label class="mb-1 small font-weight-bold"><i class="fas fa-user mr-1"></i> Titular del Certificado</label>
                         <div class="form-row">
                           <div class="col-md-4 mb-2">
-                            <input type="text" class="form-control form-control-sm" placeholder="Nombres" wire:model.defer="filters.titular_nombre">
+                            <input type="text" class="form-control form-control-sm" placeholder="Nombres" wire:model="filters.titular_nombre">
                           </div>
                           <div class="col-md-4 mb-2">
-                            <input type="text" class="form-control form-control-sm" placeholder="Apellidos" wire:model.defer="filters.titular_apellido">
+                            <input type="text" class="form-control form-control-sm" placeholder="Apellidos" wire:model="filters.titular_apellido">
                           </div>
                           <div class="col-md-4 mb-2">
-                            <input type="text" class="form-control form-control-sm" placeholder="Nro. Documento" wire:model.defer="filters.titular_nro_documento">
+                            <input type="text" class="form-control form-control-sm" placeholder="Nro. Documento" wire:model="filters.titular_nro_documento">
                           </div>
                         </div>
                       </div>
@@ -132,13 +132,13 @@
                         <label class="mb-1 small font-weight-bold"><i class="fas fa-id-card mr-1"></i> Persona que Retira</label>
                         <div class="form-row">
                           <div class="col-md-4 mb-2">
-                            <input type="text" class="form-control form-control-sm" placeholder="Nombres" wire:model.defer="filters.retira_nombre">
+                            <input type="text" class="form-control form-control-sm" placeholder="Nombres" wire:model="filters.retira_nombre">
                           </div>
                           <div class="col-md-4 mb-2">
-                            <input type="text" class="form-control form-control-sm" placeholder="Apellidos" wire:model.defer="filters.retira_apellido">
+                            <input type="text" class="form-control form-control-sm" placeholder="Apellidos" wire:model="filters.retira_apellido">
                           </div>
                           <div class="col-md-4 mb-2">
-                            <input type="text" class="form-control form-control-sm" placeholder="Documento" wire:model.defer="filters.retira_nro_documento">
+                            <input type="text" class="form-control form-control-sm" placeholder="Documento" wire:model="filters.retira_nro_documento">
                           </div>
                         </div>
                       </div>

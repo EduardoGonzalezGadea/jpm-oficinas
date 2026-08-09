@@ -14,7 +14,7 @@
         </span>
       </div>
       <input type="text" class="form-control" placeholder="Buscar acreedores..."
-        wire:model.debounce.500ms="search">
+        wire:model.live.debounce.500ms="search">
     </div>
   </div>
 
@@ -76,7 +76,7 @@
           <div class="modal-body">
             <div class="form-group">
               <label for="nombreAcreedor" class="font-weight-bold">Nombre</label>
-              <input type="text" id="nombreAcreedor" wire:model.defer="nombre"
+              <input type="text" id="nombreAcreedor" wire:model="nombre"
                 class="form-control @error('nombre') is-invalid @enderror"
                 placeholder="Ingrese el nombre del acreedor">
               @error('nombre')

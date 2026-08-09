@@ -5,7 +5,7 @@
         $cheques = $cheques ?? [];
       @endphp
       @if(count($cheques) > 0)
-        <form wire:submit.prevent="generar">
+        <form wire:submit="generar">
           <div class="alert alert-info">
             <i class="fas fa-info-circle mr-2"></i>Seleccione los cheques que desea incluir en la planilla.
           </div>
@@ -27,7 +27,7 @@
                 @foreach($cheques as $cheque)
                   <tr>
                     <td class="text-center">
-                      <input type="checkbox" wire:model="chequesSeleccionados" value="{{ $cheque['id'] }}" class="form-check-input">
+                      <input type="checkbox" wire:model.live="chequesSeleccionados" value="{{ $cheque['id'] }}" class="form-check-input">
                     </td>
                     <td><strong>{{ $cheque['numero_cheque'] }}</strong></td>
                     <td>{{ $cheque['cuenta_bancaria']['banco']['nombre'] }}</td>

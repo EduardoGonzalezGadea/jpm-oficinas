@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 
 @section('content')
 <livewire:tesoreria.banco.banco-index />
@@ -31,7 +31,7 @@
 </div>
 
 <script>
-document.addEventListener('livewire:loaded', () => {
+document.addEventListener('livewire:init', function() {
     Livewire.on('show-modal', () => {
         $('#modal').modal('show');
     });

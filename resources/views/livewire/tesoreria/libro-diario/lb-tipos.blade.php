@@ -1,4 +1,4 @@
-<div>
+﻿<div>
   <div class="row">
     <div class="col-md-12">
       <div class="card">
@@ -20,7 +20,7 @@
                 <div class="input-group-prepend">
                   <span class="input-group-text"><i class="fas fa-search"></i></span>
                 </div>
-                <input type="text" wire:model="search" id="search"
+                <input type="text" wire:model.live="search" id="search"
                   class="form-control" placeholder="Buscar por nombre...">
               </div>
             </div>
@@ -50,8 +50,7 @@
                     </td>
                     <td class="text-center align-middle">
                       <button wire:click="showDetails({{ $item->id }})"
-                        class="btn btn-sm btn-info" data-toggle="modal"
-                        data-target="#detailsModal" title="Ver"><i class="fas fa-eye"></i></button>
+                        class="btn btn-sm btn-info"  title="Ver"><i class="fas fa-eye"></i></button>
                       <button wire:click="edit({{ $item->id }})"
                         class="btn btn-sm btn-primary" title="Editar"><i class="fas fa-edit"></i></button>
                       <button
@@ -90,13 +89,13 @@
             <div class="form-group">
               <label for="nombre">Nombre *</label>
               <input type="text" class="form-control @error('nombre') is-invalid @enderror"
-                wire:model.defer="nombre" id="nombre" required>
+                wire:model="nombre" id="nombre" required>
               @error('nombre') <div class="invalid-feedback">{{ $message }}</div> @enderror
             </div>
             <div class="form-group">
               <label for="signo">Signo *</label>
               <select class="form-control @error('signo') is-invalid @enderror"
-                wire:model.defer="signo" id="signo" required>
+                wire:model="signo" id="signo" required>
                 <option value="1">+1 (Entrada — suma al saldo)</option>
                 <option value="-1">-1 (Salida — resta al saldo)</option>
                 <option value="0">0 (Redistribución — sin efecto directo)</option>
@@ -141,41 +140,45 @@
   @push('scripts')
     <script>
       window.addEventListener('swal:confirm', event => {
+        const d = window.LiveEvent(event);
         Swal.fire({
-          title: event.detail.title,
-          text: event.detail.text,
+          title: d.title,
+          text: d.text,
           icon: 'warning',
           showCancelButton: true,
           confirmButtonColor: '#3085d6',
           cancelButtonColor: '#d33',
-          confirmButtonText: event.detail.confirmButtonText,
+          confirmButtonText: d.confirmButtonText,
           cancelButtonText: 'Cancelar',
           focusConfirm: true
         }).then((result) => {
           if (result.isConfirmed) {
-            @this.call(event.detail.method, event.detail.id);
+            @this.call(d.method, d.id);
           }
         });
       });
 
       window.addEventListener('alert', event => {
+        const d = window.LiveEvent(event);
         Swal.fire({
           toast: true,
           position: 'top-end',
           showConfirmButton: false,
           timer: 3000,
           timerProgressBar: true,
-          icon: event.detail.type,
-          title: event.detail.message,
+          icon: d.type,
+          title: d.message,
         });
       });
 
-      window.livewire.on('itemStore', () => $('#modal').modal('hide'));
-      window.livewire.on('itemUpdate', () => $('#modal').modal('hide'));
+      document.addEventListener('livewire:init', function() {
+      Livewire.on('itemStore', () => $('#modal').modal('hide'));
+      Livewire.on('itemUpdate', () => $('#modal').modal('hide'));
+      });
 
       $(document).ready(function() {
         $('#modal').on('hidden.bs.modal', function() {
-          window.livewire.emit('resetForm');
+          window.Livewire.dispatch('resetForm');
         });
       });
     </script>

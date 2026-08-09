@@ -85,7 +85,7 @@
     <div class="card-body py-3">
       <div class="upload-container">
         <div class="upload-box {{ $archivo ? 'has-file' : '' }}">
-          <input type="file" id="archivoMulta" wire:model="archivo" accept=".pdf" wire:key="input-multa-{{ $archivo ? 'loaded' : 'empty' }}">
+          <input type="file" id="archivoMulta" wire:model.live="archivo" accept=".pdf" wire:key="input-multa-{{ $archivo ? 'loaded' : 'empty' }}">
           <div wire:loading.style="display: flex" wire:target="archivo" class="upload-loading-overlay">
             <div class="text-white text-center">
               <i class="fas fa-spinner fa-spin fa-2x mb-2"></i>

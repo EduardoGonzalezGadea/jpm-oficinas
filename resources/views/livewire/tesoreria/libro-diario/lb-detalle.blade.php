@@ -1,4 +1,4 @@
-<div>
+﻿<div>
   <div class="row">
     <div class="col-md-12">
       <div class="card">
@@ -20,12 +20,12 @@
                 <div class="input-group-prepend">
                   <span class="input-group-text"><i class="fas fa-search"></i></span>
                 </div>
-                <input type="text" wire:model="search" id="search"
+                <input type="text" wire:model.live="search" id="search"
                   class="form-control" placeholder="Buscar por nombre...">
               </div>
             </div>
             <div class="col-md-4">
-              <select class="form-control" wire:model="filtros.concepto_id" id="filtros_concepto_id">
+              <select class="form-control" wire:model.live="filtros.concepto_id" id="filtros_concepto_id">
                 <option value="">Todos los conceptos</option>
                 @foreach ($conceptos as $concepto)
                   <option value="{{ $concepto->id }}" {{ (old('filtros.concepto_id') ?? $filtros['concepto_id'] ?? null) == $concepto->id ? 'selected' : '' }}>{{ $concepto->nombre }}</option>
@@ -50,8 +50,7 @@
                     <td class="text-left align-middle">{{ $item->concepto->nombre ?? '—' }}</td>
                     <td class="text-center align-middle">
                       <button wire:click="showDetails({{ $item->id }})"
-                        class="btn btn-sm btn-info" data-toggle="modal"
-                        data-target="#detailsModal" title="Ver"><i class="fas fa-eye"></i></button>
+                        class="btn btn-sm btn-info"  title="Ver"><i class="fas fa-eye"></i></button>
                       <button wire:click="edit({{ $item->id }})"
                         class="btn btn-sm btn-primary" title="Editar"><i class="fas fa-edit"></i></button>
                       <button
@@ -90,7 +89,7 @@
             <div class="form-group">
               <label for="concepto_id">Concepto *</label>
               <select class="form-control @error('concepto_id') is-invalid @enderror"
-                wire:model.defer="concepto_id" id="concepto_id" required>
+                wire:model="concepto_id" id="concepto_id" required>
                 <option value="">Seleccione un concepto...</option>
                 @foreach ($conceptos as $concepto)
                   <option value="{{ $concepto->id }}">{{ $concepto->nombre }}</option>
@@ -101,7 +100,7 @@
             <div class="form-group">
               <label for="nombre">Nombre *</label>
               <input type="text" class="form-control @error('nombre') is-invalid @enderror"
-                wire:model="nombre" id="nombre" list="nombreSuggestions" required autocomplete="off">
+                wire:model.live="nombre" id="nombre" list="nombreSuggestions" required autocomplete="off">
               <datalist id="nombreSuggestions">
                 @foreach ($suggestedNames as $suggested)
                   <option value="{{ $suggested }}">
@@ -123,7 +122,7 @@
                   @foreach ($opcionesAdicionales as $idx => $template)
                     <div class="custom-control custom-checkbox">
                       <input type="checkbox" class="custom-control-input" id="adicional_{{ $idx }}"
-                        wire:model="adicionalesSeleccionados.{{ $idx }}">
+                        wire:model.live="adicionalesSeleccionados.{{ $idx }}">
                       <label class="custom-control-label small" for="adicional_{{ $idx }}">
                         {!! str_replace('{detalle}', '<strong>' . e($nombre ?: '{detalle}') . '</strong>', $template) !!}
                       </label>
@@ -171,41 +170,45 @@
   @push('scripts')
     <script>
       window.addEventListener('swal:confirm', event => {
+        const d = window.LiveEvent(event);
         Swal.fire({
-          title: event.detail.title,
-          text: event.detail.text,
+          title: d.title,
+          text: d.text,
           icon: 'warning',
           showCancelButton: true,
           confirmButtonColor: '#3085d6',
           cancelButtonColor: '#d33',
-          confirmButtonText: event.detail.confirmButtonText,
+          confirmButtonText: d.confirmButtonText,
           cancelButtonText: 'Cancelar',
           focusConfirm: true
         }).then((result) => {
           if (result.isConfirmed) {
-            @this.call(event.detail.method, event.detail.id);
+            @this.call(d.method, d.id);
           }
         });
       });
 
       window.addEventListener('alert', event => {
+        const d = window.LiveEvent(event);
         Swal.fire({
           toast: true,
           position: 'top-end',
           showConfirmButton: false,
           timer: 3000,
           timerProgressBar: true,
-          icon: event.detail.type,
-          title: event.detail.message,
+          icon: d.type,
+          title: d.message,
         });
       });
 
-      window.livewire.on('itemStore', () => $('#modal').modal('hide'));
-      window.livewire.on('itemUpdate', () => $('#modal').modal('hide'));
+      document.addEventListener('livewire:init', function() {
+      Livewire.on('itemStore', () => $('#modal').modal('hide'));
+      Livewire.on('itemUpdate', () => $('#modal').modal('hide'));
+      });
 
       $(document).ready(function() {
         $('#modal').on('hidden.bs.modal', function() {
-          window.livewire.emit('resetForm');
+          window.Livewire.dispatch('resetForm');
         });
       });
     </script>

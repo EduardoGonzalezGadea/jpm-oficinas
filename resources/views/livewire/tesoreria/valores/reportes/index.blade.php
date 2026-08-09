@@ -289,10 +289,10 @@
           <!-- Filtros -->
           <div class="d-flex justify-content-between mb-3">
             <div class="flex-fill mr-2">
-              <input type="text" wire:model.debounce.300ms="search" class="form-control" placeholder="Buscar...">
+              <input type="text" wire:model.live.debounce.300ms="search" class="form-control" placeholder="Buscar...">
             </div>
             <div class="flex-fill mr-2">
-              <select wire:model="filtroTipoLibreta" class="form-control">
+              <select wire:model.live="filtroTipoLibreta" class="form-control">
                 <option value="">Todos los tipos</option>
                 @foreach($tiposLibreta as $tipo)
                 <option value="{{ $tipo->id }}">{{ $tipo->nombre }}</option>
@@ -347,10 +347,10 @@
           <!-- Filtros -->
           <div class="d-flex justify-content-between mb-3">
             <div class="flex-fill mr-2">
-              <input type="text" wire:model.debounce.300ms="search" class="form-control" placeholder="Buscar...">
+              <input type="text" wire:model.live.debounce.300ms="search" class="form-control" placeholder="Buscar...">
             </div>
             <div class="flex-fill mr-2">
-              <select wire:model="filtroTipoLibreta" class="form-control">
+              <select wire:model.live="filtroTipoLibreta" class="form-control">
                 <option value="">Todos los tipos</option>
                 @foreach($tiposLibreta as $tipo)
                 <option value="{{ $tipo->id }}">{{ $tipo->nombre }}</option>
@@ -358,7 +358,7 @@
               </select>
             </div>
             <div class="flex-fill mr-2">
-              <select wire:model="filtroServicio" class="form-control">
+              <select wire:model.live="filtroServicio" class="form-control">
                 <option value="">Todos los servicios</option>
                 @foreach($servicios as $servicio)
                 <option value="{{ $servicio->id }}">{{ $servicio->nombre }}</option>
@@ -541,7 +541,7 @@
                 // Recargar historial en Livewire
                 if (window.Livewire) {
                   setTimeout(() => {
-                    window.Livewire.emit('stockGenerado');
+                    window.Livewire.dispatch('stockGenerado');
                     console.log('Evento stockGenerado emitido');
                   }, 1000);
                 }
@@ -610,7 +610,7 @@
   <script>
     // Listener para eventos SweetAlert desde Livewire
     window.addEventListener('swal', event => {
-      const data = event.detail;
+      const data = window.LiveEvent(event);
 
       if (data.toast) {
         // Mostrar como toast

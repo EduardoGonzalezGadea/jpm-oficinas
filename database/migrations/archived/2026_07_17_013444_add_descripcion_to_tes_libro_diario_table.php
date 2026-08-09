@@ -11,6 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (Schema::hasTable('tes_libro_diario') && Schema::hasColumn('tes_libro_diario', 'descripcion')) {
+            return;
+        }
         Schema::table('tes_libro_diario', function (Blueprint $table) {
             $table->text('descripcion')->nullable()->after('denominacion');
         });

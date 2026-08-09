@@ -69,4 +69,54 @@ class MedioDePago extends Model
                 ->orWhere('descripcion', 'like', '%' . $term . '%');
         });
     }
+
+    // Constantes para medios de pago requeridos del sistema
+    public const EFECTIVO = 'Efectivo';
+    public const TRANSFERENCIA = 'Transferencia';
+
+    /**
+     * Obtiene el medio de pago Efectivo o lanza excepción clara.
+     * 
+     * @return self
+     * @throws \RuntimeException
+     */
+    public static function efectivo(): self
+    {
+        $medio = static::where('nombre', self::EFECTIVO)
+            ->where('activo', true)
+            ->first();
+        
+        if (!$medio) {
+            throw new \RuntimeException(
+                'ERROR DE CONFIGURACIÓN: No existe el medio de pago "' . self::EFECTIVO . '" activo en el sistema. ' .
+                'Debe crearlo manualmente en: Tesorería → Libro Diario → Medios de Pago. ' .
+                'Contacte al administrador del sistema si el problema persiste.'
+            );
+        }
+        
+        return $medio;
+    }
+
+    /**
+     * Obtiene el medio de pago Transferencia o lanza excepción clara.
+     * 
+     * @return self
+     * @throws \RuntimeException
+     */
+    public static function transferencia(): self
+    {
+        $medio = static::where('nombre', 'like', '%' . self::TRANSFERENCIA . '%')
+            ->where('activo', true)
+            ->first();
+        
+        if (!$medio) {
+            throw new \RuntimeException(
+                'ERROR DE CONFIGURACIÓN: No existe un medio de pago que contenga "' . self::TRANSFERENCIA . '" activo en el sistema. ' .
+                'Debe crearlo manualmente en: Tesorería → Libro Diario → Medios de Pago. ' .
+                'Contacte al administrador del sistema si el problema persiste.'
+            );
+        }
+        
+        return $medio;
+    }
 }

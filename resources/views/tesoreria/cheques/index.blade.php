@@ -19,7 +19,7 @@
                 </div>
                 <div class="card-body p-1 pt-2">
                     <div class="nav nav-pills d-print-none" id="cheque-menu" role="tablist">
-                        <a href="#emitir" class="nav-link py-1 px-2" data-toggle="pill" role="tab" data-tab="emitir">
+                        <a href="#emitir" class="nav-link active py-1 px-2" data-toggle="pill" role="tab" data-tab="emitir">
                             <i class="fas fa-paper-plane mr-1"></i>Cheques
                         </a>
                         <a href="#planillas" class="nav-link py-1 px-2" data-toggle="pill" role="tab" data-tab="planillas">
@@ -31,7 +31,7 @@
                     </div>
                     <hr class="mt-0 mb-3 d-print-none">
                     <div class="tab-content">
-                        <div class="tab-pane fade" id="emitir">
+                        <div class="tab-pane fade show active" id="emitir">
                             @livewire('tesoreria.cheque.cheque-emitir')
                         </div>
                         <div class="tab-pane fade" id="planillas">
@@ -121,9 +121,9 @@
 
         function refreshTabData(tabName) {
             if (tabName === 'emitir') {
-                Livewire.emit('refreshEmitir');
+                Livewire.dispatch('refreshEmitir');
             } else if (tabName === 'planillas') {
-                Livewire.emit('refreshPlanillas');
+                Livewire.dispatch('refreshPlanillas');
             }
         }
 
@@ -143,18 +143,24 @@
             refreshTabData(tabName);
         });
 
-        // Also set up navigation on Livewire updates for the libreta component
+        // También actualizar navegación tras cada commit del componente libreta
         if (typeof Livewire !== 'undefined') {
-            Livewire.hook('message.processed', (message, component) => {
-                // Check if the updated component is the cheque-libreta one
-                if (component.name === 'tesoreria.cheque.cheque-libreta') {
-                    setupLibretaFormNavigation();
-                }
+            // Livewire v3: hook 'commit' reemplaza 'message.processed'
+            Livewire.hook('commit', ({ component, succeed }) => {
+                succeed(() => {
+                    if (component.name === 'tesoreria.cheque.cheque-libreta') {
+                        queueMicrotask(setupLibretaFormNavigation);
+                    }
+                });
             });
 
-            // Handle modal closing after save
-            Livewire.on('close-modal', (modalId) => {
-                $('#' + modalId).modal('hide');
+            // Livewire v3: Livewire.on con payload como primer argumento
+            document.addEventListener('livewire:init', function() {
+                Livewire.on('close-modal', (payload) => {
+                    const modalId = window.LiveEvent({ detail: payload });
+                    const id = typeof modalId === 'string' ? modalId : (modalId && modalId.modalId);
+                    $('#' + id).modal('hide');
+                });
             });
         }
     });

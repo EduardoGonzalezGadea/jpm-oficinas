@@ -40,7 +40,7 @@ class DepositoVehiculoPlanilla extends Model
 
         static::creating(function ($planilla) {
             if (empty($planilla->numero)) {
-                $planilla->numero = static::generateNumero();
+                $planilla->numero = static::generateNumero($planilla->fecha);
             }
         });
     }
@@ -48,9 +48,10 @@ class DepositoVehiculoPlanilla extends Model
     /**
      * Generar número de planilla
      */
-    private static function generateNumero()
+    private static function generateNumero($fecha = null)
     {
-        $year = date('Y');
+        $fecha = $fecha ? \Carbon\Carbon::parse($fecha) : now();
+        $year = $fecha->year;
         $lastPlanilla = static::whereYear('fecha', $year)->orderBy('id', 'desc')->first();
 
         if ($lastPlanilla) {

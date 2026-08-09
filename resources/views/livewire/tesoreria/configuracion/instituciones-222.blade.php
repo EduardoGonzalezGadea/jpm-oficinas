@@ -9,7 +9,7 @@
     <div class="card-body">
       <div class="row mb-3">
         <div class="col-md-4">
-          <input type="text" class="form-control" placeholder="Buscar por nombre o SIIF..." wire:model.debounce.300ms="search">
+          <input type="text" class="form-control" placeholder="Buscar por nombre o SIIF..." wire:model.live.debounce.300ms="search">
         </div>
       </div>
 
@@ -71,19 +71,19 @@
           <button type="button" class="close text-white" data-dismiss="modal"><span>&times;</span></button>
         </div>
         <div class="modal-body">
-          <form wire:submit.prevent="store">
+          <form wire:submit="store">
             <div class="form-group">
               <label class="font-weight-bold">Nombre <span class="text-danger">*</span></label>
-              <input type="text" class="form-control @error('nombre') is-invalid @enderror" wire:model.defer="nombre" placeholder="Ej: ANTEL">
+              <input type="text" class="form-control @error('nombre') is-invalid @enderror" wire:model="nombre" placeholder="Ej: ANTEL">
               @error('nombre') <span class="invalid-feedback">{{ $message }}</span> @enderror
             </div>
             <div class="form-group">
               <label class="font-weight-bold">Código SIIF (Opcional)</label>
-              <input type="text" class="form-control @error('codigo_siif') is-invalid @enderror" wire:model.defer="codigo_siif" placeholder="Ej: 9051">
+              <input type="text" class="form-control @error('codigo_siif') is-invalid @enderror" wire:model="codigo_siif" placeholder="Ej: 9051">
               @error('codigo_siif') <span class="invalid-feedback">{{ $message }}</span> @enderror
             </div>
             <div class="custom-control custom-switch">
-              <input type="checkbox" class="custom-control-input" id="activoSwitch" wire:model.defer="activo">
+              <input type="checkbox" class="custom-control-input" id="activoSwitch" wire:model="activo">
               <label class="custom-control-label font-weight-bold" for="activoSwitch">Institución Activa</label>
             </div>
           </form>

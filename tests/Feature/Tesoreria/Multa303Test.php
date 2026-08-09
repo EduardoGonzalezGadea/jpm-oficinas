@@ -2,7 +2,7 @@
 
 namespace Tests\Feature\Tesoreria;
 
-use App\Http\Livewire\Tesoreria\Multa303;
+use App\Livewire\Tesoreria\Multa303;
 use App\Models\User;
 use App\Models\Tesoreria\Multa303 as Multa303Model;
 use Illuminate\Foundation\Testing\RefreshDatabase;

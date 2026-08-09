@@ -63,4 +63,72 @@ class LbConcepto extends Model
             $q->where('nombre', 'like', "%{$term}%");
         });
     }
+
+    // Constantes para conceptos requeridos del sistema
+    public const CAJA_CHICA = 'Caja Chica';
+    public const RECAUDACION_222 = 'Recaudación Artículo 222';
+    public const RECAUDACION_DIARIA = 'Recaudación Diaria';
+
+    /**
+     * Obtiene el concepto Caja Chica o lanza excepción clara.
+     * 
+     * @return self
+     * @throws \RuntimeException
+     */
+    public static function cajaChica(): self
+    {
+        $concepto = static::where('nombre', self::CAJA_CHICA)->first();
+        
+        if (!$concepto) {
+            throw new \RuntimeException(
+                'ERROR DE CONFIGURACIÓN: No existe el concepto "' . self::CAJA_CHICA . '" en el Libro Diario. ' .
+                'Debe crearlo manualmente en: Tesorería → Libro Diario → Conceptos. ' .
+                'Contacte al administrador del sistema si el problema persiste.'
+            );
+        }
+        
+        return $concepto;
+    }
+
+    /**
+     * Obtiene el concepto Recaudación Artículo 222 o lanza excepción clara.
+     * 
+     * @return self
+     * @throws \RuntimeException
+     */
+    public static function recaudacion222(): self
+    {
+        $concepto = static::where('nombre', self::RECAUDACION_222)->first();
+        
+        if (!$concepto) {
+            throw new \RuntimeException(
+                'ERROR DE CONFIGURACIÓN: No existe el concepto "' . self::RECAUDACION_222 . '" en el Libro Diario. ' .
+                'Debe crearlo manualmente en: Tesorería → Libro Diario → Conceptos. ' .
+                'Contacte al administrador del sistema si el problema persiste.'
+            );
+        }
+        
+        return $concepto;
+    }
+
+    /**
+     * Obtiene el concepto Recaudación Diaria o lanza excepción clara.
+     * 
+     * @return self
+     * @throws \RuntimeException
+     */
+    public static function recaudacionDiaria(): self
+    {
+        $concepto = static::where('nombre', self::RECAUDACION_DIARIA)->first();
+        
+        if (!$concepto) {
+            throw new \RuntimeException(
+                'ERROR DE CONFIGURACIÓN: No existe el concepto "' . self::RECAUDACION_DIARIA . '" en el Libro Diario. ' .
+                'Debe crearlo manualmente en: Tesorería → Libro Diario → Conceptos. ' .
+                'Contacte al administrador del sistema si el problema persiste.'
+            );
+        }
+        
+        return $concepto;
+    }
 }

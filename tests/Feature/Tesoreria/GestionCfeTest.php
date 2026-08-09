@@ -28,6 +28,9 @@ class GestionCfeTest extends TestCase
         parent::setUp();
 
         $this->user = User::factory()->create();
+        try {
+            $this->user->givePermissionTo(['tesoreria.cfe.ver', 'tesoreria.supervisar']);
+        } catch (\Exception $e) {} // Ignorar si el trait no está presente
         $this->actingAs($this->user);
 
         $this->tipo = SiifDistribucionTipo::create(['tipo' => 'Test Tipo']);
@@ -56,14 +59,14 @@ class GestionCfeTest extends TestCase
             'tes_caja_concepto_id' => $this->concepto->id,
         ]);
 
-        Livewire::test(\App\Http\Livewire\Tesoreria\GestionCfe\Index::class)
+        Livewire::test(\App\Livewire\Tesoreria\GestionCfe\Index::class)
             ->assertSee('E-Factura Cobranza');
     }
 
     /** @test */
     public function can_open_new_cfe_modal(): void
     {
-        Livewire::test(\App\Http\Livewire\Tesoreria\GestionCfe\Index::class)
+        Livewire::test(\App\Livewire\Tesoreria\GestionCfe\Index::class)
             ->call('nuevoCfe')
             ->assertSet('mostrarModalNuevo', true);
     }
@@ -71,7 +74,7 @@ class GestionCfeTest extends TestCase
     /** @test */
     public function can_create_cfe_manually(): void
     {
-        Livewire::test(\App\Http\Livewire\Tesoreria\GestionCfe\Index::class)
+        Livewire::test(\App\Livewire\Tesoreria\GestionCfe\Index::class)
             ->call('nuevoCfe')
             ->set('nuevoDocumentoTipo', 'E-Factura Cobranza')
             ->set('nuevoDocumentoSerie', 'A')
@@ -83,7 +86,7 @@ class GestionCfeTest extends TestCase
             ->set('nuevoItems.0.detalle', 'Item de prueba')
             ->set('nuevoItems.0.importe', 1500)
             ->call('guardarNuevo')
-            ->assertDispatchedBrowserEvent('swal:toast-success');
+            ->assertDispatched('swal:toast-success');
 
         $this->assertDatabaseHas('tes_cfes', [
             'documento_numero' => 'TEST001',
@@ -100,7 +103,7 @@ class GestionCfeTest extends TestCase
             'documento_numero' => 'DUP001',
         ]);
 
-        Livewire::test(\App\Http\Livewire\Tesoreria\GestionCfe\Index::class)
+        Livewire::test(\App\Livewire\Tesoreria\GestionCfe\Index::class)
             ->call('nuevoCfe')
             ->set('nuevoDocumentoTipo', 'E-Factura Cobranza')
             ->set('nuevoDocumentoNumero', 'DUP001')
@@ -111,7 +114,7 @@ class GestionCfeTest extends TestCase
             ->set('nuevoItems.0.detalle', 'Item')
             ->set('nuevoItems.0.importe', 100)
             ->call('guardarNuevo')
-            ->assertDispatchedBrowserEvent('swal:toast-error');
+            ->assertDispatched('swal:toast-error');
     }
 
     /** @test */
@@ -121,7 +124,7 @@ class GestionCfeTest extends TestCase
             'tes_caja_concepto_id' => $this->concepto->id,
         ]);
 
-        Livewire::test(\App\Http\Livewire\Tesoreria\GestionCfe\Index::class)
+        Livewire::test(\App\Livewire\Tesoreria\GestionCfe\Index::class)
             ->call('editarCfe', $cfe->id)
             ->assertSet('mostrarModalEditar', true)
             ->assertSet('cfeEditarId', $cfe->id);
@@ -146,12 +149,12 @@ class GestionCfeTest extends TestCase
             'abreviatura' => 'OTRA',
         ]);
 
-        Livewire::test(\App\Http\Livewire\Tesoreria\GestionCfe\Index::class)
+        Livewire::test(\App\Livewire\Tesoreria\GestionCfe\Index::class)
             ->call('editarCfe', $cfe->id)
             ->set('editCajaConceptoSeleccionado', $concepto2->id)
             ->set('editSiifDependenciaSeleccionado', $dependencia2->id)
             ->call('guardarEdicion')
-            ->assertDispatchedBrowserEvent('swal:toast-success');
+            ->assertDispatched('swal:toast-success');
 
         $this->assertDatabaseHas('tes_cfes', [
             'id' => $cfe->id,
@@ -164,9 +167,9 @@ class GestionCfeTest extends TestCase
     {
         $cfe = TesCfe::factory()->create();
 
-        Livewire::test(\App\Http\Livewire\Tesoreria\GestionCfe\Index::class)
+        Livewire::test(\App\Livewire\Tesoreria\GestionCfe\Index::class)
             ->call('borrarCfe', $cfe->id)
-            ->assertDispatchedBrowserEvent('swal:toast-success');
+            ->assertDispatched('swal:toast-success');
 
         $this->assertSoftDeleted('tes_cfes', ['id' => $cfe->id]);
     }
@@ -181,9 +184,9 @@ class GestionCfeTest extends TestCase
             'planilla_er_id' => $this->planilla->id,
         ]);
 
-        Livewire::test(\App\Http\Livewire\Tesoreria\GestionCfe\Index::class)
+        Livewire::test(\App\Livewire\Tesoreria\GestionCfe\Index::class)
             ->call('borrarCfe', $cfe->id)
-            ->assertDispatchedBrowserEvent('swal:toast-error');
+            ->assertDispatched('swal:toast-error');
 
         $this->assertDatabaseHas('tes_cfes', ['id' => $cfe->id, 'deleted_at' => null]);
     }
@@ -200,7 +203,8 @@ class GestionCfeTest extends TestCase
             'tes_caja_concepto_id' => $this->concepto->id,
         ]);
 
-        Livewire::test(\App\Http\Livewire\Tesoreria\GestionCfe\Index::class)
+        Livewire::test(\App\Livewire\Tesoreria\GestionCfe\Index::class)
+            ->set('filtroAno', 0)
             ->set('search', 'BUSQUEDA001')
             ->assertSee('BUSQUEDA001')
             ->assertDontSee('OTRO002');
@@ -224,7 +228,8 @@ class GestionCfeTest extends TestCase
             'documento_numero' => 'NOFILTRO',
         ]);
 
-        Livewire::test(\App\Http\Livewire\Tesoreria\GestionCfe\Index::class)
+        Livewire::test(\App\Livewire\Tesoreria\GestionCfe\Index::class)
+            ->set('filtroAno', 0)
             ->set('filtroConcepto', $conceptoFiltro->id)
             ->assertSee('FILTRO001')
             ->assertDontSee('NOFILTRO');

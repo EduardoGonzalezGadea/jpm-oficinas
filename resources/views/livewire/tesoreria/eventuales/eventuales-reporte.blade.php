@@ -1,4 +1,4 @@
-<div class="reporte-avanzado-container">
+<div>
   <div class="row">
     <div class="col-md-12">
       <div class="card shadow-sm mb-3">
@@ -9,7 +9,7 @@
           </a>
         </div>
         <div class="card-body py-2">
-          <form wire:submit.prevent="buscar">
+          <form wire:submit="buscar">
             <div class="row">
               <!-- Fechas -->
               <div class="col-md-5">
@@ -19,17 +19,17 @@
                     <div class="form-row">
                       <div class="col-md-6 mb-2">
                         <label class="mb-0 small" for="fecha_desde">Fecha Desde</label>
-                        <input type="date" id="fecha_desde" class="form-control form-control-sm" wire:model.defer="filters.fecha_desde">
+                        <input type="date" id="fecha_desde" class="form-control form-control-sm" wire:model="filters.fecha_desde">
                       </div>
                       <div class="col-md-6 mb-2">
                         <label class="mb-0 small" for="fecha_hasta">Fecha Hasta</label>
-                        <input type="date" id="fecha_hasta" class="form-control form-control-sm" wire:model.defer="filters.fecha_hasta">
+                        <input type="date" id="fecha_hasta" class="form-control form-control-sm" wire:model="filters.fecha_hasta">
                       </div>
                     </div>
                     <div class="form-row">
                       <div class="col-md-6 mb-2">
                         <label class="mb-0 small" for="mes">Mes</label>
-                        <select id="mes" class="form-control form-control-sm" wire:model.defer="filters.mes">
+                        <select id="mes" class="form-control form-control-sm" wire:model="filters.mes">
                           <option value="">Todos</option>
                           <option value="1">Enero</option>
                           <option value="2">Febrero</option>
@@ -47,7 +47,7 @@
                       </div>
                       <div class="col-md-6 mb-2">
                         <label class="mb-0 small" for="year">Año</label>
-                        <input type="number" id="year" class="form-control form-control-sm" wire:model.defer="filters.year">
+                        <input type="number" id="year" class="form-control form-control-sm" wire:model="filters.year">
                       </div>
                     </div>
                   </div>
@@ -62,25 +62,25 @@
                     <div class="form-row">
                       <div class="col-md-6 mb-2">
                         <label class="mb-0 small" for="institucion">Institución</label>
-                        <input type="text" id="institucion" class="form-control form-control-sm" wire:model.defer="filters.institucion">
+                        <input type="text" id="institucion" class="form-control form-control-sm" wire:model="filters.institucion">
                       </div>
                       <div class="col-md-6 mb-2">
                         <label class="mb-0 small" for="titular">Titular</label>
-                        <input type="text" id="titular" class="form-control form-control-sm" wire:model.defer="filters.titular">
+                        <input type="text" id="titular" class="form-control form-control-sm" wire:model="filters.titular">
                       </div>
                     </div>
                     <div class="form-row">
                       <div class="col-md-4 mb-2">
                         <label class="mb-0 small" for="recibo">Nro. Recibo / Ingreso</label>
-                        <input type="text" id="recibo" class="form-control form-control-sm" wire:model.defer="filters.recibo">
+                        <input type="text" id="recibo" class="form-control form-control-sm" wire:model="filters.recibo">
                       </div>
                       <div class="col-md-4 mb-2">
                         <label class="mb-0 small" for="monto_min">Monto Mín.</label>
-                        <input type="number" step="0.01" id="monto_min" class="form-control form-control-sm" wire:model.defer="filters.monto_min">
+                        <input type="number" step="0.01" id="monto_min" class="form-control form-control-sm" wire:model="filters.monto_min">
                       </div>
                       <div class="col-md-4 mb-2">
                         <label class="mb-0 small" for="monto_max">Monto Máx.</label>
-                        <input type="number" step="0.01" id="monto_max" class="form-control form-control-sm" wire:model.defer="filters.monto_max">
+                        <input type="number" step="0.01" id="monto_max" class="form-control form-control-sm" wire:model="filters.monto_max">
                       </div>
                     </div>
                   </div>

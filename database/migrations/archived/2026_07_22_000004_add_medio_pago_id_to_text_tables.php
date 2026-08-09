@@ -50,9 +50,11 @@ return new class extends Migration
         $tablasTexto = ['tes_arrendamientos', 'tes_eventuales'];
 
         foreach ($tablasTexto as $tabla) {
-            Schema::table($tabla, function (Blueprint $t) {
-                $t->unsignedBigInteger('medio_pago_id')->nullable()->after('medio_de_pago');
-            });
+            if (!Schema::hasColumn($tabla, 'medio_pago_id')) {
+                Schema::table($tabla, function (Blueprint $t) {
+                    $t->unsignedBigInteger('medio_pago_id')->nullable()->after('medio_de_pago');
+                });
+            }
 
             $campoTexto = 'medio_de_pago';
             $registros = DB::table($tabla)
@@ -74,9 +76,11 @@ return new class extends Migration
             Log::info("MigracionMedios: {$tabla} {$registros->count()} registros, {$sinMapeo} sin mapeo");
         }
 
-        Schema::table('tes_cfe_medios_pago', function (Blueprint $t) {
-            $t->unsignedBigInteger('medio_pago_id')->nullable()->after('medio_pago_tipo');
-        });
+        if (!Schema::hasColumn('tes_cfe_medios_pago', 'medio_pago_id')) {
+            Schema::table('tes_cfe_medios_pago', function (Blueprint $t) {
+                $t->unsignedBigInteger('medio_pago_id')->nullable()->after('medio_pago_tipo');
+            });
+        }
 
         $cfeRegistros = DB::table('tes_cfe_medios_pago')
             ->whereNotNull('medio_pago_tipo')
@@ -97,9 +101,11 @@ return new class extends Migration
         }
         Log::info("MigracionMedios: tes_cfe_medios_pago {$cfeRegistros->count()} registros, {$cfeSinMapeo} sin mapeo");
 
-        Schema::table('tes_multas_cobradas', function (Blueprint $t) {
-            $t->unsignedBigInteger('medio_pago_id')->nullable()->after('forma_pago');
-        });
+        if (!Schema::hasColumn('tes_multas_cobradas', 'medio_pago_id')) {
+            Schema::table('tes_multas_cobradas', function (Blueprint $t) {
+                $t->unsignedBigInteger('medio_pago_id')->nullable()->after('forma_pago');
+            });
+        }
 
         $multasRegistros = DB::table('tes_multas_cobradas')
             ->whereNotNull('forma_pago')

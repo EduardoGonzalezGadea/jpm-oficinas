@@ -45,7 +45,13 @@ class ValorUrService
     public function obtener(): array
     {
         $cached = Cache::get(self::CACHE_KEY);
-        if (is_array($cached) && empty($cached['vencido'])) {
+
+        // Si hay valor en caché, devolverlo recalculando la vigencia con la fecha actual.
+        // El TTL se encarga de refrescarlo periódicamente; así no se golpea a BPS en cada
+        // request cuando el mes publicado aún no coincide con el mes en curso.
+        if (is_array($cached) && !empty($cached['valorUr'])) {
+            $cached['vencido'] = !$this->esMesVigente($cached['mesUr'] ?? null);
+
             return $cached;
         }
 
@@ -54,13 +60,14 @@ class ValorUrService
             $resultado = $this->buildResult($desdeBps['valorUr'], $desdeBps['mesUr'], 'bps');
             Cache::put(self::CACHE_KEY, $resultado, now()->addMinutes(self::CACHE_TTL_MINUTES));
 
-            if (!$resultado['vencido']) {
-                Cache::forever(self::CACHE_KEY_ULTIMO_VALIDO, $resultado);
-            }
+            // Renovar siempre el último valor descargado, aunque el mes no sea el actual,
+            // para que el fallback nunca muestre un valor demasiado antiguo.
+            Cache::forever(self::CACHE_KEY_ULTIMO_VALIDO, $resultado);
 
             return $resultado;
         }
 
+        // Si la descarga falla, usar el último valor que sí se descargó.
         $ultimoValido = Cache::get(self::CACHE_KEY_ULTIMO_VALIDO);
         if (is_array($ultimoValido) && !empty($ultimoValido['valorUr'])) {
             return $this->buildResult(
@@ -70,7 +77,7 @@ class ValorUrService
             );
         }
 
-        return $this->buildResult('$ 1.839,08', 'Noviembre', 'fallback');
+        return $this->buildResult('$ 1.922,68', 'Julio', 'fallback');
     }
 
     /**

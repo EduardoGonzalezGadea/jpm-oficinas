@@ -8,8 +8,18 @@
     <meta name="user-authenticated" content="false">
 
     <title>Iniciar Sesión - Tesorería | Oficinas</title>
-    <!-- Bootstrap 4 CSS -->
-    <link href="{{ asset('libs/bootstrap-4.6.2-dist/css/bootstrap.min.css') }}" rel="stylesheet">
+    <!-- Pre-cargar color de fondo para evitar FOUC (flash blanco) -->
+    <script>
+        (function() {
+            try {
+                var t = localStorage.getItem("bootswatch-theme-name") || "cosmo";
+                var d = ["darkly","slate","cyborg","superhero","vapor","material"];
+                document.documentElement.style.backgroundColor = d.indexOf(t) >= 0 ? "#222222" : "#ffffff";
+            } catch(e) {}
+        })();
+    </script>
+    <!-- Bootstrap 4 CSS: el tema se aplica dinámicamente desde localStorage/cookies vía theme-change.js -->
+    <link id="bootswatch-theme" href="{{ asset('libs/bootstrap-4.6.2-dist/css/bootstrap.min.css') }}" data-theme-name="default" rel="stylesheet">
 
     <!-- Font Awesome -->
     <link href="{{ asset('libs/fontawesome-free-5.15.4-web/css/all.min.css') }}" rel="stylesheet">
@@ -284,6 +294,9 @@
     <script src="{{ asset('libs/jquery/js/jquery-3.6.0.min.js') }}"></script>
     <script src="{{ asset('libs/bootstrap-4.6.2-dist/js/bootstrap.bundle.min.js') }}"></script>
     <script src="{{ asset('libs/fontawesome-free-5.15.4-web/js/all.min.js') }}"></script>
+
+    <!-- Lógica para aplicar el tema guardado en la página de login -->
+    <script src="{{ asset('js/theme-change.js') }}?v={{ filemtime(public_path('js/theme-change.js')) }}"></script>
 
     <script>
         // Inicializar tooltips y toggle de contraseña

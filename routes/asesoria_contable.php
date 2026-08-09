@@ -7,10 +7,10 @@
  * Se incluye dentro del grupo JWT + prefix('asesoria-contable') de web.php.
  */
 
-use App\Http\Livewire\AsesoriaContable\EstadosRecaudacion\Index as EstadosRecaudacionIndex;
-use App\Http\Livewire\AsesoriaContable\PlanillasNoCompletadas\Index as PlanillasNoCompletadasIndex;
-use App\Http\Livewire\AsesoriaContable\PlanillasAnuladas\Index as PlanillasAnuladasIndex;
-use App\Http\Livewire\AsesoriaContable\ResumenRecaudaciones\Index as ResumenRecaudacionesIndex;
+use App\Livewire\AsesoriaContable\EstadosRecaudacion\Index as EstadosRecaudacionIndex;
+use App\Livewire\AsesoriaContable\PlanillasNoCompletadas\Index as PlanillasNoCompletadasIndex;
+use App\Livewire\AsesoriaContable\PlanillasAnuladas\Index as PlanillasAnuladasIndex;
+use App\Livewire\AsesoriaContable\ResumenRecaudaciones\Index as ResumenRecaudacionesIndex;
 use Illuminate\Support\Facades\Route;
 
 // ============================================================================

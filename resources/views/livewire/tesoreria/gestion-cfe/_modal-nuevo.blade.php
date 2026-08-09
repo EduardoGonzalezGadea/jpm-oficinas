@@ -39,7 +39,7 @@
           </h6>
           <div class="form-group mb-0">
             <input type="text" wire:model="nuevoDocumentoSerie"
-              class="form-control @error('nuevoDocumentoSerie') is-invalid @enderror"
+              class="form-control js-upper @error('nuevoDocumentoSerie') is-invalid @enderror"
               placeholder="A">
             @error('nuevoDocumentoSerie')
               <div class="invalid-feedback">{{ $message }}</div>
@@ -52,7 +52,7 @@
           </h6>
           <div class="form-group mb-0">
             <input type="text" wire:model="nuevoDocumentoNumero"
-              class="form-control @error('nuevoDocumentoNumero') is-invalid @enderror"
+              class="form-control js-upper @error('nuevoDocumentoNumero') is-invalid @enderror"
               placeholder="123456">
             @error('nuevoDocumentoNumero')
               <div class="invalid-feedback">{{ $message }}</div>
@@ -77,7 +77,7 @@
           </h6>
           <div class="form-group mb-1">
             <input type="text" wire:model="nuevoReceptorNombre"
-              class="form-control @error('nuevoReceptorNombre') is-invalid @enderror"
+              class="form-control js-upper @error('nuevoReceptorNombre') is-invalid @enderror"
               placeholder="Nombre del receptor">
             @error('nuevoReceptorNombre')
               <div class="invalid-feedback">{{ $message }}</div>
@@ -85,7 +85,7 @@
           </div>
           <div class="form-group mb-0">
             <input type="text" wire:model="nuevoReceptorRuc"
-              class="form-control" placeholder="RUC/CI (opcional)">
+              class="form-control js-upper" placeholder="RUC/CI (opcional)">
           </div>
         </div>
       </div>
@@ -97,7 +97,7 @@
               <i class="fas fa-tag mr-1 text-primary"></i> Concepto de Caja
             </h6>
             <div class="form-group mb-0">
-              <select wire:model="nuevoCajaConceptoSeleccionado"
+              <select wire:model.live="nuevoCajaConceptoSeleccionado"
                 class="form-control @error('nuevoCajaConceptoSeleccionado') is-invalid @enderror">
                 <option value="">— Seleccione concepto —</option>
                 @foreach($cajaConceptos as $concepto)
@@ -115,7 +115,7 @@
               <i class="fas fa-sitemap mr-1 text-primary"></i> Dependencia
             </h6>
             <div class="form-group mb-0">
-              <select wire:model="nuevoSiifDependenciaSeleccionado"
+              <select wire:model.live="nuevoSiifDependenciaSeleccionado"
                 class="form-control @error('nuevoSiifDependenciaSeleccionado') is-invalid @enderror">
                 <option value="">— Seleccione dep. SIIF —</option>
                 @foreach($siifDependencias as $dep)
@@ -141,7 +141,7 @@
         </button>
       </div>
       <div class="table-responsive mb-3">
-        <table class="table table-sm table-bordered table-striped">
+        <table id="tablaNuevoItems" class="table table-sm table-bordered table-striped">
           <thead >
             <tr>
               <th style="width:35%">Detalle</th>
@@ -154,7 +154,7 @@
           </thead>
           <tbody>
             @forelse($nuevoItems as $index => $item)
-              <tr wire:key="nuevo-item-{{ $index }}">
+              <tr wire:key="nuevo-item-{{ $index }}" data-fila="{{ $index }}">
                 <td>
                   <input type="text" wire:model="nuevoItems.{{ $index }}.detalle"
                     class="form-control form-control-sm @error('nuevoItems.'.$index.'.detalle') is-invalid @enderror"
@@ -166,19 +166,20 @@
                 <td>
                   <input type="number" step="1" min="1"
                     wire:model="nuevoItems.{{ $index }}.cantidad"
-                    class="form-control form-control-sm text-center"
-                    wire:change="recalcularImporteItemNuevo({{ $index }})">
+                    class="form-control form-control-sm text-center js-cant-item"
+                    data-index="{{ $index }}">
                 </td>
                 <td>
                   <input type="number" step="0.01" min="0"
                     wire:model="nuevoItems.{{ $index }}.precio"
-                    class="form-control form-control-sm text-right"
-                    wire:change="recalcularImporteItemNuevo({{ $index }})">
+                    class="form-control form-control-sm text-right js-precio-item"
+                    data-index="{{ $index }}">
                 </td>
                 <td>
                   <input type="number" step="0.01" min="0"
                     wire:model="nuevoItems.{{ $index }}.importe"
-                    class="form-control form-control-sm text-right font-weight-bold @error('nuevoItems.'.$index.'.importe') is-invalid @enderror">
+                    class="form-control form-control-sm text-right font-weight-bold js-importe-item @error('nuevoItems.'.$index.'.importe') is-invalid @enderror"
+                    readonly>
                   @error('nuevoItems.'.$index.'.importe')
                     <div class="invalid-feedback d-block">{{ $message }}</div>
                   @enderror
@@ -221,7 +222,7 @@
           <tfoot>
             <tr class="table-active font-weight-bold">
               <td colspan="3" class="text-right">TOTAL</td>
-              <td class="text-right">
+              <td class="text-right" id="totalNuevoCfe">
                 $ {{ number_format(collect($nuevoItems)->sum(fn($i) => (float)($i['importe'] ?? 0)), 2, ',', '.') }}
               </td>
               <td colspan="2"></td>
@@ -295,7 +296,7 @@
           <h6 class="text-uppercase small font-weight-bold mb-2">
             <i class="fas fa-sticky-note mr-1 text-secondary"></i> Adenda
           </h6>
-          <textarea wire:model="nuevoAdenda" class="form-control" rows="2"
+          <textarea wire:model="nuevoAdenda" class="form-control js-upper" rows="2"
             placeholder="Adenda o comentarios adicionales (opcional)"></textarea>
         </div>
       </div>

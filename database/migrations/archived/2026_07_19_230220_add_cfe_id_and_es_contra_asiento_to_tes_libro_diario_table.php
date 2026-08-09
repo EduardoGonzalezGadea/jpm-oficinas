@@ -11,6 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (Schema::hasTable('tes_libro_diario') && Schema::hasColumn('tes_libro_diario', 'cfe_id')) {
+            return;
+        }
         Schema::table('tes_libro_diario', function (Blueprint $table) {
             $table->unsignedBigInteger('cfe_id')->nullable()->after('grupo_redistribucion_id');
             $table->boolean('es_contra_asiento')->default(false)->after('cfe_id');

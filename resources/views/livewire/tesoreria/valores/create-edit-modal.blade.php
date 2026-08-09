@@ -16,18 +16,18 @@
               <div class="form-group col-md-8">
                 <label>Nombre <span class="text-danger">*</span></label>
                 <input type="text" class="form-control @error('nombre') is-invalid @enderror"
-                    wire:model="nombre" placeholder="Ej: Recibos de Agua">
+                    wire:model.live="nombre" placeholder="Ej: Recibos de Agua">
                 @error('nombre') <div class="invalid-feedback">{{ $message }}</div> @enderror
               </div>
               <div class="form-group col-md-4">
                 <label>Recibos por Libreta <span class="text-danger">*</span></label>
                 <input type="number" class="form-control @error('recibos') is-invalid @enderror"
-                    wire:model="recibos" placeholder="100" min="1">
+                    wire:model.live="recibos" placeholder="100" min="1">
                 @error('recibos') <div class="invalid-feedback">{{ $message }}</div> @enderror
               </div>
               <div class="form-group col-md-6">
                 <label>Tipo de Valor <span class="text-danger">*</span></label>
-                <select class="form-control @error('tipo_valor') is-invalid @enderror" wire:model="tipo_valor">
+                <select class="form-control @error('tipo_valor') is-invalid @enderror" wire:model.live="tipo_valor">
                   <option value="pesos">Pesos</option>
                   <option value="UI">Unidad Indexada</option>
                   <option value="SVE">Sin Valor Escrito</option>
@@ -43,7 +43,7 @@
                     <span class="input-group-text">$</span>
                   </div>
                   <input type="number" step="0.01" class="form-control @error('valor') is-invalid @enderror"
-                      wire:model="valor" placeholder="0.00"
+                      wire:model.live="valor" placeholder="0.00"
                       @if($tipo_valor === 'SVE') disabled @endif>
                 </div>
                 @error('valor') <div class="invalid-feedback">{{ $message }}</div> @enderror
@@ -54,13 +54,13 @@
               <div class="form-group col-12">
                 <label>Descripción</label>
                 <textarea class="form-control @error('descripcion') is-invalid @enderror"
-                     wire:model="descripcion" rows="3"
+                     wire:model.live="descripcion" rows="3"
                      placeholder="Descripción opcional del valor..."></textarea>
                 @error('descripcion') <div class="invalid-feedback">{{ $message }}</div> @enderror
               </div>
               <div class="form-group col-12">
                 <div class="form-check">
-                  <input class="form-check-input" type="checkbox" wire:model="activo" id="activo">
+                  <input class="form-check-input" type="checkbox" wire:model.live="activo" id="activo">
                   <label class="form-check-label" for="activo">
                     Activo
                   </label>

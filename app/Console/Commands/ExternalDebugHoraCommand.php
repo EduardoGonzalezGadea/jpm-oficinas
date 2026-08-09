@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Services\Http\HttpClientService;
 use App\Services\SincronizacionHoraService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
@@ -100,15 +101,31 @@ class ExternalDebugHoraCommand extends Command
 
     protected function testUrl(string $url, int $idx): void
     {
+        /** @var HttpClientService $httpClient */
+        $httpClient = app(HttpClientService::class);
+        $proxy = $httpClient->detectProxy();
+        $proxyLabel = $proxy ? ' (proxy)' : ' (directo)';
+
+        // Cada URL usa su propio serviceName para evitar que el circuit breaker
+        // de una URL bloquee el test de las siguientes
+        $serviceName = 'debug_hora_url_' . $idx;
+        $httpClient->resetCircuitBreaker($serviceName);
+
         try {
             $startTime = microtime(true);
-            $response = \Illuminate\Support\Facades\Http::timeout(15)->get($url);
-            $duration = (microtime(true) - $startTime) * 1000;
+            $response = $httpClient->getWithRetry(
+                $url,
+                ['timeout' => 15],
+                1,
+                0,
+                $serviceName
+            );
+            $duration = round((microtime(true) - $startTime) * 1000);
 
             if ($response->successful()) {
-                $this->info("   ✅ URL {$idx}: OK ({$duration}ms)");
+                $this->info("   ✅ URL {$idx}: OK ({$duration}ms){$proxyLabel}");
             } else {
-                $this->warn("   ⚠️  URL {$idx}: HTTP {$response->status()} ({$duration}ms)");
+                $this->warn("   ⚠️  URL {$idx}: HTTP {$response->status()} ({$duration}ms){$proxyLabel}");
             }
         } catch (\Exception $e) {
             $this->error("   ❌ URL {$idx}: {$e->getMessage()}");

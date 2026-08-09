@@ -1,4 +1,4 @@
-<div wire:init="checkEditId">
+﻿<div wire:init="checkEditId">
   <div class="card">
     <div class="card-header card-header-section card-header-gradient py-2 px-3">
       <h4 class="mb-0"><strong><i class="fas fa-id-badge mr-2"></i>Listado de Porte de Armas</strong></h4>
@@ -10,7 +10,7 @@
           <i class="fas fa-list"></i> Planillas
         </a>
         @if(count($selectedRegistros) > 0)
-        <button wire:click="createPlanilla" class="btn btn-warning mr-2">
+        <button type="button" class="btn btn-warning mr-2" onclick="event.preventDefault(); window.dispatchEvent(new CustomEvent('swal:confirm-with-input', { detail: { title: '¿Con qué fecha crear la planilla?', text: 'Seleccione la fecha para la nueva planilla de porte de armas.', input: 'date', inputValue: '{{ date('Y-m-d') }}', method: 'createPlanilla', componentId: '{{ $this->getId() }}', confirmButtonText: 'Crear' } }))">
           <i class="fas fa-file-invoice"></i> Generar Planilla ({{ count($selectedRegistros) }})
         </button>
         @endif
@@ -32,7 +32,7 @@
       <div class="form-row mb-2">
         <div class="col-md-12">
           <div class="input-group">
-            <input type="text" class="form-control form-control-sm" placeholder="Buscar..." wire:model="search">
+            <input type="text" class="form-control form-control-sm" placeholder="Buscar..." wire:model.live="search">
             <div class="input-group-append">
               <button class="btn btn-sm btn-outline-danger" type="button" wire:click="clearSearch" title="Limpiar filtro">
                 <i class="fas fa-times"></i>
@@ -47,7 +47,7 @@
           <tr>
             <th class="text-center align-middle">
               <div class="custom-control custom-checkbox">
-                <input type="checkbox" class="custom-control-input" id="selectAll" wire:model="selectAll">
+                <input type="checkbox" class="custom-control-input" id="selectAll" wire:model.live="selectAll">
                 <label class="custom-control-label" for="selectAll"></label>
               </div>
             </th>
@@ -69,7 +69,7 @@
               @if(!$registro->planilla_id)
               <div class="custom-control custom-checkbox">
                 <input type="checkbox" class="custom-control-input" id="check_{{ $registro->id }}"
-                  wire:model="selectedRegistros" value="{{ $registro->id }}">
+                  wire:model.live="selectedRegistros" value="{{ $registro->id }}">
                 <label class="custom-control-label" for="check_{{ $registro->id }}"></label>
               </div>
               @endif
@@ -141,7 +141,7 @@
                 <div class="form-group">
                   <label>Fecha <span class="text-danger">*</span></label>
                   <input type="date" class="form-control @error('fecha') is-invalid @enderror"
-                    wire:model="fecha" id="fecha">
+                    wire:model.live="fecha" id="fecha">
                   @error('fecha')
                   <div class="invalid-feedback">{{ $message }}</div>
                   @enderror
@@ -151,7 +151,7 @@
                 <div class="form-group">
                   <label>Monto <span class="text-danger">*</span></label>
                   <input type="number" step="0.01" class="form-control @error('monto') is-invalid @enderror"
-                    wire:model="monto" id="monto">
+                    wire:model.live="monto" id="monto">
                   @error('monto')
                   <div class="invalid-feedback">{{ $message }}</div>
                   @enderror
@@ -164,7 +164,7 @@
                 <div class="form-group">
                   <label>Titular <span class="text-danger">*</span></label>
                   <input type="text" class="form-control @error('titular') is-invalid @enderror"
-                    wire:model="titular" id="titular">
+                    wire:model.live="titular" id="titular">
                   @error('titular')
                   <div class="invalid-feedback">{{ $message }}</div>
                   @enderror
@@ -174,7 +174,7 @@
                 <div class="form-group">
                   <label>Cédula <span class="text-danger">*</span></label>
                   <input type="text" class="form-control @error('cedula') is-invalid @enderror"
-                    wire:model="cedula" id="cedula">
+                    wire:model.live="cedula" id="cedula">
                   @error('cedula')
                   <div class="invalid-feedback">{{ $message }}</div>
                   @enderror
@@ -187,7 +187,7 @@
                 <div class="form-group">
                   <label>Orden de Cobro</label>
                   <input type="text" class="form-control @error('orden_cobro') is-invalid @enderror"
-                    wire:model="orden_cobro" id="orden_cobro">
+                    wire:model.live="orden_cobro" id="orden_cobro">
                   @error('orden_cobro')
                   <div class="invalid-feedback">{{ $message }}</div>
                   @enderror
@@ -197,7 +197,7 @@
                 <div class="form-group">
                   <label>Número de Trámite</label>
                   <input type="text" class="form-control @error('numero_tramite') is-invalid @enderror"
-                    wire:model="numero_tramite" id="numero_tramite">
+                    wire:model.live="numero_tramite" id="numero_tramite">
                   @error('numero_tramite')
                   <div class="invalid-feedback">{{ $message }}</div>
                   @enderror
@@ -210,7 +210,7 @@
                 <div class="form-group">
                   <label>Ingreso Contabilidad</label>
                   <input type="text" class="form-control @error('ingreso_contabilidad') is-invalid @enderror"
-                    wire:model="ingreso_contabilidad" id="ingreso_contabilidad">
+                    wire:model.live="ingreso_contabilidad" id="ingreso_contabilidad">
                   @error('ingreso_contabilidad')
                   <div class="invalid-feedback">{{ $message }}</div>
                   @enderror
@@ -220,7 +220,7 @@
                 <div class="form-group">
                   <label>Recibo</label>
                   <input type="text" class="form-control @error('recibo') is-invalid @enderror"
-                    wire:model="recibo" id="recibo">
+                    wire:model.live="recibo" id="recibo">
                   @error('recibo')
                   <div class="invalid-feedback">{{ $message }}</div>
                   @enderror
@@ -233,7 +233,7 @@
                 <div class="form-group">
                   <label>Teléfono</label>
                   <input type="text" class="form-control @error('telefono') is-invalid @enderror"
-                    wire:model="telefono" id="telefono">
+                    wire:model.live="telefono" id="telefono">
                   @error('telefono')
                   <div class="invalid-feedback">{{ $message }}</div>
                   @enderror
@@ -311,7 +311,7 @@
 
   @push('scripts')
   <script>
-    document.addEventListener('livewire:load', function() {
+    document.addEventListener('livewire:init', function() {
       // Manejo del Enter para navegar entre campos
       document.addEventListener('keydown', function(e) {
         if (e.key === 'Enter' && e.target.tagName === 'INPUT') {

@@ -17,7 +17,7 @@
           <div class="row mb-3">
             <div class="col-md-6">
               <label for="search">Buscar</label>
-              <input type="text" wire:model="search" id="search"
+              <input type="text" wire:model.live="search" id="search"
                 class="form-control form-control-sm"
                 placeholder="Buscar por nombre o descripción...">
             </div>
@@ -55,8 +55,7 @@
                     </td>
                     <td class="text-center align-middle">
                       <button wire:click="showDetails({{ $institucion->id }})"
-                        class="btn btn-sm btn-info" data-toggle="modal"
-                        data-target="#detailsModal" title="Detalles">
+                        class="btn btn-sm btn-info"  title="Detalles">
                         <i class="fas fa-eye"></i>
                       </button>
                       <button wire:click="edit({{ $institucion->id }})"
@@ -108,7 +107,7 @@
           <form>
             <div class="form-group">
               <label for="nombre">Nombre <span class="text-danger">*</span></label>
-              <input type="text" wire:model.defer="nombre" id="nombre"
+              <input type="text" wire:model="nombre" id="nombre"
                 class="form-control form-control-sm">
               @error('nombre')
                 <span class="text-danger">{{ $message }}</span>
@@ -116,7 +115,7 @@
             </div>
             <div class="form-group">
               <label for="descripcion">Descripción</label>
-              <textarea wire:model.defer="descripcion" id="descripcion" 
+              <textarea wire:model="descripcion" id="descripcion" 
                 class="form-control form-control-sm" rows="3"></textarea>
               @error('descripcion')
                 <span class="text-danger">{{ $message }}</span>
@@ -125,7 +124,7 @@
             <div class="form-group">
               <div class="custom-control custom-switch">
                 <input type="checkbox" class="custom-control-input" 
-                  id="activa" wire:model.defer="activa">
+                  id="activa" wire:model="activa">
                 <label class="custom-control-label" for="activa">Institución activa</label>
               </div>
             </div>
@@ -190,34 +189,36 @@
   @push('scripts')
     <script>
       window.addEventListener('swal:confirm', event => {
+        const d = window.LiveEvent(event);
         Swal.fire({
-          title: event.detail.title,
-          text: event.detail.text,
+          title: d.title,
+          text: d.text,
           icon: 'warning',
           showCancelButton: true,
           confirmButtonColor: '#3085d6',
           cancelButtonColor: '#d33',
-          confirmButtonText: event.detail.confirmButtonText,
+          confirmButtonText: d.confirmButtonText,
           cancelButtonText: 'Cancelar',
           focusConfirm: true
         }).then((result) => {
           if (result.isConfirmed) {
-            @this.call(event.detail.method, event.detail.id);
+            @this.call(d.method, d.id);
           }
         });
       });
 
       window.addEventListener('show-modal', event => {
-        $(event.detail.modal).modal('show');
+        $(window.LiveEvent(event).modal).modal('show');
       });
 
       window.addEventListener('close-modal', event => {
-        $(event.detail.modal).modal('hide');
+        $(window.LiveEvent(event).modal).modal('hide');
       });
 
       window.addEventListener('alert', event => {
-        const type = event.detail.type;
-        const message = event.detail.message;
+        const d = window.LiveEvent(event);
+        const type = d.type;
+        const message = d.message;
         Swal.fire({
           icon: type,
           title: message,
@@ -228,7 +229,7 @@
 
       $(document).ready(function() {
         $('#institucionModal').on('hidden.bs.modal', function() {
-          window.livewire.emit('resetForm');
+          window.Livewire.dispatch('resetForm');
         });
 
         $('#institucionModal').on('shown.bs.modal', function() {

@@ -20,7 +20,7 @@
       <div class="row mb-1">
         <div class="col">
           <div class="input-group">
-            <input type="text" wire:model.debounce.300ms="search" class="form-control" placeholder="Buscar por nombre...">
+            <input type="text" wire:model.live.debounce.300ms="search" class="form-control" placeholder="Buscar por nombre...">
             <div class="input-group-append">
               <button type="button" wire:click="clearSearch" class="btn btn-outline-danger" title="Limpiar búsqueda">
                 <i class="fas fa-times"></i>
@@ -89,17 +89,17 @@
         <div class="modal-body">
           <div class="form-group">
             <label for="nombre">Nombre</label>
-            <input type="text" wire:model.defer="nombre" id="nombre" class="form-control @error('nombre') is-invalid @enderror" placeholder="Nombre del servicio">
+            <input type="text" wire:model="nombre" id="nombre" class="form-control @error('nombre') is-invalid @enderror" placeholder="Nombre del servicio">
             @error('nombre') <span class="invalid-feedback">{{ $message }}</span> @enderror
           </div>
           <div class="form-group">
             <label for="valor_ui">Valor UI</label>
-            <input type="number" step="0.01" wire:model.defer="valor_ui" id="valor_ui" class="form-control @error('valor_ui') is-invalid @enderror">
+            <input type="number" step="0.01" wire:model="valor_ui" id="valor_ui" class="form-control @error('valor_ui') is-invalid @enderror">
             @error('valor_ui') <span class="invalid-feedback">{{ $message }}</span> @enderror
           </div>
           <div class="form-group">
             <div class="custom-control custom-switch">
-              <input type="checkbox" wire:model.defer="activo" class="custom-control-input" id="activo">
+              <input type="checkbox" wire:model="activo" class="custom-control-input" id="activo">
               <label class="custom-control-label" for="activo">Activo</label>
             </div>
           </div>

@@ -15,10 +15,10 @@
           <p><strong>Nro. Tarjeta:</strong> {{ $tarjeta->numero_tarjeta }}</p>
           <hr>
           @endif
-          <form wire:submit.prevent="deliver">
+          <form wire:submit="deliver">
             <div class="form-group">
               <label for="deliver_observaciones">Observaciones</label>
-              <textarea wire:model.defer="observaciones" class="form-control" id="deliver_observaciones" rows="3"></textarea>
+              <textarea wire:model="observaciones" class="form-control" id="deliver_observaciones" rows="3"></textarea>
               @error('observaciones') <span class="text-danger">{{ $message }}</span> @enderror
             </div>
           </form>
@@ -48,10 +48,10 @@
           <hr>
           @endif
           <p>¿Está seguro de que desea marcar esta tarjeta como devuelta?</p>
-          <form wire:submit.prevent="return">
+          <form wire:submit="return">
             <div class="form-group">
               <label for="return_observaciones">Observaciones</label>
-              <textarea wire:model.defer="observaciones" class="form-control" id="return_observaciones" rows="3"></textarea>
+              <textarea wire:model="observaciones" class="form-control" id="return_observaciones" rows="3"></textarea>
               @error('observaciones') <span class="text-danger">{{ $message }}</span> @enderror
             </div>
           </form>

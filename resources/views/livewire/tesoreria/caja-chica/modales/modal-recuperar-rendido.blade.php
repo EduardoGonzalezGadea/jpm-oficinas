@@ -14,12 +14,12 @@
           </button>
         </div>
         <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
-          <form wire:submit.prevent="saveRecuperarRendido">
+          <form wire:submit="saveRecuperarRendido">
             <div class="form-group">
               <label for="recuperarRendidoFecha">Fecha:</label>
               <input type="date" id="recuperarRendidoFecha"
                 class="form-control @error('recuperarRendidoData.fecha') is-invalid @enderror"
-                wire:model.defer="recuperarRendidoData.fecha">
+                wire:model="recuperarRendidoData.fecha">
               @error('recuperarRendidoData.fecha')
               <span class="invalid-feedback">{{ $message }}</span>
               @enderror
@@ -27,8 +27,8 @@
             <div class="form-group">
               <label for="recuperarRendidoDocumentos">Documentos:</label>
               <input type="text" id="recuperarRendidoDocumentos"
-                class="form-control @error('recuperarRendidoData.documentos') is-invalid @enderror"
-                wire:model.defer="recuperarRendidoData.documentos"
+                class="form-control text-uppercase @error('recuperarRendidoData.documentos') is-invalid @enderror"
+                wire:model="recuperarRendidoData.documentos"
                 placeholder="Ingrese documentos">
               @error('recuperarRendidoData.documentos')
               <span class="invalid-feedback">{{ $message }}</span>
@@ -38,7 +38,7 @@
               <label for="recuperarRendidoMontoRecuperado">Monto Recuperado:</label>
               <input type="number" id="recuperarRendidoMontoRecuperado"
                 class="form-control @error('recuperarRendidoData.monto_recuperado') is-invalid @enderror"
-                wire:model.defer="recuperarRendidoData.monto_recuperado" step="0.01">
+                wire:model="recuperarRendidoData.monto_recuperado" step="0.01">
               @error('recuperarRendidoData.monto_recuperado')
               <span class="invalid-feedback">{{ $message }}</span>
               @enderror

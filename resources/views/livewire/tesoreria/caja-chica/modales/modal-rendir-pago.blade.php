@@ -9,7 +9,7 @@
           </button>
         </div>
         
-        <form wire:submit.prevent="saveRendicionPago">
+        <form wire:submit="saveRendicionPago">
           <div class="modal-body pb-0">
             <!-- Detalles Informativos -->
             <div class="card mb-3 pb-0" style="background-color: #f8f9fa;">
@@ -39,7 +39,7 @@
               <!-- Fecha de Rendición -->
               <div class="form-group col-md-3 mb-2">
                 <label for="fecha_rendicion" class="font-weight-bold mb-1 small">Fecha Rendición <span class="text-danger">*</span></label>
-                <input type="date" class="form-control form-control-sm" id="fecha_rendicion" wire:model.defer="rendirPagoData.fecha_rendicion" required>
+                <input type="date" class="form-control form-control-sm" id="fecha_rendicion" wire:model="rendirPagoData.fecha_rendicion" required>
                 @error('rendirPagoData.fecha_rendicion') <span class="text-danger small">{{ $message }}</span> @enderror
               </div>
 
@@ -47,7 +47,7 @@
                 <label for="monto_rendido" class="font-weight-bold mb-1 small">Monto Rendido <span class="text-danger">*</span></label>
                 <div class="input-group input-group-sm">
                   <div class="input-group-prepend"><span class="input-group-text">$</span></div>
-                  <input type="number" class="form-control" id="monto_rendido" wire:model="rendirPagoData.monto_rendido" step="0.01" min="0" required>
+                  <input type="number" class="form-control" id="monto_rendido" wire:model.live="rendirPagoData.monto_rendido" step="0.01" min="0" required>
                 </div>
                 @error('rendirPagoData.monto_rendido') <span class="text-danger small">{{ $message }}</span> @enderror
               </div>
@@ -56,14 +56,14 @@
                 <label for="monto_reintegrado" class="font-weight-bold mb-1 small">Monto Reintegrado</label>
                 <div class="input-group input-group-sm">
                   <div class="input-group-prepend"><span class="input-group-text">$</span></div>
-                  <input type="number" class="form-control bg-light" id="monto_reintegrado" wire:model="rendirPagoData.monto_reintegrado" step="0.01" min="0" readonly tabindex="-1">
+                  <input type="number" class="form-control bg-light" id="monto_reintegrado" wire:model.live="rendirPagoData.monto_reintegrado" step="0.01" min="0" readonly tabindex="-1">
                 </div>
                 @error('rendirPagoData.monto_reintegrado') <span class="text-danger small">{{ $message }}</span> @enderror
               </div>
 
               <div class="form-group col-md-3 mb-2">
                 <label for="ingreso_reintegro" class="font-weight-bold mb-1 small">Ingreso Reintegro</label>
-                <input type="text" class="form-control form-control-sm" id="ingreso_reintegro" wire:model.defer="rendirPagoData.ingreso_reintegro" placeholder="Nro. Ingreso">
+                <input type="text" class="form-control form-control-sm text-uppercase" id="ingreso_reintegro" wire:model="rendirPagoData.ingreso_reintegro" placeholder="Nro. Ingreso">
                 @error('rendirPagoData.ingreso_reintegro') <span class="text-danger small">{{ $message }}</span> @enderror
               </div>
             </div>

@@ -34,24 +34,34 @@
           <div wire:loading wire:target="archivoPdf" class="mr-3 text-white font-weight-bold small">
             <i class="fas fa-spinner fa-spin mr-1"></i> CARGANDO
           </div>
-          <a href="{{ route('tesoreria.libro-diario.index') }}" class="btn btn-secondary mb-0 mr-2">
+          <a href="{{ route('tesoreria.libro-diario.index') }}" class="btn btn-secondary mb-0">
             <i class="fas fa-book mr-1"></i> Libro Diario
           </a>
-          <a href="{{ route('tesoreria.gestion-cfe.estados-recaudacion') }}" class="btn btn-warning mb-0 mr-2">
+          <a href="{{ route('tesoreria.gestion-cfe.estados-recaudacion') }}" class="btn btn-warning mb-0">
             <i class="fas fa-chart-line mr-1"></i> Est. Rec.
           </a>
-          <a href="{{ route('tesoreria.gestion-cfe.recaudaciones') }}" class="btn btn-info mb-0 mr-2">
-            <i class="fas fa-hand-holding-usd mr-1"></i> Resumen
-          </a>
-          <button type="button" class="btn btn-success mb-0 mr-2"
+          <div class="btn-group mb-0 position-relative" role="group" x-data="{ open: false }" @click.outside="open = false">
+            <button type="button" class="btn btn-info dropdown-toggle" @click="open = !open" aria-haspopup="true" :aria-expanded="open">
+              <i class="fas fa-hand-holding-usd mr-1"></i> Resumen
+            </button>
+            <div class="dropdown-menu" :class="{ 'show': open }" style="display: block;" x-show="open" x-cloak>
+              <a class="dropdown-item" href="{{ route('tesoreria.gestion-cfe.recaudaciones') }}">
+                <i class="fas fa-list-alt mr-2"></i>Resumen Detallado
+              </a>
+              <a class="dropdown-item" href="{{ route('tesoreria.gestion-cfe.dashboard') }}">
+                <i class="fas fa-chart-pie mr-2"></i>Indicadores
+              </a>
+            </div>
+          </div>
+          <button type="button" class="btn btn-success mb-0"
             wire:click="nuevoCfe">
             <i class="fas fa-plus-circle mr-1"></i> Nuevo
           </button>
           <label for="archivoPdfInput" class="btn btn-primary mb-0 cursor-pointer"
             wire:loading.attr="disabled" wire:target="archivoPdf">
-            <i class="fas fa-file-upload mr-1"></i> Cargar CFE
+            <i class="fas fa-file-upload mr-1"></i> Cargar
           </label>
-          <input type="file" id="archivoPdfInput" wire:model="archivoPdf" class="d-none"
+          <input type="file" id="archivoPdfInput" wire:model.live="archivoPdf" class="d-none"
             accept="application/pdf">
         </div>
       </div>
@@ -70,12 +80,12 @@
             <div class="input-group-prepend">
               <span class="input-group-text"><i class="fas fa-search"></i></span>
             </div>
-            <input type="text" wire:model.debounce.300ms="search" class="form-control"
+            <input type="text" wire:model.live.debounce.300ms="search" class="form-control"
               placeholder="Buscar por número, receptor o RUC...">
           </div>
         </div>
         <div class="mr-2" style="width: 230px;">
-          <select wire:model="filtroConcepto" class="form-control">
+          <select wire:model.live="filtroConcepto" class="form-control">
             <option value="">— Filtrar por concepto —</option>
             @foreach($cajaConceptos as $concepto)
               <option value="{{ $concepto->id }}">{{ $concepto->caja_concepto }}</option>
@@ -108,14 +118,14 @@
             @endphp
             @foreach($mesesNombres as $num => $nombre)
               <div class="custom-control custom-checkbox mb-2">
-                <input type="checkbox" id="mes_{{ $num }}" value="{{ $num }}" wire:model="filtroMeses" class="custom-control-input">
+                <input type="checkbox" id="mes_{{ $num }}" value="{{ $num }}" wire:model.live="filtroMeses" class="custom-control-input">
                 <label for="mes_{{ $num }}" class="custom-control-label small cursor-pointer w-100">{{ $nombre }}</label>
               </div>
             @endforeach
           </div>
         </div>
         <div class="mr-2" style="width: 110px;">
-          <select wire:model="filtroAno" class="form-control">
+          <select wire:model.live="filtroAno" class="form-control">
             <option value="0">— Todos los años —</option>
             @foreach($anosRegistrados as $ano)
               <option value="{{ $ano }}">{{ $ano }}</option>
@@ -238,14 +248,14 @@
                     <p class="text-muted mb-3 small">Comience cargando un CFE desde un PDF o créelo manualmente.</p>
                     <div class="d-flex justify-content-center gap-2">
                       <label for="archivoPdfInputEmpty" class="btn btn-primary btn-sm mb-0 cursor-pointer mr-2">
-                        <i class="fas fa-file-upload mr-1"></i> Cargar CFE
+                        <i class="fas fa-file-upload mr-1"></i> Cargar
                       </label>
                       <button type="button" class="btn btn-success btn-sm mb-0"
                         wire:click="nuevoCfe">
                         <i class="fas fa-plus-circle mr-1"></i> Nuevo
                       </button>
                     </div>
-                    <input type="file" id="archivoPdfInputEmpty" wire:model="archivoPdf" class="d-none" accept="application/pdf">
+                    <input type="file" id="archivoPdfInputEmpty" wire:model.live="archivoPdf" class="d-none" accept="application/pdf">
                   </div>
                 </td>
               </tr>

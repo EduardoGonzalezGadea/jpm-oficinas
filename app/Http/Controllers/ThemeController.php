@@ -34,40 +34,34 @@ class ThemeController extends Controller
             $themePath = 'libs/bootstrap-4.6.2-dist/css/bootstrap.min.css';
         }
 
-        // El cache busting sigue siendo una buena práctica.
-        $themePathWithBusting = $themePath ? $themePath . '?v=' . time() : '';
-
         // Guardar en el perfil del usuario si está autenticado
         $user = auth()->user();
 
-        // Si no hay usuario en la sesión web, intentar recuperarlo del token JWT (cookie)
         if (!$user) {
             $token = $request->cookie('jwt_token');
             if ($token) {
                 try {
-                    $user = \PHPOpenSourceSaver\JWTAuth\Facades\JWTAuth::setToken($token)->toUser();
+                    $payload = \PHPOpenSourceSaver\JWTAuth\Facades\JWTAuth::setToken($token)->getPayload();
+                    $userId = $payload->get('sub');
+                    if ($userId) {
+                        $user = \App\Models\User::find($userId);
+                    }
                 } catch (\Exception $e) {
-                    // Ignorar errores de token aquí
+                    // Token inválido o expirado
                 }
             }
         }
 
         if ($user instanceof \App\Models\User) {
             $user->update(['theme' => $theme]);
-
-            // Si el usuario fue recuperado vía JWT pero no estaba en la sesión web, 
-            // lo logueamos en la sesión web para sincronizar ambos estados.
-            if (!auth()->check()) {
-                auth()->login($user);
-            }
         }
 
         // Definimos la duración de la cookie en minutos (1 año = 525600 minutos)
         $cookieDuration = 525600;
 
-        // Creamos las cookies
-        $themeNameCookie = Cookie::make('theme_name', $theme, $cookieDuration);
-        $themePathCookie = Cookie::make('theme_path', $themePathWithBusting, $cookieDuration);
+        // Creamos las cookies con los mismos nombres que lee theme-change.js
+        $themeNameCookie = Cookie::make('bootswatch-theme-name', $theme, $cookieDuration);
+        $themePathCookie = Cookie::make('bootswatch-theme', asset($themePath), $cookieDuration);
 
         // Si es una petición AJAX (desde JS fetch), devolvemos JSON
         if ($request->expectsJson()) {

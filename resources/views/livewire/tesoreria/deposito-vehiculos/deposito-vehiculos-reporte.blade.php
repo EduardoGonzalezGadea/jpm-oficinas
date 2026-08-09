@@ -9,7 +9,7 @@
           </a>
         </div>
         <div class="card-body py-2">
-          <form wire:submit.prevent="buscar">
+          <form wire:submit="buscar">
             <div class="row">
               <!-- Grupo 1: Cronología y Fechas (Ancho Total) -->
               <div class="col-md-12">
@@ -25,20 +25,20 @@
                           <div class="col-6 mb-1">
                             <div class="input-group input-group-sm">
                               <div class="input-group-prepend"><span class="input-group-text">Desde</span></div>
-                              <input type="date" class="form-control" wire:model.defer="filters.fecha_desde">
+                              <input type="date" class="form-control" wire:model="filters.fecha_desde">
                             </div>
                           </div>
                           <div class="col-6 mb-1">
                             <div class="input-group input-group-sm">
                               <div class="input-group-prepend"><span class="input-group-text">Hasta</span></div>
-                              <input type="date" class="form-control" wire:model.defer="filters.fecha_hasta">
+                              <input type="date" class="form-control" wire:model="filters.fecha_hasta">
                             </div>
                           </div>
                         </div>
                       </div>
                       <div class="col-md-3">
                         <label class="mb-0 small">Mes Referencia</label>
-                        <select class="form-control form-control-sm" wire:model.defer="filters.mes">
+                        <select class="form-control form-control-sm" wire:model="filters.mes">
                           <option value="">Todos</option>
                           @foreach(range(1, 12) as $m)
                           <option value="{{ $m }}">{{ \Carbon\Carbon::create()->month($m)->monthName }}</option>
@@ -47,7 +47,7 @@
                       </div>
                       <div class="col-md-3">
                         <label class="mb-0 small">Año</label>
-                        <input type="number" class="form-control form-control-sm" wire:model.defer="filters.year">
+                        <input type="number" class="form-control form-control-sm" wire:model="filters.year">
                       </div>
                     </div>
                   </div>
@@ -67,10 +67,10 @@
                         <label class="mb-1 small font-weight-bold">Datos del Titular</label>
                         <div class="form-row">
                           <div class="col-md-8 mb-2">
-                            <input type="text" class="form-control form-control-sm" placeholder="Nombre completo del titular" wire:model.defer="filters.titular">
+                            <input type="text" class="form-control form-control-sm" placeholder="Nombre completo del titular" wire:model="filters.titular">
                           </div>
                           <div class="col-md-4 mb-2">
-                            <input type="text" class="form-control form-control-sm" placeholder="Documento / RUT" wire:model.defer="filters.cedula">
+                            <input type="text" class="form-control form-control-sm" placeholder="Documento / RUT" wire:model="filters.cedula">
                           </div>
                         </div>
                       </div>
@@ -80,13 +80,13 @@
                         <label class="mb-1 small font-weight-bold">Identificación del Pago</label>
                         <div class="form-row">
                           <div class="col-md-2 mb-2">
-                            <input type="text" class="form-control form-control-sm" placeholder="Serie" wire:model.defer="filters.recibo_serie">
+                            <input type="text" class="form-control form-control-sm" placeholder="Serie" wire:model="filters.recibo_serie">
                           </div>
                           <div class="col-md-5 mb-2">
-                            <input type="text" class="form-control form-control-sm" placeholder="Nro. Recibo" wire:model.defer="filters.recibo_numero">
+                            <input type="text" class="form-control form-control-sm" placeholder="Nro. Recibo" wire:model="filters.recibo_numero">
                           </div>
                           <div class="col-md-5 mb-2">
-                            <input type="text" class="form-control form-control-sm" placeholder="Orden de Cobro" wire:model.defer="filters.orden_cobro">
+                            <input type="text" class="form-control form-control-sm" placeholder="Orden de Cobro" wire:model="filters.orden_cobro">
                           </div>
                         </div>
                       </div>
@@ -95,7 +95,7 @@
                     <div class="form-row border-top mt-2 pt-2">
                       <div class="col-md-4 mb-1">
                         <label class="mb-0 small">Medio de Pago</label>
-                        <select class="form-control form-control-sm" wire:model.defer="filters.medio_pago_id">
+                        <select class="form-control form-control-sm" wire:model="filters.medio_pago_id">
                           <option value="">TODOS</option>
                           @foreach($mediosPago as $medio)
                           <option value="{{ $medio->id }}">{{ $medio->nombre }}</option>
@@ -108,13 +108,13 @@
                           <div class="col-6">
                             <div class="input-group input-group-sm">
                               <div class="input-group-prepend"><span class="input-group-text">$</span></div>
-                              <input type="number" step="0.01" class="form-control" placeholder="Min" wire:model.defer="filters.monto_min">
+                              <input type="number" step="0.01" class="form-control" placeholder="Min" wire:model="filters.monto_min">
                             </div>
                           </div>
                           <div class="col-6">
                             <div class="input-group input-group-sm">
                               <div class="input-group-prepend"><span class="input-group-text">$</span></div>
-                              <input type="number" step="0.01" class="form-control" placeholder="Max" wire:model.defer="filters.monto_max">
+                              <input type="number" step="0.01" class="form-control" placeholder="Max" wire:model="filters.monto_max">
                             </div>
                           </div>
                         </div>

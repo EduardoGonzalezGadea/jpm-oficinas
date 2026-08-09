@@ -5,49 +5,55 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="user-authenticated" content="{{ auth()->check() ? 'true' : 'false' }}">
 
     <link rel="icon" type="image/x-icon" href="{{ asset('images/icons/jpm.png') }}">
 
     <title>@yield('title', 'Tesorería | Oficinas')</title>
 
-    <!-- Bootstrap 4 CSS -->
-    <link href="{{ asset('libs/bootstrap-4.6.2-dist/css/bootstrap.min.css') }}" rel="stylesheet">
-
-    <!-- Script para cargar el tema dinámico y evitar parpadeos -->
+    <!-- Pre-cargar color de fondo para evitar FOUC (flash blanco) -->
+    @auth
+    @php
+        $darkThemes = ['darkly', 'slate', 'cyborg', 'superhero', 'vapor', 'material'];
+        $bgColor = in_array(auth()->user()->theme, $darkThemes) ? '#222222' : '#ffffff';
+    @endphp
+    <style>html { background-color: {{ $bgColor }}; }</style>
+    @else
     <script>
         (function() {
-            @auth
-            // Obtener el tema guardado en el perfil del usuario
-            const userThemePath = "{{ auth()->user()->theme_path }}";
-            const userThemeName = "{{ auth()->user()->theme }}";
-
-            // Sincronizar con LocalStorage para coherencia con el resto de la App
-            localStorage.setItem("bootswatch-theme", userThemePath);
-            localStorage.setItem("bootswatch-theme-name", userThemeName);
-
-            // Crear y agregar el elemento link
-            const themeLink = document.createElement('link');
-            themeLink.id = 'bootswatch-theme';
-            themeLink.rel = 'stylesheet';
-            themeLink.href = userThemePath;
-            document.head.appendChild(themeLink);
-            @else
-            // Para invitados, no cargamos ningún tema de Bootswatch, dejando el Bootstrap base.
-            localStorage.removeItem("bootswatch-theme");
-            localStorage.removeItem("bootswatch-theme-name");
-            @endauth
+            try {
+                var t = localStorage.getItem("bootswatch-theme-name") || "cosmo";
+                var d = ["darkly","slate","cyborg","superhero","vapor","material"];
+                document.documentElement.style.backgroundColor = d.indexOf(t) >= 0 ? "#222222" : "#ffffff";
+            } catch(e) {}
         })();
     </script>
+    @endauth
+
+    <!-- Bootstrap 4 CSS: carga directa del tema del usuario (sin flash) -->
+    @auth
+    <link id="bootswatch-theme" href="{{ auth()->user()->theme_path }}" data-theme-name="{{ auth()->user()->theme ?? 'cosmo' }}" rel="stylesheet">
+    <!-- Sincronizar localStorage con el tema del servidor (evita rasgos del usuario anterior) -->
+    <script>
+        (function() {
+            try {
+                localStorage.setItem("bootswatch-theme", "{{ auth()->user()->theme_path }}");
+                localStorage.setItem("bootswatch-theme-name", "{{ auth()->user()->theme ?? 'cosmo' }}");
+            } catch(e) {}
+        })();
+    </script>
+    @else
+    <link id="bootswatch-theme" href="{{ asset('libs/bootstrap-4.6.2-dist/css/bootstrap.min.css') }}" data-theme-name="default" rel="stylesheet">
+    @endauth
 
     <!-- Estilos personalizados -->
     <link href="{{ asset('css/app.css') }}" rel="stylesheet">
     <!-- Font Awesome -->
     <link href="{{ asset('libs/fontawesome-free-5.15.4-web/css/all.min.css') }}" rel="stylesheet">
 
-    {{-- Alpine.js CDN --}}
-    <script defer src="{{ asset('libs/alpinejs@3.14.9/dist/cdn.min.js') }}"></script>
 
-    @livewireStyles
+
+
     @yield('styles')
 
     @routes
@@ -113,7 +119,7 @@
         @yield('content')
     </main>
 
-    @livewireScripts
+
 
     <!-- Bootstrap 4 JS -->
     <script src="{{ asset('libs/jquery/js/jquery-3.6.0.min.js') }}"></script>
@@ -126,18 +132,22 @@
     @stack('scripts')
 
     <!-- Lógica para el tema dinámico -->
-    <script src="{{ asset('js/theme-change.js') }}"></script>
+    <script src="{{ asset('js/theme-change.js') }}?v={{ filemtime(public_path('js/theme-change.js')) }}"></script>
 
-    <!-- Limpiar cualquier token de sesión existente para vistas públicas -->
+    <!-- Limpiar tokens de sesión para vistas públicas (preserva cookies de tema) -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Eliminar cualquier token JWT almacenado para evitar acceso no autorizado
             localStorage.removeItem('jwt_token');
             sessionStorage.removeItem('jwt_token');
 
-            // Eliminar cookies de autenticación si existen
+            // Eliminar cookies de autenticación si existen, pero preservar las de tema
             document.cookie.split(";").forEach(function(c) {
-                document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+                var cookieName = c.replace(/^ +/, "").replace(/=.*/, "");
+                // No borrar las cookies del tema (bootswatch-theme, bootswatch-theme-name)
+                if (cookieName !== 'bootswatch-theme' && cookieName !== 'bootswatch-theme-name') {
+                    document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+                }
             });
         });
     </script>

@@ -48,6 +48,55 @@ class Pago extends Model
 
     protected $dates = ['deleted_at'];
 
+    // Referencias a documentos siempre en mayúsculas (respeta acentos/n.e.)
+    public function setEgresoPagosAttribute($value)
+    {
+        $this->attributes['egresoPagos'] = $this->normalizarReferencia($value);
+    }
+
+    public function setIngresoPagosAttribute($value)
+    {
+        $this->attributes['ingresoPagos'] = $this->normalizarReferencia($value);
+    }
+
+    public function setIngresoPagosBSEAttribute($value)
+    {
+        $this->attributes['ingresoPagosBSE'] = $this->normalizarReferencia($value);
+    }
+
+    public function setIngresoReintegroPagosAttribute($value)
+    {
+        $this->attributes['ingresoReintegroPagos'] = $this->normalizarReferencia($value);
+    }
+
+    public function getEgresoPagosAttribute($value)
+    {
+        return $this->normalizarReferencia($value);
+    }
+
+    public function getIngresoPagosAttribute($value)
+    {
+        return $this->normalizarReferencia($value);
+    }
+
+    public function getIngresoPagosBSEAttribute($value)
+    {
+        return $this->normalizarReferencia($value);
+    }
+
+    public function getIngresoReintegroPagosAttribute($value)
+    {
+        return $this->normalizarReferencia($value);
+    }
+
+    protected function normalizarReferencia($value)
+    {
+        if (is_null($value) || trim((string)$value) === '') {
+            return null;
+        }
+        return mb_strtoupper(trim((string)$value), 'UTF-8');
+    }
+
     // Relaciones
     public function cajaChica()
     {

@@ -3,7 +3,7 @@
   <div class="modal fade" id="modalNuevoPago" tabindex="-1" wire:ignore.self>
     <div class="modal-dialog">
       <div class="modal-content">
-        <form wire:submit.prevent="guardar">
+        <form wire:submit="guardar">
           <div class="modal-header bg-info text-white">
             <h5 class="modal-title">
               <i class="far fa-handshake"></i>
@@ -32,13 +32,13 @@
             </div>
             @endif
 
-            <input type="hidden" wire:model="idCajaChica">
+            <input type="hidden" wire:model.live="idCajaChica">
 
             <div class="form-group">
               <label for="pagoFechaEgreso">Fecha Egreso:</label>
               <input type="date"
                 class="form-control @error('fechaEgresoPagos') is-invalid @enderror"
-                id="pagoFechaEgreso" wire:model.defer="fechaEgresoPagos" required>
+                id="pagoFechaEgreso" wire:model="fechaEgresoPagos" required>
               @error('fechaEgresoPagos')
               <div class="invalid-feedback">{{ $message }}</div>
               @enderror
@@ -46,8 +46,8 @@
 
             <div class="form-group">
               <label for="pagoEgreso">Egreso (Opcional):</label>
-              <input type="text" class="form-control @error('egresoPagos') is-invalid @enderror"
-                id="pagoEgreso" wire:model.defer="egresoPagos" autofocus
+              <input type="text" class="form-control text-uppercase @error('egresoPagos') is-invalid @enderror"
+                id="pagoEgreso" wire:model="egresoPagos" autofocus
                 placeholder="Número de egreso (opcional)">
               @error('egresoPagos')
               <div class="invalid-feedback">{{ $message }}</div>
@@ -57,7 +57,7 @@
             <div class="form-group">
               <label for="pagoAcreedor">Acreedor:</label>
               <select class="form-control @error('relAcreedores') is-invalid @enderror"
-                id="pagoAcreedor" wire:model.defer="relAcreedores">
+                id="pagoAcreedor" wire:model="relAcreedores">
                 <option value="">Seleccionar Acreedor...</option>
                 @foreach ($acreedores as $acreedor)
                 <option value="{{ $acreedor->idAcreedores }}">{{ $acreedor->acreedor }}</option>
@@ -71,7 +71,7 @@
             <div class="form-group">
               <label for="pagoConcepto">Concepto:</label>
               <input type="text" class="form-control @error('conceptoPagos') is-invalid @enderror"
-                id="pagoConcepto" wire:model.defer="conceptoPagos" required>
+                id="pagoConcepto" wire:model="conceptoPagos" required>
               @error('conceptoPagos')
               <div class="invalid-feedback">{{ $message }}</div>
               @enderror
@@ -81,7 +81,7 @@
               <label for="pagoMonto">Monto:</label>
               <input type="number" step="0.01"
                 class="form-control @error('montoPagos') is-invalid @enderror" id="pagoMonto"
-                wire:model.defer="montoPagos" required min="0.01">
+                wire:model="montoPagos" required min="0.01">
               @error('montoPagos')
               <div class="invalid-feedback">{{ $message }}</div>
               @enderror

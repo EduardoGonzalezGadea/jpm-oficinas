@@ -90,7 +90,7 @@
       <div class="row mb-2 align-items-center">
         <div class="col-md-5">
           <div class="input-group input-group-sm">
-            <input wire:model.debounce.800ms="search" type="text" class="form-control d-print-none" autofocus
+            <input wire:model.live.debounce.800ms="search" type="text" class="form-control d-print-none" autofocus
               placeholder="Buscar por artículo.apartado o por descripción...">
             <div class="input-group-append d-print-none">
               <button class="btn btn-outline-danger" type="button" wire:click="$set('search', '')" title="Limpiar filtro">
@@ -116,7 +116,7 @@
           </button>
         </div>
         <div class="col-auto d-print-none">
-          <select wire:model="perPage" class="form-control form-control-sm">
+          <select wire:model.live="perPage" class="form-control form-control-sm">
             <option value="50">50</option>
             <option value="100">100</option>
             <option value="-1">Todos</option>
@@ -233,31 +233,31 @@
           <button type="button" class="close" wire:click="closeModal()"><span>&times;</span></button>
         </div>
 
-        <form wire:submit.prevent="store">
+        <form wire:submit="store">
           <div class="modal-body py-3" style="overflow-y: auto; max-height: 70vh;">
             <div class="row">
               <div class="col-md-6 form-group mb-2">
                 <label for="articulo" class="mb-1 small"><strong>Artículo <span class="text-danger">*</span></strong></label>
-                <input wire:model.defer="articulo" type="text" class="form-control form-control-sm @error('articulo') is-invalid @enderror" id="articulo" placeholder="Ej: 103">
+                <input wire:model="articulo" type="text" class="form-control form-control-sm @error('articulo') is-invalid @enderror" id="articulo" placeholder="Ej: 103">
                 @error('articulo')<div class="invalid-feedback">{{ $message }}</div>@enderror
               </div>
               <div class="col-md-6 form-group mb-2">
                 <label for="apartado" class="mb-1 small"><strong>Apartado</strong></label>
-                <input wire:model.defer="apartado" type="text" class="form-control form-control-sm @error('apartado') is-invalid @enderror" id="apartado" placeholder="Ej: 2A">
+                <input wire:model="apartado" type="text" class="form-control form-control-sm @error('apartado') is-invalid @enderror" id="apartado" placeholder="Ej: 2A">
                 @error('apartado')<div class="invalid-feedback">{{ $message }}</div>@enderror
               </div>
             </div>
 
             <div class="form-group mb-2">
               <label for="descripcion" class="mb-1 small"><strong>Descripción <span class="text-danger">*</span></strong></label>
-              <textarea wire:model.defer="descripcion" class="form-control form-control-sm @error('descripcion') is-invalid @enderror" id="descripcion" rows="2" placeholder="Descripción de la multa"></textarea>
+              <textarea wire:model="descripcion" class="form-control form-control-sm @error('descripcion') is-invalid @enderror" id="descripcion" rows="2" placeholder="Descripción de la multa"></textarea>
               @error('descripcion')<div class="invalid-feedback">{{ $message }}</div>@enderror
             </div>
 
             <div class="row">
               <div class="col-md-3 form-group mb-2">
                 <label for="moneda" class="mb-1 small"><strong>Moneda <span class="text-danger">*</span></strong></label>
-                <select wire:model="moneda" class="form-control form-control-sm @error('moneda') is-invalid @enderror" id="moneda">
+                <select wire:model.live="moneda" class="form-control form-control-sm @error('moneda') is-invalid @enderror" id="moneda">
                   <option value="UR">UR</option>
                   <option value="USD">USD</option>
                   <option value="UYU">UYU</option>
@@ -266,19 +266,19 @@
               </div>
               <div class="col-md-5 form-group mb-2">
                 <label for="importe_original" class="mb-1 small"><strong>Importe Original <span class="text-danger">*</span></strong></label>
-                <input wire:model.defer="importe_original" type="number" step="0.01" class="form-control form-control-sm @error('importe_original') is-invalid @enderror" id="importe_original" placeholder="0.00">
+                <input wire:model="importe_original" type="number" step="0.01" class="form-control form-control-sm @error('importe_original') is-invalid @enderror" id="importe_original" placeholder="0.00">
                 @error('importe_original')<div class="invalid-feedback">{{ $message }}</div>@enderror
               </div>
               <div class="col-md-4 form-group mb-2">
                 <label for="importe_unificado" class="mb-1 small"><strong>Importe Unificado</strong></label>
-                <input wire:model.defer="importe_unificado" type="number" step="0.01" class="form-control form-control-sm @error('importe_unificado') is-invalid @enderror" id="importe_unificado" placeholder="0.00 (opcional)">
+                <input wire:model="importe_unificado" type="number" step="0.01" class="form-control form-control-sm @error('importe_unificado') is-invalid @enderror" id="importe_unificado" placeholder="0.00 (opcional)">
                 @error('importe_unificado')<div class="invalid-feedback">{{ $message }}</div>@enderror
               </div>
             </div>
 
             <div class="form-group mb-2">
               <label for="decreto" class="mb-1 small"><strong>Decreto</strong></label>
-              <input wire:model.defer="decreto" type="text" class="form-control form-control-sm @error('decreto') is-invalid @enderror" id="decreto" placeholder="Ej: Decreto Nº 81/014">
+              <input wire:model="decreto" type="text" class="form-control form-control-sm @error('decreto') is-invalid @enderror" id="decreto" placeholder="Ej: Decreto Nº 81/014">
               @error('decreto')<div class="invalid-feedback">{{ $message }}</div>@enderror
             </div>
 

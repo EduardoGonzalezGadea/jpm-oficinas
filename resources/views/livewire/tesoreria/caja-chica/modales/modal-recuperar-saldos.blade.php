@@ -18,7 +18,7 @@
               <label for="recuperacion_fecha">Fecha de Recuperación *</label>
               <input type="date" id="recuperacion_fecha"
                 class="form-control @error('recuperacion.fecha') is-invalid @enderror"
-                wire:model.defer="recuperacion.fecha">
+                wire:model="recuperacion.fecha">
               @error('recuperacion.fecha')
               <span class="invalid-feedback">{{ $message }}</span>
               @enderror
@@ -26,8 +26,8 @@
             <div class="col-md-4 form-group">
               <label for="recuperacion_numero_ingreso">Número de Ingreso *</label>
               <input type="text" id="recuperacion_numero_ingreso"
-                class="form-control @error('recuperacion.numero_ingreso') is-invalid @enderror"
-                wire:model.defer="recuperacion.numero_ingreso" placeholder="Ej: 12345">
+                class="form-control text-uppercase @error('recuperacion.numero_ingreso') is-invalid @enderror"
+                wire:model="recuperacion.numero_ingreso" placeholder="Ej: 12345">
               @error('recuperacion.numero_ingreso')
               <span class="invalid-feedback">{{ $message }}</span>
               @enderror
@@ -50,7 +50,7 @@
             <table class="table table-sm table-bordered table-striped table-hover table-compact">
               <thead>
                 <tr>
-                  <th width="5%" class="align-middle"><input type="checkbox" wire:model="seleccionarTodos">
+                  <th width="5%" class="align-middle"><input type="checkbox" wire:model.live="seleccionarTodos">
                   </th>
                   <th class="align-middle">Tipo</th>
                   <th class="align-middle">Detalle</th>
@@ -60,7 +60,7 @@
               <tbody>
                 @forelse ($itemsParaRecuperar as $item)
                 <tr wire:key="rec-item-{{ $item['id'] }}">
-                  <td><input type="checkbox" wire:model="itemsSeleccionados"
+                  <td><input type="checkbox" wire:model.live="itemsSeleccionados"
                       value="{{ $item['id'] }}"></td>
                   <td><span
                       class="badge badge-{{ $item['tipo'] == 'Pendiente' ? 'info' : 'warning' }}">{{ $item['tipo'] }}</span>

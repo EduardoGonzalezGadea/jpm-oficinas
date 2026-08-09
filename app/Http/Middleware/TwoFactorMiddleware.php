@@ -28,7 +28,8 @@ class TwoFactorMiddleware
                 if (
                     $request->routeIs('two-factor.login') ||
                     $request->routeIs('two-factor.verify') ||
-                    $request->routeIs('logout')
+                    $request->routeIs('logout') ||
+                    $request->routeIs('theme.switch')
                 ) {
                     return $next($request);
                 }

@@ -8,35 +8,35 @@
         </button>
       </div>
       <div class="modal-body">
-        <form wire:submit.prevent="save">
+        <form wire:submit="save">
           <div class="form-group">
             <label for="fecha_recibido">Fecha de Recepción</label>
-            <input type="date" wire:model.defer="fecha_recibido" class="form-control" id="fecha_recibido">
+            <input type="date" wire:model="fecha_recibido" class="form-control" id="fecha_recibido">
             @error('fecha_recibido') <span class="text-danger">{{ $message }}</span> @enderror
           </div>
           <div class="form-group">
             <label for="titular_cedula">Cédula del Titular</label>
-            <input type="text" wire:model.defer="titular_cedula" class="form-control" id="titular_cedula" placeholder="Ej: 1.234.567-8">
+            <input type="text" wire:model="titular_cedula" class="form-control" id="titular_cedula" placeholder="Ej: 1.234.567-8">
             @error('titular_cedula') <span class="text-danger">{{ $message }}</span> @enderror
           </div>
           <div class="form-group">
             <label for="titular_nombre">Nombres del Titular</label>
-            <input type="text" wire:model.defer="titular_nombre" class="form-control" id="titular_nombre">
+            <input type="text" wire:model="titular_nombre" class="form-control" id="titular_nombre">
             @error('titular_nombre') <span class="text-danger">{{ $message }}</span> @enderror
           </div>
           <div class="form-group">
             <label for="titular_apellido">Apellidos del Titular</label>
-            <input type="text" wire:model.defer="titular_apellido" class="form-control" id="titular_apellido">
+            <input type="text" wire:model="titular_apellido" class="form-control" id="titular_apellido">
             @error('titular_apellido') <span class="text-danger">{{ $message }}</span> @enderror
           </div>
           <div class="form-group">
             <label for="numero_tarjeta">Número de Tarjeta</label>
-            <input type="text" wire:model.defer="numero_tarjeta" class="form-control" id="numero_tarjeta">
+            <input type="text" wire:model="numero_tarjeta" class="form-control" id="numero_tarjeta">
             @error('numero_tarjeta') <span class="text-danger">{{ $message }}</span> @enderror
           </div>
           <div class="form-group">
             <label for="observaciones">Observaciones</label>
-            <textarea wire:model.defer="observaciones" class="form-control" id="observaciones" rows="3"></textarea>
+            <textarea wire:model="observaciones" class="form-control" id="observaciones" rows="3"></textarea>
             @error('observaciones') <span class="text-danger">{{ $message }}</span> @enderror
           </div>
         </form>

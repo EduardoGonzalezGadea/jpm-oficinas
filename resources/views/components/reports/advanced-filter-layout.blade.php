@@ -10,7 +10,7 @@
                     <strong>Instrucciones:</strong> Seleccione los criterios de búsqueda deseados. El reporte se generará únicamente si especifica al menos un filtro.
                 </div>
 
-                <form wire:submit.prevent="validateAndGenerate">
+                <form wire:submit="validateAndGenerate">
                     {{ $slot }}
 
                     <div class="row mt-4">

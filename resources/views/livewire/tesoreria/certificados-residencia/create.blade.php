@@ -8,25 +8,25 @@
         </button>
       </div>
       <div class="modal-body">
-        <form wire:submit.prevent="save">
+        <form wire:submit="save">
           <div class="form-group">
             <label for="fecha_recibido">Fecha de Recepción</label>
-            <input type="date" wire:model.defer="fecha_recibido" class="form-control" id="fecha_recibido">
+            <input type="date" wire:model="fecha_recibido" class="form-control" id="fecha_recibido">
             @error('fecha_recibido') <span class="text-danger">{{ $message }}</span> @enderror
           </div>
           <div class="form-group">
             <label for="titular_nombre">Nombre del Titular</label>
-            <input type="text" wire:model.defer="titular_nombre" class="form-control" id="titular_nombre">
+            <input type="text" wire:model="titular_nombre" class="form-control" id="titular_nombre">
             @error('titular_nombre') <span class="text-danger">{{ $message }}</span> @enderror
           </div>
           <div class="form-group">
             <label for="titular_apellido">Apellido del Titular</label>
-            <input type="text" wire:model.defer="titular_apellido" class="form-control" id="titular_apellido">
+            <input type="text" wire:model="titular_apellido" class="form-control" id="titular_apellido">
             @error('titular_apellido') <span class="text-danger">{{ $message }}</span> @enderror
           </div>
           <div class="form-group">
             <label for="titular_tipo_documento">Tipo de Documento</label>
-            <select wire:model.defer="titular_tipo_documento" class="form-control" id="titular_tipo_documento">
+            <select wire:model="titular_tipo_documento" class="form-control" id="titular_tipo_documento">
               <option value="Cédula">Cédula</option>
               <option value="Cédula Extranjera">Cédula Extranjera</option>
               <option value="Pasaporte">Pasaporte</option>
@@ -36,7 +36,7 @@
           </div>
           <div class="form-group">
             <label for="titular_nro_documento">Nro. de Documento</label>
-            <input type="text" wire:model.defer="titular_nro_documento" class="form-control" id="titular_nro_documento">
+            <input type="text" wire:model="titular_nro_documento" class="form-control" id="titular_nro_documento">
             @error('titular_nro_documento') <span class="text-danger">{{ $message }}</span> @enderror
           </div>
         </form>

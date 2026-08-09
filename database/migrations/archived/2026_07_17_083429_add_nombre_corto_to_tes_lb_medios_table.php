@@ -11,6 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (Schema::hasTable('tes_lb_medios') && Schema::hasColumn('tes_lb_medios', 'nombre_corto')) {
+            return;
+        }
         Schema::table('tes_lb_medios', function (Blueprint $table) {
             $table->string('nombre_corto', 100)->after('nombre')->default('');
         });

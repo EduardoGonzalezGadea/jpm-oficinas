@@ -51,17 +51,11 @@ return [
      * Configuración de PROXY (auto-detectado desde env)
      */
     'proxy' => [
-        // Las siguientes variables se leen automáticamente:
-        // - HTTP_PROXY
-        // - HTTPS_PROXY
-        // - NO_PROXY
-        //
-        // Ejemplo en .env:
-        //   HTTP_PROXY=http://proxy.empresa.com:8080
-        //   HTTPS_PROXY=https://proxy.empresa.com:8080
-        //   NO_PROXY=localhost,127.0.0.1,.local
-        //
-        // El servicio HttpClientService las detecta y aplica automáticamente.
+        // Variables leídas desde .env y expuestas en el config para que funcionen
+        // tanto en modo normal como con config:cache activo.
+        'http'  => env('HTTP_PROXY',  env('http_proxy',  null)),
+        'https' => env('HTTPS_PROXY', env('https_proxy', null)),
+        'no'    => env('NO_PROXY',    env('no_proxy',    null)),
 
         'auto_detect' => true,
         'cache_detection' => true, // cachear detección por 1 hora
@@ -122,13 +116,17 @@ return [
     'sincronizacion_hora' => [
         'enabled' => env('SINCRONIZACION_HORA_ENABLED', true),
 
-        // URLs de APIs de tiempo (en orden de preferencia)
+        // URLs de fuentes de tiempo (en orden de preferencia).
+        // Para endpoints HTTP/HTML se usa el header Date (RFC 7231) que envían en GMT,
+        // sin depender de un JSON específico:
+        // - google.com y bps.gub.uy: coinciden exactamente con la hora real (verificado 2026-07)
+        // - bcu.gub.uy: hasta ~35s de adelanto, dentro del umbral de drift
+        // - timeapi.io: API JSON que hoy responde con ~17min de atraso (caché); queda como último recurso
         'urls' => [
-            'https://time.you/developer/api/timezone/America/Montevideo',
-            'https://worldontime.app/api/v1/time?timezone=America/Montevideo',
-            'https://worldtimeapi.org/api/timezone/America/Montevideo',
+            'https://www.google.com',
+            'https://www.bps.gub.uy/bps/valores.jsp?contentid=5478',
+            'https://www.bcu.gub.uy/Servicios-Financieros-SSF/Paginas/ImpPromCostoDelSOA.aspx',
             'https://timeapi.io/api/Time/current/zone?timeZone=America/Montevideo',
-            'http://worldtimeapi.org/api/timezone/America/Montevideo',
         ],
 
         // Timeout específico para esta descarga

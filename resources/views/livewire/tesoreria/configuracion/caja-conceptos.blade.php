@@ -1,4 +1,4 @@
-<div>
+﻿<div>
   <div class="row">
     <div class="col-md-12">
       <div class="card">
@@ -16,7 +16,7 @@
                 <div class="input-group-prepend">
                   <span class="input-group-text"><i class="fas fa-search"></i></span>
                 </div>
-                <input type="text" wire:model="search" id="search-caja-conceptos"
+                <input type="text" wire:model.live="search" id="search-caja-conceptos"
                   class="form-control"
                   placeholder="Buscar por nombre del concepto...">
               </div>
@@ -154,7 +154,7 @@
               <label for="caja_concepto">Nombre del Concepto *</label>
               <input type="text"
                 class="form-control @error('caja_concepto') is-invalid @enderror"
-                wire:model.defer="caja_concepto"
+                wire:model="caja_concepto"
                 id="caja_concepto"
                 placeholder="Ej: MULTAS DE TRÁNSITO"
                 required>
@@ -166,7 +166,7 @@
             <div class="form-group">
               <label for="siif_distribucion_tipo_id">Tipo de Distribución SIIF</label>
               <select class="form-control @error('siif_distribucion_tipo_id') is-invalid @enderror"
-                wire:model.defer="siif_distribucion_tipo_id"
+                wire:model="siif_distribucion_tipo_id"
                 id="siif_distribucion_tipo_id">
                 <option value="">— Sin tipo SIIF —</option>
                 @foreach ($siifTipos as $tipo)
@@ -183,7 +183,7 @@
               <label class="d-block mb-1">Opciones</label>
               <div class="custom-control custom-switch mb-2">
                 <input type="checkbox" class="custom-control-input"
-                  wire:model.defer="requiere_confirmacion"
+                  wire:model="requiere_confirmacion"
                   id="requiere_confirmacion">
                 <label class="custom-control-label" for="requiere_confirmacion">
                   Requiere Confirmación
@@ -192,7 +192,7 @@
               </div>
               <div class="custom-control custom-switch mb-2">
                 <input type="checkbox" class="custom-control-input"
-                  wire:model.defer="requiere_distribucion"
+                  wire:model="requiere_distribucion"
                   id="requiere_distribucion">
                 <label class="custom-control-label" for="requiere_distribucion">
                   Requiere Distribución
@@ -201,7 +201,7 @@
               </div>
               <div class="custom-control custom-switch">
                 <input type="checkbox" class="custom-control-input"
-                  wire:model.defer="permite_planilla"
+                  wire:model="permite_planilla"
                   id="permite_planilla">
                 <label class="custom-control-label" for="permite_planilla">
                   Permite Planilla
@@ -210,7 +210,7 @@
               </div>
               <div class="custom-control custom-switch">
                 <input type="checkbox" class="custom-control-input"
-                  wire:model.defer="requiere_organismo"
+                  wire:model="requiere_organismo"
                   id="requiere_organismo">
                 <label class="custom-control-label" for="requiere_organismo">
                   Requiere Organismo
@@ -290,31 +290,33 @@
   @push('scripts')
     <script>
       window.addEventListener('swal:confirm', event => {
+        const d = window.LiveEvent(event);
         Swal.fire({
-          title: event.detail.title,
-          text: event.detail.text,
+          title: d.title,
+          text: d.text,
           icon: 'warning',
           showCancelButton: true,
           confirmButtonColor: '#3085d6',
           cancelButtonColor: '#d33',
-          confirmButtonText: event.detail.confirmButtonText,
+          confirmButtonText: d.confirmButtonText,
           cancelButtonText: 'Cancelar',
           focusConfirm: true
         }).then((result) => {
           if (result.isConfirmed) {
-            @this.call(event.detail.method, event.detail.id);
+            @this.call(d.method, d.id);
           }
         });
       });
 
       window.addEventListener('show-modal', event => {
-        $('#' + event.detail.id).modal('show');
+        $('#' + window.LiveEvent(event).id).modal('show');
       });
 
       window.addEventListener('alert', event => {
-        const type = event.detail.type;
-        const message = event.detail.message;
-        const isToast = event.detail.toast || false;
+        const d = window.LiveEvent(event);
+        const type = d.type;
+        const message = d.message;
+        const isToast = d.toast || false;
 
         if (isToast) {
           Swal.fire({
@@ -336,17 +338,19 @@
         }
       });
 
-      window.livewire.on('cajaConceptoStore', () => {
+      document.addEventListener('livewire:init', function() {
+      Livewire.on('cajaConceptoStore', () => {
         $('#cajaConceptoModal').modal('hide');
       });
 
-      window.livewire.on('cajaConceptoUpdate', () => {
+      Livewire.on('cajaConceptoUpdate', () => {
         $('#cajaConceptoModal').modal('hide');
+      });
       });
 
       $(document).ready(function() {
         $('#cajaConceptoModal').on('hidden.bs.modal', function() {
-          window.livewire.emit('resetForm');
+          window.Livewire.dispatch('resetForm');
         });
       });
     </script>

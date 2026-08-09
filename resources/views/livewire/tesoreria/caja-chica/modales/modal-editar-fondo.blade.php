@@ -13,7 +13,7 @@
           </button>
         </div>
         <div class="modal-body">
-          <form wire:submit.prevent="actualizarFondo">
+          <form wire:submit="actualizarFondo">
             <div class="row">
               <div class="col-md-6">
                 <label for="editMes" class="form-label">Mes:</label>
@@ -36,7 +36,7 @@
                   </div>
                   <input type="number"
                     class="form-control @error('editandoFondo.monto') is-invalid @enderror"
-                    id="editMonto" wire:model="editandoFondo.monto" step="0.01"
+                    id="editMonto" wire:model.live="editandoFondo.monto" step="0.01"
                     min="0" max="99999999.99" placeholder="Ingrese el nuevo monto">
                 </div>
                 @error('editandoFondo.monto')

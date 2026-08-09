@@ -93,7 +93,7 @@
                 <div class="input-group-prepend">
                   <span class="input-group-text">Mes/Año</span>
                 </div>
-                <select id="mesSelector" class="form-control" wire:model="mes">
+                <select id="mesSelector" class="form-control" wire:model.live="mes">
                   <option value="1">Enero</option>
                   <option value="2">Febrero</option>
                   <option value="3">Marzo</option>
@@ -107,12 +107,12 @@
                   <option value="11">Noviembre</option>
                   <option value="12">Diciembre</option>
                 </select>
-                <input type="number" id="anioSelector" class="form-control" style="max-width: 100px;" wire:model="anio">
+                <input type="number" id="anioSelector" class="form-control" style="max-width: 100px;" wire:model.live="anio">
               </div>
             </div>
             <div class="col-md-7 d-print-none">
               <div class="input-group input-group-sm">
-                <input type="text" wire:model="search" id="search"
+                <input type="text" wire:model.live="search" id="search"
                   class="form-control"
                   placeholder="Buscar por nombre, recibo, cédula, concepto...">
                 <div class="input-group-append">
@@ -211,17 +211,17 @@
                   </div>
 
                   <div class="d-flex align-items-center">
-                    <div class="input-group input-group-sm mr-2" style="width: 140px;">
+                    <div wire:ignore class="input-group input-group-sm mr-2" style="width: 140px;">
                       <div class="input-group-prepend"><span class="input-group-text bg-white border-right-0 text-muted"><i class="fas fa-calendar-alt"></i></span></div>
-                      <input type="text" class="form-control border-left-0 datepicker-uy pl-0" wire:model="resumenFechaDesde" placeholder="Desde" style="font-size: 0.75rem;">
+                      <input type="text" class="form-control border-left-0 datepicker-uy pl-0" wire:model.live="resumenFechaDesde" placeholder="Desde" style="font-size: 0.75rem;">
                     </div>
-                    <div class="input-group input-group-sm mr-2" style="width: 140px;">
+                    <div wire:ignore class="input-group input-group-sm mr-2" style="width: 140px;">
                       <div class="input-group-prepend"><span class="input-group-text bg-white border-right-0 text-muted"><i class="fas fa-calendar-check"></i></span></div>
-                      <input type="text" class="form-control border-left-0 datepicker-uy pl-0" wire:model="resumenFechaHasta" placeholder="Hasta" style="font-size: 0.75rem;">
+                      <input type="text" class="form-control border-left-0 datepicker-uy pl-0" wire:model.live="resumenFechaHasta" placeholder="Hasta" style="font-size: 0.75rem;">
                     </div>
                     <div class="text-muted d-none d-lg-block" style="font-size: 0.7rem; line-height: 1.1;">
-                      Del <strong>{{ \Carbon\Carbon::parse($resumenFechaDesde)->format('d/m/y') }}</strong><br>
-                      Al <strong>{{ \Carbon\Carbon::parse($resumenFechaHasta)->format('d/m/y') }}</strong>
+                      Del <strong>{{ \Carbon\Carbon::parse($resumenFechaDesde ?: now())->format('d/m/y') }}</strong><br>
+                      Al <strong>{{ \Carbon\Carbon::parse($resumenFechaHasta ?: now())->format('d/m/y') }}</strong>
                     </div>
                   </div>
                 </div>
@@ -462,27 +462,27 @@
                       <label class="label-compact">Fecha de Cobro</label>
                       <div class="input-group input-group-sm">
                         <div class="input-group-prepend"><span class="input-group-text p-1 px-2 border-0 bg-transparent text-primary"><i class="fas fa-calendar-day"></i></span></div>
-                        <input type="text" class="form-control form-control-compact datepicker-uy @error('fecha') is-invalid @enderror" wire:model.defer="fecha">
+                        <input type="text" class="form-control form-control-compact datepicker-uy @error('fecha') is-invalid @enderror" wire:model="fecha">
                       </div>
                     </div>
                     <div class="col-md-2 mb-1 mb-md-0">
                       <label class="label-compact">Nro. Recibo</label>
                       <div class="input-group input-group-sm">
                         <div class="input-group-prepend"><span class="input-group-text p-1 px-2 border-0 bg-transparent text-primary"><i class="fas fa-hashtag"></i></span></div>
-                        <input type="text" id="input-recibo" class="form-control form-control-compact @error('recibo') is-invalid @enderror" wire:model.defer="recibo" placeholder="A-XXXX">
+                        <input type="text" id="input-recibo" class="form-control form-control-compact @error('recibo') is-invalid @enderror" wire:model="recibo" placeholder="A-XXXX">
                       </div>
                     </div>
                     <div class="col-md-2 mb-1 mb-md-0">
                       <label class="label-compact">Cédula / RUT</label>
-                      <input type="text" class="form-control form-control-compact @error('cedula') is-invalid @enderror" wire:model.defer="cedula" placeholder="12345678">
+                      <input type="text" class="form-control form-control-compact @error('cedula') is-invalid @enderror" wire:model="cedula" placeholder="12345678">
                     </div>
                     <div class="col-md-3 mb-1 mb-md-0">
                       <label class="label-compact">Nombre / Razón Social</label>
-                      <input type="text" class="form-control form-control-compact @error('nombre') is-invalid @enderror" wire:model.defer="nombre" placeholder="Nombre completo...">
+                      <input type="text" class="form-control form-control-compact @error('nombre') is-invalid @enderror" wire:model="nombre" placeholder="Nombre completo...">
                     </div>
                     <div class="col-md-3">
                       <label class="label-compact">Domicilio</label>
-                      <input type="text" class="form-control form-control-compact" wire:model.defer="domicilio" placeholder="Dirección...">
+                      <input type="text" class="form-control form-control-compact" wire:model="domicilio" placeholder="Dirección...">
                     </div>
                   </div>
                 </div>
@@ -515,13 +515,13 @@
                         @foreach($items_form as $index => $item)
                         <tr class="item-row" wire:key="item-row-{{ $item['_uid'] ?? $index }}">
                           <td class="pl-3">
-                            <input type="text" wire:model.defer="items_form.{{ $index }}.detalle"
+                            <input type="text" wire:model="items_form.{{ $index }}.detalle"
                               wire:key="detalle-{{ $item['_uid'] }}"
                               class="form-control form-control-compact @error('items_form.'.$index.'.detalle') is-invalid @enderror"
                               placeholder="Concepto..." list="sugerencias-detalle" required>
                           </td>
                           <td>
-                            <input type="text" wire:model.defer="items_form.{{ $index }}.descripcion"
+                            <input type="text" wire:model="items_form.{{ $index }}.descripcion"
                               wire:key="descripcion-{{ $item['_uid'] }}"
                               class="form-control form-control-compact"
                               placeholder="Opcional...">
@@ -529,7 +529,7 @@
                           <td class="pr-1">
                             <div class="input-group input-group-compact">
                               <div class="input-group-prepend"><span class="input-group-text bg-transparent border-0 text-muted">$</span></div>
-                              <input type="number" step="1.00" wire:model.defer="items_form.{{ $index }}.importe"
+                              <input type="number" step="1.00" wire:model="items_form.{{ $index }}.importe"
                                 wire:key="importe-{{ $item['_uid'] }}"
                                 class="form-control form-control-compact text-right font-weight-bold item-importe"
                                 value="{{ $item['importe'] }}"
@@ -611,7 +611,7 @@
                     </template>
                   </div>
 
-                  <input type="hidden" wire:model="forma_pago">
+                  <input type="hidden" wire:model.live="forma_pago">
                   @error('forma_pago') <span class="text-danger d-block small font-weight-bold">{{ $message }}</span> @enderror
                 </div>
               </div>
@@ -624,21 +624,21 @@
                     <label class="label-compact">
                       <i class="fas fa-sticky-note mr-1 text-info"></i> Notas
                     </label>
-                    <input type="text" class="form-control form-control-compact" wire:model.defer="adenda" placeholder="MATRÍCULA XXX BOLETA...">
+                    <input type="text" class="form-control form-control-compact" wire:model="adenda" placeholder="MATRÍCULA XXX BOLETA...">
                   </div>
                   <div class="form-row">
                     <div class="col-md-5">
                       <div class="form-group mb-0">
                         <label class="label-compact">Teléfono</label>
-                        <input type="text" class="form-control form-control-compact" wire:model.defer="temp_tel" placeholder="099...">
+                        <input type="text" class="form-control form-control-compact" wire:model="temp_tel" placeholder="099...">
                       </div>
                     </div>
                     <div class="col-md-7">
                       <div class="form-group mb-0">
                         <label class="label-compact">Período</label>
                         <div class="d-flex">
-                          <input type="text" class="form-control form-control-compact datepicker-uy mr-1" wire:model.defer="temp_periodo_desde" placeholder="Desde">
-                          <input type="text" class="form-control form-control-compact datepicker-uy" wire:model.defer="temp_periodo_hasta" placeholder="Hasta">
+                          <input type="text" class="form-control form-control-compact datepicker-uy mr-1" wire:model="temp_periodo_desde" placeholder="Desde">
+                          <input type="text" class="form-control form-control-compact datepicker-uy" wire:model="temp_periodo_hasta" placeholder="Hasta">
                         </div>
                       </div>
                     </div>
@@ -915,7 +915,7 @@
                 <label class="font-weight-bold small text-muted mb-1 text-uppercase">Fecha Desde</label>
                 <div class="input-group input-group-sm">
                   <div class="input-group-prepend"><span class="input-group-text p-1 px-2 border-0 bg-transparent text-primary"><i class="fas fa-calendar-alt"></i></span></div>
-                  <input type="text" class="form-control form-control-compact datepicker-uy @error('fechaDesde') is-invalid @enderror" wire:model.defer="fechaDesde">
+                  <input type="text" class="form-control form-control-compact datepicker-uy @error('fechaDesde') is-invalid @enderror" wire:model="fechaDesde">
                 </div>
                 @error('fechaDesde') <span class="text-danger small">{{ $message }}</span> @enderror
               </div>
@@ -925,7 +925,7 @@
                 <label class="font-weight-bold small text-muted mb-1 text-uppercase">Fecha Hasta</label>
                 <div class="input-group input-group-sm">
                   <div class="input-group-prepend"><span class="input-group-text p-1 px-2 border-0 bg-transparent text-primary"><i class="fas fa-calendar-check"></i></span></div>
-                  <input type="text" class="form-control form-control-compact datepicker-uy @error('fechaHasta') is-invalid @enderror" wire:model.defer="fechaHasta">
+                  <input type="text" class="form-control form-control-compact datepicker-uy @error('fechaHasta') is-invalid @enderror" wire:model="fechaHasta">
                 </div>
                 @error('fechaHasta') <span class="text-danger small">{{ $message }}</span> @enderror
               </div>
@@ -1005,7 +1005,7 @@
       initTooltips();
     });
 
-    document.addEventListener('livewire:load', function() {
+    document.addEventListener('livewire:init', function() {
       initTooltips();
     });
 

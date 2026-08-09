@@ -2,6 +2,7 @@
 
 namespace App\Listeners\Tesoreria;
 
+use App\Events\Tesoreria\CfeActualizado;
 use App\Events\Tesoreria\CfeCreado;
 use App\Events\Tesoreria\CfeEliminado;
 use App\Services\Tesoreria\RegistrarAsientosCfeService;
@@ -43,9 +44,23 @@ class RegistrarAsientosCfeListener
         }
     }
 
+    public function handleCfeActualizado(CfeActualizado $event): void
+    {
+        try {
+            $this->service->registrarAsientosPorCfeActualizado($event->cfe);
+        } catch (\Throwable $e) {
+            Log::error('RegistrarAsientosCfeListener: error al procesar asientos por CFE actualizado', [
+                'cfe_id' => $event->cfe->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+        }
+    }
+
     public function subscribe(\Illuminate\Events\Dispatcher $events): void
     {
         $events->listen(CfeCreado::class, [self::class, 'handleCfeCreado']);
         $events->listen(CfeEliminado::class, [self::class, 'handleCfeEliminado']);
+        $events->listen(CfeActualizado::class, [self::class, 'handleCfeActualizado']);
     }
 }

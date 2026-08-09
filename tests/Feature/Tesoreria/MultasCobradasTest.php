@@ -2,7 +2,7 @@
 
 namespace Tests\Feature\Tesoreria;
 
-use App\Http\Livewire\Tesoreria\MultasCobradas\MultasCobradas;
+use App\Livewire\Tesoreria\MultasCobradas\MultasCobradas;
 use App\Models\User;
 use App\Models\Tesoreria\TesMultasCobradas;
 use Illuminate\Foundation\Testing\RefreshDatabase;

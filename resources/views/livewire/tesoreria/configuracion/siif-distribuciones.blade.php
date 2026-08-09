@@ -1,4 +1,4 @@
-<div>
+﻿<div>
   <div class="row">
     <div class="col-md-12">
       <div class="card">
@@ -16,12 +16,12 @@
                 <div class="input-group-prepend">
                   <span class="input-group-text"><i class="fas fa-search"></i></span>
                 </div>
-                <input type="text" wire:model="search" class="form-control"
+                <input type="text" wire:model.live="search" class="form-control"
                   placeholder="Buscar por distribución, concepto, rubro, código SIR...">
               </div>
             </div>
             <div class="mr-2" style="width: 220px;">
-              <select wire:model="filtroTipo" class="form-control form-control-sm">
+              <select wire:model.live="filtroTipo" class="form-control form-control-sm">
                 <option value="">— Todos los tipos —</option>
                 @foreach($tipos as $tipo)
                   <option value="{{ $tipo->id }}">{{ $tipo->tipo }}</option>
@@ -29,7 +29,7 @@
               </select>
             </div>
             <div class="mr-2" style="width: 220px;">
-              <select wire:model="filtroDependencia" class="form-control form-control-sm">
+              <select wire:model.live="filtroDependencia" class="form-control form-control-sm">
                 <option value="">— Todas las dependencias —</option>
                 @foreach($dependencias as $dep)
                   <option value="{{ $dep->id }}">{{ $dep->dependencia }} ({{ $dep->abreviatura }})</option>
@@ -181,7 +181,7 @@
               <div class="form-group col-md-6">
                 <label for="tipo_id">Tipo *</label>
                 <select class="form-control @error('tipo_id') is-invalid @enderror"
-                  wire:model.defer="tipo_id" id="tipo_id" required>
+                  wire:model="tipo_id" id="tipo_id" required>
                   <option value="">Seleccionar tipo...</option>
                   @foreach ($tipos as $t)
                     <option value="{{ $t->id }}">{{ $t->tipo }}</option>
@@ -194,7 +194,7 @@
               <div class="form-group col-md-6">
                 <label for="dependencia_id">Dependencia *</label>
                 <select class="form-control @error('dependencia_id') is-invalid @enderror"
-                  wire:model.defer="dependencia_id" id="dependencia_id" required>
+                  wire:model="dependencia_id" id="dependencia_id" required>
                   <option value="">Seleccionar dependencia...</option>
                   @foreach ($dependencias as $d)
                     <option value="{{ $d->id }}">{{ $d->dependencia }} ({{ $d->abreviatura }})</option>
@@ -210,7 +210,7 @@
                 <label for="concepto">Concepto</label>
                 <input type="text"
                   class="form-control @error('concepto') is-invalid @enderror"
-                  wire:model.defer="concepto" id="concepto"
+                  wire:model="concepto" id="concepto"
                   placeholder="Ej: Recaudación art. 222">
                 @error('concepto')
                   <div class="invalid-feedback">{{ $message }}</div>
@@ -220,7 +220,7 @@
                 <label for="codigo_sir">Código SIR</label>
                 <input type="text"
                   class="form-control @error('codigo_sir') is-invalid @enderror"
-                  wire:model.defer="codigo_sir" id="codigo_sir"
+                  wire:model="codigo_sir" id="codigo_sir"
                   placeholder="Ej: 123.456">
                 @error('codigo_sir')
                   <div class="invalid-feedback">{{ $message }}</div>
@@ -230,7 +230,7 @@
                 <label for="porcentaje">% *</label>
                 <input type="text"
                   class="form-control @error('porcentaje') is-invalid @enderror"
-                  wire:model.defer="porcentaje" id="porcentaje"
+                  wire:model="porcentaje" id="porcentaje"
                   placeholder="0.000" required>
                 @error('porcentaje')
                   <div class="invalid-feedback">{{ $message }}</div>
@@ -242,7 +242,7 @@
                 <label for="rubro">Rubro</label>
                 <input type="text"
                   class="form-control @error('rubro') is-invalid @enderror"
-                  wire:model.defer="rubro" id="rubro"
+                  wire:model="rubro" id="rubro"
                   placeholder="Ej: 100">
                 @error('rubro')
                   <div class="invalid-feedback">{{ $message }}</div>
@@ -252,7 +252,7 @@
                 <label for="sub_rubro">Subrubro</label>
                 <input type="text"
                   class="form-control @error('sub_rubro') is-invalid @enderror"
-                  wire:model.defer="sub_rubro" id="sub_rubro"
+                  wire:model="sub_rubro" id="sub_rubro"
                   placeholder="Ej: 200">
                 @error('sub_rubro')
                   <div class="invalid-feedback">{{ $message }}</div>
@@ -262,7 +262,7 @@
                 <label for="recurso">Recurso</label>
                 <input type="text"
                   class="form-control @error('recurso') is-invalid @enderror"
-                  wire:model.defer="recurso" id="recurso"
+                  wire:model="recurso" id="recurso"
                   placeholder="Ej: 456">
                 @error('recurso')
                   <div class="invalid-feedback">{{ $message }}</div>
@@ -274,7 +274,7 @@
                 <label for="financiacion">Financiación</label>
                 <input type="text"
                   class="form-control @error('financiacion') is-invalid @enderror"
-                  wire:model.defer="financiacion" id="financiacion"
+                  wire:model="financiacion" id="financiacion"
                   placeholder="Ej: 1.1">
                 @error('financiacion')
                   <div class="invalid-feedback">{{ $message }}</div>
@@ -284,7 +284,7 @@
                 <label for="inciso">Inciso</label>
                 <input type="text"
                   class="form-control @error('inciso') is-invalid @enderror"
-                  wire:model.defer="inciso" id="inciso"
+                  wire:model="inciso" id="inciso"
                   placeholder="Ej: 12">
                 @error('inciso')
                   <div class="invalid-feedback">{{ $message }}</div>
@@ -294,7 +294,7 @@
                 <label for="unidad_ejecutora">Unidad Ejecutora</label>
                 <input type="text"
                   class="form-control @error('unidad_ejecutora') is-invalid @enderror"
-                  wire:model.defer="unidad_ejecutora" id="unidad_ejecutora"
+                  wire:model="unidad_ejecutora" id="unidad_ejecutora"
                   placeholder="Ej: 001">
                 @error('unidad_ejecutora')
                   <div class="invalid-feedback">{{ $message }}</div>
@@ -306,7 +306,7 @@
                 <label for="distribucion">Distribución</label>
                 <input type="text"
                   class="form-control @error('distribucion') is-invalid @enderror"
-                  wire:model.defer="distribucion" id="distribucion"
+                  wire:model="distribucion" id="distribucion"
                   placeholder="Ej: Recaudación LD - Art. 222">
                 @error('distribucion')
                   <div class="invalid-feedback">{{ $message }}</div>
@@ -369,29 +369,35 @@
   @push('scripts')
     <script>
       window.addEventListener('show-modal', event => {
-        if (event.detail.id === 'siifDistribucionModal') {
+        const d = window.LiveEvent(event);
+        if (d.id === 'siifDistribucionModal') {
           $('#siifDistribucionModal').modal('show');
         }
       });
 
-      window.livewire.on('siifDistribucionStore', () => {
+      document.addEventListener('livewire:init', function() {
+      Livewire.on('siifDistribucionStore', () => {
         $('#siifDistribucionModal').modal('hide');
       });
 
-      window.livewire.on('siifDistribucionUpdate', () => {
+      Livewire.on('siifDistribucionUpdate', () => {
         $('#siifDistribucionModal').modal('hide');
+      });
       });
 
       $(document).ready(function() {
         $('#siifDistribucionModal').on('hidden.bs.modal', function() {
-          window.livewire.emit('resetForm');
+          window.Livewire.dispatch('resetForm');
         });
         initTooltips();
       });
 
-      document.addEventListener('livewire:load', function() {
-        window.livewire.hook('message.processed', function() {
-          setTimeout(initTooltips, 50);
+      document.addEventListener('livewire:init', function() {
+        // Livewire v3: hook 'commit' reemplaza 'message.processed'
+        Livewire.hook('commit', ({ succeed }) => {
+          succeed(() => {
+            queueMicrotask(() => setTimeout(initTooltips, 50));
+          });
         });
       });
 

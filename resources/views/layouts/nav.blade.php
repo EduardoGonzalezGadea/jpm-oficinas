@@ -190,6 +190,9 @@
                                 <a class="dropdown-item" href="{{ route('tesoreria.configuracion.tes-tipos-monedas.index') }}">
                                     <i class="fas fa-money-bill-wave mr-2"></i>Tipos de Monedas
                                 </a>
+                                <a class="dropdown-item" href="{{ route('tesoreria.configuracion.tes-discriminaciones-monetarias.index') }}">
+                                    <i class="fas fa-coins mr-2"></i>Discriminación Monetaria
+                                </a>
                                 <a class="dropdown-item" href="{{ route('tesoreria.bancos.index') }}">
                                     <i class="fas fa-university mr-2"></i>Bancos
                                 </a>
@@ -319,11 +322,9 @@
     </div>
 </nav>
 
-
-
-
+@once
 @push('scripts')
-<script>
+<script data-navigate-once>
     document.addEventListener('DOMContentLoaded', function() {
         balanceSistemaMenu();
     });
@@ -361,9 +362,7 @@
 
         dividers.forEach(function(d) { menu.appendChild(d); });
     }
-</script>
 
-<script>
     $(function () {
         function showSpinner() {
             if ($('#nav-spinner-overlay').length === 0) {
@@ -425,3 +424,4 @@
     });
 </script>
 @endpush
+@endonce

@@ -4,8 +4,8 @@ namespace Database\Seeders;
 
 use App\Models\Tesoreria\LbConcepto;
 use App\Models\Tesoreria\LbDetalle;
-use App\Models\Tesoreria\LbMedio;
 use App\Models\Tesoreria\LbTipo;
+use App\Models\Tesoreria\MedioDePago;
 use Illuminate\Database\Seeder;
 
 class LibroDiarioSeeder extends Seeder
@@ -24,8 +24,7 @@ class LibroDiarioSeeder extends Seeder
                 ['nombre' => 'Entrada', 'signo' => 1],
                 ['nombre' => 'Salida', 'signo' => -1],
             ], ['nombre'], ['signo']);
-            
-            // Soft-delete el tipo 'Redistribución' si existía en la base de datos anterior
+
             LbTipo::where('nombre', 'Redistribución')->whereNull('deleted_at')->update(['deleted_at' => now()]);
         });
     }
@@ -33,15 +32,26 @@ class LibroDiarioSeeder extends Seeder
     private function seedMedios(): void
     {
         $medios = [
-            'Efectivo',
-            'Cheque',
-            'Transferencia bancaria',
-            'Tarjeta de Débito',
+            ['nombre' => 'Efectivo', 'nombre_corto' => 'Efectivo', 'contado' => true, 'orden' => 1],
+            ['nombre' => 'Cheque', 'nombre_corto' => 'Cheque', 'orden' => 2],
+            ['nombre' => 'Transferencia Bancaria', 'nombre_corto' => 'Transferencia', 'orden' => 3],
+            ['nombre' => 'Tarjeta de Débito (POS)', 'nombre_corto' => 'Débito (POS)', 'orden' => 4],
         ];
 
         foreach ($medios as $medio) {
-            LbMedio::withoutEvents(function () use ($medio) {
-                LbMedio::firstOrCreate(['nombre' => $medio]);
+            MedioDePago::withoutEvents(function () use ($medio) {
+                MedioDePago::firstOrCreate(
+                    ['nombre' => $medio['nombre']],
+                    [
+                        'nombre_corto' => $medio['nombre_corto'],
+                        'contado' => $medio['contado'] ?? false,
+                        'orden' => $medio['orden'] ?? 99,
+                        'activo' => true,
+                        'es_libro_diario' => true,
+                        'es_recaudacion' => true,
+                        'descripcion' => '',
+                    ]
+                );
             });
         }
     }

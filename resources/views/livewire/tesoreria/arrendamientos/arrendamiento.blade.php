@@ -42,7 +42,7 @@
                 <div class="input-group-prepend">
                   <span class="input-group-text">Mes y Año</span>
                 </div>
-                <select id="mesSelector" class="form-control form-control-sm" wire:model="mes">
+                <select id="mesSelector" class="form-control form-control-sm" wire:model.live="mes">
                   <option value="1">Enero</option>
                   <option value="2">Febrero</option>
                   <option value="3">Marzo</option>
@@ -56,13 +56,13 @@
                   <option value="11">Noviembre</option>
                   <option value="12">Diciembre</option>
                 </select>
-                <input type="number" id="anioSelector" class="form-control form-control-sm" wire:model="year">
+                <input type="number" id="anioSelector" class="form-control form-control-sm" wire:model.live="year">
               </div>
             </div>
             <div class="col-md-7 align-self-end d-print-none">
               <div class="btn-group d-flex" role="group">
                 <div class="input-group input-group-sm">
-                  <input type="text" wire:model="search" id="search"
+                  <input type="text" wire:model.live="search" id="search"
                     class="form-control form-control-sm"
                     placeholder="Buscar por nombre, ingreso, monto, O/C o recibo...">
                   <div class="input-group-append">
@@ -86,7 +86,7 @@
                   <th class="text-center align-middle">O/C</th>
                   <th class="text-center align-middle">Recibo</th>
                   <th class="text-center align-middle">Medio de Pago</th>
-                  <th class="text-center align-middle"></th>
+                  <th class="text-center align-middle" title="En planilla">Pl.</th>
                   @can('tesoreria.supervisar')
                   <th class="text-center align-middle d-print-none">Confirmado</th>
                   @endcan
@@ -95,7 +95,7 @@
               </thead>
               <tbody>
                 @forelse ($arrendamientos as $arrendamiento)
-                <tr>
+                <tr wire:key="arrendamiento-{{ $arrendamiento->id }}">
                   <td class="text-center align-middle">
                     {{ $arrendamiento->fecha->format('d/m/Y') }}
                   </td>
@@ -111,11 +111,14 @@
                   </td>
                   <td class="text-right align-middle">
                     {{ is_numeric($arrendamiento->recibo) ? number_format($arrendamiento->recibo, 0, ',', '.') : $arrendamiento->recibo }}
+                    @if($arrendamiento->planilla_id && $arrendamiento->planilla)
+                    <div class="small text-muted">Pl. {{ $arrendamiento->planilla->numero }}</div>
+                    @endif
                   </td>
                   <td class="text-center align-middle">{{ $arrendamiento->medio_de_pago }}</td>
                   <td class="text-center align-middle">
                     @if($arrendamiento->planilla_id)
-                    <i class="fas fa-check-circle text-success" title="En planilla"></i>
+                    <i class="fas fa-check-circle text-success" title="En planilla {{ $arrendamiento->planilla->numero }}"></i>
                     @else
                     <i class="fas fa-times-circle text-danger" title="No en planilla"></i>
                     @endif
@@ -126,7 +129,7 @@
                     <div class="custom-control custom-switch" style="transform: scale(0.8);">
                       <input type="checkbox" class="custom-control-input"
                         id="confirmado-{{ $arrendamiento->id }}"
-                        wire:click.prevent="toggleConfirmado({{ $arrendamiento->id }})"
+                        wire:click="toggleConfirmado({{ $arrendamiento->id }})"
                         {{ $arrendamiento->confirmado ? 'checked' : '' }}>
                       <label class="custom-control-label"
                         for="confirmado-{{ $arrendamiento->id }}"></label>
@@ -136,8 +139,7 @@
                   <td class="text-center align-middle d-print-none">
                     <div class="btn-group" role="group">
                       <button wire:click="showDetails({{ $arrendamiento->id }})"
-                        class="btn btn-sm btn-outline-info btn-action-fixed" data-toggle="modal"
-                        data-target="#detailsModal" title="Detalles">
+                        class="btn btn-sm btn-outline-info btn-action-fixed" title="Detalles">
                         <i class="fas fa-eye"></i>
                       </button>
                       <button wire:click="editIngreso({{ $arrendamiento->id }})"
@@ -227,7 +229,7 @@
             </dl>
             <div class="form-group">
               <label for="ingreso_input">Ingreso</label>
-              <input type="text" wire:model.defer="ingreso" id="ingreso_input"
+              <input type="text" wire:model="ingreso" id="ingreso_input"
                 class="form-control form-control-sm">
               @error('ingreso')
               <span class="text-danger">{{ $message }}</span>
@@ -262,7 +264,7 @@
               <div class="col-md-6">
                 <div class="form-group">
                   <label for="fecha">Fecha</label>
-                  <input type="date" wire:model="fecha" id="fecha"
+                  <input type="date" wire:model.live="fecha" id="fecha"
                     class="form-control form-control-sm">
                   @error('fecha')
                   <span class="text-danger">{{ $message }}</span>
@@ -272,7 +274,7 @@
               <div class="col-md-6">
                 <div class="form-group">
                   <label for="ingreso">Ingreso</label>
-                  <input type="text" wire:model.defer="ingreso" id="ingreso"
+                  <input type="text" wire:model="ingreso" id="ingreso"
                     class="form-control form-control-sm">
                   @error('ingreso')
                   <span class="text-danger">{{ $message }}</span>
@@ -282,7 +284,7 @@
             </div>
             <div class="form-group">
               <label for="nombre">Nombre</label>
-              <input type="text" wire:model.defer="nombre" id="nombre"
+              <input type="text" wire:model="nombre" id="nombre"
                 class="form-control form-control-sm">
               @error('nombre')
               <span class="text-danger">{{ $message }}</span>
@@ -292,7 +294,7 @@
               <div class="col-md-6">
                 <div class="form-group">
                   <label for="cedula">Cédula</label>
-                  <input type="text" wire:model.defer="cedula" id="cedula"
+                  <input type="text" wire:model="cedula" id="cedula"
                     class="form-control form-control-sm">
                   @error('cedula')
                   <span class="text-danger">{{ $message }}</span>
@@ -302,7 +304,7 @@
               <div class="col-md-6">
                 <div class="form-group">
                   <label for="telefono">Teléfono</label>
-                  <input type="text" wire:model.defer="telefono" id="telefono"
+                  <input type="text" wire:model="telefono" id="telefono"
                     class="form-control form-control-sm">
                   @error('telefono')
                   <span class="text-danger">{{ $message }}</span>
@@ -314,7 +316,7 @@
               <div class="col-md-6">
                 <div class="form-group">
                   <label for="medio_de_pago">Medio de Pago</label>
-                  <select wire:model.defer="medio_de_pago" id="medio_de_pago"
+                  <select wire:model="medio_de_pago" id="medio_de_pago"
                     class="form-control form-control-sm">
                     <option value="">Seleccione...</option>
                     @foreach($mediosDePago as $medio)
@@ -329,7 +331,7 @@
               <div class="col-md-6">
                 <div class="form-group">
                   <label for="monto">Monto</label>
-                  <input type="number" step="0.01" wire:model.defer="monto" id="monto"
+                  <input type="number" step="0.01" wire:model="monto" id="monto"
                     class="form-control form-control-sm">
                   @error('monto')
                   <span class="text-danger">{{ $message }}</span>
@@ -339,7 +341,7 @@
             </div>
             <div class="form-group">
               <label for="detalle">Detalle</label>
-              <textarea wire:model.defer="detalle" id="detalle" class="form-control form-control-sm"></textarea>
+              <textarea wire:model="detalle" id="detalle" class="form-control form-control-sm"></textarea>
               @error('detalle')
               <span class="text-danger">{{ $message }}</span>
               @enderror
@@ -348,7 +350,7 @@
               <div class="col-md-6">
                 <div class="form-group">
                   <label for="orden_cobro">Orden de Cobro</label>
-                  <input type="text" wire:model.defer="orden_cobro" id="orden_cobro"
+                  <input type="text" wire:model="orden_cobro" id="orden_cobro"
                     class="form-control form-control-sm">
                   @error('orden_cobro')
                   <span class="text-danger">{{ $message }}</span>
@@ -358,7 +360,7 @@
               <div class="col-md-6">
                 <div class="form-group">
                   <label for="recibo">Recibo</label>
-                  <input type="text" wire:model.defer="recibo" id="recibo"
+                  <input type="text" wire:model="recibo" id="recibo"
                     class="form-control form-control-sm">
                   @error('recibo')
                   <span class="text-danger">{{ $message }}</span>
@@ -417,12 +419,15 @@
 
   <livewire:tesoreria.arrendamientos.planillas-manager :mes="$mes" :year="$year" :key="$mes . $year" />
 
+</div>
+
   @push('scripts')
   <script>
     window.addEventListener('revertCheckbox', event => {
-      const checkbox = document.getElementById('confirmado-' + event.detail.id);
+      const d = window.LiveEvent(event);
+      const checkbox = document.getElementById('confirmado-' + d.id);
       if (checkbox) {
-        checkbox.checked = event.detail.checked;
+        checkbox.checked = d.checked;
       }
     });
 
@@ -431,9 +436,9 @@
     });
 
     window.addEventListener('alert', event => {
-      // alert(event.detail.message);
-      const type = event.detail.type;
-      const message = event.detail.message;
+      const d = window.LiveEvent(event);
+      const type = d.type;
+      const message = d.message;
       Swal.fire({
         icon: type,
         title: message,
@@ -442,22 +447,24 @@
       });
     });
 
-    window.livewire.on('arrendamientoStore', () => {
-      $('#arrendamientoModal').modal('hide');
-    });
+    document.addEventListener('livewire:init', function() {
+        Livewire.on('arrendamientoStore', () => {
+          $('#arrendamientoModal').modal('hide');
+        });
 
-    window.livewire.on('arrendamientoUpdate', () => {
-      $('#arrendamientoModal').modal('hide');
-      $('#ingresoModal').modal('hide');
-    });
+        Livewire.on('arrendamientoUpdate', () => {
+          $('#arrendamientoModal').modal('hide');
+          $('#ingresoModal').modal('hide');
+        });
+        });
 
     $(document).ready(function() {
       $('#arrendamientoModal').on('hidden.bs.modal', function() {
-        window.livewire.emit('resetForm');
+        window.Livewire.dispatch('resetForm');
       });
 
       $('#ingresoModal').on('hidden.bs.modal', function() {
-        window.livewire.emit('resetForm');
+        window.Livewire.dispatch('resetForm');
       });
 
       $('#arrendamientoModal').on('shown.bs.modal', function() {
@@ -488,5 +495,3 @@
     });
   </script>
   @endpush
-
-</div>

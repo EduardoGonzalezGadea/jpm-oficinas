@@ -24,7 +24,7 @@
   </div>
 
   @if ($totalesPorInstitucion->isNotEmpty())
-  <div class="mb-3 p-3 border rounded bg-light">
+  <div class="mb-3 p-3 border rounded card">
     <h5 class="mb-3 text-center">Totales por Institución</h5>
     <div class="d-flex flex-wrap justify-content-around">
       @foreach ($totalesPorInstitucion as $totalInst)

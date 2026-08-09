@@ -1,9 +1,5 @@
 <div>
   <style>
-    .text-nowrap-custom {
-      white-space: nowrap;
-    }
-
     .header-print {
       text-align: left;
       margin-bottom: 10px;
@@ -72,7 +68,7 @@
   </div>
 
   @if ($totalesPorInstitucion->isNotEmpty())
-  <div class="totales-institucion border rounded bg-light">
+  <div class="totales-institucion border rounded card">
     <h5 class="text-center">Totales por Institución</h5>
     <div class="d-flex flex-wrap justify-content-around">
       @foreach ($totalesPorInstitucion as $totalInst)
@@ -104,7 +100,7 @@
           <td class="text-center align-middle">{{ $eventual->fecha->format('d/m/Y') }}</td>
           <td class="text-right align-middle">{{ is_numeric($eventual->ingreso) ? number_format($eventual->ingreso, 0, ',', '.') : $eventual->ingreso }}</td>
           <td class="text-center align-middle">{{ $eventual->institucion ?: 'SIN DATO' }}</td>
-          <td class="text-right align-middle"><span class="text-nowrap-custom">{{ $eventual->monto_formateado }}</span></td>
+          <td class="text-right align-middle"><span class="text-nowrap">{{ $eventual->monto_formateado }}</span></td>
           <td class="text-right align-middle">{{ is_numeric($eventual->orden_cobro) ? number_format($eventual->orden_cobro, 0, ',', '.') : $eventual->orden_cobro }}</td>
           <td class="text-right align-middle">{{ is_numeric($eventual->recibo) ? number_format($eventual->recibo, 0, ',', '.') : $eventual->recibo }}</td>
           <td class="text-center align-middle">{{ $eventual->medio_de_pago }}</td>
@@ -119,13 +115,13 @@
         @foreach ($subtotales as $subtotal)
         <tr>
           <td colspan="3" class="text-right align-middle"><strong>Total {{ $subtotal->medio_de_pago }}:</strong></td>
-          <td class="text-right align-middle"><strong><span class="text-nowrap-custom">$ {{ number_format($subtotal->total, 2, ',', '.') }}</span></strong></td>
+          <td class="text-right align-middle"><strong><span class="text-nowrap">$ {{ number_format($subtotal->total, 2, ',', '.') }}</span></strong></td>
           <td colspan="3"></td>
         </tr>
         @endforeach
         <tr>
           <td colspan="3" class="text-right align-middle"><strong>Total General:</strong></td>
-          <td class="text-right align-middle"><strong><span class="text-nowrap-custom">$ {{ number_format($total, 2, ',', '.') }}</span></strong></td>
+          <td class="text-right align-middle"><strong><span class="text-nowrap">$ {{ number_format($total, 2, ',', '.') }}</span></strong></td>
           <td colspan="3"></td>
         </tr>
       </tfoot>

@@ -1,11 +1,11 @@
-<div>
+﻿<div>
   <div class="card">
     <div class="card-header card-header-section card-header-gradient py-2 px-3 d-flex justify-content-between align-items-center">
       <h4 class="mb-0"><strong><i class="fas fa-university mr-2"></i>Bancos</strong></h4>
       <button wire:click="create" type="button" class="btn btn-primary btn-sm">+ Nuevo</button>
     </div>
     <div class="card-body px-2">
-      <input type="text" wire:model.debounce.500ms="search" class="form-control mb-3" placeholder="Buscar...">
+      <input type="text" wire:model.live.debounce.500ms="search" class="form-control mb-3" placeholder="Buscar...">
       @if($bancos->count() > 0)
         <div class="table-responsive">
           <table class="table table-striped">
@@ -71,7 +71,7 @@
   @push('scripts')
     <script>
       window.addEventListener('show-modal', event => {
-        const modalId = event.detail.id;
+        const modalId = window.LiveEvent(event).id;
         $(`#${modalId}`).modal('show');
       });
 
@@ -79,17 +79,19 @@
         $('#modal').modal('hide');
       });
 
-      window.livewire.on('bancoStore', () => {
+      document.addEventListener('livewire:init', function() {
+      Livewire.on('bancoStore', () => {
         $('#modal').modal('hide');
       });
 
-      window.livewire.on('bancoUpdate', () => {
+      Livewire.on('bancoUpdate', () => {
         $('#modal').modal('hide');
+      });
       });
 
       $(document).ready(function() {
         $('#modal').on('hidden.bs.modal', function() {
-          window.livewire.emit('closeModal');
+          window.Livewire.dispatch('closeModal');
         });
       });
     </script>

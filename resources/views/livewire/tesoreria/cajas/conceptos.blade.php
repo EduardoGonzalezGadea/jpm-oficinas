@@ -13,10 +13,10 @@
 
       <div class="row mb-3">
         <div class="col-md-6">
-          <input type="text" wire:model="search" class="form-control" placeholder="Buscar conceptos...">
+          <input type="text" wire:model.live="search" class="form-control" placeholder="Buscar conceptos...">
         </div>
         <div class="col-md-2">
-          <select wire:model="cant" class="form-control">
+          <select wire:model.live="cant" class="form-control">
             <option value="10">10</option>
             <option value="25">25</option>
             <option value="50">50</option>
@@ -81,12 +81,12 @@
             <form>
               <div class="form-group">
                 <label for="nombre">Nombre</label>
-                <input type="text" class="form-control" id="nombre" wire:model="nombre">
+                <input type="text" class="form-control" id="nombre" wire:model.live="nombre">
                 @error('nombre') <span class="text-danger">{{ $message }}</span>@enderror
               </div>
               <div class="form-group">
                 <label for="tipo">Tipo</label>
-                <select class="form-control" id="tipo" wire:model="tipo">
+                <select class="form-control" id="tipo" wire:model.live="tipo">
                   <option value="">Seleccione un tipo</option>
                   <option value="INGRESO">Ingreso</option>
                   <option value="EGRESO">Egreso</option>
@@ -95,11 +95,11 @@
               </div>
               <div class="form-group">
                 <label for="descripcion">Descripción</label>
-                <textarea class="form-control" id="descripcion" wire:model="descripcion"></textarea>
+                <textarea class="form-control" id="descripcion" wire:model.live="descripcion"></textarea>
                 @error('descripcion') <span class="text-danger">{{ $message }}</span>@enderror
               </div>
               <div class="form-check">
-                <input type="checkbox" class="form-check-input" id="activo" wire:model="activo">
+                <input type="checkbox" class="form-check-input" id="activo" wire:model.live="activo">
                 <label class="form-check-label" for="activo">Activo</label>
               </div>
             </form>

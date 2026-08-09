@@ -53,7 +53,7 @@
                                         Ver Detalles
                                     </button>
                                     <button
-                                        wire:click="$emit('review-cfe', {{ $cfe->id }})"
+                                        wire:click="$dispatch('review-cfe', {{ $cfe->id }})"
                                         class="btn btn-sm btn-info ms-1"
                                         data-bs-toggle="modal"
                                         data-bs-target="#reviewModal">
@@ -150,7 +150,7 @@
                 <div class="mb-3">
                     <label for="motivoRechazo" class="form-label">Motivo de rechazo <span class="text-danger">*</span></label>
                     <textarea
-                        wire:model="motivoRechazo"
+                        wire:model.live="motivoRechazo"
                         id="motivoRechazo"
                         class="form-control"
                         rows="4"
@@ -169,7 +169,7 @@
 </div>
 
 <script>
-    document.addEventListener('livewire:load', function() {
+    document.addEventListener('livewire:init', function() {
         // Inicializar tooltips
         var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle]'));
         tooltipTriggerList.map(function (tooltipTriggerEl) {

@@ -1,4 +1,4 @@
-<div>
+﻿<div>
   <div class="row">
     <div class="col-md-12">
       <div class="card">
@@ -16,7 +16,7 @@
                 <div class="input-group-prepend">
                   <span class="input-group-text"><i class="fas fa-search"></i></span>
                 </div>
-                <input type="text" wire:model="search" id="search-siif-dependencias"
+                <input type="text" wire:model.live="search" id="search-siif-dependencias"
                   class="form-control"
                   placeholder="Buscar por dependencia o abreviatura...">
               </div>
@@ -90,7 +90,7 @@
               <label for="dependencia">Nombre de la Dependencia *</label>
               <input type="text"
                 class="form-control @error('dependencia') is-invalid @enderror"
-                wire:model.defer="dependencia"
+                wire:model="dependencia"
                 id="dependencia"
                 placeholder="Ej: Jefatura de Policía de Montevideo"
                 required>
@@ -103,7 +103,7 @@
               <label for="abreviatura">Abreviatura *</label>
               <input type="text"
                 class="form-control @error('abreviatura') is-invalid @enderror"
-                wire:model.defer="abreviatura"
+                wire:model="abreviatura"
                 id="abreviatura"
                 placeholder="Ej: JPM"
                 required>
@@ -157,22 +157,25 @@
   @push('scripts')
     <script>
       window.addEventListener('show-modal', event => {
-        if (event.detail.id === 'siifDependenciaModal') {
+        const d = window.LiveEvent(event);
+        if (d.id === 'siifDependenciaModal') {
           $('#siifDependenciaModal').modal('show');
         }
       });
 
-      window.livewire.on('siifDependenciaStore', () => {
+      document.addEventListener('livewire:init', function() {
+      Livewire.on('siifDependenciaStore', () => {
         $('#siifDependenciaModal').modal('hide');
       });
 
-      window.livewire.on('siifDependenciaUpdate', () => {
+      Livewire.on('siifDependenciaUpdate', () => {
         $('#siifDependenciaModal').modal('hide');
+      });
       });
 
       $(document).ready(function() {
         $('#siifDependenciaModal').on('hidden.bs.modal', function() {
-          window.livewire.emit('resetForm');
+          window.Livewire.dispatch('resetForm');
         });
       });
     </script>

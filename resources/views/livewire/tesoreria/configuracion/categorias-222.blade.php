@@ -9,7 +9,7 @@
     <div class="card-body">
       <div class="row mb-3">
         <div class="col-md-4">
-          <input type="text" class="form-control" placeholder="Buscar por nombre o código..." wire:model.debounce.300ms="search">
+          <input type="text" class="form-control" placeholder="Buscar por nombre o código..." wire:model.live.debounce.300ms="search">
         </div>
       </div>
 
@@ -71,26 +71,26 @@
           <button type="button" class="close text-white" data-dismiss="modal"><span>&times;</span></button>
         </div>
         <div class="modal-body">
-          <form wire:submit.prevent="store">
+          <form wire:submit="store">
             <div class="form-group">
               <label class="font-weight-bold">Nombre <span class="text-danger">*</span></label>
-              <input type="text" class="form-control @error('nombre') is-invalid @enderror" wire:model.defer="nombre" placeholder="Ej: Común">
+              <input type="text" class="form-control @error('nombre') is-invalid @enderror" wire:model="nombre" placeholder="Ej: Común">
               @error('nombre') <span class="invalid-feedback">{{ $message }}</span> @enderror
             </div>
             <div class="row">
               <div class="col-md-6 form-group">
                 <label class="font-weight-bold">Código <span class="text-danger">*</span></label>
-                <input type="text" class="form-control text-uppercase @error('codigo') is-invalid @enderror" wire:model.defer="codigo" placeholder="Ej: COMUN">
+                <input type="text" class="form-control text-uppercase @error('codigo') is-invalid @enderror" wire:model="codigo" placeholder="Ej: COMUN">
                 @error('codigo') <span class="invalid-feedback">{{ $message }}</span> @enderror
               </div>
               <div class="col-md-6 form-group">
                 <label class="font-weight-bold">Orden <span class="text-danger">*</span></label>
-                <input type="number" class="form-control @error('orden') is-invalid @enderror" wire:model.defer="orden" min="0">
+                <input type="number" class="form-control @error('orden') is-invalid @enderror" wire:model="orden" min="0">
                 @error('orden') <span class="invalid-feedback">{{ $message }}</span> @enderror
               </div>
             </div>
             <div class="custom-control custom-switch">
-              <input type="checkbox" class="custom-control-input" id="activoCatSwitch" wire:model.defer="activo">
+              <input type="checkbox" class="custom-control-input" id="activoCatSwitch" wire:model="activo">
               <label class="custom-control-label font-weight-bold" for="activoCatSwitch">Categoría Activa</label>
             </div>
           </form>

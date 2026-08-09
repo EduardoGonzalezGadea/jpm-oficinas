@@ -1,4 +1,4 @@
-<div>
+﻿<div>
   <div class="row">
     <div class="col-md-12">
       <div class="card">
@@ -16,7 +16,7 @@
                 <div class="input-group-prepend">
                   <span class="input-group-text"><i class="fas fa-search"></i></span>
                 </div>
-                <input type="text" wire:model="search" id="search-siif-tipos"
+                <input type="text" wire:model.live="search" id="search-siif-tipos"
                   class="form-control"
                   placeholder="Buscar por tipo...">
               </div>
@@ -88,7 +88,7 @@
               <label for="tipo">Nombre del Tipo *</label>
               <input type="text"
                 class="form-control @error('tipo') is-invalid @enderror"
-                wire:model.defer="tipo"
+                wire:model="tipo"
                 id="tipo"
                 placeholder="Ej: Recaudación Artículo 222"
                 required>
@@ -141,22 +141,25 @@
   @push('scripts')
     <script>
       window.addEventListener('show-modal', event => {
-        if (event.detail.id === 'siifTipoModal') {
+        const d = window.LiveEvent(event);
+        if (d.id === 'siifTipoModal') {
           $('#siifTipoModal').modal('show');
         }
       });
 
-      window.livewire.on('siifTipoStore', () => {
+      document.addEventListener('livewire:init', function() {
+      Livewire.on('siifTipoStore', () => {
         $('#siifTipoModal').modal('hide');
       });
 
-      window.livewire.on('siifTipoUpdate', () => {
+      Livewire.on('siifTipoUpdate', () => {
         $('#siifTipoModal').modal('hide');
+      });
       });
 
       $(document).ready(function() {
         $('#siifTipoModal').on('hidden.bs.modal', function() {
-          window.livewire.emit('resetForm');
+          window.Livewire.dispatch('resetForm');
         });
       });
     </script>

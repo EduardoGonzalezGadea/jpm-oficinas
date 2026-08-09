@@ -23,7 +23,7 @@
               <div class="input-group-prepend">
                 <span class="input-group-text"><i class="fas fa-search"></i></span>
               </div>
-              <input type="text" class="form-control" wire:model="search"
+              <input type="text" class="form-control" wire:model.live="search"
                 placeholder="Buscar por concepto o descripción...">
             </div>
           </div>
@@ -31,7 +31,7 @@
         <div class="col-md-3">
           <div class="form-group">
             <label class="font-weight-bold col-form-label-sm">Valor Asociado</label>
-            <select class="form-control form-control-sm" wire:model="filterValor">
+            <select class="form-control form-control-sm" wire:model.live="filterValor">
               <option value="">Todos</option>
               @foreach ($valores as $valor)
                 <option value="{{ $valor->id }}">{{ $valor->nombre }}</option>
@@ -42,7 +42,7 @@
         <div class="col-md-2">
           <div class="form-group">
             <label class="font-weight-bold col-form-label-sm">Estado</label>
-            <select class="form-control form-control-sm" wire:model="filterActivo">
+            <select class="form-control form-control-sm" wire:model.live="filterActivo">
               <option value="">Todos</option>
               <option value="1">Activos</option>
               <option value="0">Inactivos</option>
@@ -52,7 +52,7 @@
         <div class="col-md-2">
           <div class="form-group">
             <label class="font-weight-bold col-form-label-sm">Por página</label>
-            <select class="form-control form-control-sm" wire:model="perPage">
+            <select class="form-control form-control-sm" wire:model.live="perPage">
               <option value="10">10</option>
               <option value="25">25</option>
               <option value="50">50</option>
@@ -191,7 +191,7 @@
               <div class="form-group col-md-6">
                 <label>Valor Asociado <span class="text-danger">*</span></label>
                 <select class="form-control @error('valores_id') is-invalid @enderror"
-                  wire:model="valores_id">
+                  wire:model.live="valores_id">
                   <option value="">Seleccione un valor</option>
                   @foreach ($valores as $valor)
                     <option value="{{ $valor->id }}">{{ $valor->nombre }}</option>
@@ -204,7 +204,7 @@
               <div class="form-group col-md-6">
                 <label>Concepto <span class="text-danger">*</span></label>
                 <input type="text" class="form-control @error('concepto') is-invalid @enderror"
-                  wire:model="concepto" placeholder="Ej: Cuota Social">
+                  wire:model.live="concepto" placeholder="Ej: Cuota Social">
                 @error('concepto')
                   <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
@@ -212,7 +212,7 @@
               <div class="form-group col-md-6">
                 <label>Monto <span class="text-danger">*</span></label>
                 <input type="number" step="0.01" class="form-control @error('monto') is-invalid @enderror"
-                  wire:model="monto" placeholder="0.00" min="0">
+                  wire:model.live="monto" placeholder="0.00" min="0">
                 @error('monto')
                   <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
@@ -220,7 +220,7 @@
               <div class="form-group col-md-6">
                 <label>Tipo de Monto <span class="text-danger">*</span></label>
                 <select class="form-control @error('tipo_monto') is-invalid @enderror"
-                  wire:model="tipo_monto">
+                  wire:model.live="tipo_monto">
                   <option value="pesos">Pesos</option>
                   <option value="UI">Unidad Indexada</option>
                   <option value="porcentaje">Porcentaje</option>
@@ -231,7 +231,7 @@
               </div>
               <div class="form-group col-12">
                 <label>Descripción</label>
-                <textarea class="form-control @error('descripcion') is-invalid @enderror" wire:model="descripcion" rows="3"
+                <textarea class="form-control @error('descripcion') is-invalid @enderror" wire:model.live="descripcion" rows="3"
                   placeholder="Descripción opcional del concepto..."></textarea>
                 @error('descripcion')
                   <div class="invalid-feedback">{{ $message }}</div>
@@ -239,7 +239,7 @@
               </div>
               <div class="form-group col-12">
                 <div class="form-check">
-                  <input class="form-check-input" type="checkbox" wire:model="activo"
+                  <input class="form-check-input" type="checkbox" wire:model.live="activo"
                     id="activoConcepto">
                   <label class="form-check-label" for="activoConcepto">
                     Activo

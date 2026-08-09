@@ -13,7 +13,7 @@
           <i class="fas fa-search"></i>
         </span>
       </div>
-      <input type="text" class="form-control" placeholder="Buscar dependencias..." wire:model.debounce.500ms="search">
+      <input type="text" class="form-control" placeholder="Buscar dependencias..." wire:model.live.debounce.500ms="search">
     </div>
   </div>
 
@@ -73,7 +73,7 @@
           <div class="modal-body">
             <div class="form-group">
               <label for="nombreDependencia" class="font-weight-bold">Nombre</label>
-              <input type="text" id="nombreDependencia" wire:model.defer="nombre"
+              <input type="text" id="nombreDependencia" wire:model="nombre"
                 class="form-control @error('nombre') is-invalid @enderror"
                 placeholder="Ingrese el nombre de la dependencia">
               @error('nombre')

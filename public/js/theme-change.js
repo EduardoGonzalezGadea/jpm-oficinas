@@ -1,6 +1,13 @@
 /**
  * Lógica para el cambio de tema dinámico de Bootswatch
- * Incluye respaldo con cookies para compatibilidad con sistemas que no soportan LocalStorage
+ *
+ * Estrategia de persistencia:
+ *  - Usuario autenticado: el tema se guarda en la BD (columna users.theme).
+ *    El layout (app.blade.php) renderiza el <link> correcto desde el servidor.
+ *  - Usuario no autenticado (login): se lee desde localStorage/cookies para
+ *    mostrar el último tema elegido en la página de login.
+ *  - Al cambiar el tema: se actualiza el DOM, se guarda en localStorage
+ *    (para la página de login) y se notifica al backend (para persistir en BD).
  */
 (() => {
     // Si el script ya se ejecutó, salir
@@ -9,27 +16,40 @@
 
     // Obtener la URL base de la aplicación (para manejar subcarpetas)
     const getBaseUrl = () => {
-        // Primero, intentar usar el elemento base si existe
+        // 1. Intentar extraer desde el src del propio script (más confiable)
+        //    El script se carga desde {baseUrl}/js/theme-change.js
+        const scripts = document.querySelectorAll('script[src*="theme-change.js"]');
+        if (scripts.length > 0) {
+            const src = scripts[scripts.length - 1].src;
+            // Quitar todo desde /js/theme-change.js en adelante
+            const idx = src.indexOf('/js/theme-change.js');
+            if (idx > 0) {
+                return src.substring(0, idx);
+            }
+        }
+
+        // 2. Intentar usar el elemento base si existe
         const baseElement = document.querySelector('base');
         if (baseElement) {
             return baseElement.href.replace(/\/$/, '');
         }
 
-        // Si estamos en /oficinas/public/*, la ruta base es /oficinas/public
-        const pathname = window.location.pathname;
-        const matches = pathname.match(/^(.+?)\/(login|dashboard|\/|$)/);
-        if (matches) {
-            let basePath = matches[1];
-            if (basePath === '') basePath = '/oficinas/public';
-            return window.location.origin + basePath;
+        // 3. Usar el meta base-url inyectado por el layout
+        const baseMeta = document.querySelector('meta[name="base-url"]');
+        if (baseMeta) {
+            return baseMeta.getAttribute('content').replace(/\/$/, '');
         }
 
-        // Como último recurso, devolver origen + /oficinas/public
-        return window.location.origin + '/oficinas/public';
+        // 4. Si window.BASE_URL está definido, usarlo
+        if (window.BASE_URL) {
+            return String(window.BASE_URL).replace(/\/$/, '');
+        }
+
+        // 5. Como último recurso, usar el origin
+        return window.location.origin;
     };
 
     const baseUrl = getBaseUrl();
-    console.log('Base URL para fetch:', baseUrl);
 
     // Funciones helper para manejo de cookies
     const setCookie = (name, value, days = 365) => {
@@ -47,12 +67,8 @@
         return null;
     };
 
-    const deleteCookie = (name) => {
-        document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
-    };
-
     // Lista de temas oscuros conocidos de Bootswatch
-    const DARK_THEMES = ["darkly", "slate", "cyborg", "superhero", "vapor", "materia"];
+    const DARK_THEMES = ["darkly", "slate", "cyborg", "superhero", "vapor", "material"];
 
     /**
      * Aplica o remueve la clase .dark-theme en el elemento <html>
@@ -69,55 +85,60 @@
         document.documentElement.setAttribute('data-theme', themeName);
     }
 
+    /**
+     * Devuelve la ruta (path) del CSS para un nombre de tema dado.
+     */
+    function themePathFor(themeName) {
+        const paths = {
+            'cerulean': 'libs/bootswatch@4.6.2/dist/cerulean/bootstrap.min.css',
+            'cosmo':    'libs/bootswatch@4.6.2/dist/cosmo/bootstrap.min.css',
+            'litera':   'libs/bootswatch@4.6.2/dist/litera/bootstrap.min.css',
+            'cyborg':   'libs/bootswatch@4.6.2/dist/cyborg/bootstrap.min.css',
+            'darkly':   'libs/bootswatch@4.6.2/dist/darkly/bootstrap.min.css',
+            'material': 'libs/bootswatch@4.6.2/dist/materia/bootstrap.min.css',
+            'default':  'libs/bootstrap-4.6.2-dist/css/bootstrap.min.css',
+        };
+        return paths[themeName] || paths['cosmo'];
+    }
+
     const setupTheme = () => {
         const themeStylesheet = document.getElementById("bootswatch-theme");
-        const defaultThemePath = "/libs/bootswatch@4.6.2/dist/cosmo/bootstrap.min.css";
         const defaultThemeName = "cosmo";
 
-        // Cargar el tema guardado al iniciar (LocalStorage primero, luego cookies como respaldo)
-        let savedThemePath = localStorage.getItem("bootswatch-theme");
-        let savedThemeName = localStorage.getItem("bootswatch-theme-name");
+        // Determinar si el usuario está autenticado
+        const userAuthenticated = document.querySelector('meta[name="user-authenticated"]')?.content === 'true';
 
-        // Si no hay en LocalStorage, intentar cargar desde cookies
-        if (!savedThemePath) {
-            savedThemePath = getCookie("bootswatch-theme");
-            savedThemeName = getCookie("bootswatch-theme-name");
+        // El nombre del tema actual se determina así:
+        // 1. Si el usuario está autenticado, el <link> ya fue renderizado desde
+        //    el servidor con el tema de la BD. Leemos el data-theme-name del <link>.
+        // 2. Si no está autenticado (login), leemos de localStorage/cookies.
+        let currentThemeName = null;
 
-            // Si se cargó desde cookies, sincronizar con LocalStorage
-            if (savedThemePath && savedThemeName) {
-                try {
-                    localStorage.setItem("bootswatch-theme", savedThemePath);
-                    localStorage.setItem("bootswatch-theme-name", savedThemeName);
-                } catch (e) {
-                    // Si LocalStorage falla, continuar con cookies
-                    console.warn("No se pudo sincronizar con LocalStorage, usando cookies como respaldo");
-                }
+        if (userAuthenticated && themeStylesheet) {
+            // El servidor ya cargó el tema correcto; lo respetamos.
+            currentThemeName = themeStylesheet.getAttribute('data-theme-name') || defaultThemeName;
+        } else {
+            // Usuario no autenticado: leer de localStorage (respaldo cookies)
+            currentThemeName = localStorage.getItem("bootswatch-theme-name");
+            if (!currentThemeName) {
+                currentThemeName = getCookie("bootswatch-theme-name");
+            }
+
+            if (!currentThemeName) {
+                currentThemeName = defaultThemeName;
+            }
+
+            // Aplicar el tema al <link> si existe
+            if (themeStylesheet) {
+                themeStylesheet.setAttribute("href", baseUrl + "/" + themePathFor(currentThemeName));
             }
         }
 
-        if (!savedThemePath) {
-            // Si no hay tema guardado en ningún lugar, usar el por defecto y guardarlo
-            savedThemePath = defaultThemePath;
-            savedThemeName = defaultThemeName;
-            try {
-                localStorage.setItem("bootswatch-theme", savedThemePath);
-                localStorage.setItem("bootswatch-theme-name", savedThemeName);
-            } catch (e) {
-                // Si LocalStorage falla, guardar en cookies
-                setCookie("bootswatch-theme", savedThemePath);
-                setCookie("bootswatch-theme-name", savedThemeName);
-            }
-        }
-
-        if (themeStylesheet) {
-            themeStylesheet.setAttribute("href", savedThemePath);
-        }
-
-        // Aplicar la clase dark-theme según el tema guardado
-        applyDarkThemeClass(savedThemeName);
+        // Aplicar la clase dark-theme según el tema actual
+        applyDarkThemeClass(currentThemeName);
 
         // Actualizar el indicador de activo en el menú al cargar la página
-        updateActiveThemeIndicator(savedThemeName);
+        updateActiveThemeIndicator(currentThemeName);
 
         // Manejar el clic en los botones del selector
         const themeButtons = document.querySelectorAll(".theme-select-button");
@@ -136,15 +157,14 @@
                 applyThemeChange(themeName, themePath);
 
                 // IMPORTANTE: Solo notificar al backend si el usuario está logueado
-                // En la página de login no hay botones con esta clase, pero por seguridad lo validamos
-                if (document.querySelector('meta[name="user-authenticated"]')?.content === 'false') {
+                if (!userAuthenticated) {
                     return;
                 }
 
-                // Notificar al backend
+                // Notificar al backend para persistir en BD
                 fetch(baseUrl + "/tema/cambiar", {
                     method: "POST",
-                    credentials: "include", // IMPORTANTE: Enviar cookies para mantener la sesión
+                    credentials: "include",
                     headers: {
                         "Content-Type": "application/json",
                         "Accept": "application/json",
@@ -161,7 +181,7 @@
                                     window.handleSessionExpired({ message: payload.message || payload.error, redirect: payload.redirect });
                                 }).catch(function () { window.handleSessionExpired(); });
                             } else {
-                                window.location.href = '/login';
+                                window.location.href = baseUrl + '/login';
                             }
                             return;
                         }
@@ -171,7 +191,7 @@
                         return response.json();
                     })
                     .then(data => {
-                        console.log('Tema guardado exitosamente:', data);
+                        if (data) console.log('Tema guardado exitosamente:', data);
                     })
                     .catch(error => {
                         console.error('Error de red al intentar guardar el tema:', error);
@@ -186,11 +206,13 @@
         // Cambiar el CSS en el DOM instantáneamente
         if (themeStylesheet) {
             themeStylesheet.setAttribute("href", themePath);
+            // Actualizar el atributo data-theme-name para que setupTheme
+            // pueda leerlo en futuras cargas si el usuario está autenticado.
+            themeStylesheet.setAttribute("data-theme-name", themeName);
         }
 
         // Aplicar color de fondo inmediatamente sin transiciones
-        const darkThemes = ["darkly", "slate", "cyborg", "materia"];
-        const isDark = darkThemes.includes(themeName);
+        const isDark = DARK_THEMES.includes(themeName);
 
         document.documentElement.style.backgroundColor = isDark
             ? "#222222"
@@ -200,7 +222,7 @@
         // Aplicar la clase dark-theme según el tema
         applyDarkThemeClass(themeName);
 
-        // Guardar la elección en LocalStorage y cookies (doble respaldo)
+        // Guardar la elección en localStorage y cookies (para página de login)
         try {
             localStorage.setItem("bootswatch-theme", themePath);
             localStorage.setItem("bootswatch-theme-name", themeName);
@@ -241,7 +263,7 @@
     }
 
     // Reinicializar cuando Livewire haga una actualización
-    document.addEventListener("livewire:load", () => {
+    document.addEventListener("livewire:init", () => {
         setupTheme();
     });
 })();

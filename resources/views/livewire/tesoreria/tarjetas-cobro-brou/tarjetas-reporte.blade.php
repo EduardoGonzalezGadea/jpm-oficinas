@@ -9,7 +9,7 @@
           </a>
         </div>
         <div class="card-body py-2">
-          <form wire:submit.prevent="buscar">
+          <form wire:submit="buscar">
             <div class="row">
               <!-- Grupo 1: Cronología y Fechas -->
               <div class="col-md-12">
@@ -25,13 +25,13 @@
                           <div class="col-6 mb-1">
                             <div class="input-group input-group-sm">
                               <div class="input-group-prepend"><span class="input-group-text">Desde</span></div>
-                              <input type="date" class="form-control" wire:model.defer="filters.fecha_desde">
+                              <input type="date" class="form-control" wire:model="filters.fecha_desde">
                             </div>
                           </div>
                           <div class="col-6 mb-1">
                             <div class="input-group input-group-sm">
                               <div class="input-group-prepend"><span class="input-group-text">Hasta</span></div>
-                              <input type="date" class="form-control" wire:model.defer="filters.fecha_hasta">
+                              <input type="date" class="form-control" wire:model="filters.fecha_hasta">
                             </div>
                           </div>
                         </div>
@@ -42,13 +42,13 @@
                           <div class="col-6 mb-1">
                             <div class="input-group input-group-sm">
                               <div class="input-group-prepend"><span class="input-group-text">Desde</span></div>
-                              <input type="date" class="form-control" wire:model.defer="filters.fecha_entregado_desde">
+                              <input type="date" class="form-control" wire:model="filters.fecha_entregado_desde">
                             </div>
                           </div>
                           <div class="col-6 mb-1">
                             <div class="input-group input-group-sm">
                               <div class="input-group-prepend"><span class="input-group-text">Hasta</span></div>
-                              <input type="date" class="form-control" wire:model.defer="filters.fecha_entregado_hasta">
+                              <input type="date" class="form-control" wire:model="filters.fecha_entregado_hasta">
                             </div>
                           </div>
                         </div>
@@ -59,13 +59,13 @@
                           <div class="col-6 mb-1">
                             <div class="input-group input-group-sm">
                               <div class="input-group-prepend"><span class="input-group-text">Desde</span></div>
-                              <input type="date" class="form-control" wire:model.defer="filters.fecha_devuelto_desde">
+                              <input type="date" class="form-control" wire:model="filters.fecha_devuelto_desde">
                             </div>
                           </div>
                           <div class="col-6 mb-1">
                             <div class="input-group input-group-sm">
                               <div class="input-group-prepend"><span class="input-group-text">Hasta</span></div>
-                              <input type="date" class="form-control" wire:model.defer="filters.fecha_devuelto_hasta">
+                              <input type="date" class="form-control" wire:model="filters.fecha_devuelto_hasta">
                             </div>
                           </div>
                         </div>
@@ -74,7 +74,7 @@
                     <div class="form-row border-top mt-2 pt-2">
                       <div class="col-md-3 mb-1">
                         <label class="mb-0 small">Estado Actual</label>
-                        <select class="form-control form-control-sm" wire:model.defer="filters.estado">
+                        <select class="form-control form-control-sm" wire:model="filters.estado">
                           <option value="">TODOS</option>
                           <option value="Recibido">RECIBIDO</option>
                           <option value="Entregado">ENTREGADO</option>
@@ -95,16 +95,16 @@
                   <div class="card-body py-2 px-3">
                     <div class="row">
                       <div class="col-md-3 mb-2">
-                        <input type="text" class="form-control form-control-sm" placeholder="Cédula" wire:model.defer="filters.titular_cedula">
+                        <input type="text" class="form-control form-control-sm" placeholder="Cédula" wire:model="filters.titular_cedula">
                       </div>
                       <div class="col-md-3 mb-2">
-                        <input type="text" class="form-control form-control-sm" placeholder="Nombres" wire:model.defer="filters.titular_nombre">
+                        <input type="text" class="form-control form-control-sm" placeholder="Nombres" wire:model="filters.titular_nombre">
                       </div>
                       <div class="col-md-3 mb-2">
-                        <input type="text" class="form-control form-control-sm" placeholder="Apellidos" wire:model.defer="filters.titular_apellido">
+                        <input type="text" class="form-control form-control-sm" placeholder="Apellidos" wire:model="filters.titular_apellido">
                       </div>
                       <div class="col-md-3 mb-2">
-                        <input type="text" class="form-control form-control-sm" placeholder="Nro. Tarjeta" wire:model.defer="filters.numero_tarjeta">
+                        <input type="text" class="form-control form-control-sm" placeholder="Nro. Tarjeta" wire:model="filters.numero_tarjeta">
                       </div>
                     </div>
 

@@ -30,7 +30,7 @@
           <div class="row mb-3">
             <div class="col-12">
               <div class="input-group input-group-sm">
-                <input type="text" wire:model.debounce.300ms="search" class="form-control form-control-sm" placeholder="Buscar por número de cheque o banco...">
+                <input type="text" wire:model.live.debounce.300ms="search" class="form-control form-control-sm" placeholder="Buscar por número de cheque o banco...">
                 <div class="input-group-append">
                   <button class="btn btn-primary" type="button" wire:click="clearSearch">
                     <i class="fas fa-times"></i>
@@ -96,11 +96,11 @@
                 <tr>
                   {{-- <th class="text-nowrap py-2 text-center align-middle">
                       <input type="checkbox"
-                          wire:model="selectAll"
+                          wire:model.live="selectAll"
                           class="form-check-input">
                     </th> --}}
                   <th class="text-nowrap py-1 align-middle">
-                    <input type="checkbox" wire:model="selectAll">
+                    <input type="checkbox" wire:model.live="selectAll">
                   </th>
                   <th class="text-nowrap py-1">Banco</th>
                   <th class="text-nowrap py-1">Cuenta</th>
@@ -117,7 +117,7 @@
                 <tr style="font-size: 0.875rem;">
                   <td class="text-nowrap py-1 text-center">
                     <input type="checkbox"
-                      wire:model="selectedCheques"
+                      wire:model.live="selectedCheques"
                       value="{{ $cheque->id }}">
                   </td>
                   <td class="text-nowrap py-1">{{ $cheque->cuentaBancaria->banco->codigo }}</td>
@@ -207,12 +207,12 @@
           </div>
           @endif
 
-          <form wire:submit.prevent="emitir">
+          <form wire:submit="emitir">
             <div class="row">
               <div class="col-md-6">
                 <div class="form-group mb-2">
                   <label for="fecha_emision" class="mb-1 small">Fecha *</label>
-                  <input type="date" wire:model="fecha_emision" class="form-control form-control-sm @error('fecha_emision') is-invalid @enderror" id="fecha_emision">
+                  <input type="date" wire:model.live="fecha_emision" class="form-control form-control-sm @error('fecha_emision') is-invalid @enderror" id="fecha_emision">
                   @error('fecha_emision')
                   <div class="invalid-feedback">{{ $message }}</div>
                   @enderror
@@ -221,7 +221,7 @@
               <div class="col-md-6">
                 <div class="form-group mb-2">
                   <label for="monto" class="mb-1 small">Monto *</label>
-                  <input type="number" step="0.01" wire:model="monto" class="form-control form-control-sm @error('monto') is-invalid @enderror" id="monto" placeholder="Monto">
+                  <input type="number" step="0.01" wire:model.live="monto" class="form-control form-control-sm @error('monto') is-invalid @enderror" id="monto" placeholder="Monto">
                   @error('monto')
                   <div class="invalid-feedback">{{ $message }}</div>
                   @enderror
@@ -230,7 +230,7 @@
             </div>
             <div class="form-group mb-2">
               <label for="beneficiario" class="mb-1 small">Beneficiario *</label>
-              <input type="text" wire:model.debounce.300ms="beneficiario" class="form-control form-control-sm @error('beneficiario') is-invalid @enderror" id="beneficiario" placeholder="Nombre del beneficiario" autocomplete="off">
+              <input type="text" wire:model.live.debounce.300ms="beneficiario" class="form-control form-control-sm @error('beneficiario') is-invalid @enderror" id="beneficiario" placeholder="Nombre del beneficiario" autocomplete="off">
               @if(!empty($beneficiariosSugerencias))
               <div class="list-group position-absolute w-100" style="z-index: 1000; max-height: 200px; overflow-y: auto;">
                 @foreach($beneficiariosSugerencias as $sugerencia)
@@ -246,7 +246,7 @@
             </div>
             <div class="form-group mb-2">
               <label for="concepto" class="mb-1 small">Concepto *</label>
-              <textarea wire:model.debounce.300ms="concepto" class="form-control form-control-sm @error('concepto') is-invalid @enderror" id="concepto" rows="2" placeholder="Concepto del cheque"></textarea>
+              <textarea wire:model.live.debounce.300ms="concepto" class="form-control form-control-sm @error('concepto') is-invalid @enderror" id="concepto" rows="2" placeholder="Concepto del cheque"></textarea>
               @if(!empty($conceptosSugerencias))
               <div class="list-group position-absolute w-100" style="z-index: 1000; max-height: 200px; overflow-y: auto;">
                 @foreach($conceptosSugerencias as $sugerencia)
@@ -299,12 +299,12 @@
           </div>
           @endif
 
-          <form wire:submit.prevent="editar">
+          <form wire:submit="editar">
             <div class="row">
               <div class="col-md-6">
                 <div class="form-group mb-2">
                   <label for="edit_fecha_emision" class="mb-1 small">Fecha *</label>
-                  <input type="date" wire:model="edit_fecha_emision" class="form-control form-control-sm @error('edit_fecha_emision') is-invalid @enderror" id="edit_fecha_emision">
+                  <input type="date" wire:model.live="edit_fecha_emision" class="form-control form-control-sm @error('edit_fecha_emision') is-invalid @enderror" id="edit_fecha_emision">
                   @error('edit_fecha_emision')
                   <div class="invalid-feedback">{{ $message }}</div>
                   @enderror
@@ -314,7 +314,7 @@
               <div class="col-md-6">
                 <div class="form-group mb-2">
                   <label for="edit_monto" class="mb-1 small">Monto *</label>
-                  <input type="number" step="0.01" wire:model="edit_monto" class="form-control form-control-sm @error('edit_monto') is-invalid @enderror" id="edit_monto" placeholder="Monto">
+                  <input type="number" step="0.01" wire:model.live="edit_monto" class="form-control form-control-sm @error('edit_monto') is-invalid @enderror" id="edit_monto" placeholder="Monto">
                   @error('edit_monto')
                   <div class="invalid-feedback">{{ $message }}</div>
                   @enderror
@@ -323,7 +323,7 @@
             </div>
             <div class="form-group mb-2">
               <label for="edit_beneficiario" class="mb-1 small">Beneficiario *</label>
-              <input type="text" wire:model.debounce.300ms="edit_beneficiario" class="form-control form-control-sm @error('edit_beneficiario') is-invalid @enderror" id="edit_beneficiario" placeholder="Nombre del beneficiario" autocomplete="off">
+              <input type="text" wire:model.live.debounce.300ms="edit_beneficiario" class="form-control form-control-sm @error('edit_beneficiario') is-invalid @enderror" id="edit_beneficiario" placeholder="Nombre del beneficiario" autocomplete="off">
               @if(!empty($beneficiariosSugerencias))
               <div class="list-group position-absolute w-100" style="z-index: 1000; max-height: 200px; overflow-y: auto;">
                 @foreach($beneficiariosSugerencias as $sugerencia)
@@ -339,7 +339,7 @@
             </div>
             <div class="form-group mb-2">
               <label for="edit_concepto" class="mb-1 small">Concepto *</label>
-              <textarea wire:model.debounce.300ms="edit_concepto" class="form-control form-control-sm @error('edit_concepto') is-invalid @enderror" id="edit_concepto" rows="2" placeholder="Concepto del cheque"></textarea>
+              <textarea wire:model.live.debounce.300ms="edit_concepto" class="form-control form-control-sm @error('edit_concepto') is-invalid @enderror" id="edit_concepto" rows="2" placeholder="Concepto del cheque"></textarea>
               @if(!empty($conceptosSugerencias))
               <div class="list-group position-absolute w-100" style="z-index: 1000; max-height: 200px; overflow-y: auto;">
                 @foreach($conceptosSugerencias as $sugerencia)
@@ -392,10 +392,10 @@
           </div>
           @endif
 
-          <form wire:submit.prevent="anular" id="anularForm">
+          <form wire:submit="anular" id="anularForm">
             <div class="form-group mb-2">
               <label for="motivo_anulacion" class="mb-1 small">Motivo de anulación *</label>
-              <textarea wire:model.lazy="motivo_anulacion" class="form-control form-control-sm @error('motivo_anulacion') is-invalid @enderror" id="motivo_anulacion" rows="3" placeholder="Motivo de la anulación del cheque"></textarea>
+              <textarea wire:model.blur="motivo_anulacion" class="form-control form-control-sm @error('motivo_anulacion') is-invalid @enderror" id="motivo_anulacion" rows="3" placeholder="Motivo de la anulación del cheque"></textarea>
               @error('motivo_anulacion')
               <div class="invalid-feedback">{{ $message }}</div>
               @enderror
@@ -414,19 +414,20 @@
 
   @push('scripts')
   <script>
-    window.livewire.on('showEmitirModal', () => {
+    document.addEventListener('livewire:init', function() {
+    Livewire.on('showEmitirModal', () => {
       $('#emitirChequeModal').modal('show');
     });
 
-    window.livewire.on('hideEmitirModal', () => {
+    Livewire.on('hideEmitirModal', () => {
       $('#emitirChequeModal').modal('hide');
     });
 
-    window.livewire.on('showAnularModal', () => {
+    Livewire.on('showAnularModal', () => {
       $('#anularChequeModal').modal('show');
     });
 
-    window.livewire.on('hideAnularModal', () => {
+    Livewire.on('hideAnularModal', () => {
       $('#anularChequeModal').modal('hide');
       // Re-enable button and restore text after modal closes
       setTimeout(() => {
@@ -436,7 +437,7 @@
       }, 500);
     });
 
-    window.livewire.on('chequeEmitido', () => {
+    Livewire.on('chequeEmitido', () => {
       $('#emitirChequeModal').modal('hide');
       Swal.fire({
         icon: 'success',
@@ -446,7 +447,7 @@
       });
     });
 
-    window.livewire.on('chequeAnulado', () => {
+    Livewire.on('chequeAnulado', () => {
       $('#anularChequeModal').modal('hide');
       Swal.fire({
         icon: 'success',
@@ -456,15 +457,15 @@
       });
     });
 
-    window.livewire.on('showEditarModal', () => {
+    Livewire.on('showEditarModal', () => {
       $('#editarChequeModal').modal('show');
     });
 
-    window.livewire.on('hideEditarModal', () => {
+    Livewire.on('hideEditarModal', () => {
       $('#editarChequeModal').modal('hide');
     });
 
-    window.livewire.on('chequeEditado', () => {
+    Livewire.on('chequeEditado', () => {
       $('#editarChequeModal').modal('hide');
       Swal.fire({
         icon: 'success',
@@ -472,6 +473,7 @@
         showConfirmButton: false,
         timer: 1500
       });
+    });
     });
 
     $(document).ready(function() {
@@ -498,7 +500,7 @@
       });
 
       $('#emitirChequeModal').on('hidden.bs.modal', function() {
-        window.livewire.emit('closeModal');
+        window.Livewire.dispatch('closeModal');
       });
 
       $('#anularChequeModal').on('shown.bs.modal', function() {
@@ -524,7 +526,7 @@
       });
 
       $('#anularChequeModal').on('hidden.bs.modal', function() {
-        window.livewire.emit('closeAnularModal');
+        window.Livewire.dispatch('closeAnularModal');
       });
 
       $('#editarChequeModal').on('shown.bs.modal', function() {
@@ -550,15 +552,16 @@
       });
 
       $('#editarChequeModal').on('hidden.bs.modal', function() {
-        window.livewire.emit('closeEditarModal');
+        window.Livewire.dispatch('closeEditarModal');
       });
     });
 
     // Listener para redireccionamiento después de éxito
     window.addEventListener('redirect-after-success', event => {
+      const data = window.LiveEvent(event);
       setTimeout(() => {
-        window.location.href = event.detail.url;
-      }, event.detail.delay || 1000);
+        window.location.href = data.url;
+      }, data.delay || 1000);
     });
   </script>
   @endpush

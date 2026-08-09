@@ -1,0 +1,35 @@
+<?php
+
+namespace App\Livewire\Tesoreria\Prendas;
+
+use Livewire\Component;
+use App\Models\Tesoreria\Prenda;
+
+/**
+ * Componente Livewire: Ver Detalle de Prenda
+ *
+ * Muestra los detalles completos de una prenda.
+ */
+class Show extends Component
+{
+    public $prenda;
+
+    protected $listeners = ['showDetailModal'];
+
+    public function showDetailModal($id)
+    {
+        $this->prenda = Prenda::with([
+            'medioPago',
+            'createdBy',
+            'updatedBy',
+            'deletedBy'
+        ])->find($id);
+
+        $this->dispatch('show-modal', id: 'showModal');
+    }
+
+    public function render()
+    {
+        return view('livewire.tesoreria.prendas.show');
+    }
+}

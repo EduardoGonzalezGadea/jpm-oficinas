@@ -72,6 +72,42 @@
         </div>
     </div>
 
+    @php
+        // Totales por institución considerando SOLO los registros que integran la planilla
+        $totalesInstitucion = $planilla->eventuales
+            ->groupBy('institucion')
+            ->map(function ($grupo, $institucion) {
+                return [
+                    'institucion' => $institucion,
+                    'total_monto' => (float) $grupo->sum('monto'),
+                ];
+            })
+            ->sortBy('institucion')
+            ->values();
+    @endphp
+
+    @if ($totalesInstitucion->isNotEmpty())
+        <div style="margin-bottom: 20px; border: 1px solid #ccc; border-radius: 4px; padding: 10px;">
+            <h3 style="margin: 0 0 8px 0; font-size: 14px; text-align: center; font-weight: bold;">Totales por Institución</h3>
+            <table style="margin-bottom: 0;">
+                <thead>
+                    <tr>
+                        <th>Institución</th>
+                        <th class="text-right">Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach ($totalesInstitucion as $total)
+                        <tr>
+                            <td>{{ $total['institucion'] ?: 'SIN DATO' }}</td>
+                            <td class="text-right">{{ '$ ' . number_format($total['total_monto'], 2, ',', '.') }}</td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    @endif
+
     <table>
         <thead>
             <tr>

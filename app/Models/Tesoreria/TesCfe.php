@@ -97,8 +97,9 @@ class TesCfe extends Model
     }
 
     /**
-     * @deprecated El campo siif_distribucion_tipo_id en BD será eliminado.
-     * Usar $this->cajaConcepto?->siifDistribucionTipo en su lugar.
+     * Obtiene el modelo SiifDistribucionTipo asociado vía cajaConcepto.
+     * La columna siif_distribucion_tipo_id en BD es una desnormalización
+     * que preserva el valor al momento de creación del CFE (no es deprecated).
      */
     public function getSiifDistribucionTipoAttribute()
     {
@@ -106,8 +107,9 @@ class TesCfe extends Model
     }
 
     /**
-     * @deprecated El campo siif_distribucion_tipo_id en BD será eliminado.
-     * Usar $this->cajaConcepto?->siif_distribucion_tipo_id en su lugar.
+     * Proxy al siif_distribucion_tipo_id del cajaConcepto asociado.
+     * La columna en BD se auto-puebla desde cajaConcepto al crear el CFE
+     * y se mantiene como copia inmutable para preservar el histórico.
      */
     public function getSiifDistribucionTipoIdAttribute()
     {

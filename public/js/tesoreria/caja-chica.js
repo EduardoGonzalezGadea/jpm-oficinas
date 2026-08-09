@@ -1,4 +1,4 @@
-document.addEventListener('livewire:load', function() {
+document.addEventListener('livewire:init', function() {
 
     Livewire.on('show-recuperar-modal', () => $('#modalRecuperar').modal('show'));
     Livewire.on('hide-recuperar-modal', () => $('#modalRecuperar').modal('hide'));
@@ -60,12 +60,12 @@ document.addEventListener('livewire:load', function() {
 
     // === Modal Nuevo Pendiente - Bootstrap close handler ===
     $(document).on('hidden.bs.modal', '#modalNuevoPendiente', function() {
-        Livewire.emit('cerrarModalNuevoPendiente');
+        Livewire.dispatch('cerrarModalNuevoPendiente');
     });
 
     // === Modal Nuevo Pago - Bootstrap close handler ===
     $(document).on('hidden.bs.modal', '#modalNuevoPago', function() {
-        Livewire.emit('cerrarModalNuevoPago');
+        Livewire.dispatch('cerrarModalNuevoPago');
     });
     $(document).on('shown.bs.modal', '#modalNuevoPago', function() {
         $('#pagoEgreso').focus();
@@ -200,9 +200,9 @@ document.addEventListener('livewire:load', function() {
             });
         });
         $('#modalEditarDetalle').on('hidden.bs.modal', function() {
-            window.livewire.emit('resetForm');
+            Livewire.dispatch('resetForm');
         });
-        window.livewire.on('pendienteActualizado', () => {
+        window.Livewire.on('pendienteActualizado', () => {
             $('#modalEditarDetalle').modal('hide');
             setTimeout(function() {
                 window.dispatchEvent(new CustomEvent('swal:success', {

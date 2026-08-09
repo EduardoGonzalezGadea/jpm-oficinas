@@ -145,7 +145,19 @@ class HttpClientService
         ];
 
         if ($proxyConfig !== null) {
-            $options['proxy'] = $proxyConfig;
+            // Guzzle espera un array con claves 'http', 'https' y opcionalmente 'no'
+            // para manejar correctamente HTTPS a través del proxy.
+            $proxyArray = [
+                'http'  => $proxyConfig,
+                'https' => $proxyConfig,
+            ];
+
+            $noProxy = $this->config['proxy']['no'] ?? null;
+            if (is_string($noProxy) && $noProxy !== '') {
+                $proxyArray['no'] = array_map('trim', explode(',', $noProxy));
+            }
+
+            $options['proxy'] = $proxyArray;
         } else {
             $options['proxy'] = false; // explicitly no proxy (evita que Guzzle lea HTTP_PROXY del env)
         }
@@ -159,35 +171,20 @@ class HttpClientService
 
     public function detectProxy(): ?string
     {
-        // Cachear detección por 1 hora
-        $cacheKey = 'proxy_detection_' . md5(json_encode([
-            $_ENV['HTTP_PROXY'] ?? '',
-            $_ENV['HTTPS_PROXY'] ?? '',
-        ]));
+        $cacheKey = 'proxy_detection_result';
 
         if ($this->config['proxy']['cache_detection'] ?? true) {
-            if ($cached = Cache::get($cacheKey)) {
+            $cached = Cache::get($cacheKey);
+            if ($cached !== null) {
                 return $cached === 'none' ? null : $cached;
             }
         }
 
-        $proxyEnvVars = ['HTTPS_PROXY', 'HTTP_PROXY', 'https_proxy', 'http_proxy'];
-        $proxy = null;
-
-        foreach ($proxyEnvVars as $var) {
-            if ($value = getenv($var)) {
-                $proxy = $value;
-                break;
-            }
-            if (isset($_ENV[$var]) && !empty($_ENV[$var])) {
-                $proxy = $_ENV[$var];
-                break;
-            }
-            if (isset($_SERVER[$var]) && !empty($_SERVER[$var])) {
-                $proxy = $_SERVER[$var];
-                break;
-            }
-        }
+        // Leer desde config() para que funcione con y sin config:cache.
+        // env() no es fiable en producción cuando el config está cacheado.
+        $https = $this->config['proxy']['https'] ?? null;
+        $http  = $this->config['proxy']['http']  ?? null;
+        $proxy = ($https && $https !== '') ? $https : (($http && $http !== '') ? $http : null);
 
         if ($this->config['proxy']['cache_detection'] ?? true) {
             Cache::put($cacheKey, $proxy ?? 'none', 3600);

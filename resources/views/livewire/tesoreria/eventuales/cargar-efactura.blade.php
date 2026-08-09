@@ -27,11 +27,6 @@
       background-color: rgba(40, 167, 69, 0.1);
     }
 
-    .extra-small {
-      font-size: 0.75rem;
-      letter-spacing: 0.01rem;
-    }
-
     .upload-box i {
       font-size: 1.5rem;
       margin-bottom: 0.2rem;
@@ -96,7 +91,7 @@
     <div class="card-body p-2">
       <div class="upload-container">
         <div class="upload-box {{ $archivo ? 'has-file' : '' }}">
-          <input type="file" id="archivoEfactura" wire:model="archivo" accept=".pdf" wire:key="input-efactura-{{ $archivo ? 'loaded' : 'empty' }}">
+          <input type="file" id="archivoEfactura" wire:model.live="archivo" accept=".pdf" wire:key="input-efactura-{{ $archivo ? 'loaded' : 'empty' }}">
 
           <div wire:loading.style="display: flex" wire:target="archivo" class="upload-loading-overlay">
             <div class="text-primary text-center">
@@ -111,7 +106,7 @@
               <i class="fas fa-file-invoice text-success mr-2 mb-0"></i>
               <div>
                 <span class="text-success font-weight-bold small">{{ $archivo->getClientOriginalName() }}</span>
-                <span class="text-adaptive-muted extra-small d-block">PDF listo para procesar</span>
+                <span class="text-adaptive-muted small d-block">PDF listo para procesar</span>
               </div>
             </div>
             @else
@@ -119,7 +114,7 @@
               <i class="fas fa-file-pdf text-info mr-2 mb-0"></i>
               <div>
                 <span class="font-weight-bold small">Arrastra la eFactura o haz clic</span>
-                <span class="text-adaptive-muted extra-small d-block">Solo archivos PDF de hasta 10MB</span>
+                <span class="text-adaptive-muted small d-block">Solo archivos PDF de hasta 10MB</span>
               </div>
             </div>
             @endif
@@ -180,7 +175,7 @@
     <div class="card-body p-2">
       <div class="row no-gutters">
         <div class="col-md-5 pr-2 border-right">
-          <table class="table table-sm table-borderless mb-0 extra-small">
+          <table class="table table-sm table-borderless mb-0 small">
             <tbody>
               <tr>
                 <th width="35%">Titular:</th>
@@ -206,7 +201,7 @@
           </table>
         </div>
         <div class="col-md-4 px-2 border-right">
-          <table class="table table-sm table-borderless mb-0 extra-small">
+          <table class="table table-sm table-borderless mb-0 small">
             <tbody>
               <tr>
                 <th width="45%">M. Pago:</th>
@@ -231,13 +226,11 @@
         </div>
       </div>
 
-      <div class="mt-1 pt-1 border-top extra-small">
+      <div class="mt-1 pt-1 border-top small">
         <strong><i class="fas fa-info-circle mr-1"></i>Detalle:</strong>
         <span class="text-adaptive-muted">{{ $datosExtraidos['detalle'] }}</span>
       </div>
     </div>
   </div>
   @endif
-</div>
-</div>
 </div>

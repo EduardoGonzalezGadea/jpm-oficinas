@@ -36,7 +36,7 @@
             <i class="fas fa-tag mr-1 text-primary"></i> Concepto de Caja
           </h6>
           <div class="form-group mb-0">
-            <select wire:model="editCajaConceptoSeleccionado"
+            <select wire:model.live="editCajaConceptoSeleccionado"
               class="form-control @error('editCajaConceptoSeleccionado') is-invalid @enderror">
               <option value="">— Seleccione concepto —</option>
               @foreach($cajaConceptos as $concepto)
@@ -53,7 +53,7 @@
             <i class="fas fa-sitemap mr-1 text-primary"></i> Dependencia
           </h6>
           <div class="form-group mb-0">
-            <select wire:model="editSiifDependenciaSeleccionado"
+            <select wire:model.live="editSiifDependenciaSeleccionado"
               class="form-control @error('editSiifDependenciaSeleccionado') is-invalid @enderror">
               <option value="">— Seleccione dep. SIIF —</option>
               @foreach($siifDependencias as $dep)

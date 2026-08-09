@@ -20,7 +20,7 @@
       <div class="row mb-1">
         <div class="col">
           <div class="input-group">
-            <input type="text" wire:model.debounce.300ms="search" class="form-control" placeholder="Buscar por nombre...">
+            <input type="text" wire:model.live.debounce.300ms="search" class="form-control" placeholder="Buscar por nombre...">
             <div class="input-group-append">
               <button type="button" wire:click="clearSearch" class="btn btn-outline-danger" title="Limpiar búsqueda">
                 <i class="fas fa-times"></i>
@@ -91,14 +91,14 @@
         <div class="modal-body">
           <div class="form-group">
             <label for="nombre">Nombre</label>
-            <input type="text" wire:model.defer="nombre" id="nombre" class="form-control @error('nombre') is-invalid @enderror">
+            <input type="text" wire:model="nombre" id="nombre" class="form-control @error('nombre') is-invalid @enderror">
             @error('nombre') <span class="invalid-feedback">{{ $message }}</span> @enderror
           </div>
           <div class="row">
             <div class="col-md-6">
               <div class="form-group">
                 <label for="cantidad_recibos">Cantidad de Recibos</label>
-                <select wire:model.defer="cantidad_recibos" id="cantidad_recibos" class="form-control @error('cantidad_recibos') is-invalid @enderror">
+                <select wire:model="cantidad_recibos" id="cantidad_recibos" class="form-control @error('cantidad_recibos') is-invalid @enderror">
                   <option value="25">25</option>
                   <option value="50">50</option>
                 </select>
@@ -108,7 +108,7 @@
             <div class="col-md-6">
               <div class="form-group">
                 <label for="stock_minimo_recibos">Stock Mínimo (Recibos)</label>
-                <input type="number" wire:model.defer="stock_minimo_recibos" id="stock_minimo_recibos" class="form-control @error('stock_minimo_recibos') is-invalid @enderror">
+                <input type="number" wire:model="stock_minimo_recibos" id="stock_minimo_recibos" class="form-control @error('stock_minimo_recibos') is-invalid @enderror">
                 @error('stock_minimo_recibos') <span class="invalid-feedback">{{ $message }}</span> @enderror
               </div>
             </div>
@@ -119,7 +119,7 @@
               <div class="card-body">
                 @foreach($allServicios as $servicio)
                   <div class="custom-control custom-checkbox">
-                    <input type="checkbox" class="custom-control-input" id="servicio_{{ $servicio->id }}" value="{{ $servicio->id }}" wire:model.defer="serviciosSeleccionados">
+                    <input type="checkbox" class="custom-control-input" id="servicio_{{ $servicio->id }}" value="{{ $servicio->id }}" wire:model="serviciosSeleccionados">
                     <label class="custom-control-label" for="servicio_{{ $servicio->id }}">{{ $servicio->nombre }}</label>
                   </div>
                 @endforeach

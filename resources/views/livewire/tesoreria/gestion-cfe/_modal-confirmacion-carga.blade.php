@@ -87,7 +87,7 @@
                   <i class="fas fa-tag mr-1 text-primary"></i> Concepto de Caja
                 </h6>
                 <div class="form-group mb-0">
-                  <select wire:model="cajaConceptoSeleccionado" id="selectorCajaConcepto"
+                  <select wire:model.live="cajaConceptoSeleccionado" id="selectorCajaConcepto"
                     class="form-control @error('cajaConceptoSeleccionado') is-invalid @enderror">
                     <option value="">— Seleccione concepto —</option>
                     @foreach($cajaConceptos as $concepto)
@@ -105,7 +105,7 @@
                   <i class="fas fa-sitemap mr-1 text-primary"></i> Dependencia
                 </h6>
                 <div class="form-group mb-0">
-                  <select wire:model="siifDependenciaSeleccionado" id="selectorSiifDependencia"
+                  <select wire:model.live="siifDependenciaSeleccionado" id="selectorSiifDependencia"
                     class="form-control @error('siifDependenciaSeleccionado') is-invalid @enderror">
                     <option value="">— Seleccione dep. SIIF —</option>
                     @foreach($siifDependencias as $dep)

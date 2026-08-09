@@ -26,8 +26,8 @@
                         <div class="input-group-prepend">
                             <span class="input-group-text"><i class="fas fa-search"></i></span>
                         </div>
-                        <input type="text" wire:model.debounce.300ms="search" class="form-control"
-                            placeholder="Buscar por planilla...">
+                        <input type="text" wire:model.live.debounce.300ms="search" class="form-control"
+                            placeholder="Buscar por planilla o N° ER...">
                         <div class="input-group-append">
                             <button class="btn btn-outline-dark" wire:click="resetearBusqueda" title="Resetear búsqueda">
                                 <i class="fas fa-undo"></i>
@@ -61,14 +61,14 @@
                         @endphp
                         @foreach($mesesNombres as $num => $nombre)
                             <div class="custom-control custom-checkbox mb-2">
-                                <input type="checkbox" id="mes_{{ $num }}" value="{{ $num }}" wire:model="filtroMeses" class="custom-control-input">
+                                <input type="checkbox" id="mes_{{ $num }}" value="{{ $num }}" wire:model.live="filtroMeses" class="custom-control-input">
                                 <label for="mes_{{ $num }}" class="custom-control-label small cursor-pointer w-100">{{ $nombre }}</label>
                             </div>
                         @endforeach
                     </div>
                 </div>
                 <div class="mr-2" style="width: 170px;">
-                    <select wire:model="filtroAno" class="form-control">
+                    <select wire:model.live="filtroAno" class="form-control">
                         <option value="0">— Todos los años —</option>
                         @foreach($anosRegistrados as $ano)
                             <option value="{{ $ano }}">{{ $ano }}</option>

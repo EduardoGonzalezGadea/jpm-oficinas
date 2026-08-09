@@ -9,7 +9,7 @@
           </a>
         </div>
         <div class="card-body py-2">
-          <form wire:submit.prevent="buscar">
+          <form wire:submit="buscar">
             <div class="row">
               <!-- Fechas -->
               <div class="col-md-5">
@@ -19,17 +19,17 @@
                     <div class="form-row">
                       <div class="col-md-6 mb-2">
                         <label class="mb-0 small" for="fecha_desde">Fecha Desde</label>
-                        <input type="text" id="fecha_desde" class="form-control form-control-sm datepicker-uy" wire:model.defer="filters.fecha_desde">
+                        <input type="text" id="fecha_desde" class="form-control form-control-sm datepicker-uy" wire:model="filters.fecha_desde">
                       </div>
                       <div class="col-md-6 mb-2">
                         <label class="mb-0 small" for="fecha_hasta">Fecha Hasta</label>
-                        <input type="text" id="fecha_hasta" class="form-control form-control-sm datepicker-uy" wire:model.defer="filters.fecha_hasta">
+                        <input type="text" id="fecha_hasta" class="form-control form-control-sm datepicker-uy" wire:model="filters.fecha_hasta">
                       </div>
                     </div>
                     <div class="form-row">
                       <div class="col-md-6 mb-2">
                         <label class="mb-0 small" for="mes">Mes</label>
-                        <select id="mes" class="form-control form-control-sm" wire:model.defer="filters.mes">
+                        <select id="mes" class="form-control form-control-sm" wire:model="filters.mes">
                           <option value="">Todos</option>
                           <option value="1">Enero</option>
                           <option value="2">Febrero</option>
@@ -47,7 +47,7 @@
                       </div>
                       <div class="col-md-6 mb-2">
                         <label class="mb-0 small" for="year">Año</label>
-                        <input type="number" id="year" class="form-control form-control-sm" wire:model.defer="filters.year">
+                        <input type="number" id="year" class="form-control form-control-sm" wire:model="filters.year">
                       </div>
                     </div>
                   </div>
@@ -62,25 +62,25 @@
                     <div class="form-row">
                       <div class="col-md-6 mb-2">
                         <label class="mb-0 small" for="nombre">Nombre</label>
-                        <input type="text" id="nombre" class="form-control form-control-sm" wire:model.defer="filters.nombre">
+                        <input type="text" id="nombre" class="form-control form-control-sm" wire:model="filters.nombre">
                       </div>
                       <div class="col-md-3 mb-2">
                         <label class="mb-0 small" for="cedula">Cédula</label>
-                        <input type="text" id="cedula" class="form-control form-control-sm" wire:model.defer="filters.cedula" placeholder="Ej: 12345678">
+                        <input type="text" id="cedula" class="form-control form-control-sm" wire:model="filters.cedula" placeholder="Ej: 12345678">
                       </div>
                       <div class="col-md-3 mb-2">
                         <label class="mb-0 small" for="recibo">Nro. Recibo</label>
-                        <input type="text" id="recibo" class="form-control form-control-sm" wire:model.defer="filters.recibo">
+                        <input type="text" id="recibo" class="form-control form-control-sm" wire:model="filters.recibo">
                       </div>
                     </div>
                     <div class="form-row">
                       <div class="col-md-4 mb-2">
                         <label class="mb-0 small" for="forma_pago">Medio Pago</label>
-                        <input type="text" id="forma_pago" class="form-control form-control-sm" wire:model.defer="filters.forma_pago">
+                        <input type="text" id="forma_pago" class="form-control form-control-sm" wire:model="filters.forma_pago">
                       </div>
                       <div class="col-md-8 mb-2">
                         <label class="mb-0 small" for="detalle_item">Item / Infracción</label>
-                        <input type="text" id="detalle_item" class="form-control form-control-sm" wire:model.defer="filters.detalle_item" placeholder="Ej: Luz roja, Exceso...">
+                        <input type="text" id="detalle_item" class="form-control form-control-sm" wire:model="filters.detalle_item" placeholder="Ej: Luz roja, Exceso...">
                       </div>
                     </div>
                   </div>
@@ -97,7 +97,7 @@
                     <div class="form-row">
                       <div class="col-md-12 mb-2">
                         <label class="mb-0 small" for="adenda">Adenda / Boleta / Matrícula</label>
-                        <input type="text" id="adenda" class="form-control form-control-sm" wire:model.defer="filters.adenda" placeholder="Buscar en observaciones, nro de boleta, matrícula...">
+                        <input type="text" id="adenda" class="form-control form-control-sm" wire:model="filters.adenda" placeholder="Buscar en observaciones, nro de boleta, matrícula...">
                       </div>
                     </div>
                   </div>

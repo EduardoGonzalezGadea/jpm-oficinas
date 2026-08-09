@@ -1,11 +1,11 @@
 <div>
-  <form wire:submit.prevent="save" id="cheque-libreta-form">
+  <form wire:submit="save" id="cheque-libreta-form">
     <!-- Fila completa para banco y cuenta -->
     <div class="row">
       <div class="col-12">
         <div class="form-group">
           <label for="cuenta_bancaria_id">Cuenta Bancaria</label>
-          <select wire:model="cuenta_bancaria_id" class="form-control @error('cuenta_bancaria_id') is-invalid @enderror">
+          <select wire:model.live="cuenta_bancaria_id" class="form-control @error('cuenta_bancaria_id') is-invalid @enderror">
             <option value="">Seleccionar cuenta...</option>
             @foreach($cuentas as $cuenta)
               <option value="{{ $cuenta->id }}">{{ $cuenta->banco->nombre }} - {{ $cuenta->numero_cuenta }}</option>
@@ -23,7 +23,7 @@
       <div class="col-md-3">
         <div class="form-group">
           <label for="serie">Serie</label>
-          <input type="text" wire:model="serie" class="form-control @error('serie') is-invalid @enderror" id="serie" placeholder="Serie del cheque" maxlength="11" wire:key="serie-input">
+          <input type="text" wire:model.live="serie" class="form-control @error('serie') is-invalid @enderror" id="serie" placeholder="Serie del cheque" maxlength="11" wire:key="serie-input">
           @error('serie')
             <div class="invalid-feedback">{{ $message }}</div>
           @enderror
@@ -32,7 +32,7 @@
       <div class="col-md-3">
         <div class="form-group">
           <label for="inicio">Número Inicial</label>
-          <input type="number" wire:model="inicio" class="form-control @error('inicio') is-invalid @enderror" placeholder="1, 26, 51..." wire:key="inicio-input">
+          <input type="number" wire:model.live="inicio" class="form-control @error('inicio') is-invalid @enderror" placeholder="1, 26, 51..." wire:key="inicio-input">
           @error('inicio')
             <div class="invalid-feedback">{{ $message }}</div>
           @enderror
@@ -41,7 +41,7 @@
       <div class="col-md-3">
         <div class="form-group">
           <label for="cantidad_libretas">Cantidad de Libretas</label>
-          <input type="number" wire:model="cantidad_libretas" class="form-control @error('cantidad_libretas') is-invalid @enderror" placeholder="1, 2, 3...">
+          <input type="number" wire:model.live="cantidad_libretas" class="form-control @error('cantidad_libretas') is-invalid @enderror" placeholder="1, 2, 3...">
           @error('cantidad_libretas')
             <div class="invalid-feedback">{{ $message }}</div>
           @enderror
@@ -50,7 +50,7 @@
       <div class="col-md-3">
         <div class="form-group">
           <label>Número Final</label>
-          <input type="number" class="form-control" wire:model="numero_final" readonly placeholder="Calculado automáticamente">
+          <input type="number" class="form-control" wire:model.live="numero_final" readonly placeholder="Calculado automáticamente">
         </div>
       </div>
     </div>

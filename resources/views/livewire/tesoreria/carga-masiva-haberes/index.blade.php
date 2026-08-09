@@ -2,8 +2,6 @@
     @section('title', 'Carga masiva de Haberes')
 
     <style>
-      .fp-loader { display: none; }
-      .fp-loader.fp-visible { display: flex; flex-direction: column; justify-content: center; align-items: center; }
       .row-selected {
         background-color: #e8f4fd !important;
       }
@@ -15,18 +13,6 @@
     </style>
 
     <div class="card">
-
-      {{-- Loading overlay full page --}}
-      <div wire:loading.class="fp-visible"
-           wire:target="procesar, generarAsientos"
-           class="fp-loader"
-           style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); z-index: 9999;">
-        <div class="spinner-border text-light" role="status" style="width: 3rem; height: 3rem;">
-          <span class="sr-only">Cargando...</span>
-        </div>
-        <p class="text-light mt-2" wire:loading wire:target="procesar">Procesando archivos Excel...</p>
-        <p class="text-light mt-2" wire:loading wire:target="generarAsientos">Generando asientos...</p>
-      </div>
 
       <div class="card-header bg-info text-white card-header-gradient p-2">
         <div class="d-flex justify-content-between align-items-center">
@@ -43,7 +29,7 @@
       <div class="card-body px-2 pt-2" style="position: relative;">
 
         {{-- Folder selector with autocomplete --}}
-        <div class="form-row align-items-end mb-3" x-data="{ open: @entangle('mostrarSugerencias') }" @click.away="open = false; $wire.ocultarSugerencias()">
+        <div class="form-row align-items-end mb-3" x-data="{ open: @entangle('mostrarSugerencias').live }" @click.away="open = false; $wire.ocultarSugerencias()">
           <div class="col-md-8">
             <label class="small mb-0">Carpeta con archivos Excel</label>
             <div style="position: relative;">
@@ -51,7 +37,7 @@
                 <div class="input-group-prepend">
                   <span class="input-group-text"><i class="fas fa-folder-open"></i></span>
                 </div>
-                <input type="text" class="form-control" wire:model.debounce.400ms="ruta"
+                <input type="text" class="form-control" wire:model.live.debounce.400ms="ruta"
                        placeholder="Escriba la ruta de la carpeta…"
                        id="rutaInput"
                        autocomplete="off"
@@ -78,7 +64,7 @@
           </div>
           <div class="col-md-2">
             <label class="small mb-0">Fecha asiento</label>
-            <input type="date" class="form-control form-control-sm" wire:model="fechaAsiento">
+            <input type="date" class="form-control form-control-sm" wire:model.live="fechaAsiento">
           </div>
           <div class="col-md-2">
             <button type="button" class="btn btn-primary btn-sm btn-block" wire:click="procesar"
@@ -124,7 +110,7 @@
                   <div class="form-row align-items-end p-2 bg-light border-bottom">
                     <div class="col-md-2">
                       <label class="small mb-0">Mes</label>
-                      <select class="form-control form-control-sm" wire:model="filtro_mes">
+                      <select class="form-control form-control-sm" wire:model.live="filtro_mes">
                         <option value="">Todos</option>
                         @foreach ($mesesDisponibles as $m)
                           <option value="{{ $m }}">{{ $m }}</option>
@@ -133,7 +119,7 @@
                     </div>
                     <div class="col-md-2">
                       <label class="small mb-0">Tipo</label>
-                      <select class="form-control form-control-sm" wire:model="filtro_tipo">
+                      <select class="form-control form-control-sm" wire:model.live="filtro_tipo">
                         <option value="">Todos</option>
                         @foreach ($tiposDisponibles as $t)
                           <option value="{{ $t }}">{{ $t }}</option>
@@ -142,7 +128,7 @@
                     </div>
                     <div class="col-md-2">
                       <label class="small mb-0">Pago</label>
-                      <select class="form-control form-control-sm" wire:model="filtro_ventanilla">
+                      <select class="form-control form-control-sm" wire:model.live="filtro_ventanilla">
                         <option value="">Todos</option>
                         <option value="1">Ventanilla</option>
                         <option value="0">Otros medios</option>
@@ -150,7 +136,7 @@
                     </div>
                     <div class="col-md-3">
                       <label class="small mb-0">Buscar</label>
-                      <input type="text" class="form-control form-control-sm" wire:model="buscar" placeholder="C.I. o nombre">
+                      <input type="text" class="form-control form-control-sm" wire:model.live="buscar" placeholder="C.I. o nombre">
                     </div>
                     <div class="col-md-3">
                       <label class="small mb-0">&nbsp;</label>
@@ -193,7 +179,7 @@
                           @php $idx = $d['_idx']; @endphp
                           <tr class="{{ ($seleccionados[$idx] ?? false) ? 'row-selected' : '' }} {{ $d['es_ventanilla'] ? '' : 'text-muted' }}">
                             <td class="text-center">
-                              <input type="checkbox" wire:model="seleccionados.{{ $idx }}">
+                              <input type="checkbox" wire:model.live="seleccionados.{{ $idx }}">
                             </td>
                             <td>{{ $d['ci'] }}</td>
                             <td>{{ $d['nombre'] }}</td>
@@ -209,12 +195,12 @@
                             </td>
                             <td>
                               <input type="text" class="form-control form-control-sm"
-                                     wire:model.lazy="descripcionItem.{{ $idx }}"
+                                     wire:model.blur="descripcionItem.{{ $idx }}"
                                      placeholder="Descripción…">
                             </td>
                             <td>
                               <select class="form-control form-control-sm"
-                                      wire:model="detalleAsignado.{{ $idx }}">
+                                      wire:model.live="detalleAsignado.{{ $idx }}">
                                 <option value="">— Seleccionar —</option>
                                 @foreach ($opcionesDetalle as $opt)
                                   <option value="{{ $opt['id'] }}">{{ $opt['nombre'] }}</option>
@@ -271,19 +257,38 @@
           @endif
 
           {{-- Action buttons --}}
-          <div class="d-flex justify-content-end mt-3">
-            <a href="{{ route('tesoreria.libro-diario.index') }}" class="btn btn-secondary mr-2">
-              <i class="fas fa-times mr-1"></i> Cancelar
-            </a>
-            <button type="button" class="btn btn-success"
-                    wire:click="generarAsientos"
-                    wire:loading.attr="disabled"
-                    {{ $this->cantidadSeleccionados === 0 ? 'disabled' : '' }}>
-              <i class="fas fa-save mr-1"></i> Generar asientos
-              @if ($this->cantidadSeleccionados > 0)
-                ({{ $this->cantidadSeleccionados }})
-              @endif
-            </button>
+          <div class="d-flex align-items-center mt-3" style="flex-wrap:nowrap">
+            <div class="d-flex align-items-end flex-wrap mr-3" style="flex:1;min-width:0">
+              <div class="form-check mr-4 mb-2 mb-sm-0">
+                <input type="checkbox" class="form-check-input"
+                       wire:model.live="entrada_confirmada" id="confirmarEntrada">
+                <label class="form-check-label" for="confirmarEntrada">
+                  <i class="fas fa-check-circle text-success mr-1"></i>
+                  Confirmar ingreso a caja
+                </label>
+                <small class="text-muted d-block ml-4">Si no se confirma, el dinero no se contabiliza en caja hasta su confirmación posterior.</small>
+              </div>
+              <div class="mb-0 mr-4" style="min-width:220px;max-width:280px;flex:1">
+                <label class="small mb-0" for="documento_referencia">Documento de referencia (opcional)</label>
+                <input type="text" class="form-control form-control-sm"
+                       wire:model.live="documento_referencia" id="documento_referencia"
+                       placeholder="Nro. documento, recibo, etc.">
+              </div>
+            </div>
+            <div class="d-flex" style="flex-shrink:0">
+              <a href="{{ route('tesoreria.libro-diario.index') }}" class="btn btn-secondary mr-2">
+                <i class="fas fa-times mr-1"></i> Cancelar
+              </a>
+              <button type="button" class="btn btn-success"
+                      wire:click="generarAsientos"
+                      wire:loading.attr="disabled"
+                      {{ $this->cantidadSeleccionados === 0 ? 'disabled' : '' }}>
+                <i class="fas fa-save mr-1"></i> Generar asientos
+                @if ($this->cantidadSeleccionados > 0)
+                  ({{ $this->cantidadSeleccionados }})
+                @endif
+              </button>
+            </div>
           </div>
 
         @elseif (!$cargando && !$error)
@@ -301,21 +306,23 @@
 @push('scripts')
 <script>
   window.addEventListener('alert', event => {
+    const data = window.LiveEvent(event);
     Swal.fire({
       toast: true,
       position: 'top-end',
       showConfirmButton: false,
       timer: 3000,
       timerProgressBar: true,
-      icon: event.detail.type,
-      title: event.detail.message,
+      icon: data.type,
+      title: data.message,
     });
   });
 
   window.addEventListener('swal:confirmar-duplicados', event => {
+    const data = window.LiveEvent(event);
     Swal.fire({
       title: 'Registros duplicados',
-      html: `Se encontraron <strong>${event.detail.cantidad}</strong> registro(s) que ya existen en el Libro Diario con los mismos datos (identificador, denominación, concepto, detalle y monto).`,
+      html: `Se encontraron <strong>${data.cantidad}</strong> registro(s) que ya existen en el Libro Diario con los mismos datos (identificador, denominación, concepto, detalle y monto).`,
       icon: 'warning',
       showCancelButton: true,
       confirmButtonText: 'Descartar duplicados',
@@ -329,6 +336,29 @@
       } else {
         @this.call('procesarGeneracion', false);
       }
+    });
+  });
+
+  window.addEventListener('swal:items-sin-detalle', event => {
+    const data = window.LiveEvent(event);
+    Swal.fire({
+      title: 'Ítems sin detalle asignado',
+      html: data.html,
+      icon: 'warning',
+      showCancelButton: true,
+      showDenyButton: true,
+      confirmButtonColor: '#28a745',
+      denyButtonColor: '#dc3545',
+      cancelButtonColor: '#6c757d',
+      confirmButtonText: `<i class="fas fa-check mr-1"></i>Continuar con ${data.cantidadConDetalle} ítems`,
+      denyButtonText: '<i class="fas fa-times mr-1"></i>Cancelar',
+      cancelButtonText: '<i class="fas fa-arrow-left mr-1"></i>Volver',
+      reverseButtons: true,
+    }).then(result => {
+      if (result.isConfirmed) {
+        @this.call('procesarGeneracionSinDetalle');
+      }
+      // Si es deny o cancel, no hacer nada (el usuario cancela)
     });
   });
 </script>

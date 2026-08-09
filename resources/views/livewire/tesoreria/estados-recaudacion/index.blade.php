@@ -65,7 +65,7 @@
               @php
                 $totalDia = $planillasDelDia->sum(fn($p) => $p->items->sum('importe'));
               @endphp
-              <tr class="table-info">
+              <tr class="table-info" wire:key="fecha-header-{{ $fecha }}">
                 <td colspan="7" class="py-1 px-2 font-weight-bold">
                   <div class="d-flex justify-content-between align-items-center">
                     <span><i class="far fa-calendar-alt mr-1"></i> {{ \Carbon\Carbon::parse($fecha)->format('d/m/Y') }}</span>
@@ -74,8 +74,7 @@
                 </td>
               </tr>
               @foreach($planillasDelDia as $p)
-                <tbody class="planilla-group">
-                <tr>
+                <tr wire:key="planilla-row-{{ $p->id }}">
                   <td class="align-middle">
                     @if($p->trashed())
                       {{ $p->numero }}<br><strong class="text-danger">(ANULADA)</strong>
@@ -123,7 +122,7 @@
                     </div>
                   </td>
                 </tr>
-                <tr class="table-secondary">
+                <tr class="table-secondary" wire:key="planilla-meta-{{ $p->id }}">
                   <td colspan="7" class="py-1 px-2">
                     <div class="d-flex flex-wrap align-items-center small">
                       <span class="mr-3"><strong>ER N°:</strong> {{ $p->er_numero ?? '—' }}</span>
@@ -134,7 +133,6 @@
                     </div>
                   </td>
                 </tr>
-                </tbody>
               @endforeach
             @empty
               <tr>
@@ -733,7 +731,8 @@
     </div>
   </div>
 
-  @push('scripts')
+</div>
+@push('scripts')
     <script>
       function imprimirPlanilla() {
         var modalBody = document.getElementById('modalPlanilla').querySelector('.modal-body');
@@ -782,9 +781,9 @@
         ventana.document.write('.rounded{border-radius:4px}');
         ventana.document.write('.d-print-none,.modal-footer,.close,.custom-control{display:none!important}');
         ventana.document.write('@media print{body{padding:0}}');
-        ventana.document.write('</style></head><body>');
+        ventana.document.write('<\/style><\/head><body>');
         ventana.document.write(wrapper.innerHTML);
-        ventana.document.write('</body></html>');
+        ventana.document.write('<\/body><\/html>');
         ventana.document.close();
         ventana.focus();
         setTimeout(function() { ventana.print(); ventana.close(); }, 500);
@@ -838,9 +837,9 @@
         ventana.document.write('tbody{page-break-inside:avoid}');
         ventana.document.write('.d-print-none,.modal-footer,.close{display:none!important}');
         ventana.document.write('@media print{body{padding:0}}');
-        ventana.document.write('</style></head><body>');
+        ventana.document.write('<\/style><\/head><body>');
         ventana.document.write(wrapper.innerHTML);
-        ventana.document.write('</body></html>');
+        ventana.document.write('<\/body><\/html>');
         ventana.document.close();
         ventana.focus();
         setTimeout(function() { ventana.print(); ventana.close(); }, 500);
@@ -864,48 +863,54 @@
           cancelButtonText: 'Cancelar'
         }).then((result) => {
           if (result.isConfirmed) {
-            Livewire.emit('anularPlanilla', id, result.value);
+            Livewire.dispatch('anularPlanilla', { id: id, motivo: result.value });
           }
         });
       }
 
-      document.addEventListener('livewire:load', function () {
-        window.addEventListener('abrir-modal-nueva-planilla', () => {
-          $('#modalNuevaPlanilla').modal('show');
-        });
-        window.addEventListener('abrir-modal-detalles', () => {
-          $('#modalDetallesPlanilla').modal('show');
-        });
-        window.addEventListener('abrir-modal-planilla', () => {
-          $('#modalPlanilla').modal('show');
-        });
-        window.addEventListener('abrir-modal-editar', () => {
-          $('#modalEditarPlanilla').modal('show');
-        });
-        window.addEventListener('cerrar-modal-editar', () => {
-          $('#modalEditarPlanilla').modal('hide');
-        });
-        window.addEventListener('cerrar-modal-planilla', () => {
-          $('#modalPlanilla').modal('hide');
-        });
-        window.addEventListener('cerrar-modal-nueva', () => {
-          $('#modalNuevaPlanilla').modal('hide');
-        });
-        window.addEventListener('cerrar-modal-detalles', () => {
-          $('#modalDetallesPlanilla').modal('hide');
-        });
+      function bindModalEvents() {
+        const show = (selector) => $(selector).modal('show');
+        const hide = (selector) => $(selector).modal('hide');
 
-        // Si el modal se cierra manualmente (backdrop, ESC), sincronizar estado Livewire
+        window.addEventListener('abrir-modal-nueva-planilla', () => show('#modalNuevaPlanilla'));
+        window.addEventListener('abrir-modal-detalles', () => show('#modalDetallesPlanilla'));
+        window.addEventListener('abrir-modal-planilla', () => show('#modalPlanilla'));
+        window.addEventListener('abrir-modal-editar', () => show('#modalEditarPlanilla'));
+
+        window.addEventListener('cerrar-modal-editar', () => hide('#modalEditarPlanilla'));
+        window.addEventListener('cerrar-modal-planilla', () => hide('#modalPlanilla'));
+        window.addEventListener('cerrar-modal-nueva', () => hide('#modalNuevaPlanilla'));
+        window.addEventListener('cerrar-modal-detalles', () => hide('#modalDetallesPlanilla'));
+
+        if (typeof Livewire !== 'undefined') {
+          Livewire.on('abrir-modal-nueva-planilla', () => show('#modalNuevaPlanilla'));
+          Livewire.on('abrir-modal-detalles', () => show('#modalDetallesPlanilla'));
+          Livewire.on('abrir-modal-planilla', () => show('#modalPlanilla'));
+          Livewire.on('abrir-modal-editar', () => show('#modalEditarPlanilla'));
+
+          Livewire.on('cerrar-modal-editar', () => hide('#modalEditarPlanilla'));
+          Livewire.on('cerrar-modal-planilla', () => hide('#modalPlanilla'));
+          Livewire.on('cerrar-modal-nueva', () => hide('#modalNuevaPlanilla'));
+          Livewire.on('cerrar-modal-detalles', () => hide('#modalDetallesPlanilla'));
+        }
+
         $('#modalNuevaPlanilla').on('hidden.bs.modal', function () {
-          @this.call('cerrarModalNueva');
+          if (typeof Livewire !== 'undefined') Livewire.dispatch('cerrarModalNueva');
         });
         $('#modalDetallesPlanilla').on('hidden.bs.modal', function () {
-          @this.call('cerrarModalDetalles');
+          if (typeof Livewire !== 'undefined') Livewire.dispatch('cerrarModalDetalles');
         });
         $('#modalEditarPlanilla').on('hidden.bs.modal', function () {
-          @this.call('cerrarModalEditar');
+          if (typeof Livewire !== 'undefined') Livewire.dispatch('cerrarModalEditar');
         });
-      });
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', bindModalEvents);
+      } else {
+        bindModalEvents();
+      }
+      document.addEventListener('livewire:init', bindModalEvents);
     </script>
 
     <script>
@@ -946,5 +951,4 @@
         });
       }
     </script>
-  @endpush
-</div>
+@endpush

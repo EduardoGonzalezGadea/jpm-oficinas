@@ -104,7 +104,7 @@ Route::middleware(['web', 'jwt.verify', 'two-factor'])->group(function () {
     // Historial de auditoría
     // ------------------------------------------------------------------------
     Route::middleware(['modulo:tesoreria,supervisor'])->group(function () {
-        Route::get('/sistema/auditoria', \App\Http\Livewire\Sistema\Auditoria\Index::class)->name('sistema.auditoria.index');
+        Route::get('/sistema/auditoria', \App\Livewire\Sistema\Auditoria\Index::class)->name('sistema.auditoria.index');
     });
 
     // ------------------------------------------------------------------------

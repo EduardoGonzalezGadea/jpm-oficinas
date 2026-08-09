@@ -1,15 +1,4 @@
 <div wire:init="checkEditId">
-  <style>
-    .text-nowrap-custom {
-      white-space: nowrap;
-    }
-
-    .btn-action-fixed {
-      width: 30px;
-      padding-left: 0;
-      padding-right: 0;
-    }
-  </style>
   <div class="row">
     <div class="col-md-12">
       <div class="card">
@@ -38,7 +27,7 @@
         </div>
         <div class="card-body p-2">
           @if ($totalesPorInstitucion->isNotEmpty())
-          <div class="mb-2 p-2 border rounded bg-light">
+          <div class="mb-2 p-2 border rounded card">
             <h6 class="mb-2 text-center font-weight-bold">Totales por Institución</h6>
             <div class="d-flex flex-wrap justify-content-around">
               @foreach ($totalesPorInstitucion as $total)
@@ -57,7 +46,7 @@
                 <div class="input-group-prepend">
                   <span class="input-group-text">Mes y Año</span>
                 </div>
-                <select id="mesSelector" class="form-control form-control-sm" wire:model="mes">
+                <select id="mesSelector" class="form-control form-control-sm" wire:model.live="mes">
                   <option value="1">Enero</option>
                   <option value="2">Febrero</option>
                   <option value="3">Marzo</option>
@@ -71,20 +60,18 @@
                   <option value="11">Noviembre</option>
                   <option value="12">Diciembre</option>
                 </select>
-                <input type="number" id="anioSelector" class="form-control form-control-sm" wire:model="year">
+                <input type="number" id="anioSelector" class="form-control form-control-sm" wire:model.live="year">
               </div>
             </div>
             <div class="col-md-7 align-self-end d-print-none">
-              <div class="btn-group d-flex" role="group">
-                <div class="input-group input-group-sm">
-                  <input type="text" wire:model="search" id="search"
-                    class="form-control form-control-sm"
-                    placeholder="Buscar por ingreso, monto, O/C o recibo...">
-                  <div class="input-group-append">
-                    <button class="btn btn-outline-danger btn-sm" type="button" wire:click="$set('search', '')" title="Limpiar filtro">
-                      <i class="fas fa-times"></i>
-                    </button>
-                  </div>
+              <div class="input-group input-group-sm">
+                <input type="text" wire:model.live="search" id="search"
+                  class="form-control form-control-sm"
+                  placeholder="Buscar por ingreso, monto, O/C o recibo...">
+                <div class="input-group-append">
+                  <button class="btn btn-outline-danger btn-sm" type="button" wire:click="$set('search', '')" title="Limpiar filtro">
+                    <i class="fas fa-times"></i>
+                  </button>
                 </div>
               </div>
             </div>
@@ -110,7 +97,7 @@
               </thead>
               <tbody>
                 @forelse ($eventuales as $eventual)
-                <tr>
+                <tr wire:key="eventual-{{ $eventual->id }}">
                   <td class="text-center align-middle">{{ $eventual->fecha->format('d/m/Y') }}
                   </td>
                   <td class="text-right align-middle">
@@ -118,11 +105,15 @@
                   </td>
                   <td class="text-center align-middle">{{ $eventual->institucion ?: 'SIN DATO' }}</td>
                   <td class="text-right align-middle"><span
-                      class="text-nowrap-custom">{{ $eventual->monto_formateado }}</span></td>
+                      class="text-nowrap">{{ $eventual->monto_formateado }}</span></td>
                   <td class="text-right align-middle">
                     {{ is_numeric($eventual->orden_cobro) ? number_format($eventual->orden_cobro, 0, ',', '.') : $eventual->orden_cobro }}
                   </td>
-                  <td class="text-right align-middle">{{ is_numeric($eventual->recibo) ? number_format($eventual->recibo, 0, ',', '.') : $eventual->recibo }}</td>
+                  <td class="text-right align-middle">{{ is_numeric($eventual->recibo) ? number_format($eventual->recibo, 0, ',', '.') : $eventual->recibo }}
+                    @if($eventual->planilla_id && $eventual->planilla)
+                    <div class="small text-muted">Pl. {{ $eventual->planilla->numero }}</div>
+                    @endif
+                  </td>
                   <td class="text-center align-middle">{{ $eventual->medio_de_pago }}</td>
                   <td class="text-center align-middle">
                     @if($eventual->planilla_id)
@@ -137,7 +128,7 @@
                     <div class="custom-control custom-switch" style="transform: scale(0.8);">
                       <input type="checkbox" class="custom-control-input"
                         id="confirmado-{{ $eventual->id }}"
-                        wire:click.prevent="toggleConfirmado({{ $eventual->id }})"
+                        wire:click="toggleConfirmado({{ $eventual->id }})"
                         {{ $eventual->confirmado ? 'checked' : '' }}>
                       <label class="custom-control-label"
                         for="confirmado-{{ $eventual->id }}"></label>
@@ -146,8 +137,7 @@
                   @endcan
                   <td class="text-center align-middle d-print-none text-nowrap">
                     <button wire:click="showDetails({{ $eventual->id }})"
-                      class="btn btn-sm btn-info btn-action-fixed" data-toggle="modal"
-                      data-target="#detailsModal" title="Detalles"><i
+                      class="btn btn-sm btn-info btn-action-fixed"  title="Detalles"><i
                         class="fas fa-eye"></i></button>
                     <button wire:click="editIngreso({{ $eventual->id }})"
                       class="btn btn-sm btn-success btn-action-fixed" title="Ingreso"><i
@@ -178,7 +168,7 @@
                 <tr>
                   <td colspan="3" class="text-right align-middle"><strong>Total
                       {{ $subtotal->medio_de_pago }}:</strong></td>
-                  <td class="text-right align-middle"><strong><span class="text-nowrap-custom">$
+                  <td class="text-right align-middle"><strong><span class="text-nowrap">$
                         {{ number_format($subtotal->total_submonto, 2, ',', '.') }}</span></strong>
                   </td>
                   <td colspan="@can('tesoreria.supervisar') 6 @else 5 @endcan"
@@ -188,7 +178,7 @@
                 <tr>
                   <td colspan="3" class="text-right align-middle"><strong>Total General:</strong>
                   </td>
-                  <td class="text-right align-middle"><strong><span class="text-nowrap-custom">$
+                  <td class="text-right align-middle"><strong><span class="text-nowrap">$
                         {{ number_format($generalTotal, 2, ',', '.') }}</span></strong></td>
                   <td
                     colspan="@can('tesoreria.supervisar') 6 @else 5 @endcan">
@@ -225,7 +215,7 @@
               <div class="col-md-6">
                 <div class="form-group">
                   <label for="fecha">Fecha</label>
-                  <input type="date" wire:model.defer="fecha" id="fecha"
+                  <input type="date" wire:model="fecha" id="fecha"
                     class="form-control form-control-sm">
                   @error('fecha')
                   <span class="text-danger">{{ $message }}</span>
@@ -235,7 +225,7 @@
               <div class="col-md-6">
                 <div class="form-group">
                   <label for="ingreso">Ingreso</label>
-                  <input type="text" wire:model.defer="ingreso" id="ingreso"
+                  <input type="text" wire:model="ingreso" id="ingreso"
                     class="form-control form-control-sm">
                   @error('ingreso')
                   <span class="text-danger">{{ $message }}</span>
@@ -247,7 +237,7 @@
               <div class="col-md-6">
                 <div class="form-group">
                   <label for="institucion">Institución</label>
-                  <select wire:model.defer="institucion" id="institucion"
+                  <select wire:model="institucion" id="institucion"
                     class="form-control form-control-sm">
                     <option value="">Seleccione...</option>
                     @foreach($instituciones as $inst)
@@ -262,7 +252,7 @@
               <div class="col-md-6">
                 <div class="form-group">
                   <label for="titular">Titular</label>
-                  <input type="text" wire:model.defer="titular" id="titular"
+                  <input type="text" wire:model="titular" id="titular"
                     class="form-control form-control-sm">
                   @error('titular')
                   <span class="text-danger">{{ $message }}</span>
@@ -274,7 +264,7 @@
               <div class="col-md-6">
                 <div class="form-group">
                   <label for="medio_de_pago">Medio de Pago</label>
-                  <select wire:model.defer="medio_de_pago" id="medio_de_pago"
+                  <select wire:model="medio_de_pago" id="medio_de_pago"
                     class="form-control form-control-sm">
                     <option value="">Seleccione...</option>
                     @foreach($mediosDePago as $medio)
@@ -289,7 +279,7 @@
               <div class="col-md-6">
                 <div class="form-group">
                   <label for="monto">Monto</label>
-                  <input type="number" step="0.01" wire:model.defer="monto" id="monto"
+                  <input type="number" step="0.01" wire:model="monto" id="monto"
                     class="form-control form-control-sm">
                   @error('monto')
                   <span class="text-danger">{{ $message }}</span>
@@ -299,7 +289,7 @@
             </div>
             <div class="form-group">
               <label for="detalle">Detalle</label>
-              <textarea wire:model.defer="detalle" id="detalle" class="form-control form-control-sm"></textarea>
+              <textarea wire:model="detalle" id="detalle" class="form-control form-control-sm"></textarea>
               @error('detalle')
               <span class="text-danger">{{ $message }}</span>
               @enderror
@@ -308,7 +298,7 @@
               <div class="col-md-6">
                 <div class="form-group">
                   <label for="orden_cobro">Orden de Cobro</label>
-                  <input type="text" wire:model.defer="orden_cobro" id="orden_cobro"
+                  <input type="text" wire:model="orden_cobro" id="orden_cobro"
                     class="form-control form-control-sm">
                   @error('orden_cobro')
                   <span class="text-danger">{{ $message }}</span>
@@ -318,7 +308,7 @@
               <div class="col-md-6">
                 <div class="form-group">
                   <label for="recibo">Recibo</label>
-                  <input type="text" wire:model.defer="recibo" id="recibo"
+                  <input type="text" wire:model="recibo" id="recibo"
                     class="form-control form-control-sm">
                   @error('recibo')
                   <span class="text-danger">{{ $message }}</span>
@@ -357,7 +347,7 @@
           <p class="mb-0"><strong>Titular:</strong> {{ $selectedEventual->titular }}</p>
           <p class="mb-0"><strong>Medio de Pago:</strong> {{ $selectedEventual->medio_de_pago }}</p>
           <p class="mb-0"><strong>Monto:</strong> <span
-              class="text-nowrap-custom">{{ $selectedEventual->monto_formateado }}</span></p>
+              class="text-nowrap">{{ $selectedEventual->monto_formateado }}</span></p>
           <p class="mb-0"><strong>Detalle:</strong> {{ $selectedEventual->detalle }}</p>
           <p class="mb-0"><strong>Orden de Cobro:</strong> {{ $selectedEventual->orden_cobro }}</p>
           <p class="mb-0"><strong>Recibo:</strong> {{ $selectedEventual->recibo }}</p>
@@ -399,7 +389,7 @@
             </dl>
             <div class="form-group">
               <label for="ingreso_input">Ingreso</label>
-              <input type="text" wire:model.defer="ingreso" id="ingreso_input"
+              <input type="text" wire:model="ingreso" id="ingreso_input"
                 class="form-control form-control-sm">
               @error('ingreso')
               <span class="text-danger">{{ $message }}</span>
@@ -418,115 +408,117 @@
 
   <livewire:tesoreria.eventuales.planillas-manager :mes="$mes" :year="$year" :key="$mes . $year" />
 
-  @push('scripts')
-  <script>
-    // Listener swal:confirm eliminado (ya gestionado globalmente en app.blade.php)
+</div>
 
-    window.addEventListener('revertCheckbox', event => {
-      const checkbox = document.getElementById('confirmado-' + event.detail.id);
-      if (checkbox) {
-        checkbox.checked = event.detail.checked;
-      }
-    });
+@push('scripts')
+<script>
+  window.addEventListener('revertCheckbox', event => {
+    const d = window.LiveEvent(event);
+    const checkbox = document.getElementById('confirmado-' + d.id);
+    if (checkbox) {
+      checkbox.checked = d.checked;
+    }
+  });
 
-    window.addEventListener('close-modal', event => {
-      $('#eventualModal').modal('hide');
-    });
+  window.addEventListener('close-modal', event => {
+    $('#eventualModal').modal('hide');
+  });
 
-    window.addEventListener('alert', event => {
-      const type = event.detail.type;
-      const message = event.detail.message;
-      const isToast = event.detail.toast || false; // Get toast property, default to false
+  window.addEventListener('alert', event => {
+    const d = window.LiveEvent(event);
+    const type = d.type;
+    const message = d.message;
+    const isToast = d.toast || false; // Get toast property, default to false
 
-      if (isToast) {
-        Swal.fire({
-          toast: true,
-          position: 'top-end', // Position for toast
-          showConfirmButton: false,
-          timer: 3000, // Longer timer for toast
-          timerProgressBar: true,
-          icon: type,
-          title: message,
-        });
-      } else {
-        Swal.fire({
-          icon: type,
-          title: message,
-          showConfirmButton: false,
-          timer: 1500
-        });
-      }
-    });
-
-    // Manejar redirección cuando el JWT expire
-    window.addEventListener('redirect-to-login', event => {
+    if (isToast) {
       Swal.fire({
-        icon: 'warning',
-        title: 'Sesión Expirada',
-        text: event.detail.message,
-        showConfirmButton: true,
-        confirmButtonText: 'Ir al Login',
-        allowOutsideClick: false,
-        allowEscapeKey: false
-      }).then((result) => {
-        if (result.isConfirmed) {
-          // Limpiar tokens locales si existieran
-          try {
-            localStorage.removeItem('jwt_token');
-            sessionStorage.removeItem('jwt_token');
-          } catch (e) {}
+        toast: true,
+        position: 'top-end', // Position for toast
+        showConfirmButton: false,
+        timer: 3000, // Longer timer for toast
+        timerProgressBar: true,
+        icon: type,
+        title: message,
+      });
+    } else {
+      Swal.fire({
+        icon: type,
+        title: message,
+        showConfirmButton: false,
+        timer: 1500
+      });
+    }
+  });
 
-          // Redirigir al login
-          window.location.href = '{{ route("login") }}';
+  // Manejar redirección cuando el JWT expire
+  window.addEventListener('redirect-to-login', event => {
+    Swal.fire({
+      icon: 'warning',
+      title: 'Sesión Expirada',
+      text: window.LiveEvent(event).message,
+      showConfirmButton: true,
+      confirmButtonText: 'Ir al Login',
+      allowOutsideClick: false,
+      allowEscapeKey: false
+    }).then((result) => {
+      if (result.isConfirmed) {
+        // Limpiar tokens locales si existieran
+        try {
+          localStorage.removeItem('jwt_token');
+          sessionStorage.removeItem('jwt_token');
+        } catch (e) {}
+
+        // Redirigir al login
+        window.location.href = '{{ route("login") }}';
+      }
+    });
+  });
+
+  document.addEventListener('livewire:init', function() {
+  Livewire.on('eventualStore', () => {
+    $('#eventualModal').modal('hide');
+  });
+
+  Livewire.on('eventualUpdate', () => {
+    $('#eventualModal').modal('hide');
+    $('#ingresoModal').modal('hide');
+  });
+  });
+
+  $(document).ready(function() {
+    $('#eventualModal').on('hidden.bs.modal', function() {
+      window.Livewire.dispatch('resetForm');
+    });
+
+    $('#ingresoModal').on('hidden.bs.modal', function() {
+      window.Livewire.dispatch('resetForm');
+    });
+
+    $('#eventualModal').on('shown.bs.modal', function() {
+      $('#ingreso').focus();
+
+      const form = $(this).find('form');
+      const inputs = form.find('input:not([type="hidden"]), textarea, select');
+
+      inputs.off('keydown').on('keydown', function(e) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+
+          const currentIndex = inputs.index(this);
+          const nextIndex = currentIndex + 1;
+
+          if (nextIndex < inputs.length) {
+            $(inputs[nextIndex]).focus();
+          } else {
+            form.closest('.modal-content').find('.btn-primary').focus();
+          }
         }
       });
     });
 
-    window.livewire.on('eventualStore', () => {
-      $('#eventualModal').modal('hide');
+    $('#ingresoModal').on('shown.bs.modal', function() {
+      $('#ingreso_input').focus();
     });
-
-    window.livewire.on('eventualUpdate', () => {
-      $('#eventualModal').modal('hide');
-      $('#ingresoModal').modal('hide');
-    });
-
-    $(document).ready(function() {
-      $('#eventualModal').on('hidden.bs.modal', function() {
-        window.livewire.emit('resetForm');
-      });
-
-      $('#ingresoModal').on('hidden.bs.modal', function() {
-        window.livewire.emit('resetForm');
-      });
-
-      $('#eventualModal').on('shown.bs.modal', function() {
-        $('#ingreso').focus();
-
-        const form = $(this).find('form');
-        const inputs = form.find('input:not([type="hidden"]), textarea, select');
-
-        inputs.off('keydown').on('keydown', function(e) {
-          if (e.key === 'Enter') {
-            e.preventDefault();
-
-            const currentIndex = inputs.index(this);
-            const nextIndex = currentIndex + 1;
-
-            if (nextIndex < inputs.length) {
-              $(inputs[nextIndex]).focus();
-            } else {
-              form.closest('.modal-content').find('.btn-primary').focus();
-            }
-          }
-        });
-      });
-
-      $('#ingresoModal').on('shown.bs.modal', function() {
-        $('#ingreso_input').focus();
-      });
-    });
-  </script>
-  @endpush
-
-</div>
+  });
+</script>
+@endpush

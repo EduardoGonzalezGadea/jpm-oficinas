@@ -10,25 +10,25 @@
           </button>
         </div>
         <div class="modal-body">
-          <form wire:submit.prevent="deliver">
+          <form wire:submit="deliver">
             <div class="form-group form-check">
-              <input type="checkbox" class="form-check-input" id="retiraEsTitular" wire:model="retiraEsTitular">
+              <input type="checkbox" class="form-check-input" id="retiraEsTitular" wire:model.live="retiraEsTitular">
               <label class="form-check-label" for="retiraEsTitular">Quien retira es el titular</label>
             </div>
             <hr>
             <div class="form-group">
               <label for="retira_nombre">Nombre de quien retira</label>
-              <input type="text" wire:model.defer="retira_nombre" class="form-control" id="retira_nombre">
+              <input type="text" wire:model="retira_nombre" class="form-control" id="retira_nombre">
               @error('retira_nombre') <span class="text-danger">{{ $message }}</span> @enderror
             </div>
             <div class="form-group">
               <label for="retira_apellido">Apellido de quien retira</label>
-              <input type="text" wire:model.defer="retira_apellido" class="form-control" id="retira_apellido">
+              <input type="text" wire:model="retira_apellido" class="form-control" id="retira_apellido">
               @error('retira_apellido') <span class="text-danger">{{ $message }}</span> @enderror
             </div>
             <div class="form-group">
               <label for="retira_tipo_documento">Tipo de Documento</label>
-              <select wire:model.defer="retira_tipo_documento" class="form-control" id="retira_tipo_documento">
+              <select wire:model="retira_tipo_documento" class="form-control" id="retira_tipo_documento">
                 <option value="Cédula">Cédula</option>
                 <option value="Cédula Extranjera">Cédula Extranjera</option>
                 <option value="Pasaporte">Pasaporte</option>
@@ -38,22 +38,22 @@
             </div>
             <div class="form-group">
               <label for="retira_nro_documento">Nro. de Documento</label>
-              <input type="text" wire:model.defer="retira_nro_documento" class="form-control" id="retira_nro_documento">
+              <input type="text" wire:model="retira_nro_documento" class="form-control" id="retira_nro_documento">
               @error('retira_nro_documento') <span class="text-danger">{{ $message }}</span> @enderror
             </div>
             <div class="form-group">
               <label for="retira_telefono">Teléfono</label>
-              <input type="text" wire:model.defer="retira_telefono" class="form-control" id="retira_telefono">
+              <input type="text" wire:model="retira_telefono" class="form-control" id="retira_telefono">
               @error('retira_telefono') <span class="text-danger">{{ $message }}</span> @enderror
             </div>
             <div class="form-group">
               <label for="numero_recibo">Número de Recibo</label>
-              <input type="text" wire:model.defer="numero_recibo" class="form-control" id="numero_recibo">
+              <input type="text" wire:model="numero_recibo" class="form-control" id="numero_recibo">
               @error('numero_recibo') <span class="text-danger">{{ $message }}</span> @enderror
             </div>
             <div class="form-group">
               <label for="monto">Monto ($)</label>
-              <input type="number" step="0.01" min="0" wire:model.defer="monto" class="form-control" id="monto" placeholder="Ej: 55.00">
+              <input type="number" step="0.01" min="0" wire:model="monto" class="form-control" id="monto" placeholder="Ej: 55.00">
               @error('monto') <span class="text-danger">{{ $message }}</span> @enderror
             </div>
           </form>

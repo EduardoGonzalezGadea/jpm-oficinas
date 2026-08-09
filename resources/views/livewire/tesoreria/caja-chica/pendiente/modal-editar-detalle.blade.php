@@ -19,7 +19,7 @@
                 <div class="mb-3">
                   <div class="input-group">
                     <span class="input-group-text">Número</span>
-                    <input type="number" wire:model.defer="nroPendiente"
+                    <input type="number" wire:model="nroPendiente"
                       id="inputNumeroPendiente"
                       class="form-control"
                       placeholder="Ingrese el número">
@@ -36,7 +36,7 @@
                 <div class="mb-3">
                   <div class="input-group">
                     <span class="input-group-text">Dependencia</span>
-                    <select wire:model.defer="relDependencia"
+                    <select wire:model="relDependencia"
                       id="selectDependencia"
                       class="form-control">
                       <option value="">Seleccione una dependencia</option>
@@ -60,7 +60,7 @@
                 <div class="mb-3">
                   <div class="input-group">
                     <span class="input-group-text">Fecha</span>
-                    <input type="date" wire:model.defer="fechaPendientes"
+                    <input type="date" wire:model="fechaPendientes"
                       id="inputFechaPendientes"
                       class="form-control"
                       placeholder="Seleccione la fecha">
@@ -77,7 +77,7 @@
                 <div class="mb-3">
                   <div class="input-group">
                     <span class="input-group-text">Monto en $</span>
-                    <input type="number" step="1.00" min="0.0" wire:model.defer="montoPendientes"
+                    <input type="number" step="1.00" min="0.0" wire:model="montoPendientes"
                       id="inputMontoPendientes"
                       class="form-control"
                       placeholder="Ingrese el monto">

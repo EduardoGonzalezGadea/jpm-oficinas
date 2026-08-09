@@ -1,4 +1,4 @@
-<div class="modal fade" id="reviewModal" tabindex="-1" aria-labelledby="reviewModalLabel" aria-hidden="true" wire:ignore>
+﻿<div class="modal fade" id="reviewModal" tabindex="-1" aria-labelledby="reviewModalLabel" aria-hidden="true" wire:ignore>
   <div class="modal-dialog modal-xl">
     <div class="modal-content">
       <div class="modal-header bg-primary text-white">
@@ -66,7 +66,7 @@
                       <textarea class="form-control form-control-sm" rows="3" disabled>{{ json_encode($value, JSON_PRETTY_PRINT) }}</textarea>
                     @else
                       <input type="text" class="form-control form-control-sm"
-                          wire:model.debounce.300ms="datosEditados.{{ $key }}"
+                          wire:model.live.debounce.300ms="datosEditados.{{ $key }}"
                           value="{{ is_string($value) ? $value : (is_numeric($value) ? number_format($value, 2, ',', '.') : $value) }}">
                     @endif
                   </div>
@@ -95,13 +95,15 @@
 </div>
 
 <script>
-  document.addEventListener('livewire:load', function() {
-    Livewire.on('show-modal', (data) => {
+  document.addEventListener('livewire:init', function() {
+    Livewire.on('show-modal', (payload) => {
+      const data = window.LiveEvent({ detail: payload });
       const modal = new bootstrap.Modal(document.getElementById(data.id));
       modal.show();
     });
 
-    Livewire.on('cerrar-modal', (data) => {
+    Livewire.on('cerrar-modal', (payload) => {
+      const data = window.LiveEvent({ detail: payload });
       const modalEl = document.getElementById(data.id);
       if (modalEl) {
         const modal = bootstrap.Modal.getInstance(modalEl);

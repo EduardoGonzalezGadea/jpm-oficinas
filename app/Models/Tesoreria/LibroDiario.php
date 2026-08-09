@@ -34,6 +34,11 @@ class LibroDiario extends Model
         'grupo_redistribucion_id',
         'cfe_id',
         'es_contra_asiento',
+        'documento_referencia',
+        'confirmado',
+        'fecha_confirmacion',
+        'cch_origen_type',
+        'cch_origen_id',
         'created_by',
         'updated_by',
         'deleted_by',
@@ -46,9 +51,11 @@ class LibroDiario extends Model
         'signo_efectivo' => 'integer',
         'numero' => 'integer',
         'es_contra_asiento' => 'boolean',
+        'confirmado' => 'boolean',
+        'fecha_confirmacion' => 'datetime',
     ];
 
-    protected $editableCampos = ['identidad', 'denominacion', 'descripcion'];
+    protected $editableCampos = ['identidad', 'denominacion', 'descripcion', 'documento_referencia'];
 
     public static function getEditableCampos(): array
     {
@@ -95,6 +102,17 @@ class LibroDiario extends Model
         return $this->grupo_redistribucion_id !== null;
     }
 
+    /**
+     * Fecha efectiva del asiento a efectos de filtros, saldos y reportes:
+     * cuando está confirmado se usa la fecha de confirmación; si no, la de
+     * creación. Centraliza la regla para que todas las consultas contables
+     * operen sobre la misma fecha y se evite mezclar criterios.
+     */
+    public function getFechaEfectivaAttribute()
+    {
+        return $this->fecha_confirmacion ?? $this->fecha;
+    }
+
     public function cfe(): BelongsTo
     {
         return $this->belongsTo(TesCfe::class, 'cfe_id');
@@ -113,6 +131,37 @@ class LibroDiario extends Model
     public function deletedBy()
     {
         return $this->belongsTo(\App\Models\User::class, 'deleted_by');
+    }
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($model) {
+            if (Auth::check()) {
+                $model->created_by = Auth::id();
+                $model->updated_by = Auth::id();
+            }
+        });
+
+        static::updating(function ($model) {
+            if (Auth::check()) {
+                $model->updated_by = Auth::id();
+            }
+        });
+
+        static::deleting(function ($model) {
+            if (Auth::check()) {
+                $model->deleted_by = Auth::id();
+                $model->save();
+            }
+        });
+
+        // Sincronización: Al eliminar (soft delete) un asiento del Libro Diario,
+        // eliminar también los movimientos de caja vinculados para evitar huérfanos.
+        static::deleted(function ($asiento) {
+            \App\Models\Tesoreria\Cajas\CajaMovimiento::where('libro_diario_id', $asiento->id)->delete();
+        });
     }
 
     public function scopeDelAnio($query, $anio)
@@ -140,6 +189,21 @@ class LibroDiario extends Model
         return $query->whereNotNull('grupo_redistribucion_id');
     }
 
+    public function scopePendientes($query)
+    {
+        return $query->whereNull('fecha_confirmacion');
+    }
+
+    public function scopeConfirmados($query)
+    {
+        return $query->whereNotNull('fecha_confirmacion');
+    }
+
+    public function confirmar($fecha = null): void
+    {
+        $this->update(['confirmado' => true, 'fecha_confirmacion' => $fecha ?? now()]);
+    }
+
     public static function generarGrupoRedistribucionId(): int
     {
         return (self::max('grupo_redistribucion_id') ?? 0) + 1;
@@ -154,13 +218,25 @@ class LibroDiario extends Model
         return ($max ?? 0) + 1;
     }
 
-    public static function ultimoSaldoSubcuenta($medioId, $conceptoId, $detalleId, $fecha, $numero = null)
+    public static function ultimoSaldoSubcuenta($medioId, $conceptoId, $detalleId, $fecha, $numero = null, $identidad = null)
     {
-        return self::where('medio_id', $medioId)
+        $query = self::where('medio_id', $medioId)
             ->where('concepto_id', $conceptoId)
             ->where('detalle_id', $detalleId)
-            ->where('fecha', '<=', $fecha)
-            ->orderBy('fecha', 'desc')
+            ->where('fecha', '<=', $fecha);
+
+        if ($identidad !== null) {
+            $identidad = trim((string) $identidad);
+            $query->where(function ($q) use ($identidad) {
+                if ($identidad === '') {
+                    $q->whereNull('identidad')->orWhere('identidad', '');
+                } else {
+                    $q->where('identidad', $identidad);
+                }
+            });
+        }
+
+        return $query->orderBy('fecha', 'desc')
             ->orderBy('id', 'desc')
             ->value('saldo') ?? 0;
     }

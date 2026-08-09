@@ -185,7 +185,7 @@
           </button>
         </div>
 
-        <form wire:submit.prevent="guardarMovimiento">
+        <form wire:submit="guardarMovimiento">
           <div class="modal-body">
             @if ($errors->any())
             <div class="alert alert-danger alert-dismissible fade show" role="alert">
@@ -208,7 +208,7 @@
                   </label>
                   <input type="date"
                     class="form-control @error('fechaMovimientos') is-invalid @enderror"
-                    id="fechaMovimientos" wire:model.lazy="fechaMovimientos"
+                    id="fechaMovimientos" wire:model.blur="fechaMovimientos"
                     max="{{ date('Y-m-d') }}">
                   @error('fechaMovimientos')
                   <div class="invalid-feedback">{{ $message }}</div>
@@ -220,8 +220,8 @@
                 <div class="form-group">
                   <label for="documentos">Documentos</label>
                   <input type="text"
-                    class="form-control @error('documentos') is-invalid @enderror"
-                    id="documentos" wire:model.lazy="documentos"
+                    class="form-control text-uppercase @error('documentos') is-invalid @enderror"
+                    id="documentos" wire:model.blur="documentos"
                     placeholder="Ej: Facturas, recibos, etc." maxlength="255">
                   @error('documentos')
                   <div class="invalid-feedback">{{ $message }}</div>
@@ -245,7 +245,7 @@
                     </div>
                     <input type="number"
                       class="form-control @error('rendido') is-invalid @enderror"
-                      id="movimiento_monto_rendido" wire:model.debounce.300ms="rendido" step="0.01"
+                      id="movimiento_monto_rendido" wire:model.live.debounce.300ms="rendido" step="0.01"
                       min="0" placeholder="0.00" {{ $isRecovering ? 'disabled' : '' }}>
                     @error('rendido')
                     <div class="invalid-feedback">{{ $message }}</div>
@@ -266,7 +266,7 @@
                     </div>
                     <input type="number"
                       class="form-control @error('reintegrado') is-invalid @enderror"
-                      id="movimiento_monto_reintegrado" wire:model.lazy="reintegrado" step="0.01"
+                      id="movimiento_monto_reintegrado" wire:model.blur="reintegrado" step="0.01"
                       min="0" placeholder="0.00" {{ $isRecovering ? 'disabled' : '' }}>
                     @error('reintegrado')
                     <div class="invalid-feedback">{{ $message }}</div>
@@ -287,7 +287,7 @@
                     </div>
                     <input type="number"
                       class="form-control @error('recuperado') is-invalid @enderror"
-                      id="recuperado" wire:model.lazy="recuperado" step="0.01"
+                      id="recuperado" wire:model.blur="recuperado" step="0.01"
                       min="0" placeholder="0.00">
                     @error('recuperado')
                     <div class="invalid-feedback">{{ $message }}</div>

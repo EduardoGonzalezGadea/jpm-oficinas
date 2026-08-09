@@ -8,25 +8,25 @@
         </button>
       </div>
       <div class="modal-body">
-        <form wire:submit.prevent="update">
+        <form wire:submit="update">
           <div class="form-group">
             <label for="edit_fecha_recibido">Fecha de Recepción</label>
-            <input type="date" wire:model.defer="fecha_recibido" class="form-control" id="edit_fecha_recibido">
+            <input type="date" wire:model="fecha_recibido" class="form-control" id="edit_fecha_recibido">
             @error('fecha_recibido') <span class="text-danger">{{ $message }}</span> @enderror
           </div>
           <div class="form-group">
             <label for="edit_titular_nombre">Nombre del Titular</label>
-            <input type="text" wire:model.defer="titular_nombre" class="form-control" id="edit_titular_nombre">
+            <input type="text" wire:model="titular_nombre" class="form-control" id="edit_titular_nombre">
             @error('titular_nombre') <span class="text-danger">{{ $message }}</span> @enderror
           </div>
           <div class="form-group">
             <label for="edit_titular_apellido">Apellido del Titular</label>
-            <input type="text" wire:model.defer="titular_apellido" class="form-control" id="edit_titular_apellido">
+            <input type="text" wire:model="titular_apellido" class="form-control" id="edit_titular_apellido">
             @error('titular_apellido') <span class="text-danger">{{ $message }}</span> @enderror
           </div>
           <div class="form-group">
             <label for="edit_titular_tipo_documento">Tipo de Documento</label>
-            <select wire:model.defer="titular_tipo_documento" class="form-control" id="edit_titular_tipo_documento">
+            <select wire:model="titular_tipo_documento" class="form-control" id="edit_titular_tipo_documento">
               <option value="Cédula">Cédula</option>
               <option value="Cédula Extranjera">Cédula Extranjera</option>
               <option value="Pasaporte">Pasaporte</option>
@@ -36,7 +36,7 @@
           </div>
           <div class="form-group">
             <label for="edit_titular_nro_documento">Nro. de Documento</label>
-            <input type="text" wire:model.defer="titular_nro_documento" class="form-control" id="edit_titular_nro_documento">
+            <input type="text" wire:model="titular_nro_documento" class="form-control" id="edit_titular_nro_documento">
             @error('titular_nro_documento') <span class="text-danger">{{ $message }}</span> @enderror
           </div>
 
@@ -46,25 +46,25 @@
 
             <div class="form-group">
               <label for="edit_fecha_entregado">Fecha de Entrega</label>
-              <input type="date" wire:model.defer="fecha_entregado" class="form-control" id="edit_fecha_entregado">
+              <input type="date" wire:model="fecha_entregado" class="form-control" id="edit_fecha_entregado">
               @error('fecha_entregado') <span class="text-danger">{{ $message }}</span> @enderror
             </div>
 
             <div class="form-group">
               <label for="edit_retira_nombre">Nombre de quien retira</label>
-              <input type="text" wire:model.defer="retira_nombre" class="form-control" id="edit_retira_nombre">
+              <input type="text" wire:model="retira_nombre" class="form-control" id="edit_retira_nombre">
               @error('retira_nombre') <span class="text-danger">{{ $message }}</span> @enderror
             </div>
 
             <div class="form-group">
               <label for="edit_retira_apellido">Apellido de quien retira</label>
-              <input type="text" wire:model.defer="retira_apellido" class="form-control" id="edit_retira_apellido">
+              <input type="text" wire:model="retira_apellido" class="form-control" id="edit_retira_apellido">
               @error('retira_apellido') <span class="text-danger">{{ $message }}</span> @enderror
             </div>
 
             <div class="form-group">
               <label for="edit_retira_tipo_documento">Tipo de Documento</label>
-              <select wire:model.defer="retira_tipo_documento" class="form-control" id="edit_retira_tipo_documento">
+              <select wire:model="retira_tipo_documento" class="form-control" id="edit_retira_tipo_documento">
                 <option value="">Seleccione...</option>
                 <option value="Cédula">Cédula</option>
                 <option value="Cédula Extranjera">Cédula Extranjera</option>
@@ -76,19 +76,19 @@
 
             <div class="form-group">
               <label for="edit_retira_nro_documento">Nro. de Documento</label>
-              <input type="text" wire:model.defer="retira_nro_documento" class="form-control" id="edit_retira_nro_documento">
+              <input type="text" wire:model="retira_nro_documento" class="form-control" id="edit_retira_nro_documento">
               @error('retira_nro_documento') <span class="text-danger">{{ $message }}</span> @enderror
             </div>
 
             <div class="form-group">
               <label for="edit_numero_recibo">Número de Recibo</label>
-              <input type="text" wire:model.defer="numero_recibo" class="form-control" id="edit_numero_recibo">
+              <input type="text" wire:model="numero_recibo" class="form-control" id="edit_numero_recibo">
               @error('numero_recibo') <span class="text-danger">{{ $message }}</span> @enderror
             </div>
 
             <div class="form-group">
               <label for="edit_monto">Monto ($)</label>
-              <input type="number" step="0.01" min="0" wire:model.defer="monto" class="form-control" id="edit_monto" placeholder="Ej: 55.00">
+              <input type="number" step="0.01" min="0" wire:model="monto" class="form-control" id="edit_monto" placeholder="Ej: 55.00">
               @error('monto') <span class="text-danger">{{ $message }}</span> @enderror
             </div>
           @endif

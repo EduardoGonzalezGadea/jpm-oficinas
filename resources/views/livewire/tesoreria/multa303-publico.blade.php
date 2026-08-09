@@ -54,7 +54,7 @@
       <div class="row mb-2 align-items-center">
         <div class="col-md-5">
           <div class="input-group input-group-sm">
-            <input wire:model.debounce.800ms="search" type="text" class="form-control" autofocus
+            <input wire:model.live.debounce.800ms="search" type="text" class="form-control" autofocus
               placeholder="Buscar por código, grupo o descripción...">
             <div class="input-group-append">
               <button class="btn btn-outline-danger" type="button" wire:click="$set('search', '')" title="Limpiar filtro">
@@ -69,7 +69,7 @@
           </span>
         </div>
         <div class="col-auto">
-          <select wire:model="perPage" class="form-control form-control-sm">
+          <select wire:model.live="perPage" class="form-control form-control-sm">
             <option value="50">50</option>
             <option value="100">100</option>
             <option value="-1">Todos</option>

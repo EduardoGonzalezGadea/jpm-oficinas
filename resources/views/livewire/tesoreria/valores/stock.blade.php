@@ -1,4 +1,4 @@
-<div wire:key="stock-component">
+﻿<div wire:key="stock-component">
   {{-- Encabezado --}}
   <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
@@ -55,7 +55,7 @@
         <div class="col-md-4">
           <div class="form-group">
             <label class="font-weight-bold col-form-label-sm">Filtrar por Valor</label>
-            <select class="form-control form-control-sm" wire:model="filterValor">
+            <select class="form-control form-control-sm" wire:model.live="filterValor">
               <option value="">Todos los Valores</option>
               @foreach ($valoresParaFiltro as $valorFiltro)
                 <option value="{{ $valorFiltro->id }}">{{ $valorFiltro->nombre }}</option>
@@ -66,7 +66,7 @@
         <div class="col-md-3">
           <div class="form-group">
             <label class="font-weight-bold col-form-label-sm">Filtrar por Tipo</label>
-            <select class="form-control form-control-sm" wire:model="filterTipo">
+            <select class="form-control form-control-sm" wire:model.live="filterTipo">
               <option value="">Todos los Tipos</option>
               <option value="pesos">Pesos</option>
               <option value="UI">UI</option>
@@ -77,7 +77,7 @@
         <div class="col-md-3">
           <div class="form-group">
             <div class="form-check mt-4">
-              <input class="form-check-input" type="checkbox" wire:model="filterStockBajo"
+              <input class="form-check-input" type="checkbox" wire:model.live="filterStockBajo"
                 id="filterStockBajo">
               <label class="form-check-label" for="filterStockBajo">
                 Mostrar solo Stock Bajo
@@ -280,7 +280,7 @@
                                 <td>{{ number_format($uso['total_recibos']) }}</td>
                                 <td>
                                   <input type="number" class="form-control form-control-sm"
-                                    wire:model.defer="detalleStock.conceptos_detalle.{{ $loop->parent->index }}.usos.{{ $loop->index }}.recibos_disponibles"
+                                    wire:model="detalleStock.conceptos_detalle.{{ $loop->parent->index }}.usos.{{ $loop->index }}.recibos_disponibles"
                                     wire:change="actualizarRecibosUso({{ $uso['id'] }}, $event.target.value)"
                                     min="0" max="{{ $uso['total_recibos'] }}">
                                 </td>
@@ -379,12 +379,12 @@
 
   @push('scripts')
   <script>
-    document.addEventListener('livewire:load', function () {
-      window.livewire.on('show-detail-modal', () => {
+    document.addEventListener('livewire:init', function () {
+      Livewire.on('show-detail-modal', () => {
         $('#detailStockModal').modal('show');
       });
 
-      window.livewire.on('hide-detail-modal', () => {
+      Livewire.on('hide-detail-modal', () => {
         $('#detailStockModal').modal('hide');
       });
     });

@@ -1,14 +1,14 @@
 <div class="container-fluid px-0">
   @section('title', 'Confirmar Planilla — E.R.')
 
-  <div class="card">
-    <div class="card-header bg-primary text-white card-header-gradient p-2">
-      <div class="d-flex justify-content-between align-items-center">
-        <h4 class="card-title px-1 m-0">
+  <div class="card border-primary shadow-sm">
+    <div class="card-header bg-primary text-white p-2">
+      <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center">
+        <h4 class="card-title px-1 mb-2 mb-lg-0">
           <strong><i class="fas fa-check-double mr-2"></i>Confirmar Planilla {{ $planilla->numero }}</strong>
         </h4>
-        <div>
-          <a href="{{ route('tesoreria.gestion-cfe.estados-recaudacion') }}" class="btn btn-sm btn-outline-light mr-2">
+        <div class="d-flex flex-column flex-sm-row align-items-stretch">
+          <a href="{{ route('tesoreria.gestion-cfe.estados-recaudacion') }}" class="btn btn-sm btn-outline-light mb-2 mb-sm-0 mr-sm-2">
             <i class="fas fa-list mr-1"></i>Estados de Recaudación
           </a>
           <a href="{{ route('tesoreria.gestion-cfe.estados-recaudacion.no-confirmadas') }}" class="btn btn-sm btn-light">
@@ -18,48 +18,150 @@
       </div>
     </div>
 
-    <div class="card-body p-3">
+    <div class="card-body p-2 p-md-3">
 
       {{-- ============================================================ --}}
       {{-- SECCIÓN SUPERIOR: Items por CFE con cambio de Distribución SIIF --}}
       {{-- ============================================================ --}}
       <div class="card mb-4 border-primary">
-        <div class="card-header bg-primary text-white py-1">
-          <strong><i class="fas fa-tags mr-1"></i>Distribución SIIF por Ítem</strong>
-          <span class="badge badge-light float-right mt-1">$ {{ number_format($totalGeneral, 2, ',', '.') }}</span>
+        <div class="card-header bg-primary text-white py-2">
+          <div class="d-flex flex-row align-items-center w-100">
+            {{-- Título a la izquierda --}}
+            <div class="text-nowrap mr-3 flex-shrink-0">
+              <strong><i class="fas fa-tags mr-1"></i>Distribución SIIF por Ítem</strong>
+            </div>
+
+            {{-- Barra de progreso en el medio (ocupa espacio disponible) --}}
+            @if($estadisticas['total'] > 0)
+            <div class="d-flex align-items-center flex-grow-1 mx-3" style="min-width: 80px;">
+              <div class="progress w-100">
+                <div class="progress-bar font-weight-bold"
+                     role="progressbar"
+                     style="width: {{ $estadisticas['porcentaje_completado'] }}%;"
+                     aria-valuenow="{{ $estadisticas['porcentaje_completado'] }}"
+                     aria-valuemin="0"
+                     aria-valuemax="100">
+                  {{ $estadisticas['confirmados'] }}/{{ $estadisticas['total'] }} ({{ $estadisticas['porcentaje_completado'] }}%)
+                </div>
+              </div>
+            </div>
+            @endif
+
+            {{-- Badges a la derecha --}}
+            <div class="d-flex align-items-center flex-nowrap ml-auto">
+              @php
+                $totalItems = $planilla->items->count();
+                $itemsConfirmados = $planilla->items->where('confirmado', true)->count();
+                $itemsSinDistribucion = $planilla->items->whereNull('siif_distribucion_id')->count();
+                $itemsPendientes = $planilla->items->where('confirmado', false)->where('siif_distribucion_id', '!=', null)->count();
+              @endphp
+              <span class="badge badge-light mr-2" title="Total de ítems" data-toggle="tooltip">
+                <i class="fas fa-list mr-1"></i>{{ $totalItems }}
+              </span>
+              <span class="badge badge-success mr-2" title="Ítems confirmados" data-toggle="tooltip">
+                <i class="fas fa-check-circle mr-1"></i>{{ $itemsConfirmados }}
+              </span>
+              @if($itemsPendientes > 0)
+              <span class="badge badge-warning mr-2" title="Pendientes de confirmación" data-toggle="tooltip">
+                <i class="fas fa-exclamation-circle mr-1"></i>{{ $itemsPendientes }}
+              </span>
+              @endif
+              @if($itemsSinDistribucion > 0)
+              <span class="badge badge-danger mr-2" title="Sin distribución SIIF" data-toggle="tooltip">
+                <i class="fas fa-exclamation-triangle mr-1"></i>{{ $itemsSinDistribucion }}
+              </span>
+              @endif
+              <span class="badge badge-light" title="Total general" data-toggle="tooltip">
+                $ {{ number_format($totalGeneral, 2, ',', '.') }}
+              </span>
+            </div>
+          </div>
         </div>
         <div class="card-body p-2">
-          <div class="card card-body py-1 px-2 mb-2 bg-light border border-secondary">
-            <div class="d-flex align-items-center">
-              <div class="input-group input-group-sm mr-2 flex-grow-1">
+          <div class="card card-body py-2 px-2 mb-2 border border-secondary">
+            <div class="form-row align-items-center">
+              <div class="col-12 col-lg mb-2 mb-lg-0">
+              <div class="input-group input-group-sm">
                 <div class="input-group-prepend">
                   <span class="input-group-text"><i class="fas fa-search"></i></span>
                 </div>
                 <input type="text" class="form-control" placeholder="Buscar por receptor o documento..."
                   wire:model.live.debounce.300ms="busqueda">
               </div>
-              <select class="form-control form-control-sm mr-2" style="max-width: 280px;"
+              </div>
+              <div class="col-12 col-md-6 col-lg-3 mb-2 mb-lg-0">
+              <select class="form-control form-control-sm"
                 wire:model.live="filtroDistribucion">
                 <option value="">Todas las distribuciones</option>
                 @foreach($distribucionesPlanilla as $distConcepto)
                   <option value="{{ $distConcepto }}">{{ $distConcepto }}</option>
                 @endforeach
               </select>
-              <button class="btn btn-sm btn-secondary text-nowrap" wire:click="limpiarFiltros">
+              </div>
+              <div class="col-12 col-md-6 col-lg-auto mb-2 mb-lg-0">
+              <button class="btn btn-sm btn-block {{ $modoRevisionRapida ? 'btn-warning' : 'btn-outline-warning' }} text-nowrap"
+                wire:click="toggleModoRevisionRapida"
+                title="Mostrar solo ítems sin confirmar">
+                <i class="fas fa-filter mr-1"></i>{{ $modoRevisionRapida ? 'Mostrando sin confirmar' : 'Revisión rápida' }}
+              </button>
+              </div>
+              <div class="col-12 col-lg-auto">
+              <button class="btn btn-sm btn-secondary btn-block text-nowrap" wire:click="limpiarFiltros">
                 <i class="fas fa-times"></i> Limpiar
               </button>
+              </div>
             </div>
           </div>
+
+          {{-- Leyenda de estados --}}
+          <div class="card card-body py-2 px-3 mb-2 border">
+            <div class="d-flex align-items-center justify-content-center flex-wrap small">
+              <span class="mr-3"><strong>Leyenda:</strong></span>
+              <span class="mr-3">
+                <i class="fas fa-check-circle text-success"></i> Configurado correctamente
+              </span>
+              <span class="mr-3">
+                <i class="fas fa-exclamation-circle text-warning"></i> Pendiente de confirmación
+              </span>
+              <span class="mr-3">
+                <i class="fas fa-exclamation-triangle text-danger"></i> Sin distribución SIIF
+              </span>
+            </div>
+          </div>
+
+          {{-- Alertas de coherencia en distribuciones --}}
+          @if(!empty($alertasCoherencia))
+          <div class="alert alert-warning py-2 mb-2" role="alert">
+            <div class="d-flex align-items-start">
+              <i class="fas fa-exclamation-triangle mr-2 mt-1"></i>
+              <div class="flex-grow-1">
+                <strong>Advertencias de Coherencia en Distribuciones:</strong>
+                <ul class="mb-0 mt-1 small">
+                  @foreach($alertasCoherencia as $alerta)
+                  <li>
+                    <strong>{{ $alerta['cfe']->documento_tipo }} {{ $alerta['cfe']->documento_serie }}-{{ $alerta['cfe']->documento_numero }}:</strong>
+                    {{ $alerta['detalle'] }}
+                  </li>
+                  @endforeach
+                </ul>
+                <p class="small mb-0 mt-1">
+                  <i class="fas fa-info-circle mr-1"></i>
+                  Las diferencias menores (±$2) son normales por redondeos. Estas advertencias no impiden la confirmación.
+                </p>
+              </div>
+            </div>
+          </div>
+          @endif
+
           @forelse($itemsPorCfe as $cfeLabel => $items)
             @php $primerCfe = $items->first()->cfe; @endphp
             <div class="card mb-2 border">
-              <div class="card-header bg-light py-1 d-flex align-items-center justify-content-between">
+              <div class="card-header py-2 d-flex flex-column flex-md-row align-items-md-center justify-content-between">
                 <strong><i class="fas fa-file-invoice mr-1"></i>{{ $cfeLabel }}</strong>
-                <div class="d-flex align-items-center">
+                <div class="d-flex align-items-center mt-2 mt-md-0">
                   @if($items->where('enPlanilla', true)->isNotEmpty())
                   <div class="custom-control custom-switch d-inline-block mr-3">
                     <input type="checkbox" class="custom-control-input" id="cfeMaster_{{ $primerCfe->id }}"
-                      onclick="event.preventDefault()"
                       wire:click="toggleConfirmadoCfe({{ $primerCfe->id }})"
                       {{ $items->where('enPlanilla', true)->every(fn($i) => $i->confirmado) ? 'checked' : '' }}>
                     <label class="custom-control-label small" for="cfeMaster_{{ $primerCfe->id }}">
@@ -71,8 +173,13 @@
                 </div>
               </div>
               @if($primerCfe)
-              <div class="px-3 py-1 small bg-white border-bottom d-flex flex-wrap">
-                <span class="mr-3"><strong>Receptor:</strong> {{ $primerCfe->receptor_nombre_denominacion ?? '—' }}</span>
+              <div class="px-3 py-2 small border-bottom d-flex flex-wrap">
+                <span class="mr-3">
+                  <strong>Receptor:</strong> {{ $primerCfe->receptor_nombre_denominacion ?? '—' }}
+                  @if($primerCfe->receptor_documento_ruc)
+                    <small class="text-muted">({{ $primerCfe->receptor_documento_ruc }})</small>
+                  @endif
+                </span>
                 <span class="mr-3"><strong>Fecha:</strong> {{ $primerCfe->fecha?->format('d/m/Y') ?? '—' }}</span>
                 <span><strong>Total a pagar:</strong> $ {{ number_format($primerCfe->total_a_pagar ?? 0, 2, ',', '.') }}</span>
               </div>
@@ -82,27 +189,42 @@
                 $adenda = $primerCfe->adenda ?? null;
               @endphp
               <div class="card-body p-0">
+                <div class="table-responsive">
                   <table class="table table-sm table-bordered mb-0">
                     <thead class="thead-light">
                       <tr>
                         <th>Detalle</th>
-                        <th class="text-right" style="width: 80px;">Cantidad</th>
-                        <th class="text-right" style="width: 100px;">Precio</th>
-                        <th class="text-right" style="width: 100px;">Importe</th>
+                        <th class="text-right text-nowrap">Cantidad</th>
+                        <th class="text-right text-nowrap">Precio</th>
+                        <th class="text-right text-nowrap">Importe</th>
                         <th>Distribución SIIF</th>
-                        <th class="text-center" style="width: 100px;">Conf.</th>
+                        <th class="text-center text-nowrap">Conf.</th>
                       </tr>
                     </thead>
                     <tbody>
                       @foreach($items as $item)
-                        <tr class="{{ $item->enPlanilla ? '' : 'text-muted' }}" style="{{ $item->enPlanilla ? '' : 'opacity: 0.6;' }}">
+                        @php
+                          $estado = $this->getEstadoItem($item);
+                          $rowClass = $item->enPlanilla ? "border-left border-{$estado['color']}" : 'text-secondary';
+                        @endphp
+                        <tr class="{{ $rowClass }}">
                           <td class="align-middle small">
                             @if(!$item->enPlanilla)
                               <i class="fas fa-minus-circle mr-1 text-secondary" title="No integra esta planilla"></i>
                             @else
-                              <i class="fas fa-check-circle mr-1 text-success" title="Integra esta planilla"></i>
+                              <i class="fas fa-{{ $estado['icono'] }} mr-1 text-{{ $estado['color'] }}"
+                                 title="{{ $estado['mensaje'] }}"
+                                 data-toggle="tooltip"
+                                 data-placement="right"></i>
                             @endif
                             {{ $item->detalle }}
+                            @if($item->enPlanilla && !empty($estado['problemas']))
+                              <span class="badge badge-{{ $estado['color'] }} badge-pill ml-1"
+                                    data-toggle="tooltip"
+                                    title="{{ implode(', ', $estado['problemas']) }}">
+                                <i class="fas fa-info-circle"></i>
+                              </span>
+                            @endif
                           </td>
                           <td class="align-middle small text-right text-nowrap">{{ $item->cantidad ? number_format($item->cantidad, 2, ',', '.') : '—' }}</td>
                           <td class="align-middle small text-right text-nowrap">$ {{ number_format($item->precio, 2, ',', '.') }}</td>
@@ -118,7 +240,10 @@
                                   $opciones = $opcionesPorTipoDep[$key] ?? [];
                                 @endphp
                                 @foreach($opciones as $opt)
-                                  <option value="{{ $opt->id }}" {{ $item->siif_distribucion_id == $opt->id ? 'selected' : '' }}>
+                                  <option value="{{ $opt->id }}"
+                                          {{ $item->siif_distribucion_id == $opt->id ? 'selected' : '' }}
+                                          data-toggle="tooltip"
+                                          title="Recurso: {{ $opt->recurso ?? 'N/A' }} | Concepto: {{ $opt->concepto ?? $opt->distribucion }} | Financ: {{ $opt->financiacion ?? 'N/A' }} | Inciso: {{ $opt->inciso ?? 'N/A' }} | U.E.: {{ $opt->unidad_ejecutora ?? 'N/A' }}">
                                     {{ $opt->distribucion }}
                                   </option>
                                 @endforeach
@@ -131,24 +256,23 @@
                             @if($item->enPlanilla)
                               <div class="custom-control custom-switch d-inline-block">
                                 <input type="checkbox" class="custom-control-input" id="itemConfirmado_{{ $item->id }}"
-                                  onclick="event.preventDefault()"
                                   wire:click="toggleItemConfirmado({{ $item->id }})"
                                   {{ $item->confirmado ? 'checked' : '' }}>
                                 <label class="custom-control-label" for="itemConfirmado_{{ $item->id }}">
-                                  <span class="small {{ $item->confirmado ? 'text-success font-weight-bold' : 'text-muted' }}">
+                                  <span class="small {{ $item->confirmado ? 'text-success font-weight-bold' : 'text-secondary' }}">
                                     {{ $item->confirmado ? 'Sí' : 'No' }}
                                   </span>
                                 </label>
                               </div>
                             @else
-                              <span class="small text-muted">—</span>
+                              <span class="small text-secondary">—</span>
                             @endif
                           </td>
                         </tr>
                         @if($item->descripcion)
-                        <tr class="{{ $item->enPlanilla ? '' : 'text-muted' }}">
-                          <td class="pl-3 py-1 small border-top-0 text-nowrap" style="width: 1%;"><strong>DESC.:</strong></td>
-                          <td colspan="5" class="py-1 small border-top-0" style="font-style: italic;">
+                        <tr class="{{ $item->enPlanilla ? '' : 'text-secondary' }}">
+                          <td class="pl-3 py-1 small border-top-0 text-nowrap"><strong>DESC.:</strong></td>
+                          <td colspan="5" class="py-1 small border-top-0 font-italic">
                             {{ $item->descripcion }}
                           </td>
                         </tr>
@@ -156,29 +280,30 @@
                       @endforeach
                     </tbody>
                   </table>
+                </div>
                   @if($referencias || $adenda)
-                  <div class="px-3 py-2 bg-white border-top small">
+                  <div class="px-3 py-2 border-top small">
                     @if($referencias)
                       <div class="mb-1">
-                        <strong><i class="fas fa-hashtag mr-1 text-muted"></i>Referencias:</strong>
-                        <span class="text-muted">{{ $referencias }}</span>
+                        <strong><i class="fas fa-hashtag mr-1 text-secondary"></i>Referencias:</strong>
+                        <span>{{ $referencias }}</span>
                       </div>
                     @endif
                     @if($adenda)
                       <div>
-                        <strong><i class="fas fa-paperclip mr-1 text-muted"></i>Adenda:</strong>
-                        <span class="text-muted">{{ $adenda }}</span>
+                        <strong><i class="fas fa-paperclip mr-1 text-secondary"></i>Adenda:</strong>
+                        <span>{{ $adenda }}</span>
                       </div>
                     @endif
                   </div>
                   @endif
                   @if(!$loop->last)
-                  <hr class="my-2" style="border-top: 3px solid #adb5bd;">
+                  <hr class="my-2 border-secondary">
                   @endif
               </div>
             </div>
           @empty
-            <p class="text-muted text-center py-3 mb-0">No hay ítems asociados a esta planilla.</p>
+            <p class="text-center py-3 mb-0">No hay ítems asociados a esta planilla.</p>
           @endforelse
         </div>
       </div>
@@ -197,7 +322,7 @@
 
           @if($tabsConDatos->isNotEmpty())
             @php $primerActivo = true; @endphp
-            <ul class="nav nav-tabs" id="confirmarRecaudacionesTab" role="tablist">
+            <ul class="nav nav-tabs flex-column flex-sm-row" id="confirmarRecaudacionesTab" role="tablist">
               @foreach($gruposRecaudacion as $key => $grupo)
                 @if($grupo['total_efectivo'] + $grupo['total_cheque'] + $grupo['total_transferencia'] + $grupo['total_pos'] > 0)
                   <li class="nav-item">
@@ -214,7 +339,7 @@
               @endforeach
             </ul>
             @php $primerActivo = true; @endphp
-            <div class="tab-content border border-top-0 p-3" id="confirmarRecaudacionesTabContent">
+            <div class="tab-content border border-top-0 p-2 p-md-3" id="confirmarRecaudacionesTabContent">
               @foreach($gruposRecaudacion as $key => $grupo)
                 @if($grupo['total_efectivo'] + $grupo['total_cheque'] + $grupo['total_transferencia'] + $grupo['total_pos'] > 0)
                   <div class="tab-pane fade {{ $primerActivo ? 'show active' : '' }}"
@@ -225,11 +350,11 @@
                     @foreach($grupo['distribuciones'] as $distKey => $distribucion)
                       @if(!empty($distribucion['items']))
                         <div class="card mb-3">
-                          <div class="card-header py-1 px-2 bg-light text-center">
+                          <div class="card-header py-1 px-2 text-center">
                             <strong>{{ $distribucion['distribucion'] }}</strong>
                             @php $docsStr = $this->formatRangoDocumentos($distribucion['items']); @endphp
                             @if($docsStr)
-                              <br><small class="text-muted">{{ $docsStr }}</small>
+                              <br><small>{{ $docsStr }}</small>
                             @endif
                           </div>
                           <div class="card-body p-0">
@@ -288,8 +413,8 @@
                     @php
                       $totalGrupo = $grupo['total_efectivo'] + $grupo['total_cheque'] + $grupo['total_transferencia'] + $grupo['total_pos'];
                     @endphp
-                    <div class="d-flex justify-content-end py-2 px-3 bg-light border rounded">
-                      <table class="table table-sm table-borderless mb-0 text-right" style="width: auto;">
+                    <div class="table-responsive py-2 px-3 border rounded">
+                      <table class="table table-sm table-borderless mb-0 text-right w-auto ml-auto">
                         <thead>
                           <tr>
                             <th class="text-center align-middle small font-weight-bold">TOTALES</th>
@@ -317,7 +442,7 @@
               @endforeach
             </div>
           @else
-            <p class="text-muted text-center py-3 mb-0">No hay medios de pago registrados para esta planilla.</p>
+            <p class="text-center py-3 mb-0">No hay medios de pago registrados para esta planilla.</p>
           @endif
         </div>
       </div>
@@ -338,12 +463,12 @@
           </div>
           @endif
 
-          <div class="d-flex justify-content-between align-items-start mb-3">
-            <div class="small">
+          <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-start mb-3">
+            <div class="small mb-2 mb-sm-0">
               <strong>JEFATURA DE POLICÍA DE MONTEVIDEO</strong><br>
               <strong>DIRECCIÓN DE TESORERÍA</strong>
             </div>
-            <div class="text-right small">
+            <div class="text-sm-right small">
               <strong>PLANILLA: {{ $planilla->numero }}</strong><br>
               <strong>FECHA: {{ $planilla->fecha?->format('d/m/Y') }}</strong>
             </div>
@@ -380,6 +505,7 @@
                   @endphp
 
                   @if($distribuciones->isNotEmpty())
+                    <div class="table-responsive">
                     <table class="table table-sm table-bordered mb-0 border-top-0">
                       <thead>
                         <tr>
@@ -466,6 +592,7 @@
                         @endforeach
                       </tbody>
                     </table>
+                    </div>
                   @endif
                 @endif
 
@@ -485,37 +612,38 @@
             <strong>TOTAL GENERAL:</strong>&nbsp;$ {{ number_format($totalGeneralAjustado, 2, ',', '.') }}
           </div>
 
+          <div class="table-responsive">
           <table class="table table-sm table-bordered mt-3 mb-0">
             <tbody>
               <tr>
-                <td class="align-middle small text-nowrap font-weight-bold" style="width: 1%; white-space: nowrap;">Estado de recaudación Nro.</td>
+                <td class="align-middle small text-nowrap font-weight-bold w-25">Estado de recaudación Nro.</td>
                 <td class="align-middle small">{{ $planilla->er_numero ?? '—' }}</td>
               </tr>
               <tr>
-                <td class="align-middle small text-nowrap font-weight-bold" style="width: 1%; white-space: nowrap;">Nros. Egresos (rubro 100.99/800.9)</td>
+                <td class="align-middle small text-nowrap font-weight-bold w-25">Nros. Egresos (rubro 100.99/800.9)</td>
                 <td class="align-middle small">{{ $planilla->egresos_numero ?? '—' }}</td>
               </tr>
               <tr>
-                <td class="align-middle small text-nowrap font-weight-bold" style="width: 1%; white-space: nowrap;">Nros. Ingresos</td>
+                <td class="align-middle small text-nowrap font-weight-bold w-25">Nros. Ingresos</td>
                 <td class="align-middle small">{{ $planilla->ingresos_numero ?? '—' }}</td>
               </tr>
               <tr>
-                <td class="align-middle small text-nowrap font-weight-bold" style="width: 1%; white-space: nowrap;">Fecha de transferencia</td>
+                <td class="align-middle small text-nowrap font-weight-bold w-25">Fecha de transferencia</td>
                 <td class="align-middle small">{{ $planilla->transferencia_fecha?->format('d/m/Y') ?? '—' }}</td>
               </tr>
               <tr>
-                <td class="align-middle small text-nowrap font-weight-bold" style="width: 1%; white-space: nowrap;">Transf. Confirmación</td>
+                <td class="align-middle small text-nowrap font-weight-bold w-25">Transf. Confirmación</td>
                 <td class="align-middle small">{{ $planilla->transferencia_confirmacion ?? '—' }}</td>
               </tr>
             </tbody>
           </table>
+          </div>
 
-          <div class="d-flex align-items-center justify-content-between border-top pt-3 mt-3">
+          <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between border-top pt-3 mt-3">
             @can('tesoreria.supervisar')
-              <div class="d-flex align-items-center">
+              <div class="d-flex flex-wrap align-items-center mb-3 mb-md-0">
                 <div class="custom-control custom-switch d-inline-block">
                   <input type="checkbox" class="custom-control-input" id="switchConfirmar"
-                    onclick="event.preventDefault()"
                     wire:click="toggleConfirmada"
                     {{ $planilla->confirmada ? 'checked' : '' }}>
                   <label class="custom-control-label font-weight-bold" for="switchConfirmar">
@@ -533,17 +661,17 @@
                 @endif
               </div>
               @if($planilla->confirmada)
-              <button type="button" class="btn btn-primary btn-sm" onclick="imprimirConfirmar()">
+              <button type="button" class="btn btn-primary btn-sm align-self-stretch align-self-md-auto" onclick="imprimirConfirmar()">
                 <i class="fas fa-print mr-1"></i> Imprimir
               </button>
               @else
-              <button type="button" class="btn btn-danger btn-sm"
+              <button type="button" class="btn btn-danger btn-sm align-self-stretch align-self-md-auto"
                 onclick="anularPlanilla()">
                 <i class="fas fa-ban mr-1"></i> Anular esta planilla para E.R.
               </button>
               @endif
             @else
-              <p class="text-muted mb-0">
+              <p class="mb-0">
                 <i class="fas fa-info-circle mr-1"></i> No tiene permisos para confirmar planillas.
               </p>
             @endcan
@@ -557,6 +685,20 @@
 
 @push('scripts')
 <script>
+// Inicializar tooltips de Bootstrap
+$(document).ready(function() {
+  $('[data-toggle="tooltip"]').tooltip();
+});
+
+// Reinicializar tooltips después de cada actualización de Livewire v3
+document.addEventListener('livewire:init', function () {
+  Livewire.hook('commit', ({ succeed }) => {
+    succeed(() => {
+      queueMicrotask(() => $('[data-toggle="tooltip"]').tooltip());
+    });
+  });
+});
+
 function anularPlanilla() {
   Swal.fire({
     title: '¿Anular planilla?',
@@ -580,8 +722,42 @@ function anularPlanilla() {
   });
 }
 
+window.addEventListener('swal:previsualizar-cambio', event => {
+  const data = window.LiveEvent(event);
+  Swal.fire({
+    title: 'Previsualización de Cambio',
+    html: `
+      <div class="text-left">
+        <p><strong>Ítem:</strong> ${data.itemDetalle}</p>
+        <hr>
+        <div class="mb-2">
+          <strong>Distribución Actual:</strong><br>
+          <span class="badge badge-secondary">${data.distribucionAnterior}</span>
+        </div>
+        <div class="text-center my-2">
+          <i class="fas fa-arrow-down fa-2x text-primary"></i>
+        </div>
+        <div>
+          <strong>Nueva Distribución:</strong><br>
+          <span class="badge badge-primary">${data.distribucionNueva}</span>
+        </div>
+      </div>
+    `,
+    icon: 'info',
+    showCancelButton: true,
+    confirmButtonColor: '#3085d6',
+    cancelButtonColor: '#6c757d',
+    confirmButtonText: '<i class="fas fa-check mr-1"></i>Aplicar Cambio',
+    cancelButtonText: '<i class="fas fa-times mr-1"></i>Cancelar'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      @this.call('cambiarDistribucion', data.itemId, data.nuevoSiifDistribucionId);
+    }
+  });
+});
+
 window.addEventListener('swal:confirmar-cambio-planilla', event => {
-  const data = event.detail;
+  const data = window.LiveEvent(event);
   const showDeny = data.otrosItemsCount > 0;
   Swal.fire({
     title: data.title,
@@ -603,6 +779,43 @@ window.addEventListener('swal:confirmar-cambio-planilla', event => {
     } else {
       @this.call('cancelarCambioPlanilla');
     }
+  });
+});
+
+window.addEventListener('swal:confirmar-con-advertencias', event => {
+  const data = window.LiveEvent(event);
+  Swal.fire({
+    title: data.title,
+    html: data.html,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#ffc107',
+    cancelButtonColor: '#6c757d',
+    confirmButtonText: '<i class="fas fa-check mr-1"></i>Sí, confirmar de todos modos',
+    cancelButtonText: '<i class="fas fa-times mr-1"></i>Cancelar',
+    customClass: {
+      confirmButton: 'btn btn-warning',
+      cancelButton: 'btn btn-secondary'
+    },
+    buttonsStyling: false
+  }).then((result) => {
+    if (result.isConfirmed) {
+      @this.call('confirmarConAdvertencias');
+    }
+  });
+});
+
+window.addEventListener('swal:error', event => {
+  const data = window.LiveEvent(event);
+
+  Swal.fire({
+    title: data.title || 'Error',
+    text: data.text || 'Ocurrió un error',
+    icon: 'error',
+    confirmButtonColor: '#d33',
+    confirmButtonText: 'Entendido',
+    width: '600px',
+    allowOutsideClick: false
   });
 });
 
@@ -645,13 +858,13 @@ function imprimirConfirmar() {
   ventana.document.write('.page-break{page-break-before:always}');
   ventana.document.write('@media print{body{padding:0}}');
   ventana.document.write('</style>');
-  ventana.document.write('</head><body>');
+  ventana.document.write('<\/head><body>');
   ventana.document.write('<h4 style="margin-bottom:1rem">Recaudaciones</h4>');
   ventana.document.write(contenidoRec);
   ventana.document.write('<div class="page-break"></div>');
   ventana.document.write('<h4 style="margin-bottom:1rem">Planilla {{ $planilla->numero }}</h4>');
   ventana.document.write(contenidoPlan);
-  ventana.document.write('</body></html>');
+  ventana.document.write('<\/body><\/html>');
   ventana.document.close();
   ventana.focus();
   setTimeout(function() { ventana.print(); ventana.close(); }, 500);

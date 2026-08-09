@@ -42,4 +42,17 @@ class Movimiento extends Model
     {
         return $this->belongsTo(Pendiente::class, 'relPendiente', 'idPendientes');
     }
+
+    // Referencias a documentos siempre en mayúsculas (respeta acentos/n.e.)
+    public function setDocumentosAttribute($value)
+    {
+        $this->attributes['documentos'] = is_null($value) || trim((string)$value) === ''
+            ? null
+            : mb_strtoupper(trim((string)$value), 'UTF-8');
+    }
+
+    public function getDocumentosAttribute($value)
+    {
+        return is_null($value) ? null : mb_strtoupper($value, 'UTF-8');
+    }
 }

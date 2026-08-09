@@ -16,6 +16,10 @@
               <a class="dropdown-item" href="#" wire:click.prevent="openLibroDiarioReport">
                 <i class="fas fa-book mr-2"></i>Libro Diario
               </a>
+              <a class="dropdown-item" href="#" wire:click.prevent="openLibroDiarioAmpliadoReport">
+                <i class="fas fa-book-open mr-2"></i>Libro Diario Ampliado
+              </a>
+              <div class="dropdown-divider"></div>
               <a class="dropdown-item" href="#" wire:click.prevent="openPersonalPolicialReport">
                 <i class="fas fa-user-shield mr-2"></i>Personal Policial
               </a>
@@ -26,7 +30,7 @@
               <i class="fas fa-cog"></i> Opciones
             </button>
             <div class="dropdown-menu dropdown-menu-right">
-              @if(auth()->user()->esAdministrador() || in_array(auth()->user()->nivelActual(), ['supervisor', 'gerente']))
+              @if(auth()->user()->esAdministrador())
                 <a class="dropdown-item" href="{{ route('tesoreria.libro-diario.lb-tipos.index') }}">
                   <i class="fas fa-tag mr-2"></i>Tipos de Asiento
                 </a>
@@ -37,7 +41,7 @@
               <a class="dropdown-item" href="{{ route('tesoreria.libro-diario.lb-detalle.index') }}">
                 <i class="fas fa-list mr-2"></i>Detalles
               </a>
-              <a class="dropdown-item" href="{{ route('tesoreria.libro-diario.lb-medios.index') }}">
+              <a class="dropdown-item" href="{{ route('tesoreria.libro-diario.medios-de-pago.index') }}">
                 <i class="fas fa-credit-card mr-2"></i>Medios de Pago
               </a>
             </div>
@@ -70,11 +74,11 @@
       <form class="form-row align-items-end mb-2 d-print-none">
         <div class="col-md-auto" style="min-width:130px">
           <label class="small mb-0">Desde</label>
-          <input type="date" class="form-control form-control-sm" wire:model="fecha_desde">
+          <input type="date" class="form-control form-control-sm" wire:model.live="fecha_desde">
         </div>
         <div class="col-md-auto" style="min-width:130px">
           <label class="small mb-0">Hasta</label>
-          <input type="date" class="form-control form-control-sm" wire:model="fecha_hasta">
+          <input type="date" class="form-control form-control-sm" wire:model.live="fecha_hasta">
         </div>
         <div class="col-auto">
           <label class="small mb-0">&nbsp;</label>
@@ -82,18 +86,18 @@
             <i class="fas fa-calendar-day"></i> Hoy
           </button>
         </div>
-        <div class="col">
+        <div class="col-md-1">
           <label class="small mb-0">Tipo</label>
-          <select class="form-control form-control-sm" wire:model="filtro_tipo_id">
+          <select class="form-control form-control-sm" wire:model.live="filtro_tipo_id">
             <option value="">Todos</option>
             @foreach ($tipos as $tipo)
               <option value="{{ $tipo->id }}">{{ $tipo->nombre }}</option>
             @endforeach
           </select>
         </div>
-        <div class="col">
+        <div class="col-md-2">
           <label class="small mb-0">Detalle</label>
-          <select class="form-control form-control-sm" wire:model="filtro_detalle_id">
+          <select class="form-control form-control-sm" wire:model.live="filtro_detalle_id">
             <option value="">Todos</option>
             @foreach ($detallesAgrupados as $conceptoNombre => $grupoDetalles)
               <optgroup label="{{ $conceptoNombre }}">
@@ -105,9 +109,13 @@
             @endforeach
           </select>
         </div>
-        <div class="col">
+        <div class="col-md-1">
+          <label class="small mb-0">Monto</label>
+          <input type="number" step="0.01" min="0" class="form-control form-control-sm" wire:model.live="filtro_monto" placeholder="Exacto" title="Filtrar por monto exacto">
+        </div>
+        <div class="col-md-2">
           <label class="small mb-0">Buscar</label>
-          <input type="text" class="form-control form-control-sm" wire:model="search" placeholder="Identidad / Denominación">
+          <input type="text" class="form-control form-control-sm" wire:model.live="search" placeholder="Identidad / Denominación">
         </div>
         <div class="col-auto">
           <label class="small mb-0">&nbsp;</label>
@@ -131,7 +139,7 @@
               </thead>
               <tbody>
                 @if($fechaAnterior)
-                  <tr>
+                  <tr wire:key="saldo-anterior-{{ $tick }}">
                     <td class="text-left align-middle font-weight-bold">SALDO ANTERIOR ({{ $fechaAnterior }})</td>
                     @foreach ($mediosEnTabla as $medio)
                       @php
@@ -142,7 +150,7 @@
                       </td>
                     @endforeach
                   </tr>
-                  <tr>
+                  <tr wire:key="movimientos-periodo-{{ $tick }}">
                     <td class="text-left align-middle font-weight-bold">MOVIMIENTOS EN EL PERÍODO</td>
                     @foreach ($mediosEnTabla as $medio)
                       @php
@@ -158,13 +166,13 @@
                     @endforeach
                   </tr>
                 @endif
-                <tr>
+                <tr wire:key="saldo-actual-{{ $tick }}">
                   <td class="text-left align-middle font-weight-bold">SALDO ACTUAL</td>
                   @foreach ($mediosEnTabla as $medio)
                     @php
                       $saldo = $saldosPorMedio->firstWhere('medio_id', $medio->id)->saldo_actual ?? 0;
                     @endphp
-                    <td class="text-center align-middle font-weight-bold {{ $saldo < 0 ? 'text-danger' : '' }}">
+                    <td class="text-center align-middle font-weight-bold {{ $saldo < 0 ? 'text-danger' : '' }}" wire:key="saldo-{{ $medio->id }}-{{ $tick }}">
                       $ {{ number_format($saldo, 2, ',', '.') }}
                     </td>
                   @endforeach
@@ -175,11 +183,19 @@
         </div>
       </div>
 
-      <div style="overflow-x:auto">
+      {{-- ASIENTOS CONFIRMADOS --}}
+      <div class="rounded-top border border-success mb-0" style="border-bottom:none!important">
+        <div class="bg-success text-white px-3 py-1 d-flex align-items-center" style="border-radius:0.3rem 0.3rem 0 0">
+          <i class="fas fa-check-circle mr-2"></i>
+          <strong>ASIENTOS CONFIRMADOS</strong>
+          <span class="badge badge-light ml-2">{{ $itemsConfirmados->count() }}</span>
+        </div>
+      </div>
+      <div style="overflow-x:auto" class="mb-4">
         <table class="table table-bordered table-sm table-hover mb-0" style="width:100%">
-          <thead>
+          <thead class="thead-light">
             <tr>
-              <th class="text-center align-middle" style="width:75px">Fecha</th>
+              <th class="text-center align-middle" style="width:75px">Fecha Confirmación</th>
               <th class="text-center align-middle" style="width:40px">N°</th>
               <th class="text-center align-middle" style="width:65px">Tipo</th>
               <th class="text-center align-middle">Concepto / Detalle</th>
@@ -190,9 +206,12 @@
             </tr>
           </thead>
           <tbody>
-            @forelse ($items as $item)
+            @forelse ($itemsConfirmados as $item)
               <tr>
-                <td class="text-center align-middle">{{ $item->fecha->format('d/m/Y') }}</td>
+                <td class="text-center align-middle">
+                  <div>{{ $item->fecha_efectiva->format('d/m/Y') }}</div>
+                  <div class="text-muted" style="font-size:60%">creado {{ $item->fecha->format('d/m/Y') }}</div>
+                </td>
                 <td class="text-center align-middle">{{ $item->numero }}</td>
                 <td class="text-center align-middle {{ $item->signo_efectivo === -1 ? 'table-danger' : ($item->signo_efectivo === 1 ? 'table-success' : '') }}">
                   {{ $item->tipo->nombre ?? '—' }}
@@ -205,6 +224,20 @@
                   @if($item->detalle)
                     <div class="text-muted" style="font-size:65%">{{ $item->detalle->nombre }}</div>
                   @endif
+                  @if($item->documento_referencia)
+                    <div class="text-muted" style="font-size:65%"><i class="fas fa-file-alt mr-1"></i>{{ $item->documento_referencia }}</div>
+                  @endif
+                  <div class="mt-1" style="font-size:65%;line-height:1">
+                    @if($item->cfe_id)
+                      <span class="badge badge-info" title="Asiento generado desde Gestión de Recaudaciones (CFE)"><i class="fas fa-file-invoice mr-1"></i>Recaudación</span>
+                    @endif
+                    @if($item->cch_origen_type)
+                      <span class="badge badge-secondary" title="Asiento generado desde Caja Chica ({{ $item->cch_origen_type }})"><i class="fas fa-wallet mr-1"></i>Caja Chica</span>
+                    @endif
+                    @if($item->grupo_redistribucion_id)
+                      <span class="badge badge-warning text-dark" title="Pertenece a una redistribución (grupo {{ $item->grupo_redistribucion_id }})"><i class="fas fa-exchange-alt mr-1"></i>Redistribución</span>
+                    @endif
+                  </div>
                 </td>
                 <td class="text-left align-middle">
                   @if($item->identidad || $item->denominacion)
@@ -226,25 +259,166 @@
                       class="btn btn-info" title="Ver" style="padding:0.15rem 0.3rem;font-size:inherit"><i class="fas fa-eye"></i></button>
                     <button wire:click="openEditModal({{ $item->id }})"
                       class="btn btn-primary" title="Editar" style="padding:0.15rem 0.3rem;font-size:inherit"><i class="fas fa-edit"></i></button>
+                    @if(!$item->cch_origen_type)
                     <button
                       onclick="event.preventDefault(); window.dispatchEvent(new CustomEvent('swal:confirm', { detail: { title: '¿Estás seguro?', text: '¡No podrás revertir esto! Se recalcularán los saldos.', method: 'destroy', id: {{ $item->id }}, confirmButtonText: 'Sí, elimínalo' } }))"
                       class="btn btn-danger" title="Eliminar" style="padding:0.15rem 0.3rem;font-size:inherit"><i class="fas fa-trash-alt"></i></button>
+                    @endif
+                    @if ($item->documento_referencia)
+                      <button type="button" class="btn btn-outline-warning"
+                              @if($item->signo_efectivo === -1)
+                                disabled title="El documento contiene salidas que no se pueden desconfirmar"
+                              @else
+                                wire:click="desconfirmarPorDocumento('{{ $item->documento_referencia }}')"
+                                title="Desconfirmar todo el lote del documento {{ $item->documento_referencia }}"
+                              @endif>
+                        <i class="fas fa-undo"></i>
+                      </button>
+                    @else
+                      @if($item->signo_efectivo === 1 && !$item->cch_origen_type && !$item->grupo_redistribucion_id && !$item->cfe_id && optional($item->medio)->nombre === \App\Models\Tesoreria\MedioDePago::EFECTIVO)
+                        <button type="button" class="btn btn-outline-warning"
+                                wire:click="toggleConfirmacion({{ $item->id }})"
+                                title="Desconfirmar asiento">
+                          <i class="fas fa-undo"></i>
+                        </button>
+                      @endif
+                    @endif
                   </div>
                 </td>
               </tr>
             @empty
               <tr>
-                <td colspan="8" class="text-center py-3">No hay asientos registrados en el período seleccionado.</td>
+                <td colspan="8" class="text-center py-3 text-muted">No hay asientos confirmados en el período seleccionado.</td>
               </tr>
             @endforelse
           </tbody>
           <tfoot>
             <tr class="font-weight-bold bg-light">
-              <td colspan="5" class="text-right align-middle">MONTO TOTAL</td>
+              <td colspan="5" class="text-right align-middle">MONTO TOTAL CONFIRMADOS</td>
               <td class="text-right align-middle" style="white-space:nowrap">
-                $ {{ number_format($totales['entradas'] - $totales['salidas'], 2, ',', '.') }}
+                $ {{ number_format($totalesConfirmados['entradas'] - $totalesConfirmados['salidas'], 2, ',', '.') }}
               </td>
-              <td colspan="1"></td>
+              <td colspan="2"></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      {{-- ASIENTOS PENDIENTES --}}
+      <div class="rounded-top border border-warning mb-0" style="border-bottom:none!important">
+        <div class="bg-warning text-dark px-3 py-1 d-flex align-items-center" style="border-radius:0.3rem 0.3rem 0 0">
+          <i class="fas fa-clock mr-2"></i>
+          <strong>ASIENTOS PENDIENTES</strong>
+          <span class="badge badge-dark ml-2">{{ $itemsPendientes->count() }}</span>
+        </div>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="table table-bordered table-sm table-hover mb-0" style="width:100%">
+          <thead class="thead-light">
+            <tr>
+              <th class="text-center align-middle" style="width:75px">Fecha</th>
+              <th class="text-center align-middle" style="width:40px">N°</th>
+              <th class="text-center align-middle" style="width:65px">Tipo</th>
+              <th class="text-center align-middle">Concepto / Detalle</th>
+              <th class="text-center align-middle">Identidad</th>
+              <th class="text-center align-middle" style="width:105px">Monto</th>
+              <th class="text-center align-middle d-print-none" style="width:90px">Saldo</th>
+              <th class="text-center align-middle d-print-none" style="width:80px">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            @forelse ($itemsPendientes as $item)
+              <tr>
+                <td class="text-center align-middle">{{ $item->fecha->format('d/m/Y') }}</td>
+                <td class="text-center align-middle">{{ $item->numero }}</td>
+                <td class="text-center align-middle {{ $item->signo_efectivo === -1 ? 'table-danger' : ($item->signo_efectivo === 1 ? 'table-success' : '') }}">
+                  {{ $item->tipo->nombre ?? '—' }}
+                  @if($item->grupo_redistribucion_id)
+                    <i class="fas fa-exchange-alt text-muted ml-1" title="Parte de una redistribución"></i>
+                  @endif
+                </td>
+                <td class="text-left align-middle">
+                  <div>{{ $item->concepto->nombre ?? '—' }}</div>
+                  @if($item->detalle)
+                    <div class="text-muted" style="font-size:65%">{{ $item->detalle->nombre }}</div>
+                  @endif
+                  @if($item->documento_referencia)
+                    <div class="text-muted" style="font-size:65%"><i class="fas fa-file-alt mr-1"></i>{{ $item->documento_referencia }}</div>
+                  @endif
+                  <div class="mt-1" style="font-size:65%;line-height:1">
+                    @if($item->cfe_id)
+                      <span class="badge badge-info" title="Asiento generado desde Gestión de Recaudaciones (CFE)"><i class="fas fa-file-invoice mr-1"></i>Recaudación</span>
+                    @endif
+                    @if($item->cch_origen_type)
+                      <span class="badge badge-secondary" title="Asiento generado desde Caja Chica ({{ $item->cch_origen_type }})"><i class="fas fa-wallet mr-1"></i>Caja Chica</span>
+                    @endif
+                    @if($item->grupo_redistribucion_id)
+                      <span class="badge badge-warning text-dark" title="Pertenece a una redistribución (grupo {{ $item->grupo_redistribucion_id }})"><i class="fas fa-exchange-alt mr-1"></i>Redistribución</span>
+                    @endif
+                  </div>
+                </td>
+                <td class="text-left align-middle">
+                  @if($item->identidad || $item->denominacion)
+                    {{ $item->identidad }}@if($item->identidad && $item->denominacion) - @endif{{ $item->denominacion }}
+                  @else
+                    <span class="text-muted">—</span>
+                  @endif
+                </td>
+                <td class="text-right align-middle font-weight-bold" style="white-space:nowrap">
+                  <span class="{{ $item->signo_efectivo === -1 ? 'text-danger' : '' }}">
+                    {{ $item->signo_efectivo === -1 ? '-' : '+' }} $ {{ number_format($item->monto, 2, ',', '.') }}
+                  </span>
+                  <span class="text-muted d-block" style="font-size:65%;line-height:1">{{ $item->medio->nombre_corto ?? $item->medio->nombre ?? '—' }}</span>
+                </td>
+                <td class="text-right align-middle d-print-none" style="white-space:nowrap">$ {{ number_format($item->saldo, 2, ',', '.') }}</td>
+                <td class="text-center align-middle d-print-none" style="white-space:nowrap">
+                  <div class="btn-group btn-group-sm" role="group">
+                    <button wire:click="showDetails({{ $item->id }})"
+                      class="btn btn-info" title="Ver" style="padding:0.15rem 0.3rem;font-size:inherit"><i class="fas fa-eye"></i></button>
+                    <button wire:click="openEditModal({{ $item->id }})"
+                      class="btn btn-primary" title="Editar" style="padding:0.15rem 0.3rem;font-size:inherit"><i class="fas fa-edit"></i></button>
+                    @if(!$item->cch_origen_type)
+                    <button
+                      onclick="event.preventDefault(); window.dispatchEvent(new CustomEvent('swal:confirm', { detail: { title: '¿Estás seguro?', text: '¡No podrás revertir esto! Se recalcularán los saldos.', method: 'destroy', id: {{ $item->id }}, confirmButtonText: 'Sí, elimínalo' } }))"
+                      class="btn btn-danger" title="Eliminar" style="padding:0.15rem 0.3rem;font-size:inherit"><i class="fas fa-trash-alt"></i></button>
+                    @endif
+                    <button type="button" class="btn btn-outline-success"
+                            title="Confirmar asiento"
+                            style="padding:0.15rem 0.3rem;font-size:inherit"
+                            wire:click="toggleConfirmacion({{ $item->id }})">
+                      <i class="fas fa-clock"></i>
+                    </button>
+                    @if ($item->documento_referencia)
+                      <button type="button" class="btn btn-outline-success"
+                              title="Confirmar todo el lote del documento {{ $item->documento_referencia }}"
+                              style="padding:0.15rem 0.3rem;font-size:inherit"
+                              wire:click="confirmarPorDocumento('{{ $item->documento_referencia }}')">
+                        <i class="fas fa-check-double"></i>
+                      </button>
+                    @endif
+                  </div>
+                  <div class="mt-1">
+                    <label class="mb-0 text-muted" style="font-size:75%;cursor:pointer;white-space:nowrap">
+                      <input type="checkbox" class="mr-1" wire:model.live="seleccionadosConfirmar"
+                        value="{{ $item->id }}">
+                      Confirmar
+                    </label>
+                  </div>
+                </td>
+              </tr>
+            @empty
+              <tr>
+                <td colspan="8" class="text-center py-3 text-muted">No hay asientos pendientes en el período seleccionado.</td>
+              </tr>
+            @endforelse
+          </tbody>
+          <tfoot>
+            <tr class="font-weight-bold bg-light">
+              <td colspan="5" class="text-right align-middle">MONTO TOTAL PENDIENTES</td>
+              <td class="text-right align-middle" style="white-space:nowrap">
+                $ {{ number_format($totalesPendientes['entradas'] - $totalesPendientes['salidas'], 2, ',', '.') }}
+              </td>
+              <td colspan="2"></td>
             </tr>
           </tfoot>
         </table>
@@ -269,13 +443,13 @@
               <div class="form-group col-md-4">
                 <label for="fecha">Fecha *</label>
                 <input type="date" class="form-control @error('fecha') is-invalid @enderror"
-                  wire:model.defer="fecha" id="fecha">
+                  wire:model="fecha" id="fecha">
                 @error('fecha') <div class="invalid-feedback">{{ $message }}</div> @enderror
               </div>
               <div class="form-group col-md-4">
                 <label for="tipo_id">Tipo *</label>
                 <select class="form-control @error('tipo_id') is-invalid @enderror"
-                  wire:model="tipo_id" id="tipo_id">
+                  wire:model.live="tipo_id" id="tipo_id">
                   <option value="">Seleccione...</option>
                   @foreach ($tipos as $tipo)
                     <option value="{{ $tipo->id }}">{{ $tipo->nombre }}</option>
@@ -286,7 +460,7 @@
               <div class="form-group col-md-4">
                 <label for="medio_id">Medio *</label>
                 <select class="form-control @error('medio_id') is-invalid @enderror"
-                  wire:model.defer="medio_id" id="medio_id" {{ $asiento_base_id ? 'disabled' : '' }}>
+                  wire:model="medio_id" id="medio_id" {{ $asiento_base_id ? 'disabled' : '' }}>
                   <option value="">Seleccione...</option>
                   @foreach ($medios as $medio)
                     <option value="{{ $medio->id }}">{{ $medio->nombre }}</option>
@@ -299,7 +473,7 @@
               <div class="form-group col-md-6">
                 <label for="concepto_id">Concepto *</label>
                 <select class="form-control @error('concepto_id') is-invalid @enderror"
-                  wire:model="concepto_id" id="concepto_id">
+                  wire:model.live="concepto_id" id="concepto_id">
                   <option value="">Seleccione...</option>
                   @foreach ($conceptos as $concepto)
                     <option value="{{ $concepto->id }}">{{ $concepto->nombre }}</option>
@@ -310,7 +484,7 @@
               <div class="form-group col-md-6">
                 <label for="detalle_id">Detalle *</label>
                 <select class="form-control @error('detalle_id') is-invalid @enderror"
-                  wire:model="detalle_id" id="detalle_id" {{ !$concepto_id ? 'disabled' : '' }}>
+                  wire:model.live="detalle_id" id="detalle_id" {{ !$concepto_id ? 'disabled' : '' }}>
                   <option value="">Seleccione un concepto primero...</option>
                   @foreach ($detalles as $detalle)
                     <option value="{{ $detalle->id }}">{{ $detalle->nombre }}</option>
@@ -329,7 +503,7 @@
                   </div>
                 </div>
                 <select class="form-control form-control-sm @error('asiento_base_id') is-invalid @enderror"
-                  wire:model="asiento_base_id" id="asiento_base_id">
+                  wire:model.live="asiento_base_id" id="asiento_base_id">
                   <option value="">Agregar importe e identificación manualmente...</option>
                   @foreach ($asientos_base as $asientoBase)
                     <option value="{{ data_get($asientoBase, 'id') }}">
@@ -349,13 +523,13 @@
               <div class="form-group col-md-4">
                 <label for="monto">Monto *</label>
                 <input type="number" step="0.01" min="0.01" class="form-control @error('monto') is-invalid @enderror"
-                  wire:model.defer="monto" id="monto" placeholder="0.00">
+                  wire:model="monto" id="monto" placeholder="0.00">
                 @error('monto') <div class="invalid-feedback">{{ $message }}</div> @enderror
               </div>
               <div class="form-group col-md-8">
                 <label for="identidad">Identidad</label>
                 <input type="text" class="form-control @error('identidad') is-invalid @enderror"
-                  wire:model.defer="identidad" id="identidad" placeholder="Cédula / RUT">
+                  wire:model="identidad" id="identidad" placeholder="Cédula / RUT">
                 @error('identidad') <div class="invalid-feedback">{{ $message }}</div> @enderror
               </div>
             </div>
@@ -363,15 +537,35 @@
               <div class="form-group col-md-6">
                 <label for="denominacion">Denominación</label>
                 <input type="text" class="form-control @error('denominacion') is-invalid @enderror"
-                  wire:model.defer="denominacion" id="denominacion" placeholder="Nombre / Razón social">
+                  wire:model="denominacion" id="denominacion" placeholder="Nombre / Razón social">
                 @error('denominacion') <div class="invalid-feedback">{{ $message }}</div> @enderror
               </div>
               <div class="form-group col-md-6">
                 <label for="descripcion">Descripción</label>
                 <textarea class="form-control @error('descripcion') is-invalid @enderror"
-                  wire:model.defer="descripcion" id="descripcion" rows="1" placeholder="Descripción del asiento"></textarea>
+                  wire:model="descripcion" id="descripcion" rows="1" placeholder="Descripción del asiento"></textarea>
                 @error('descripcion') <div class="invalid-feedback">{{ $message }}</div> @enderror
               </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group {{ $tipoEsEntrada ? 'col-md-6' : 'col-md-12' }}">
+                <label>&nbsp;</label>
+                <div class="custom-control custom-checkbox mt-2">
+                  <input type="checkbox" class="custom-control-input"
+                         wire:model.live="confirmado" id="confirmarAsiento">
+                  <label class="custom-control-label" for="confirmarAsiento">
+                    Confirmado
+                  </label>
+                </div>
+                <small class="text-muted d-block mt-1">Si no se confirma, entradas de efectivo no contabilizan en caja.</small>
+              </div>
+              @if($tipoEsEntrada)
+                <div class="form-group col-md-6">
+                  <label for="documento_referencia">Referencia Documento (opcional)</label>
+                  <input type="text" class="form-control"
+                    wire:model="documento_referencia" id="documento_referencia" placeholder="Nro. documento, recibo, etc.">
+                </div>
+              @endif
             </div>
           </form>
         </div>
@@ -405,7 +599,7 @@
               <div class="form-group mb-0 mt-2 mt-md-0">
                 <label for="rd_fecha" class="small text-uppercase font-weight-bold text-muted mb-1">Fecha *</label>
                 <input type="date" class="form-control @error('rd_fecha') is-invalid @enderror"
-                  wire:model.defer="rd_fecha" id="rd_fecha">
+                  wire:model="rd_fecha" id="rd_fecha">
                 @error('rd_fecha') <div class="invalid-feedback">{{ $message }}</div> @enderror
               </div>
             </div>
@@ -420,7 +614,7 @@
                   <div class="form-group">
                 <label for="rd_origen_concepto_id">Concepto origen *</label>
                 <select class="form-control @error('rd_origen_concepto_id') is-invalid @enderror"
-                  wire:model="rd_origen_concepto_id" id="rd_origen_concepto_id">
+                  wire:model.live="rd_origen_concepto_id" id="rd_origen_concepto_id">
                   <option value="">Seleccione...</option>
                   @foreach ($rd_origen_conceptos as $concepto)
                     <option value="{{ $concepto->id }}">{{ $concepto->nombre }}</option>
@@ -431,7 +625,7 @@
                   <div class="form-group">
                 <label for="rd_origen_detalle_id">Detalle origen *</label>
                 <select class="form-control @error('rd_origen_detalle_id') is-invalid @enderror"
-                  wire:model="rd_origen_detalle_id" id="rd_origen_detalle_id" {{ !$rd_origen_concepto_id ? 'disabled' : '' }}>
+                  wire:model.live="rd_origen_detalle_id" id="rd_origen_detalle_id" {{ !$rd_origen_concepto_id ? 'disabled' : '' }}>
                   <option value="">Seleccione un concepto primero...</option>
                   @foreach ($rd_origen_detalles as $detalle)
                     <option value="{{ $detalle->id }}">{{ $detalle->nombre }}</option>
@@ -442,7 +636,7 @@
                   <div class="form-group mb-0">
                 <label for="rd_asiento_id">Asiento *</label>
                 <select class="form-control @error('rd_asiento_id') is-invalid @enderror"
-                  wire:model="rd_asiento_id" id="rd_asiento_id" {{ !$rd_origen_detalle_id ? 'disabled' : '' }}>
+                  wire:model.live="rd_asiento_id" id="rd_asiento_id" {{ !$rd_origen_detalle_id ? 'disabled' : '' }}>
                   <option value="">Seleccione concepto y detalle primero...</option>
                   @foreach ($rd_asientos as $asiento)
                     <option value="{{ $asiento->id }}">
@@ -471,7 +665,7 @@
                   <p class="small text-muted">Defina la subcuenta que recibirá el importe.</p>
                   <div class="form-group">
                     <label for="rd_concepto_id">Concepto destino *</label>
-                    <select class="form-control @error('rd_concepto_id') is-invalid @enderror" wire:model="rd_concepto_id" id="rd_concepto_id">
+                    <select class="form-control @error('rd_concepto_id') is-invalid @enderror" wire:model.live="rd_concepto_id" id="rd_concepto_id">
                       <option value="">Seleccione...</option>
                       @foreach ($conceptos as $concepto)<option value="{{ $concepto->id }}">{{ $concepto->nombre }}</option>@endforeach
                     </select>
@@ -479,7 +673,7 @@
                   </div>
                   <div class="form-group">
                     <label for="rd_detalle_id">Detalle destino *</label>
-                    <select class="form-control @error('rd_detalle_id') is-invalid @enderror" wire:model="rd_detalle_id" id="rd_detalle_id" {{ !$rd_concepto_id ? 'disabled' : '' }}>
+                    <select class="form-control @error('rd_detalle_id') is-invalid @enderror" wire:model.live="rd_detalle_id" id="rd_detalle_id" {{ !$rd_concepto_id ? 'disabled' : '' }}>
                       <option value="">Seleccione un concepto primero...</option>
                       @foreach ($rd_detalles as $detalle)<option value="{{ $detalle->id }}">{{ $detalle->nombre }}</option>@endforeach
                     </select>
@@ -487,7 +681,7 @@
                   </div>
                   <div class="form-group mb-0">
                     <label for="rd_medio_id">Medio de pago *</label>
-                    <select class="form-control @error('rd_medio_id') is-invalid @enderror" wire:model.defer="rd_medio_id" id="rd_medio_id">
+                    <select class="form-control @error('rd_medio_id') is-invalid @enderror" wire:model="rd_medio_id" id="rd_medio_id">
                       <option value="">Seleccione...</option>
                       @foreach ($medios as $medio)<option value="{{ $medio->id }}">{{ $medio->nombre }}</option>@endforeach
                     </select>
@@ -501,7 +695,7 @@
                 <div class="bg-white border rounded shadow-sm p-3 h-100">
                   <label for="rd_monto" class="small text-uppercase font-weight-bold text-muted">Importe a redistribuir *</label>
                 <input type="number" step="0.01" min="0.01" class="form-control @error('rd_monto') is-invalid @enderror"
-                  wire:model.defer="rd_monto" id="rd_monto" placeholder="0.00" {{ !$rd_asiento_id ? 'readonly' : '' }}>
+                  wire:model="rd_monto" id="rd_monto" placeholder="0.00" {{ !$rd_asiento_id ? 'readonly' : '' }}>
                 @error('rd_monto') <div class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
               </div>
@@ -520,13 +714,13 @@
               <div class="form-group col-md-6 mb-md-0">
                 <label for="rd_identidad">Identidad</label>
                 <input type="text" class="form-control @error('rd_identidad') is-invalid @enderror"
-                  wire:model.defer="rd_identidad" id="rd_identidad" placeholder="Cédula / RUT">
+                  wire:model="rd_identidad" id="rd_identidad" placeholder="Cédula / RUT">
                 @error('rd_identidad') <div class="invalid-feedback">{{ $message }}</div> @enderror
               </div>
               <div class="form-group col-md-6 mb-0">
                 <label for="rd_denominacion">Denominación</label>
                 <input type="text" class="form-control @error('rd_denominacion') is-invalid @enderror"
-                  wire:model.defer="rd_denominacion" id="rd_denominacion" placeholder="Nombre / Razón social">
+                  wire:model="rd_denominacion" id="rd_denominacion" placeholder="Nombre / Razón social">
                 @error('rd_denominacion') <div class="invalid-feedback">{{ $message }}</div> @enderror
               </div>
               </div>
@@ -559,19 +753,19 @@
             <div class="form-group">
               <label for="edit_identidad">Identidad</label>
               <input type="text" class="form-control @error('edit_identidad') is-invalid @enderror"
-                wire:model.defer="edit_identidad" id="edit_identidad">
+                wire:model="edit_identidad" id="edit_identidad">
               @error('edit_identidad') <div class="invalid-feedback">{{ $message }}</div> @enderror
             </div>
             <div class="form-group">
               <label for="edit_denominacion">Denominación</label>
               <input type="text" class="form-control @error('edit_denominacion') is-invalid @enderror"
-                wire:model.defer="edit_denominacion" id="edit_denominacion">
+                wire:model="edit_denominacion" id="edit_denominacion">
               @error('edit_denominacion') <div class="invalid-feedback">{{ $message }}</div> @enderror
             </div>
             <div class="form-group">
               <label for="edit_descripcion">Descripción</label>
               <textarea class="form-control @error('edit_descripcion') is-invalid @enderror"
-                wire:model.defer="edit_descripcion" id="edit_descripcion" rows="2"></textarea>
+                wire:model="edit_descripcion" id="edit_descripcion" rows="2"></textarea>
               @error('edit_descripcion') <div class="invalid-feedback">{{ $message }}</div> @enderror
             </div>
           </form>
@@ -667,6 +861,43 @@
     </div>
   </div>
 
+  {{-- Confirm Modal --}}
+  <div wire:ignore.self class="modal fade" id="confirmModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-sm" role="document">
+      <div class="modal-content">
+        <div class="modal-header bg-success text-white">
+          <h5 class="modal-title">
+            @if($confirmLoteDocRef)
+              <i class="fas fa-check-double mr-2"></i>Confirmar Lote de Documento
+            @else
+              <i class="fas fa-check-circle mr-2"></i>Confirmar Asiento
+            @endif
+          </h5>
+          <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close" wire:click="resetConfirmModal">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          @if($confirmLoteDocRef)
+            <p class="mb-2">Se confirmarán todos los asientos pendientes con el documento <strong>{{ $confirmLoteDocRef }}</strong>.</p>
+          @endif
+          <div class="form-group">
+            <label for="confirm_fecha">Fecha de confirmación *</label>
+            <input type="date" class="form-control datepicker-uy @error('confirmFecha') is-invalid @enderror"
+              wire:model="confirmFecha" id="confirm_fecha">
+            @error('confirmFecha') <div class="invalid-feedback">{{ $message }}</div> @enderror
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal" wire:click="resetConfirmModal">Cancelar</button>
+          <button type="button" class="btn btn-success" wire:click="confirmarConFecha" wire:loading.attr="disabled">
+            <i class="fas fa-check mr-1"></i> Confirmar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   {{-- Personal Policial Report Modal --}}
   <div wire:ignore.self class="modal fade" id="personalPolicialModal" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog modal-xl" role="document">
@@ -681,7 +912,7 @@
           <div class="form-row mb-3">
             <div class="col-md-4">
               <label for="pp_fecha" class="small mb-0">Fecha</label>
-              <input type="date" class="form-control" wire:model="pp_fecha" id="pp_fecha">
+              <input type="date" class="form-control" wire:model.live="pp_fecha" id="pp_fecha">
             </div>
             <div class="col-md-8 d-flex align-items-end justify-content-end">
               <button type="button" class="btn btn-primary btn-sm" onclick="imprimirPersonalPolicial()">
@@ -768,7 +999,9 @@
     <div class="modal-dialog modal-xl" role="document">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title"><i class="fas fa-book mr-2"></i>Libro Diario</h5>
+          <h5 class="modal-title">
+            <i class="fas {{ $ld_ampliado ? 'fa-book-open' : 'fa-book' }} mr-2"></i>{{ $ld_ampliado ? 'Libro Diario Ampliado' : 'Libro Diario' }}
+          </h5>
           <button type="button" class="close" data-dismiss="modal" aria-label="Close" wire:click="resetLibroDiarioReportModal">
             <span aria-hidden="true">&times;</span>
           </button>
@@ -777,7 +1010,7 @@
           <div class="form-row mb-3">
             <div class="col-md-4">
               <label for="ld_fecha" class="small mb-0">Fecha</label>
-              <input type="date" class="form-control" wire:model="ld_fecha" id="ld_fecha">
+              <input type="date" class="form-control" wire:model.live="ld_fecha" id="ld_fecha">
             </div>
             <div class="col-md-8 d-flex align-items-end justify-content-end">
               <button type="button" class="btn btn-primary btn-sm" onclick="imprimirLibroDiario()">
@@ -788,14 +1021,19 @@
           <div class="text-center mb-3">
             <h5 class="font-weight-bold mb-1">JEFATURA DE POLICÍA DE MONTEVIDEO</h5>
             <h6 class="font-weight-bold mb-1">DIRECCIÓN DE TESORERÍA</h6>
-            <h6 class="mb-0">LIBRO DIARIO DEL DÍA {{ \Carbon\Carbon::parse($ld_fecha)->format('d/m/Y') }}</h6>
+            <h6 class="mb-0">{{ $ld_ampliado ? 'LIBRO DIARIO AMPLIADO' : 'LIBRO DIARIO' }} DEL DÍA {{ \Carbon\Carbon::parse($ld_fecha)->format('d/m/Y') }}</h6>
+            @if(!$ld_ampliado)
+              <small class="text-muted">Listado de asientos en Efectivo.</small>
+            @else
+              <small class="text-muted">Listado de asientos con todos los medios de pago.</small>
+            @endif
           </div>
           @if(count($ld_datos) > 0)
             <div style="overflow-x:auto">
               <table class="table table-bordered table-sm mb-0" style="width:100%">
                 <thead class="thead-light">
                   <tr>
-                    <th class="text-center" style="width:75px">Fecha</th>
+                    <th class="text-center" style="width:75px">Fecha Confirmación</th>
                     <th class="text-center" style="width:40px">N°</th>
                     <th class="text-center" style="width:65px">Tipo</th>
                     <th class="text-center">Concepto / Detalle</th>
@@ -806,7 +1044,10 @@
                 <tbody>
                   @foreach($ld_datos as $item)
                     <tr>
-                      <td class="text-center align-middle">{{ $item->fecha->format('d/m/Y') }}</td>
+                      <td class="text-center align-middle">
+                        <div>{{ $item->fecha_confirmacion ? $item->fecha_confirmacion->format('d/m/Y') : $item->fecha->format('d/m/Y') }}</div>
+                        <div class="text-muted" style="font-size:60%">creado {{ $item->fecha->format('d/m/Y') }}</div>
+                      </td>
                       <td class="text-center align-middle">{{ $item->numero }}</td>
                       <td class="text-center align-middle {{ $item->signo_efectivo === -1 ? 'table-danger' : ($item->signo_efectivo === 1 ? 'table-success' : '') }}">
                         {{ $item->tipo->nombre ?? '—' }}
@@ -850,7 +1091,7 @@
                   <table class="table table-bordered table-sm mb-0">
                     <thead class="thead-light">
                       <tr>
-                        <th class="text-left align-middle">TOTALES POR MEDIO DE PAGO</th>
+                        <th class="text-left align-middle">{{ $ld_ampliado ? 'TOTALES POR MEDIO DE PAGO' : 'TOTALES' }}</th>
                         @foreach ($ld_mediosEnTabla as $medio)
                           <th class="text-center align-middle">{{ $medio->nombre_corto ?: $medio->nombre }}</th>
                         @endforeach
@@ -939,9 +1180,9 @@
       ventana.document.write('.d-none.d-print-table-cell { display: table-cell !important; }');
       ventana.document.write('.form-row, .alert, .d-none:not(.d-print-table-cell) { display: none !important; }');
       ventana.document.write('</style>');
-      ventana.document.write('</head><body>');
+      ventana.document.write('<\/head><body>');
       ventana.document.write(contenido.innerHTML);
-      ventana.document.write('</body></html>');
+      ventana.document.write('<\/body><\/html>');
       ventana.document.close();
       ventana.focus();
       setTimeout(function() { ventana.print(); ventana.close(); }, 500);
@@ -950,8 +1191,11 @@
     function imprimirLibroDiario() {
       var contenido = document.querySelector('#libroDiarioReportModal .modal-body').cloneNode(true);
 
+      var titulo = document.querySelector('#libroDiarioReportModal .modal-title');
+      var tituloTexto = titulo ? titulo.textContent.trim() : 'Libro Diario';
+
       var ventana = window.open('', '_blank', 'width=1200,height=800');
-      ventana.document.write('<html><head><title>Libro Diario</title>');
+      ventana.document.write('<html><head><title>' + tituloTexto + '</title>');
       ventana.document.write('<style>');
       ventana.document.write('@page { size: portrait; margin: 1.5cm; }');
       ventana.document.write('body { font-family: Arial, sans-serif; font-size: 10pt; padding: 0; margin: 0; }');
@@ -973,9 +1217,9 @@
       ventana.document.write('.align-middle { vertical-align: middle !important; }');
       ventana.document.write('.form-row, .alert, .d-none:not(.d-print-table-cell) { display: none !important; }');
       ventana.document.write('</style>');
-      ventana.document.write('</head><body>');
+      ventana.document.write('<\/head><body>');
       ventana.document.write(contenido.innerHTML);
-      ventana.document.write('</body></html>');
+      ventana.document.write('<\/body><\/html>');
       ventana.document.close();
       ventana.focus();
       setTimeout(function() { ventana.print(); ventana.close(); }, 500);
@@ -984,46 +1228,85 @@
 
   @push('scripts')
     <script>
+      const getEventData = (event) => Array.isArray(event.detail) ? event.detail[0] : event.detail;
+
       window.addEventListener('show-modal', event => {
-        $('#' + event.detail.id).modal('show');
+        const data = getEventData(event);
+        const id = typeof data === 'string' ? data : (data.id || data);
+        $('#' + id).modal('show');
       });
 
       window.addEventListener('close-modal', event => {
-        $('#' + event.detail.id).modal('hide');
+        const data = getEventData(event);
+        const id = typeof data === 'string' ? data : (data.id || data);
+        $('#' + id).modal('hide');
       });
 
       window.addEventListener('swal:confirm', event => {
+        const data = getEventData(event);
         Swal.fire({
-          title: event.detail.title,
-          text: event.detail.text,
+          title: data.title,
+          text: data.text,
           icon: 'warning',
           showCancelButton: true,
           confirmButtonColor: '#3085d6',
           cancelButtonColor: '#d33',
-          confirmButtonText: event.detail.confirmButtonText,
+          confirmButtonText: data.confirmButtonText || 'Confirmar',
           cancelButtonText: 'Cancelar',
           focusConfirm: true
         }).then((result) => {
           if (result.isConfirmed) {
-            @this.call(event.detail.method, event.detail.id);
+            if (typeof Livewire !== 'undefined') {
+              Livewire.dispatch(data.method, { id: data.id });
+            }
           }
         });
       });
 
       window.addEventListener('alert', event => {
+        const data = getEventData(event);
         Swal.fire({
           toast: true,
           position: 'top-end',
           showConfirmButton: false,
-          timer: 3000,
+          timer: 3500,
           timerProgressBar: true,
-          icon: event.detail.type,
-          title: event.detail.message,
+          icon: data.type || 'info',
+          title: data.message || '',
+        });
+      });
+
+      window.addEventListener('openConfirmModal', event => {
+        $('#confirmModal').modal('show');
+      });
+
+      window.addEventListener('swal:confirmar-documento', event => {
+        const data = getEventData(event);
+        Swal.fire({
+          title: 'Confirmar lote de documento',
+          html: `Existen <strong>${data.cantidad}</strong> asiento(s) pendiente(s) con el documento <strong>${data.documentoReferencia}</strong>.<br><br>¿Desea confirmarlos todos con la misma fecha?`,
+          icon: 'question',
+          showCancelButton: true,
+          confirmButtonText: 'Confirmar todos',
+          cancelButtonText: 'Solo este asiento',
+          confirmButtonColor: '#28a745',
+          cancelButtonColor: '#6c757d',
+          reverseButtons: true,
+        }).then((result) => {
+          if (result.isConfirmed) {
+            if (typeof Livewire !== 'undefined') {
+              Livewire.dispatch('confirmarTodosDocumento');
+            }
+          } else if (result.dismiss === Swal.DismissReason.cancel) {
+            if (typeof Livewire !== 'undefined') {
+              Livewire.dispatch('confirmarSoloEste');
+            }
+          }
         });
       });
 
       window.addEventListener('swal:confirmar-eliminar-asiento-con-cfe', event => {
-        const data = event.detail;
+        const data = getEventData(event);
         Swal.fire({
           title: '¿Está seguro?',
           html: `Este asiento está asociado al CFE <strong>${data.cfeTipo} ${data.cfeSerie}${data.cfeNumero}</strong> que también será eliminado. ¿Desea continuar?`,
@@ -1035,7 +1318,9 @@
           cancelButtonText: 'Cancelar'
         }).then((result) => {
           if (result.isConfirmed) {
-            @this.call('confirmarEliminarAsientoConCfe', data.asientoId);
+            if (typeof Livewire !== 'undefined') {
+              Livewire.dispatch('confirmarEliminarAsientoConCfe', { id: data.asientoId });
+            }
           }
         });
       });
@@ -1046,14 +1331,17 @@
 
       if (typeof Livewire !== 'undefined') {
         var tooltipTimeout;
-        Livewire.hook('message.received', function() {
-          $('[data-toggle="tooltip"]').tooltip('dispose');
-        });
-        Livewire.hook('element.updated', function() {
-          clearTimeout(tooltipTimeout);
-          tooltipTimeout = setTimeout(function() {
-            $('[data-toggle="tooltip"]').tooltip();
-          }, 10);
+        // Livewire v3: 'commit' hook reemplaza 'message.received' y 'element.updated'
+        Livewire.hook('commit', ({ component, commit, respond, succeed, fail }) => {
+          succeed(({ snapshot, effect }) => {
+            queueMicrotask(() => {
+              $('[data-toggle="tooltip"]').tooltip('dispose');
+              clearTimeout(tooltipTimeout);
+              tooltipTimeout = setTimeout(function() {
+                $('[data-toggle="tooltip"]').tooltip();
+              }, 10);
+            });
+          });
         });
       }
     </script>

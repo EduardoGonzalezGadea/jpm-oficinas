@@ -58,11 +58,11 @@ return [
             'prefix_indexes' => true,
             'strict' => true,
             'engine' => null,
-            'options' => extension_loaded('pdo_mysql') ? array_filter([
-                PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
-            ]) : [],
+            'options' => array_filter([
+                PDO::ATTR_CASE => PDO::CASE_NATURAL,
+            ]),
             'dump' => [
-                'mysql_binary_path' => 'C:\\xampp\\mysql\\bin',
+                'mysql_binary_path' => env('DB_DUMP_BINARY_PATH', '/usr/bin'),
             ],
         ],
 

@@ -12,12 +12,12 @@
         cancelButtonText: 'Cancelar'
       }).then((result) => {
         if (result.isConfirmed) {
-          Livewire.emit('borrarCfe', id);
+          Livewire.dispatch('borrarCfe', { id: id });
         }
       });
     }
 
-    document.addEventListener('livewire:load', function () {
+    document.addEventListener('livewire:init', function () {
       $('#dropdownMesesWrapper').on('hide.bs.dropdown', function (e) {
         if (e.clickEvent && $(e.clickEvent.target).closest('.dropdown-menu').length) {
           e.preventDefault();
@@ -33,11 +33,11 @@
       });
 
       $('#modalConfirmacionCfe').on('hidden.bs.modal', function () {
-        @this.call('cancelarCarga');
+        Livewire.dispatch('cancelarCarga');
       });
 
       window.addEventListener('swal:confirmar-orden-cobro-duplicada', (event) => {
-        const data = event.detail;
+        const data = window.LiveEvent(event);
         Swal.fire({
           title: 'Orden de Cobro Duplicada',
           html: `La orden de cobro <strong>${data.ordenCobro}</strong> ya existe en el documento <strong>${data.documentoExistente}</strong>.<br><br>¿Desea grabar de todas formas o descartar la carga?`,
@@ -52,15 +52,15 @@
           cancelButtonText: 'Cancelar y revisar'
         }).then((result) => {
           if (result.isConfirmed) {
-            @this.call('confirmarCarga', true);
+            Livewire.dispatch('confirmarCarga', { ignorarAdvertencias: true });
           } else if (result.isDenied) {
-            @this.call('cancelarCarga');
+            Livewire.dispatch('cancelarCarga');
           }
         });
       });
 
       window.addEventListener('swal:confirmar-guardar-referencia-duplicada', (event) => {
-        const data = event.detail;
+        const data = window.LiveEvent(event);
         Swal.fire({
           title: 'Referencia Duplicada',
           html: `La referencia al documento original <strong>${data.documentoReferencia}</strong> ya existe en el documento <strong>${data.documentoExistente}</strong>.<br><br>¿Desea grabar de todas formas o descartar la carga?`,
@@ -75,15 +75,15 @@
           cancelButtonText: 'Cancelar y revisar'
         }).then((result) => {
           if (result.isConfirmed) {
-            @this.call('confirmarCarga', true);
+            Livewire.dispatch('confirmarCarga', { ignorarAdvertencias: true });
           } else if (result.isDenied) {
-            @this.call('cancelarCarga');
+            Livewire.dispatch('cancelarCarga');
           }
         });
       });
 
       window.addEventListener('swal:modal', (event) => {
-        const data = event.detail;
+        const data = window.LiveEvent(event);
         Swal.fire({
           icon: data.type || 'info',
           title: data.title || 'Información',
@@ -92,7 +92,7 @@
       });
 
       window.addEventListener('swal:toast-error', (event) => {
-        const data = event.detail;
+        const data = window.LiveEvent(event);
         Swal.fire({
           icon: 'error',
           title: 'Error',
@@ -106,7 +106,7 @@
       });
 
       window.addEventListener('swal:toast-success', (event) => {
-        const data = event.detail;
+        const data = window.LiveEvent(event);
         Swal.fire({
           icon: 'success',
           title: 'Éxito',
@@ -120,7 +120,7 @@
       });
 
       window.addEventListener('swal:confirmar-eliminar-cfe-con-asientos', (event) => {
-        const data = event.detail;
+        const data = window.LiveEvent(event);
         const texto = data.cantidad === 1
           ? 'Este CFE tiene 1 asiento asociado en el Libro Diario que también será eliminado y los saldos serán recalculados desde la fecha del CFE en adelante. ¿Desea continuar?'
           : `Este CFE tiene ${data.cantidad} asientos asociados en el Libro Diario que también serán eliminados y los saldos serán recalculados desde la fecha del CFE en adelante. ¿Desea continuar?`;
@@ -135,13 +135,13 @@
           cancelButtonText: 'Cancelar'
         }).then((result) => {
           if (result.isConfirmed) {
-            @this.call('confirmarBorrarCfeConAsientos', data.cfeId);
+            Livewire.dispatch('borrarCfe', { cfeId: data.cfeId });
           }
         });
       });
 
       window.addEventListener('swal:documento-duplicado-bloqueante', (event) => {
-        const data = event.detail;
+        const data = window.LiveEvent(event);
         Swal.fire({
           title: 'Documento Duplicado',
           html: `El documento <strong>${data.documentoTipo} ${data.documentoNumero}</strong> ya existe.<br><br>No se puede grabar un documento con el mismo tipo y número que uno ya existente.`,
@@ -167,11 +167,11 @@
       });
 
       $('#modalNuevoCfe').on('hidden.bs.modal', function () {
-        @this.call('cancelarNuevo');
+        Livewire.dispatch('cancelarNuevo');
       });
 
       $('#modalEditarCfe').on('hidden.bs.modal', function () {
-        @this.call('cancelarEdicion');
+        Livewire.dispatch('cancelarEdicion');
       });
 
       window.addEventListener('confirmar-descartar-cambios', () => {
@@ -186,10 +186,59 @@
           cancelButtonText: 'Seguir editando'
         }).then((result) => {
           if (result.isConfirmed) {
-            @this.call('cancelarEdicion');
+            Livewire.dispatch('cancelarEdicion');
           }
         });
       });
     });
+
+    // Uppercase en vivo (sin round-trip al servidor): convierte a mayúsculas
+    // mientras se escribe, preservando la posición del cursor. Solo afecta a
+    // los inputs con la clase .texto-upper del modal de nuevo CFE.
+    document.addEventListener('input', function (e) {
+      var el = e.target;
+      if (!el || !el.classList) return;
+
+      if (el.classList.contains('js-cant-item') || el.classList.contains('js-precio-item')) {
+        recalcImporteItem(el);
+      }
+
+      if (!el.classList.contains('js-upper')) return;
+      var start = el.selectionStart;
+      var end = el.selectionEnd;
+      var arrastrado = document.activeElement === el;
+      if (el.value !== el.value.toUpperCase()) {
+        el.value = el.value.toUpperCase();
+        if (arrastrado && start !== null) {
+          el.setSelectionRange(start, end);
+        }
+      }
+    });
+
+    function recalcImporteItem(el) {
+      var row = el.closest('tr[data-fila]');
+      if (!row) return;
+      var cant = parseFloat((row.querySelector('.js-cant-item') || {}).value) || 0;
+      var precio = parseFloat((row.querySelector('.js-precio-item') || {}).value) || 0;
+      var importe = row.querySelector('.js-importe-item');
+      if (importe) {
+        importe.value = (Math.round(cant * precio * 100) / 100).toFixed(2);
+      }
+      recalcularTotalNuevoCfe();
+    }
+
+    function recalcularTotalNuevoCfe() {
+      var total = 0;
+      document.querySelectorAll('#tablaNuevoItems tbody tr[data-fila]').forEach(function (row) {
+        var importe = row.querySelector('.js-importe-item');
+        if (importe) {
+          total += parseFloat(importe.value) || 0;
+        }
+      });
+      var totalCell = document.querySelector('#totalNuevoCfe');
+      if (totalCell) {
+        totalCell.textContent = '$ ' + total.toFixed(2).replace('.', ',');
+      }
+    }
   </script>
 @endpush

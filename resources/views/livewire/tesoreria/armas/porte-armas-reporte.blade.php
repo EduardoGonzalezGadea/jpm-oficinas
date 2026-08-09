@@ -9,7 +9,7 @@
           </a>
         </div>
         <div class="card-body py-2">
-          <form wire:submit.prevent="buscar">
+          <form wire:submit="buscar">
             <div class="row">
               <!-- Fechas -->
               <div class="col-md-5">
@@ -19,17 +19,17 @@
                     <div class="form-row">
                       <div class="col-md-6 mb-2">
                         <label class="mb-0 small" for="fecha_desde">Fecha Desde</label>
-                        <input type="date" id="fecha_desde" class="form-control form-control-sm" wire:model.defer="filters.fecha_desde">
+                        <input type="date" id="fecha_desde" class="form-control form-control-sm" wire:model="filters.fecha_desde">
                       </div>
                       <div class="col-md-6 mb-2">
                         <label class="mb-0 small" for="fecha_hasta">Fecha Hasta</label>
-                        <input type="date" id="fecha_hasta" class="form-control form-control-sm" wire:model.defer="filters.fecha_hasta">
+                        <input type="date" id="fecha_hasta" class="form-control form-control-sm" wire:model="filters.fecha_hasta">
                       </div>
                     </div>
                     <div class="form-row">
                       <div class="col-md-6 mb-2">
                         <label class="mb-0 small" for="mes">Mes</label>
-                        <select id="mes" class="form-control form-control-sm" wire:model.defer="filters.mes">
+                        <select id="mes" class="form-control form-control-sm" wire:model="filters.mes">
                           <option value="">Todos</option>
                           <option value="1">Enero</option>
                           <option value="2">Febrero</option>
@@ -47,7 +47,7 @@
                       </div>
                       <div class="col-md-6 mb-2">
                         <label class="mb-0 small" for="year">Año</label>
-                        <input type="number" id="year" class="form-control form-control-sm" wire:model.defer="filters.year">
+                        <input type="number" id="year" class="form-control form-control-sm" wire:model="filters.year">
                       </div>
                     </div>
                   </div>
@@ -62,25 +62,25 @@
                     <div class="form-row">
                       <div class="col-md-8 mb-2">
                         <label class="mb-0 small" for="titular">Nombre / Titular</label>
-                        <input type="text" id="titular" class="form-control form-control-sm" wire:model.defer="filters.titular" placeholder="Nombre completo o parcial">
+                        <input type="text" id="titular" class="form-control form-control-sm" wire:model="filters.titular" placeholder="Nombre completo o parcial">
                       </div>
                       <div class="col-md-4 mb-2">
                         <label class="mb-0 small" for="cedula">Cédula</label>
-                        <input type="text" id="cedula" class="form-control form-control-sm" wire:model.defer="filters.cedula" placeholder="1.234.567-8">
+                        <input type="text" id="cedula" class="form-control form-control-sm" wire:model="filters.cedula" placeholder="1.234.567-8">
                       </div>
                     </div>
                     <div class="form-row">
                       <div class="col-md-4 mb-2">
                         <label class="mb-0 small" for="numero_tramite">Nro. Trámite</label>
-                        <input type="text" id="numero_tramite" class="form-control form-control-sm" wire:model.defer="filters.numero_tramite">
+                        <input type="text" id="numero_tramite" class="form-control form-control-sm" wire:model="filters.numero_tramite">
                       </div>
                       <div class="col-md-4 mb-2">
                         <label class="mb-0 small" for="recibo">Recibo</label>
-                        <input type="text" id="recibo" class="form-control form-control-sm" wire:model.defer="filters.recibo">
+                        <input type="text" id="recibo" class="form-control form-control-sm" wire:model="filters.recibo">
                       </div>
                       <div class="col-md-4 mb-2">
                         <label class="mb-0 small" for="orden_cobro">Ord. Cobro</label>
-                        <input type="text" id="orden_cobro" class="form-control form-control-sm" wire:model.defer="filters.orden_cobro">
+                        <input type="text" id="orden_cobro" class="form-control form-control-sm" wire:model="filters.orden_cobro">
                       </div>
                     </div>
                   </div>

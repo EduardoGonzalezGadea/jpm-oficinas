@@ -9,7 +9,7 @@
           <a href="{{ route('tesoreria.tarjetas-cobro-brou.reportes') }}" class="btn btn-secondary mr-2">
             <i class="fas fa-filter"></i> Reportes
           </a>
-          <button class="btn btn-primary" wire:click="$emit('showCreateModal')">
+          <button class="btn btn-primary" wire:click="$dispatch('showCreateModal')">
             <i class="fas fa-plus"></i> Nuevo
           </button>
         </div>
@@ -22,13 +22,13 @@
             <div class="input-group-prepend">
               <span class="input-group-text"><i class="fas fa-search"></i></span>
             </div>
-            <input type="text" wire:model.debounce.300ms="search" class="form-control" placeholder="Buscar por titular, cédula o tarjeta...">
+            <input type="text" wire:model.live.debounce.300ms="search" class="form-control" placeholder="Buscar por titular, cédula o tarjeta...">
           </div>
         </div>
 
         <div class="flex-grow-1 {{ $estado !== 'Recibido' ? 'mr-1' : '' }}">
           <div class="input-group">
-            <select wire:model="estado" class="form-control">
+            <select wire:model.live="estado" class="form-control">
               <option value="">Todos los estados</option>
               <option value="Recibido">Recibido</option>
               <option value="Entregado">Entregado</option>
@@ -46,7 +46,7 @@
 
         @if($estado !== 'Recibido')
         <div class="input-group mr-1" style="width: 140px;">
-          <select wire:model="year" class="form-control">
+          <select wire:model.live="year" class="form-control">
             @foreach($years as $y)
             <option value="{{ $y }}">{{ $y }}</option>
             @endforeach
@@ -105,17 +105,17 @@
               <td class="align-middle text-center d-print-none">
                 <div class="btn-group" role="group" aria-label="Acciones">
                   @if($tarjeta->estado == 'Recibido')
-                  <button class="btn btn-sm btn-info" title="Entregar" wire:click="$emit('showDeliverModal', {{ $tarjeta->id }})">
+                  <button class="btn btn-sm btn-info" title="Entregar" wire:click="$dispatch('showDeliverModal', {{ $tarjeta->id }})">
                     <i class="fas fa-check"></i>
                   </button>
-                  <button class="btn btn-sm btn-warning" title="Devolver" wire:click="$emit('showReturnModal', {{ $tarjeta->id }})">
+                  <button class="btn btn-sm btn-warning" title="Devolver" wire:click="$dispatch('showReturnModal', {{ $tarjeta->id }})">
                     <i class="fas fa-undo"></i>
                   </button>
                   @endif
-                  <button class="btn btn-sm btn-secondary" title="Ver Detalles" wire:click="$emit('showDetailModal', {{ $tarjeta->id }})">
+                  <button class="btn btn-sm btn-secondary" title="Ver Detalles" wire:click="$dispatch('showDetailModal', {{ $tarjeta->id }})">
                     <i class="fas fa-eye"></i>
                   </button>
-                  <button class="btn btn-sm btn-primary" title="Editar" wire:click="$emit('showEditModal', {{ $tarjeta->id }})">
+                  <button class="btn btn-sm btn-primary" title="Editar" wire:click="$dispatch('showEditModal', {{ $tarjeta->id }})">
                     <i class="fas fa-edit"></i>
                   </button>
                   <button class="btn btn-sm btn-danger" title="Eliminar" wire:click="confirmDelete({{ $tarjeta->id }})">

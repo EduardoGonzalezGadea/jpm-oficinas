@@ -24,10 +24,10 @@ use App\Http\Controllers\Tesoreria\StockChequesController;
 use App\Http\Controllers\Tesoreria\StockReporteController;
 use App\Http\Controllers\Tesoreria\TesoreriaController;
 use App\Http\Controllers\Tesoreria\ViewController;
-use App\Http\Livewire\Tesoreria\Arrendamientos\PrintArrendamientos;
-use App\Http\Livewire\Tesoreria\Arrendamientos\PrintArrendamientosFull;
-use App\Http\Livewire\Tesoreria\Eventuales\PrintEventuales;
-use App\Http\Livewire\Tesoreria\Eventuales\PrintEventualesFull;
+use App\Livewire\Tesoreria\Arrendamientos\PrintArrendamientos;
+use App\Livewire\Tesoreria\Arrendamientos\PrintArrendamientosFull;
+use App\Livewire\Tesoreria\Eventuales\PrintEventuales;
+use App\Livewire\Tesoreria\Eventuales\PrintEventualesFull;
 use Illuminate\Support\Facades\Route;
 
 // ============================================================================
@@ -72,7 +72,7 @@ Route::get('cheques/reportes/download-stock/{filename}',   [StockChequesControll
 Route::view('multas-transito', 'tesoreria.multas')->name('multas-transito');
 Route::view('multas-303-2023', 'tesoreria.multas-303-2023')->name('multas-303-2023');
 Route::get('multas-transito/exportar-pdf',
-    \App\Http\Livewire\Tesoreria\PrintMultasArticulos::class
+    \App\Livewire\Tesoreria\PrintMultasArticulos::class
 )->name('multas-transito.exportar-pdf');
 
 // ============================================================================
@@ -84,19 +84,19 @@ Route::prefix('multas-cobradas')->name('multas-cobradas.')->middleware(['modulo:
     Route::view('cargar-cfe', 'tesoreria.multas-cobradas.cargar-cfe')->name('cargar-cfe');
 
     Route::get('imprimir-detalles/{fechaDesde}/{fechaHasta}',
-        \App\Http\Livewire\Tesoreria\MultasCobradas\PrintMultasCobradasFull::class
+        \App\Livewire\Tesoreria\MultasCobradas\PrintMultasCobradasFull::class
     )->name('imprimir-detalles');
 
     Route::get('imprimir-resumen/{fechaDesde}/{fechaHasta}',
-        \App\Http\Livewire\Tesoreria\MultasCobradas\PrintMultasCobradasResumen::class
+        \App\Livewire\Tesoreria\MultasCobradas\PrintMultasCobradasResumen::class
     )->name('imprimir-resumen');
 
     Route::get('reportes',
-        \App\Http\Livewire\Tesoreria\MultasCobradas\MultasCobradasReporte::class
+        \App\Livewire\Tesoreria\MultasCobradas\MultasCobradasReporte::class
     )->name('reportes');
 
     Route::get('imprimir-avanzado',
-        \App\Http\Livewire\Tesoreria\MultasCobradas\PrintMultasCobradasAdvanced::class
+        \App\Livewire\Tesoreria\MultasCobradas\PrintMultasCobradasAdvanced::class
     )->name('imprimir-avanzado');
 });
 
@@ -116,11 +116,11 @@ Route::prefix('eventuales')->name('eventuales.')->group(function () {
     Route::get('cargar-efactura', [EventualesController::class, 'cargarEfactura'])->name('cargar-efactura');
 
     Route::get('reportes',
-        \App\Http\Livewire\Tesoreria\Eventuales\EventualesReporte::class
+        \App\Livewire\Tesoreria\Eventuales\EventualesReporte::class
     )->name('reportes');
 
     Route::get('imprimir-avanzado',
-        \App\Http\Livewire\Tesoreria\Eventuales\PrintEventualesAdvanced::class
+        \App\Livewire\Tesoreria\Eventuales\PrintEventualesAdvanced::class
     )->name('imprimir-avanzado');
 });
 
@@ -138,11 +138,11 @@ Route::prefix('arrendamientos')->name('arrendamientos.')->group(function () {
     Route::get('imprimir-todo/{year}/{mes}', PrintArrendamientosFull::class) ->name('imprimir-todo');
 
     Route::get('reportes',
-        \App\Http\Livewire\Tesoreria\Arrendamientos\ArrendamientosReporte::class
+        \App\Livewire\Tesoreria\Arrendamientos\ArrendamientosReporte::class
     )->name('reportes');
 
     Route::get('imprimir-avanzado',
-        \App\Http\Livewire\Tesoreria\Arrendamientos\PrintArrendamientosAdvanced::class
+        \App\Livewire\Tesoreria\Arrendamientos\PrintArrendamientosAdvanced::class
     )->name('imprimir-avanzado');
 });
 
@@ -159,30 +159,30 @@ Route::prefix('armas')->name('armas.')->group(function () {
     Route::get('porte/imprimir/{id}',    [ArmasImpresionController::class, 'imprimirPorte'])    ->name('porte.imprimir');
 
     Route::get('porte/reportes',
-        \App\Http\Livewire\Tesoreria\Armas\PorteArmasReporte::class
+        \App\Livewire\Tesoreria\Armas\PorteArmasReporte::class
     )->name('porte.reportes');
 
     Route::get('porte/imprimir-avanzado',
-        \App\Http\Livewire\Tesoreria\Armas\PrintPorteArmasAdvanced::class
+        \App\Livewire\Tesoreria\Armas\PrintPorteArmasAdvanced::class
     )->name('porte.imprimir-avanzado');
 
     Route::get('tenencia/reportes',
-        \App\Http\Livewire\Tesoreria\Armas\TenenciaArmasReporte::class
+        \App\Livewire\Tesoreria\Armas\TenenciaArmasReporte::class
     )->name('tenencia.reportes');
 
     Route::get('tenencia/imprimir-avanzado',
-        \App\Http\Livewire\Tesoreria\Armas\PrintTenenciaArmasAdvanced::class
+        \App\Livewire\Tesoreria\Armas\PrintTenenciaArmasAdvanced::class
     )->name('tenencia.imprimir-avanzado');
 
     Route::prefix('porte/planillas')->name('porte.planillas.')->group(function () {
-        Route::get('/',            \App\Http\Livewire\Tesoreria\Armas\Planillas\TesPorteArmasPlanillasIndex::class) ->name('index');
-        Route::get('/{id}',        \App\Http\Livewire\Tesoreria\Armas\Planillas\TesPorteArmasPlanillasShow::class)  ->name('show');
+        Route::get('/',            \App\Livewire\Tesoreria\Armas\Planillas\TesPorteArmasPlanillasIndex::class) ->name('index');
+        Route::get('/{id}',        \App\Livewire\Tesoreria\Armas\Planillas\TesPorteArmasPlanillasShow::class)  ->name('show');
         Route::get('/{id}/imprimir', [ArmasImpresionController::class, 'imprimirPlanillaPorte'])                      ->name('imprimir');
     });
 
     Route::prefix('tenencia/planillas')->name('tenencia.planillas.')->group(function () {
-        Route::get('/',            \App\Http\Livewire\Tesoreria\Armas\Planillas\TesTenenciaArmasPlanillasIndex::class) ->name('index');
-        Route::get('/{id}',        \App\Http\Livewire\Tesoreria\Armas\Planillas\TesTenenciaArmasPlanillasShow::class)  ->name('show');
+        Route::get('/',            \App\Livewire\Tesoreria\Armas\Planillas\TesTenenciaArmasPlanillasIndex::class) ->name('index');
+        Route::get('/{id}',        \App\Livewire\Tesoreria\Armas\Planillas\TesTenenciaArmasPlanillasShow::class)  ->name('show');
         Route::get('/{id}/imprimir', [ArmasImpresionController::class, 'imprimirPlanillaTenencia'])                      ->name('imprimir');
     });
 });
@@ -192,15 +192,15 @@ Route::prefix('armas')->name('armas.')->group(function () {
 // ============================================================================
 
 Route::prefix('certificados-residencia')->name('certificados-residencia.')->group(function () {
-    Route::get('/', \App\Http\Livewire\Tesoreria\CertificadosResidencia\Index::class)->name('index');
+    Route::get('/', \App\Livewire\Tesoreria\CertificadosResidencia\Index::class)->name('index');
     Route::view('cargar-cfe', 'tesoreria.certificados-residencia.cargar-cfe')->name('cargar-cfe');
 
     Route::get('reportes',
-        \App\Http\Livewire\Tesoreria\CertificadosResidencia\CertificadosReporte::class
+        \App\Livewire\Tesoreria\CertificadosResidencia\CertificadosReporte::class
     )->name('reportes');
 
     Route::get('imprimir-avanzado',
-        \App\Http\Livewire\Tesoreria\CertificadosResidencia\PrintCertificadosAdvanced::class
+        \App\Livewire\Tesoreria\CertificadosResidencia\PrintCertificadosAdvanced::class
     )->name('imprimir-avanzado');
 });
 
@@ -209,14 +209,14 @@ Route::prefix('certificados-residencia')->name('certificados-residencia.')->grou
 // ============================================================================
 
 Route::prefix('tarjetas-cobro-brou')->name('tarjetas-cobro-brou.')->group(function () {
-    Route::get('/', \App\Http\Livewire\Tesoreria\TarjetasCobroBrou\Index::class)->name('index');
+    Route::get('/', \App\Livewire\Tesoreria\TarjetasCobroBrou\Index::class)->name('index');
 
     Route::get('reportes',
-        \App\Http\Livewire\Tesoreria\TarjetasCobroBrou\TarjetasReporte::class
+        \App\Livewire\Tesoreria\TarjetasCobroBrou\TarjetasReporte::class
     )->name('reportes');
 
     Route::get('imprimir-avanzado',
-        \App\Http\Livewire\Tesoreria\TarjetasCobroBrou\PrintTarjetasAdvanced::class
+        \App\Livewire\Tesoreria\TarjetasCobroBrou\PrintTarjetasAdvanced::class
     )->name('imprimir-avanzado');
 });
 // ============================================================================
@@ -224,19 +224,20 @@ Route::prefix('tarjetas-cobro-brou')->name('tarjetas-cobro-brou.')->group(functi
 // ============================================================================
 
 Route::prefix('gestion-cfe')->name('gestion-cfe.')->group(function () {
-    Route::get('/', \App\Http\Livewire\Tesoreria\GestionCfe\Index::class)->name('index');
-    Route::get('/estados-recaudacion', \App\Http\Livewire\Tesoreria\EstadosRecaudacion\Index::class)
+    Route::get('/', \App\Livewire\Tesoreria\GestionCfe\Index::class)->name('index');
+    Route::get('/dashboard', \App\Livewire\Tesoreria\GestionCfe\Dashboard::class)->name('dashboard');
+    Route::get('/estados-recaudacion', \App\Livewire\Tesoreria\EstadosRecaudacion\Index::class)
         ->name('estados-recaudacion');
-    Route::get('/estados-recaudacion/no-confirmadas', \App\Http\Livewire\Tesoreria\EstadosRecaudacion\NoConfirmadas::class)
+    Route::get('/estados-recaudacion/no-confirmadas', \App\Livewire\Tesoreria\EstadosRecaudacion\NoConfirmadas::class)
         ->name('estados-recaudacion.no-confirmadas');
-    Route::get('/estados-recaudacion/confirmar/{planilla}', \App\Http\Livewire\Tesoreria\EstadosRecaudacion\Confirmar::class)
+    Route::get('/estados-recaudacion/confirmar/{planilla}', \App\Livewire\Tesoreria\EstadosRecaudacion\Confirmar::class)
         ->name('estados-recaudacion.confirmar');
-    Route::get('/recaudaciones', \App\Http\Livewire\Tesoreria\Recaudaciones\Index::class)
+    Route::get('/recaudaciones', \App\Livewire\Tesoreria\Recaudaciones\Index::class)
         ->name('recaudaciones');
 });
 
 Route::prefix('libro-diario')->name('libro-diario.')->group(function () {
-    Route::get('/', \App\Http\Livewire\Tesoreria\LibroDiario\Index::class)
+    Route::get('/', \App\Livewire\Tesoreria\LibroDiario\Index::class)
         ->name('index');
     Route::redirect('asientos', '/tesoreria/libro-diario')
         ->name('asientos');
@@ -247,20 +248,23 @@ Route::prefix('libro-diario')->name('libro-diario.')->group(function () {
         ->name('lb-conceptos.index');
     Route::view('lb-detalle', 'tesoreria.libro-diario.lb-detalle.index-livewire')
         ->name('lb-detalle.index');
-    Route::view('lb-medios', 'tesoreria.libro-diario.lb-medios.index-livewire')
-        ->name('lb-medios.index');
+    Route::view('medios-de-pago', 'tesoreria.libro-diario.medios-de-pago.index-livewire')
+        ->name('medios-de-pago.index');
 
-    Route::get('/carga-masiva-haberes', \App\Http\Livewire\Tesoreria\CargaMasivaHaberes\Index::class)
+    Route::get('/carga-masiva-haberes', \App\Livewire\Tesoreria\CargaMasivaHaberes\Index::class)
         ->name('carga-masiva-haberes');
 });
 
 Route::prefix('caja-diaria')->name('caja-diaria.')->middleware(['modulo:tesoreria'])->group(function () {
-    Route::get('/', \App\Http\Livewire\Tesoreria\CajaDiaria\Index::class)->name('index');
+    Route::get('/', \App\Livewire\Tesoreria\CajaDiaria\Index::class)->name('index');
+    Route::get('apertura-cierre', \App\Livewire\Tesoreria\CajaDiaria\AperturaCierre::class)->name('apertura-cierre');
+    Route::get('arqueo', \App\Livewire\Tesoreria\CajaDiaria\Arqueo::class)->name('arqueo');
+    Route::get('movimientos', \App\Livewire\Tesoreria\CajaDiaria\Movimientos::class)->name('movimientos');
 });
 
 Route::prefix('cfe')->name('cfe.')->group(function () {
-    Route::get('/pendientes', \App\Http\Livewire\CfePendientesIndex::class)->name('pendientes');
-    Route::get('/monitoring', \App\Http\Livewire\Tesoreria\CfeMonitoring\Index::class)->name('monitoring');
+    Route::get('/pendientes', \App\Livewire\CfePendientesIndex::class)->name('pendientes');
+    Route::get('/monitoring', \App\Livewire\Tesoreria\CfeMonitoring\Index::class)->name('monitoring');
 });
 
 // ============================================================================
@@ -268,20 +272,20 @@ Route::prefix('cfe')->name('cfe.')->group(function () {
 // ============================================================================
 
 Route::prefix('prendas')->name('prendas.')->group(function () {
-    Route::get('/', \App\Http\Livewire\Tesoreria\Prendas\Index::class)->name('index');
+    Route::get('/', \App\Livewire\Tesoreria\Prendas\Index::class)->name('index');
     Route::view('cargar-cfe', 'tesoreria.prendas.cargar-cfe')->name('cargar-cfe');
 
     Route::get('reportes',
-        \App\Http\Livewire\Tesoreria\Prendas\PrendasReporte::class
+        \App\Livewire\Tesoreria\Prendas\PrendasReporte::class
     )->name('reportes');
 
     Route::get('imprimir-avanzado',
-        \App\Http\Livewire\Tesoreria\Prendas\PrintPrendasAdvanced::class
+        \App\Livewire\Tesoreria\Prendas\PrintPrendasAdvanced::class
     )->name('imprimir-avanzado');
 
     Route::prefix('planillas')->name('planillas.')->group(function () {
-        Route::get('/',              \App\Http\Livewire\Tesoreria\Prendas\Planillas\Index::class) ->name('index');
-        Route::get('/{id}',          \App\Http\Livewire\Tesoreria\Prendas\Planillas\Show::class)  ->name('show');
+        Route::get('/',              \App\Livewire\Tesoreria\Prendas\Planillas\Index::class) ->name('index');
+        Route::get('/{id}',          \App\Livewire\Tesoreria\Prendas\Planillas\Show::class)  ->name('show');
         Route::get('/{id}/imprimir', [ViewController::class, 'prendaPlanillaPrint'])->name('print');
     });
 });
@@ -294,7 +298,7 @@ Route::prefix('deposito-vehiculos')->name('deposito-vehiculos.')->group(function
     Route::get('/', [DepositoVehiculosController::class, 'index'])->name('index');
 
     Route::get('reportes',
-        \App\Http\Livewire\Tesoreria\DepositoVehiculos\DepositoVehiculosReporte::class
+        \App\Livewire\Tesoreria\DepositoVehiculos\DepositoVehiculosReporte::class
     )->name('reportes');
 
     Route::get('imprimir-avanzado', [ViewController::class, 'imprimirAvanzadoNoImplementado'])
@@ -317,6 +321,9 @@ Route::prefix('configuracion')->name('configuracion.')->middleware('modulo:tesor
 
     Route::view('tipos-monedas', 'tesoreria.configuracion.tes-tipos-monedas.index-livewire')
         ->name('tes-tipos-monedas.index');
+
+    Route::view('discriminaciones-monetarias', 'tesoreria.configuracion.tes-discriminaciones-monetarias.index-livewire')
+        ->name('tes-discriminaciones-monetarias.index');
 
     Route::view('caja-conceptos', 'tesoreria.configuracion.caja-conceptos.index-livewire')
         ->name('caja-conceptos.index');
@@ -359,7 +366,7 @@ Route::prefix('reporte-recibos')
     ->name('reporte-recibos.')
     ->middleware(['modulo:tesoreria,supervisor'])
     ->group(function () {
-        Route::get('/',       \App\Http\Livewire\Tesoreria\ReporteRecibos\ReporteRecibosIndex::class) ->name('index');
-        Route::get('imprimir', \App\Http\Livewire\Tesoreria\ReporteRecibos\PrintReporteRecibos::class) ->name('imprimir');
+        Route::get('/',       \App\Livewire\Tesoreria\ReporteRecibos\ReporteRecibosIndex::class) ->name('index');
+        Route::get('imprimir', \App\Livewire\Tesoreria\ReporteRecibos\PrintReporteRecibos::class) ->name('imprimir');
         Route::get('exportar-excel', [ReporteRecibosController::class, 'exportarExcel'])               ->name('exportar-excel');
     });

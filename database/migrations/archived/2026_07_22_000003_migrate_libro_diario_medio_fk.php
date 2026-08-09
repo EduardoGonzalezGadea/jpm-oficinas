@@ -9,6 +9,9 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (Schema::hasColumn('tes_libro_diario', 'nuevo_medio_id') || $this->medioPagoYaMigrado()) {
+            return;
+        }
         Schema::table('tes_libro_diario', function (Blueprint $table) {
             $table->unsignedBigInteger('nuevo_medio_id')->nullable()->after('medio_id');
         });
@@ -76,12 +79,26 @@ return new class extends Migration
         });
     }
 
+    private function medioPagoYaMigrado(): bool
+    {
+        try {
+            $sm = Schema::getConnection()->getDoctrineSchemaManager();
+            foreach ($sm->listTableForeignKeys('tes_libro_diario') as $fk) {
+                if (in_array('medio_id', $fk->getLocalColumns()) &&
+                    $fk->getForeignTableName() === 'tes_medio_de_pagos') {
+                    return true;
+                }
+            }
+        } catch (\Throwable $e) {
+        }
+        return false;
+    }
+
     public function down(): void
     {
         Schema::table('tes_libro_diario', function (Blueprint $table) {
             $table->dropForeign(['medio_id']);
         });
-
         Schema::table('tes_libro_diario', function (Blueprint $table) {
             $table->renameColumn('medio_id', 'nuevo_medio_id');
         });

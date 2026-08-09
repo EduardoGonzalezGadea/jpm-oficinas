@@ -8,7 +8,7 @@
       <div class="d-flex align-items-center">
         <!-- Selectores de Mes y Año -->
         <div class="form-inline mr-3">
-          <select id="mesSelector" class="form-control form-control-sm mr-2" wire:model="mesActual">
+          <select id="mesSelector" class="form-control form-control-sm mr-2" wire:model.live="mesActual">
             <option value="enero">Enero</option>
             <option value="febrero">Febrero</option>
             <option value="marzo">Marzo</option>
@@ -22,7 +22,7 @@
             <option value="noviembre">Noviembre</option>
             <option value="diciembre">Diciembre</option>
           </select>
-          <input type="number" id="anioSelector" class="form-control form-control-sm" style="width: 90px;" wire:model="anioActual">
+          <input type="number" id="anioSelector" class="form-control form-control-sm" style="width: 90px;" wire:model.live="anioActual">
         </div>
         <!-- Botones -->
         <div class="btn-group" role="group">
@@ -61,7 +61,7 @@
           </td>
           <td class="text-center d-print-none">
             <button class="btn btn-sm btn-success"
-              wire:click="$emitTo('tesoreria.caja-chica.modales.modal-editar-fondo', 'abrirModalEditarFondo', {{ $item['idCajaChica'] }}, {{ $item['montoCajaChica'] }})">
+              wire:click="$dispatchTo('tesoreria.caja-chica.modales.modal-editar-fondo', 'abrirModalEditarFondo', [{{ $item['idCajaChica'] }}, {{ $item['montoCajaChica'] }}])">
               <i class="fas fa-pencil-alt"></i> Editar
             </button>
           </td>
@@ -94,7 +94,7 @@
 
     <div class="form-inline d-print-none">
       <label for="fechaHastaInput" class="mr-2">Fecha Hasta:</label>
-      <input type="date" id="fechaHastaInput" class="form-control mr-2" wire:model="fechaHasta">
+      <input type="date" id="fechaHastaInput" class="form-control mr-2" wire:model.live="fechaHasta">
       <button class="btn btn-secondary btn-sm mr-2" wire:click="establecerFechaHoy">
         <i class="fas fa-calendar-day"></i> Hoy
       </button>
@@ -175,7 +175,7 @@
     <h4 class="mb-0 mr-3 flex-shrink-0">Pendientes</h4>
     <div class="input-group flex-grow-1 mr-3">
       <input type="text"
-        wire:model.debounce.300ms="searchPendientes"
+        wire:model.live.debounce.300ms="searchPendientes"
         class="form-control"
         placeholder="Buscar por número, dependencia o monto...">
       <div class="input-group-append">
@@ -271,7 +271,7 @@
               @if (($item['tot_recuperado'] ?? 0) < ($item['tot_rendido'] ?? 0) && ($item['tot_rendido'] ?? 0)> 0)
                 <button type="button" class="btn btn-sm btn-info mr-1"
                   title="Recuperar Dinero Rendido"
-                  wire:click="$emitTo('tesoreria.caja-chica.modales.modal-recuperar-rendido', 'abrirModalRecuperarRendido', {{ $item['idPendientes'] }}, '{{ $fechaHasta }}')">
+                  wire:click="$dispatchTo('tesoreria.caja-chica.modales.modal-recuperar-rendido', 'abrirModalRecuperarRendido', [{{ $item['idPendientes'] }}, '{{ $fechaHasta }}'])">
                   <i class="fas fa-hand-holding-usd"></i>
                 </button>
                 @endif
@@ -391,7 +391,7 @@
     <h4 class="mb-0 mr-3 flex-shrink-0">Pagos Directos</h4>
     <div class="input-group flex-grow-1 mr-3">
       <input type="text"
-        wire:model.debounce.300ms="searchPagos"
+        wire:model.live.debounce.300ms="searchPagos"
         class="form-control"
         placeholder="Buscar por egreso, acreedor, concepto o monto...">
       <div class="input-group-append">
@@ -472,19 +472,19 @@
             <input type='hidden' name='selIdPagos' value='{{ $item['idPagos'] }}'>
             <div class='btn-group' role='group'>
               <button type="button" class="btn btn-sm btn-dark"
-                wire:click="$emitTo('tesoreria.caja-chica.modales.modal-editar-pago', 'mostrarModalEditarPago', {{ $item['idPagos'] }})" title="Editar">
+                wire:click="$dispatchTo('tesoreria.caja-chica.modales.modal-editar-pago', 'mostrarModalEditarPago', [{{ $item['idPagos'] }}])" title="Editar">
                 <i class="fas fa-pencil-alt"></i>
               </button>
               @if (!($item['tiene_datos_rendicion'] ?? false))
               <button type="button" class="btn btn-sm btn-success"
-                wire:click="$emitTo('tesoreria.caja-chica.modales.modal-rendir-pago', 'abrirModalRendirPago', {{ $item['idPagos'] }})" title="Rendir Pago">
+                wire:click="$dispatchTo('tesoreria.caja-chica.modales.modal-rendir-pago', 'abrirModalRendirPago', [{{ $item['idPagos'] }}])" title="Rendir Pago">
                 <i class="fas fa-file-invoice-dollar"></i>
               </button>
               @endif
               @if ($item['puede_recuperar'] ?? false)
                 <button type="button" class="btn btn-sm btn-info"
                   title="Recuperar Pago Directo"
-                  wire:click="$emitTo('tesoreria.caja-chica.modales.modal-recuperar-pago', 'abrirModalRecuperarPago', {{ $item['idPagos'] }})">
+                  wire:click="$dispatchTo('tesoreria.caja-chica.modales.modal-recuperar-pago', 'abrirModalRecuperarPago', [{{ $item['idPagos'] }}])">
                   <i class="fas fa-hand-holding-usd"></i>
                 </button>
               @endif

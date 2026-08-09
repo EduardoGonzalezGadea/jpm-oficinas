@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Services\Http\HttpClientService;
 use Carbon\Carbon;
+use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
@@ -23,8 +24,17 @@ class SincronizacionHoraService
     {
         $cached = Cache::get(self::CACHE_KEY);
         if (is_array($cached)) {
-            $cached['datetime'] = now('America/Montevideo')->toIso8601String();
-            $cached['drift_seconds'] = 0;
+            // Recalcular datetime usando el offset sincronizado en lugar del reloj local,
+            // que puede estar desincronizado respecto a la hora real.
+            if (!empty($cached['synced']) && !empty($cached['utc_reference'])) {
+                $elapsed = time() - $cached['utc_reference'];
+                $remoteTime = Carbon::createFromTimestamp($cached['utc_timestamp'] + $elapsed, 'America/Montevideo');
+                $cached['datetime'] = $remoteTime->toIso8601String();
+                $cached['drift_seconds'] = 0;
+            } else {
+                $cached['datetime'] = now('America/Montevideo')->toIso8601String();
+                $cached['drift_seconds'] = 0;
+            }
             return $cached;
         }
 
@@ -78,17 +88,24 @@ class SincronizacionHoraService
             }
 
             $data = $response->json();
-            if (!$data) {
-                Log::warning("SincronizacionHoraService: No se pudo parsear JSON desde {$url}");
-                return $this->buildResult('server', false);
+
+            if (is_array($data)) {
+                if ($this->isWorldTimeApiResponse($data)) {
+                    Log::debug("SincronizacionHoraService: Respuesta WorldTimeAPI detectada");
+                    return $this->processWorldTimeApi($data, $config);
+                }
+
+                if ($this->isTimeApiIoResponse($data)) {
+                    Log::debug("SincronizacionHoraService: Respuesta TimeAPI.io detectada");
+                    return $this->processTimeApiIo($data, $config);
+                }
             }
 
-            if ($this->isWorldTimeApiResponse($data)) {
-                Log::debug("SincronizacionHoraService: Respuesta WorldTimeAPI detectada");
-                return $this->processWorldTimeApi($data, $config);
-            } elseif ($this->isTimeApiIoResponse($data)) {
-                Log::debug("SincronizacionHoraService: Respuesta TimeAPI.io detectada");
-                return $this->processTimeApiIo($data, $config);
+            // Fallback confiable: header HTTP Date (RFC 7231) presente en toda
+            // respuesta de servidores de confianza (BPS, BCU, Google, etc.)
+            if ($this->hasHttpDateHeader($response)) {
+                Log::debug("SincronizacionHoraService: Header HTTP Date detectado desde {$url}");
+                return $this->processHttpDateHeader($response, $config);
             }
 
             Log::warning("SincronizacionHoraService: Formato de respuesta no reconocido desde {$url}");
@@ -113,6 +130,42 @@ class SincronizacionHoraService
         return isset($data['year']) && isset($data['month']) && isset($data['day']) && isset($data['hour']);
     }
 
+    protected function hasHttpDateHeader(Response $response): bool
+    {
+        return !empty($response->header('Date'));
+    }
+
+    protected function processHttpDateHeader(Response $response, array $config): array
+    {
+        try {
+            $dateHeader = $response->header('Date');
+            if (empty($dateHeader)) {
+                return $this->buildResult('http_date', false);
+            }
+
+            // Formato RFC 7231, ej: "Sat, 01 Aug 2026 00:36:21 GMT"
+            $remoteTime = Carbon::parse($dateHeader);
+            $timezone = $config['validation']['expected_timezone'] ?? 'America/Montevideo';
+            $localTime = now($timezone);
+
+            $drift = abs($remoteTime->diffInSeconds($localTime));
+
+            $maxDrift = $config['validation']['max_drift_seconds'] ?? 60;
+            if ($drift > $maxDrift) {
+                Log::warning("SincronizacionHoraService: Drift demasiado grande ({$drift}s) - rechazando header HTTP Date");
+                return $this->buildResult('http_date', false);
+            }
+
+            $datetime = $remoteTime->copy()->setTimezone($timezone)->toIso8601String();
+
+            return $this->buildResult('http_date', true, $datetime, $timezone, $drift);
+
+        } catch (\Exception $e) {
+            Log::warning("SincronizacionHoraService: Error procesando header HTTP Date: " . $e->getMessage());
+            return $this->buildResult('http_date', false);
+        }
+    }
+
     protected function processWorldTimeApi(array $data, array $config): array
     {
         try {
@@ -129,7 +182,8 @@ class SincronizacionHoraService
 
             $maxDrift = $config['validation']['max_drift_seconds'] ?? 60;
             if ($drift > $maxDrift) {
-                Log::warning("SincronizacionHoraService: Drift detectado ({$drift}s) - usando hora remota de todas formas");
+                Log::warning("SincronizacionHoraService: Drift demasiado grande ({$drift}s) - rechazando respuesta de WorldTimeAPI");
+                return $this->buildResult('worldtimeapi', false);
             }
 
             return $this->buildResult('worldtimeapi', true, $datetime, $timezone, $drift);
@@ -155,13 +209,16 @@ class SincronizacionHoraService
 
             $timezone = $data['timeZone'] ?? 'America/Montevideo';
 
-            $remoteTime = Carbon::parse($datetime);
-            $localTime = now('America/Montevideo');
+            // timeapi.io no incluye offset en la respuesta; los valores son hora local
+            // del timezone solicitado, por lo que deben interpretarse con ese timezone.
+            $remoteTime = Carbon::createFromFormat('Y-m-d\TH:i:s', $datetime, $timezone);
+            $localTime = now($timezone);
             $drift = abs($remoteTime->diffInSeconds($localTime));
 
             $maxDrift = $config['validation']['max_drift_seconds'] ?? 60;
             if ($drift > $maxDrift) {
-                Log::warning("SincronizacionHoraService: Drift detectado ({$drift}s) - usando hora remota de todas formas");
+                Log::warning("SincronizacionHoraService: Drift demasiado grande ({$drift}s) - rechazando respuesta de TimeAPI.io");
+                return $this->buildResult('timeapi', false);
             }
 
             return $this->buildResult('timeapi', true, $datetime, $timezone, $drift);
@@ -190,7 +247,7 @@ class SincronizacionHoraService
         ?string $timezone = null,
         ?int $drift = null
     ): array {
-        return [
+        $result = [
             'success' => true,
             'datetime' => $datetime ?? now('America/Montevideo')->toIso8601String(),
             'timezone' => $timezone ?? 'America/Montevideo',
@@ -198,5 +255,14 @@ class SincronizacionHoraService
             'synced' => $synced,
             'drift_seconds' => $drift,
         ];
+
+        // Guardar referencia UTC para poder recalcular la hora correcta desde caché
+        // sin depender del reloj local (que puede estar desincronizado)
+        if ($synced && $datetime) {
+            $result['utc_timestamp'] = Carbon::parse($datetime)->utcOffset(0)->timestamp;
+            $result['utc_reference'] = time();
+        }
+
+        return $result;
     }
 }

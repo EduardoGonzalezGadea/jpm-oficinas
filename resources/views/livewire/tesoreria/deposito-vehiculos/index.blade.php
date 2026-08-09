@@ -9,10 +9,10 @@
         <a href="{{ route('tesoreria.deposito-vehiculos.planillas.index') }}" class="btn btn-success">
           <i class="fas fa-list-alt"></i> Planillas
         </a>
-        <button wire:click="createPlanilla" class="btn btn-warning" @if(count($selectedDepositos)==0) disabled @endif>
+        <button class="btn btn-warning" @if(count($selectedDepositos)==0) disabled @endif onclick="event.preventDefault(); window.dispatchEvent(new CustomEvent('swal:confirm-with-input', { detail: { title: '¿Con qué fecha crear la planilla?', text: 'Seleccione la fecha para la nueva planilla de depósito de vehículos.', input: 'date', inputValue: '{{ date('Y-m-d') }}', method: 'createPlanilla', componentId: '{{ $this->getId() }}', confirmButtonText: 'Crear' } }))">
           <i class="fas fa-plus-circle"></i> Crear Planilla @if(count($selectedDepositos) > 0) ({{ count($selectedDepositos) }}) @endif
         </button>
-        <button wire:click="$emit('showCreateModal')" class="btn btn-primary">
+        <button wire:click="$dispatch('showCreateModal')" class="btn btn-primary">
           <i class="fas fa-plus"></i> Nuevo
         </button>
       </div>
@@ -24,9 +24,9 @@
             <div class="input-group-prepend">
               <span class="input-group-text"><i class="fas fa-search"></i></span>
             </div>
-            <input type="text" wire:model.debounce.300ms="search" class="form-control" placeholder="Buscar por titular, cédula, recibo...">
+            <input type="text" wire:model.live.debounce.300ms="search" class="form-control" placeholder="Buscar por titular, cédula, recibo...">
             <div class="input-group-append">
-              <select wire:model="selectedYear" class="custom-select" style="border-radius: 0;">
+              <select wire:model.live="selectedYear" class="custom-select" style="border-radius: 0;">
                 @foreach($years as $year)
                 <option value="{{ $year }}">{{ $year }}</option>
                 @endforeach
@@ -44,7 +44,7 @@
           <thead class="align-middle">
             <tr>
               <th class="align-middle text-center" style="width: 50px;">
-                <input type="checkbox" wire:model="selectAll" style="transform: scale(1.2); cursor: pointer;">
+                <input type="checkbox" wire:model.live="selectAll" style="transform: scale(1.2); cursor: pointer;">
               </th>
               <th class="align-middle">Fecha</th>
               <th class="align-middle">Serie/N°</th>
@@ -60,7 +60,7 @@
             <tr>
               <td class="align-middle text-center">
                 @if(is_null($deposito->planilla_id))
-                <input type="checkbox" wire:model="selectedDepositos" value="{{ $deposito->id }}" style="transform: scale(1.2); cursor: pointer;">
+                <input type="checkbox" wire:model.live="selectedDepositos" value="{{ $deposito->id }}" style="transform: scale(1.2); cursor: pointer;">
                 @else
                 <i class="fas fa-check text-success" title="En planilla"></i>
                 @endif
@@ -72,10 +72,10 @@
               <td class="align-middle text-right text-nowrap">${{ number_format($deposito->monto, 2, ',', '.') }}</td>
               <td class="align-middle">{{ $deposito->medioPago->nombre ?? '-' }}</td>
               <td class="align-middle text-center d-print-none">
-                <button wire:click="$emit('showDetailModal', {{ $deposito->id }})" class="btn btn-sm btn-primary" title="Ver detalles">
+                <button wire:click="$dispatch('showDetailModal', {{ $deposito->id }})" class="btn btn-sm btn-primary" title="Ver detalles">
                   <i class="fas fa-eye"></i>
                 </button>
-                <button wire:click="$emit('showEditModal', {{ $deposito->id }})" class="btn btn-sm btn-info" title="Editar">
+                <button wire:click="$dispatch('showEditModal', {{ $deposito->id }})" class="btn btn-sm btn-info" title="Editar">
                   <i class="fas fa-edit"></i>
                 </button>
                 <button wire:click="confirmDelete({{ $deposito->id }})" class="btn btn-sm btn-danger" title="Eliminar">

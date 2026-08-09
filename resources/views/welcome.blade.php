@@ -575,10 +575,10 @@
                                         Registro, consulta y control de datos
                                     </p>
                                     <p class="small mb-2"><i class="fas fa-check-circle text-success mr-1"></i>
-                                        Creación de planillas y reportes
+                                        Libro Diario y otras secciones
                                     </p>
                                     <p class="small mb-2"><i class="fas fa-check-circle text-success mr-1"></i>
-                                        Adaptación a las necesidades
+                                        Creación de planillas y reportes
                                     </p>
                                     <p class="small mb-2"><i class="fas fa-check-circle text-success mr-1"></i>
                                         Autorización y gestión de Usuarios

@@ -3,7 +3,7 @@
   <div class="modal fade" id="modalNuevoPendiente" tabindex="-1" wire:ignore.self>
     <div class="modal-dialog">
       <div class="modal-content">
-        <form wire:submit.prevent="guardar">
+        <form wire:submit="guardar">
           <div class="modal-header bg-primary text-white">
             <h5 class="modal-title">
               <i class="fas fa-money-bill"></i>
@@ -26,12 +26,12 @@
             </div>
             @endif
 
-            <input type="hidden" wire:model="idCajaChica">
+            <input type="hidden" wire:model.live="idCajaChica">
 
             <div class="form-group">
               <label for="pendienteNumero">Número:</label>
               <input type="number" class="form-control @error('pendiente') is-invalid @enderror"
-                id="pendienteNumero" wire:model.defer="pendiente" required>
+                id="pendienteNumero" wire:model="pendiente" required>
               @error('pendiente')
               <div class="invalid-feedback">{{ $message }}</div>
               @enderror
@@ -41,7 +41,7 @@
               <label for="pendienteFecha">Fecha:</label>
               <input type="date"
                 class="form-control @error('fechaPendientes') is-invalid @enderror"
-                id="pendienteFecha" wire:model.defer="fechaPendientes" required
+                id="pendienteFecha" wire:model="fechaPendientes" required
                 value="{{ now()->format('Y-m-d') }}">
               @error('fechaPendientes')
               <div class="invalid-feedback">{{ $message }}</div>
@@ -51,30 +51,22 @@
             <div class="form-group">
               <label for="pendienteDependencia">Dependencia:</label>
               <select class="form-control @error('relDependencia') is-invalid @enderror"
-                id="pendienteDependencia" wire:model.defer="relDependencia" required x-data x-init="(() => {
+                id="pendienteDependencia" wire:model="relDependencia" required x-data x-init="(() => {
                     const targetElement = $el;
                     let focusAttempts = 0;
-                    const maxFocusAttempts = 5; // Try for a short period
+                    const maxFocusAttempts = 5;
 
                     function attemptFocus() {
                       if (focusAttempts < maxFocusAttempts) {
                         targetElement.focus();
-                        console.log('Attempting focus on pendienteDependencia. Active element:', document.activeElement);
                         if (document.activeElement !== targetElement) {
                           focusAttempts++;
-                          requestAnimationFrame(attemptFocus); // Try again on next frame
-                        } else {
-                          console.log('Focus achieved and maintained on pendienteDependencia!');
+                          requestAnimationFrame(attemptFocus);
                         }
                       }
-                    } else {
-                      console.log('Max focus attempts reached for pendienteDependencia. Focus not maintained.');
                     }
 
-                    // Start the aggressive focus attempt after a short initial delay
-                    setTimeout(() => {
-                      requestAnimationFrame(attemptFocus);
-                    }, 100); // Initial delay to let other scripts run first
+                    setTimeout(() => { requestAnimationFrame(attemptFocus); }, 100);
                   })()">
                 <option value="">Seleccionar...</option>
                 @foreach ($dependencias as $dep)
@@ -90,7 +82,7 @@
               <label for="pendienteMonto">Monto:</label>
               <input type="number" step="0.01"
                 class="form-control @error('montoPendientes') is-invalid @enderror"
-                id="pendienteMonto" wire:model.defer="montoPendientes" required>
+                id="pendienteMonto" wire:model="montoPendientes" required>
               @error('montoPendientes')
               <div class="invalid-feedback">{{ $message }}</div>
               @enderror

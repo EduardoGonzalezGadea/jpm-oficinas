@@ -16,16 +16,16 @@
 
     {{-- Filtros --}}
     <div class="card-body py-2 px-3">
-      <form wire:submit.prevent="generarReporte">
+      <form wire:submit="generarReporte">
         <div class="row align-items-end">
           <div class="col-md-3">
             <label class="small font-weight-bold mb-0">Fecha Desde</label>
-            <input type="date" wire:model.defer="fechaDesde" class="form-control form-control-sm">
+            <input type="date" wire:model="fechaDesde" class="form-control form-control-sm">
             @error('fechaDesde') <span class="text-danger small">{{ $message }}</span> @enderror
           </div>
           <div class="col-md-3">
             <label class="small font-weight-bold mb-0">Fecha Hasta</label>
-            <input type="date" wire:model.defer="fechaHasta" class="form-control form-control-sm">
+            <input type="date" wire:model="fechaHasta" class="form-control form-control-sm">
             @error('fechaHasta') <span class="text-danger small">{{ $message }}</span> @enderror
           </div>
           <div class="col-md-6">
@@ -89,7 +89,7 @@
                   type="checkbox"
                   class="custom-control-input"
                   id="chk-todas"
-                  wire:click.prevent="toggleTodas"
+                  wire:click="toggleTodas"
                   @if($todasActivas) checked @endif
                   style="cursor: pointer;"
                 >
@@ -109,12 +109,12 @@
             style="{{ !$activa ? 'opacity: 0.55;' : '' }}">
             <td class="align-middle text-center">
               <div class="custom-control custom-checkbox mb-0">
-                {{-- wire:model con array es el binding idiomático de Livewire 2 para checkboxes --}}
+                {{-- wire:model.live con array es el binding idiomático de Livewire 2 para checkboxes --}}
                 <input
                   type="checkbox"
                   class="custom-control-input"
                   id="chk-seccion-{{ $index }}"
-                  wire:model="seccionesActivas"
+                  wire:model.live="seccionesActivas"
                   value="{{ $index }}"
                   style="cursor: pointer;"
                 >

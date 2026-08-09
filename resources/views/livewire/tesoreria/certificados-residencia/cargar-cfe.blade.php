@@ -113,7 +113,7 @@
     <div class="card-body py-3">
       <div class="upload-container">
         <div class="upload-box {{ $archivo ? 'has-file' : '' }}">
-          <input type="file" id="archivoCertificado" wire:model="archivo" accept=".pdf" wire:key="input-cert-{{ $archivo ? 'loaded' : 'empty' }}">
+          <input type="file" id="archivoCertificado" wire:model.live="archivo" accept=".pdf" wire:key="input-cert-{{ $archivo ? 'loaded' : 'empty' }}">
           <div wire:loading.style="display: flex" wire:target="archivo" class="upload-loading-overlay">
             <div class="text-white text-center">
               <i class="fas fa-spinner fa-spin fa-2x mb-2"></i>
@@ -282,24 +282,24 @@
           <div class="row">
             <div class="col-md-4 form-group">
               <label class="small font-weight-bold">Fecha Recibido <span class="text-danger">*</span></label>
-              <input type="date" wire:model="nuevoCertificado.fecha_recibido" class="form-control form-control-sm @error('nuevoCertificado.fecha_recibido') is-invalid @enderror">
+              <input type="date" wire:model.live="nuevoCertificado.fecha_recibido" class="form-control form-control-sm @error('nuevoCertificado.fecha_recibido') is-invalid @enderror">
               @error('nuevoCertificado.fecha_recibido') <span class="invalid-feedback d-block small">{{ $message }}</span> @enderror
             </div>
             <div class="col-md-4 form-group">
               <label class="small font-weight-bold">Nombre Titular <span class="text-danger">*</span></label>
-              <input type="text" wire:model="nuevoCertificado.titular_nombre" class="form-control form-control-sm @error('nuevoCertificado.titular_nombre') is-invalid @enderror" placeholder="Nombre del titular">
+              <input type="text" wire:model.live="nuevoCertificado.titular_nombre" class="form-control form-control-sm @error('nuevoCertificado.titular_nombre') is-invalid @enderror" placeholder="Nombre del titular">
               @error('nuevoCertificado.titular_nombre') <span class="invalid-feedback d-block small">{{ $message }}</span> @enderror
             </div>
             <div class="col-md-4 form-group">
               <label class="small font-weight-bold">Apellido Titular <span class="text-danger">*</span></label>
-              <input type="text" wire:model="nuevoCertificado.titular_apellido" class="form-control form-control-sm @error('nuevoCertificado.titular_apellido') is-invalid @enderror" placeholder="Apellido del titular">
+              <input type="text" wire:model.live="nuevoCertificado.titular_apellido" class="form-control form-control-sm @error('nuevoCertificado.titular_apellido') is-invalid @enderror" placeholder="Apellido del titular">
               @error('nuevoCertificado.titular_apellido') <span class="invalid-feedback d-block small">{{ $message }}</span> @enderror
             </div>
           </div>
           <div class="row">
             <div class="col-md-4 form-group">
               <label class="small font-weight-bold">Tipo Documento <span class="text-danger">*</span></label>
-              <select wire:model="nuevoCertificado.titular_tipo_documento" class="form-control form-control-sm @error('nuevoCertificado.titular_tipo_documento') is-invalid @enderror">
+              <select wire:model.live="nuevoCertificado.titular_tipo_documento" class="form-control form-control-sm @error('nuevoCertificado.titular_tipo_documento') is-invalid @enderror">
                 <option value="Cédula">Cédula</option>
                 <option value="Cédula Extranjera">Cédula Extranjera</option>
                 <option value="Pasaporte">Pasaporte</option>
@@ -309,7 +309,7 @@
             </div>
             <div class="col-md-4 form-group">
               <label class="small font-weight-bold">Nro. Documento Titular <span class="text-danger">*</span></label>
-              <input type="text" wire:model="nuevoCertificado.titular_nro_documento" class="form-control form-control-sm @error('nuevoCertificado.titular_nro_documento') is-invalid @enderror" placeholder="Cédula del titular">
+              <input type="text" wire:model.live="nuevoCertificado.titular_nro_documento" class="form-control form-control-sm @error('nuevoCertificado.titular_nro_documento') is-invalid @enderror" placeholder="Cédula del titular">
               @error('nuevoCertificado.titular_nro_documento') <span class="invalid-feedback d-block small">{{ $message }}</span> @enderror
             </div>
             <div class="col-md-4 d-flex align-items-end justify-content-center form-group">

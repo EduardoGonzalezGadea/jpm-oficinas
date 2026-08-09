@@ -23,7 +23,7 @@
               <div class="input-group-prepend">
                 <span class="input-group-text"><i class="fas fa-search"></i></span>
               </div>
-              <input type="text" class="form-control" wire:model="search"
+              <input type="text" class="form-control" wire:model.live="search"
                 placeholder="Buscar por comprobante, interno, responsable, concepto o valor...">
             </div>
           </div>
@@ -31,7 +31,7 @@
         <div class="col-md-3">
           <div class="form-group">
             <label class="font-weight-bold col-form-label-sm">Valor</label>
-            <select class="form-control form-control-sm" wire:model="filterValor">
+            <select class="form-control form-control-sm" wire:model.live="filterValor">
               <option value="">Todos los valores</option>
               @foreach ($valores as $valor)
                 <option value="{{ $valor->id }}">{{ $valor->nombre }}</option>
@@ -42,7 +42,7 @@
         <div class="col-md-2">
           <div class="form-group">
             <label class="font-weight-bold col-form-label-sm">Concepto</label>
-            <select class="form-control form-control-sm" wire:model="filterConcepto">
+            <select class="form-control form-control-sm" wire:model.live="filterConcepto">
               <option value="">Todos los conceptos</option>
               @foreach ($conceptos as $concepto)
                 <option value="{{ $concepto->id }}">{{ $concepto->concepto }} ({{ $concepto->valor->nombre }})
@@ -54,7 +54,7 @@
         <div class="col-md-2">
           <div class="form-group">
             <label class="font-weight-bold col-form-label-sm">Fecha</label>
-            <select class="form-control form-control-sm" wire:model="filterFecha">
+            <select class="form-control form-control-sm" wire:model.live="filterFecha">
               <option value="">Todas</option>
               <option value="hoy">Hoy</option>
               <option value="semana">Esta Semana</option>
@@ -65,7 +65,7 @@
         <div class="col-md-1">
           <div class="form-group">
             <label class="font-weight-bold col-form-label-sm">Pág.</label>
-            <select class="form-control form-control-sm" wire:model="perPage">
+            <select class="form-control form-control-sm" wire:model.live="perPage">
               <option value="10">10</option>
               <option value="25">25</option>
               <option value="50">50</option>
@@ -192,7 +192,7 @@
               <div class="form-group col-md-6">
                 <label>Valor <span class="text-danger">*</span></label>
                 <select class="form-control @error('valores_id') is-invalid @enderror"
-                  wire:model="valores_id">
+                  wire:model.live="valores_id">
                   <option value="">Seleccione un valor</option>
                   @foreach ($valores as $valor)
                     <option value="{{ $valor->id }}">{{ $valor->nombre }}</option>
@@ -205,7 +205,7 @@
               <div class="form-group col-md-6">
                 <label>Concepto <span class="text-danger">*</span></label>
                 <select class="form-control @error('conceptos_id') is-invalid @enderror"
-                  wire:model="conceptos_id" @if (!$valores_id) disabled @endif>
+                  wire:model.live="conceptos_id" @if (!$valores_id) disabled @endif>
                   <option value="">Seleccione un concepto</option>
                   @foreach ($conceptosDisponibles as $concepto)
                     <option value="{{ $concepto->id }}">{{ $concepto->concepto }}</option>
@@ -218,7 +218,7 @@
               <div class="form-group col-md-6">
                 <label>Fecha <span class="text-danger">*</span></label>
                 <input type="date" class="form-control @error('fecha') is-invalid @enderror"
-                  wire:model="fecha">
+                  wire:model.live="fecha">
                 @error('fecha')
                   <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
@@ -226,7 +226,7 @@
               <div class="form-group col-md-6">
                 <label>Comprobante <span class="text-danger">*</span></label>
                 <input type="text" class="form-control @error('comprobante') is-invalid @enderror"
-                  wire:model="comprobante" placeholder="Ej: Recibo 12345">
+                  wire:model.live="comprobante" placeholder="Ej: Recibo 12345">
                 @error('comprobante')
                   <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
@@ -234,7 +234,7 @@
               <div class="form-group col-md-6">
                 <label>Desde <span class="text-danger">*</span></label>
                 <input type="number" class="form-control @error('desde') is-invalid @enderror"
-                  wire:model="desde" placeholder="1" min="1">
+                  wire:model.live="desde" placeholder="1" min="1">
                 @error('desde')
                   <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
@@ -242,7 +242,7 @@
               <div class="form-group col-md-6">
                 <label>Hasta <span class="text-danger">*</span></label>
                 <input type="number" class="form-control @error('hasta') is-invalid @enderror"
-                  wire:model="hasta" placeholder="100" min="1">
+                  wire:model.live="hasta" placeholder="100" min="1">
                 @error('hasta')
                   <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
@@ -250,7 +250,7 @@
               <div class="form-group col-md-6">
                 <label>Número Interno (Opcional)</label>
                 <input type="text" class="form-control @error('interno') is-invalid @enderror"
-                  wire:model="interno" placeholder="Ej: Lote B-2023">
+                  wire:model.live="interno" placeholder="Ej: Lote B-2023">
                 @error('interno')
                   <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
@@ -258,14 +258,14 @@
               <div class="form-group col-md-6">
                 <label>Responsable (Opcional)</label>
                 <input type="text" class="form-control @error('responsable') is-invalid @enderror"
-                  wire:model="responsable" placeholder="Ej: Juan Pérez">
+                  wire:model.live="responsable" placeholder="Ej: Juan Pérez">
                 @error('responsable')
                   <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
               </div>
               <div class="form-group col-12">
                 <label>Observaciones</label>
-                <textarea class="form-control @error('observaciones') is-invalid @enderror" wire:model="observaciones" rows="3"
+                <textarea class="form-control @error('observaciones') is-invalid @enderror" wire:model.live="observaciones" rows="3"
                   placeholder="Observaciones adicionales..."></textarea>
                 @error('observaciones')
                   <div class="invalid-feedback">{{ $message }}</div>

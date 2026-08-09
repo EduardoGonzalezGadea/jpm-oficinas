@@ -14,12 +14,12 @@
           </button>
         </div>
         <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
-          <form wire:submit.prevent="saveRecuperarPago">
+          <form wire:submit="saveRecuperarPago">
             <div class="form-group">
               <label for="recuperarPagoFecha">Fecha de Recuperación:</label>
               <input type="date" id="recuperarPagoFecha"
                 class="form-control @error('recuperarPagoData.fecha') is-invalid @enderror"
-                wire:model.defer="recuperarPagoData.fecha">
+                wire:model="recuperarPagoData.fecha">
               @error('recuperarPagoData.fecha')
               <span class="invalid-feedback">{{ $message }}</span>
               @enderror
@@ -27,8 +27,8 @@
             <div class="form-group">
               <label for="recuperarPagoNumeroIngreso">Número de Ingreso:</label>
               <input type="text" id="recuperarPagoNumeroIngreso"
-                class="form-control @error('recuperarPagoData.numero_ingreso') is-invalid @enderror"
-                wire:model.defer="recuperarPagoData.numero_ingreso"
+                class="form-control text-uppercase @error('recuperarPagoData.numero_ingreso') is-invalid @enderror"
+                wire:model="recuperarPagoData.numero_ingreso"
                 placeholder="Ingrese número de ingreso">
               @error('recuperarPagoData.numero_ingreso')
               <span class="invalid-feedback">{{ $message }}</span>
@@ -38,8 +38,8 @@
             <div class="form-group">
               <label for="recuperarPagoNumeroIngresoBSE">Número de Ingreso BSE <span class="text-muted">(opcional)</span>:</label>
               <input type="text" id="recuperarPagoNumeroIngresoBSE"
-                class="form-control @error('recuperarPagoData.numero_ingreso_bse') is-invalid @enderror"
-                wire:model.defer="recuperarPagoData.numero_ingreso_bse"
+                class="form-control text-uppercase @error('recuperarPagoData.numero_ingreso_bse') is-invalid @enderror"
+                wire:model="recuperarPagoData.numero_ingreso_bse"
                 placeholder="Ingrese número de ingreso BSE">
               @error('recuperarPagoData.numero_ingreso_bse')
               <span class="invalid-feedback">{{ $message }}</span>
@@ -49,7 +49,7 @@
               <label for="recuperarPagoFechaBSE">Fecha Ingreso BSE <span class="text-muted">(opcional)</span>:</label>
               <input type="date" id="recuperarPagoFechaBSE"
                 class="form-control @error('recuperarPagoData.fecha_ingreso_bse') is-invalid @enderror"
-                wire:model.defer="recuperarPagoData.fecha_ingreso_bse">
+                wire:model="recuperarPagoData.fecha_ingreso_bse">
               @error('recuperarPagoData.fecha_ingreso_bse')
               <span class="invalid-feedback">{{ $message }}</span>
               @enderror
@@ -59,7 +59,7 @@
               <label for="recuperarPagoMontoRecuperado">Monto Recuperado:</label>
               <input type="number" id="recuperarPagoMontoRecuperado"
                 class="form-control @error('recuperarPagoData.monto_recuperado') is-invalid @enderror"
-                wire:model.defer="recuperarPagoData.monto_recuperado" step="0.01">
+                wire:model="recuperarPagoData.monto_recuperado" step="0.01">
               @error('recuperarPagoData.monto_recuperado')
               <span class="invalid-feedback">{{ $message }}</span>
               @enderror

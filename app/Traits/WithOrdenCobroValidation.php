@@ -39,7 +39,7 @@ trait WithOrdenCobroValidation
         if ($existing) {
             $recibo = $this->formatearReciboExistente($existing, $reciboField);
 
-            $this->dispatchBrowserEvent('swal:error', [
+            $this->dispatch('swal:error', [
                 'title' => 'Orden de Cobro Duplicada',
                 'text' => "La Orden de Cobro N° {$ordenCobro} ya existe en el recibo {$recibo}.",
             ]);

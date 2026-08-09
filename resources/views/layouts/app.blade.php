@@ -12,38 +12,46 @@
 
     <title>@yield('title', 'Tesorería | Oficinas')</title>
 
-    <!-- Bootstrap 4 CSS -->
-    <link href="{{ asset('libs/bootstrap-4.6.2-dist/css/bootstrap.min.css') }}" rel="stylesheet">
-
-    <!-- Script para cargar el tema dinámico y evitar parpadeos -->
+    <!-- Pre-cargar color de fondo para evitar FOUC (flash blanco) -->
+    @auth
+    @php
+        $darkThemes = ['darkly', 'slate', 'cyborg', 'superhero', 'vapor', 'material'];
+        $bgColor = in_array(auth()->user()->theme, $darkThemes) ? '#222222' : '#ffffff';
+    @endphp
+    <style>html { background-color: {{ $bgColor }}; }</style>
+    @else
     <script>
         (function() {
-            @auth
-            // Obtenemos los valores directamente del usuario autenticado
-            const userThemePath = "{{ auth()->user()->theme_path }}";
-            const userThemeName = "{{ auth()->user()->theme }}";
-
-            if (userThemePath) {
-                localStorage.setItem("bootswatch-theme", userThemePath);
-                localStorage.setItem("bootswatch-theme-name", userThemeName);
-
-                const themeLink = document.createElement('link');
-                themeLink.id = 'bootswatch-theme';
-                themeLink.rel = 'stylesheet';
-                themeLink.href = userThemePath;
-                document.head.appendChild(themeLink);
-            }
-            @else
-            localStorage.removeItem("bootswatch-theme");
-            localStorage.removeItem("bootswatch-theme-name");
-            @endauth
+            try {
+                var t = localStorage.getItem("bootswatch-theme-name") || "cosmo";
+                var d = ["darkly","slate","cyborg","superhero","vapor","material"];
+                document.documentElement.style.backgroundColor = d.indexOf(t) >= 0 ? "#222222" : "#ffffff";
+            } catch(e) {}
         })();
     </script>
+    @endauth
+
+    <!-- Bootstrap 4 CSS: carga directa del tema del usuario (sin flash) -->
+    @auth
+    <link id="bootswatch-theme" href="{{ auth()->user()->theme_path }}" data-theme-name="{{ auth()->user()->theme ?? 'cosmo' }}" rel="stylesheet">
+    <!-- Sincronizar localStorage con el tema del servidor (evita rasgos del usuario anterior) -->
+    <script>
+        (function() {
+            try {
+                localStorage.setItem("bootswatch-theme", "{{ auth()->user()->theme_path }}");
+                localStorage.setItem("bootswatch-theme-name", "{{ auth()->user()->theme ?? 'cosmo' }}");
+            } catch(e) {}
+        })();
+    </script>
+    @else
+    <link id="bootswatch-theme" href="{{ asset('libs/bootstrap-4.6.2-dist/css/bootstrap.min.css') }}" data-theme-name="default" rel="stylesheet">
+    @endauth
 
     <!-- Estilos personalizados -->
     <link href="{{ asset('css/app.css') }}" rel="stylesheet">
     <!-- Font Awesome -->
     <link href="{{ asset('libs/fontawesome-free-5.15.4-web/css/all.min.css') }}" rel="stylesheet">
+    <style>.card-header svg[data-icon="calendar-alt"]{width:1em!important;height:1em!important;vertical-align:middle!important}</style>
     {{-- SweetAlert2 --}}
     <link href="{{ asset('libs/sweetalert2/dist/sweetalert2.min.css') }}" rel="stylesheet">
 
@@ -51,9 +59,12 @@
     <link href="{{ asset('libs/flatpickr/flatpickr.min.css') }}" rel="stylesheet">
     <link href="{{ asset('libs/flatpickr/material_blue.css') }}" rel="stylesheet">
 
-    <script defer src="{{ asset('libs/alpinejs@3.14.9/dist/cdn.min.js') }}"></script>
-
+    <!-- Livewire v3: estilos -->
     @livewireStyles
+
+
+
+
 
 
 
@@ -68,6 +79,7 @@
 
     <main class="@auth container-fluid mt-0 p-1 @else container-fluid @endauth">
         @yield('content')
+        {{ $slot ?? '' }}
     </main>
 
     <!-- Botones Flotantes de Navegación (Comentados por solicitud: los usuarios no se han acostumbrado) -->
@@ -90,13 +102,18 @@
     --}}
 
     <!-- Bootstrap 4 JS -->
-    <script src="{{ asset('libs/jquery/js/jquery-3.6.0.min.js') }}"></script>
-    <script src="{{ asset('libs/bootstrap-4.6.2-dist/js/bootstrap.bundle.min.js') }}"></script>
+    <!-- data-navigate-once: estos scripts globales no deben re-ejecutarse al
+         navegar con wire:navigate (evita que la delegación de eventos de
+         dropdowns/modales queden sin inicializar). -->
+    <script data-navigate-once src="{{ asset('libs/jquery/js/jquery-3.6.0.min.js') }}"></script>
+    <script data-navigate-once src="{{ asset('libs/bootstrap-4.6.2-dist/js/bootstrap.bundle.min.js') }}"></script>
+
+
+
+    <script data-navigate-once src="{{ asset('libs/fontawesome-free-5.15.4-web/js/all.min.js') }}"></script>
+    <script data-navigate-once src="{{ asset('libs/sweetalert2/dist/sweetalert2.all.min.js') }}"></script>
 
     @livewireScripts
-
-    <script src="{{ asset('libs/fontawesome-free-5.15.4-web/js/all.min.js') }}"></script>
-    <script src="{{ asset('libs/sweetalert2/dist/sweetalert2.all.min.js') }}"></script>
 
     @yield('scripts')
 
@@ -104,33 +121,99 @@
     @stack('scripts')
 
     <!-- Lógica para el tema dinámico -->
-    <script src="{{ asset('js/session-expired.js') }}"></script>
-    <script src="{{ asset('js/theme-change.js') }}"></script>
+    <script data-navigate-once src="{{ asset('js/session-expired.js') }}?v={{ filemtime(public_path('js/session-expired.js')) }}"></script>
+    <script data-navigate-once src="{{ asset('js/theme-change.js') }}?v={{ filemtime(public_path('js/theme-change.js')) }}"></script>
 
-    {{-- Loader --}}
-    <div id="loader" wire:loading.attr="hidden" wire:target="openEmitirModal, openAnularModal, formarPlanilla, emitir, editar, anular, openEditarModal, clearSearch, sortBy, seleccionarBeneficiario, seleccionarConcepto, selectedCheques" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); z-index: 9999; flex-direction: column; justify-content: center; align-items: center;">
-        <div class="spinner-border text-light" role="status" style="width: 3rem; height: 3rem;">
+    {{-- Loader global: controlado por JS (ver script abajo) para omitir los syncInput de escritura --}}
+    <div
+        id="livewire-loader"
+        style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background-color:rgba(0,0,0,0.45); z-index:9999; flex-direction:column; justify-content:center; align-items:center;"
+    >
+        <div class="spinner-border text-light" role="status" style="width:3rem; height:3rem;">
             <span class="sr-only">Cargando...</span>
         </div>
-        <p class="text-light mt-2">Procesando...</p>
+        <p class="text-light mt-2 mb-0" style="font-size:0.95rem;">Procesando...</p>
     </div>
 
-    <script src="{{ asset('js/app-layout.js') }}"></script>
+    <script>
+        // Loader por eventos Livewire v3: cubre tanto componentes inline como los que
+        // usan .extends('layouts.app'), donde wire:loading.flex no alcanza el DOM del loader.
+        (function () {
+            var loader = document.getElementById('livewire-loader');
+            var loaderTimer = null;
+            var hideTimer = null;
+            var pendingRequests = 0;
+            var DELAY_MS = 0;        // mostrar de inmediato
+            var MIN_VISIBLE_MS = 100; // permanencia mínima para que se perciba
 
-    <script src="{{ asset('js/print.js') }}"></script>
+            function showLoader() {
+                pendingRequests++;
+                if (loaderTimer) return;
+                clearTimeout(hideTimer);
+                hideTimer = null;
+                loaderTimer = setTimeout(function () {
+                    loaderTimer = null;
+                    if (loader && pendingRequests > 0) loader.style.display = 'flex';
+                }, DELAY_MS);
+            }
+
+            function hideLoader() {
+                if (pendingRequests > 0) pendingRequests--;
+                if (pendingRequests > 0) return;
+                clearTimeout(loaderTimer);
+                loaderTimer = null;
+                if (!loader) return;
+                if (loader.style.display === 'flex') {
+                    // Garantizar un tiempo mínimo visible, sin esconder si llega otra petición
+                    hideTimer = setTimeout(function () {
+                        if (pendingRequests === 0) loader.style.display = 'none';
+                    }, MIN_VISIBLE_MS);
+                } else {
+                    loader.style.display = 'none';
+                }
+            }
+
+            // Livewire v3: el hook 'commit' intercepta el ciclo de vida de red completo.
+            // 'succeed' se dispara al terminar; dentro de succeed/fail se oculta.
+            // En v3 el commit expone 'calls' (métodos invocados) y las actualizaciones de
+            // propiedades van aparte (payload.updates). Solo mostramos el loader cuando el
+            // commit invoca métodos (consultas/acciones), no en escritura/typing puro.
+            document.addEventListener('livewire:init', function () {
+                Livewire.hook('commit', ({ component, commit, respond, succeed, fail }) => {
+                    var hasCalls = commit.calls && commit.calls.length > 0;
+
+                    if (hasCalls) {
+                        showLoader();
+                    }
+
+                    succeed(() => { hideLoader(); });
+                    fail(() => { hideLoader(); });
+                });
+            });
+        })();
+    </script>
+
+    <script data-navigate-once src="{{ asset('js/app-layout.js') }}"></script>
+
+    <script data-navigate-once src="{{ asset('js/enter-navigation.js') }}"></script>
+
+    <script data-navigate-once src="{{ asset('js/print.js') }}"></script>
 
     <!-- Flatpickr JS -->
-    <script src="{{ asset('libs/flatpickr/flatpickr.min.js') }}"></script>
-    <script src="{{ asset('libs/flatpickr/es.js') }}"></script>
+    <script data-navigate-once src="{{ asset('libs/flatpickr/flatpickr.min.js') }}"></script>
+    <script data-navigate-once src="{{ asset('libs/flatpickr/es.js') }}"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             initFlatpickr();
         });
 
-        document.addEventListener('livewire:load', function() {
+        document.addEventListener('livewire:init', function() {
             initFlatpickr();
-            Livewire.hook('message.processed', (message, component) => {
-                initFlatpickr();
+            // Livewire v3: reinicializar flatpickr después de cada commit exitoso
+            Livewire.hook('commit', ({ succeed }) => {
+                succeed(() => {
+                    queueMicrotask(initFlatpickr);
+                });
             });
         });
 

@@ -8,26 +8,26 @@
         </button>
       </div>
       <div class="modal-body">
-        <form wire:submit.prevent="store">
+        <form wire:submit="store">
           <div class="row">
             <div class="col-md-4">
               <div class="form-group">
                 <label for="recibo_serie">Serie Recibo</label>
-                <input type="text" wire:model.defer="recibo_serie" class="form-control" id="recibo_serie">
+                <input type="text" wire:model="recibo_serie" class="form-control" id="recibo_serie">
                 @error('recibo_serie') <span class="text-danger">{{ $message }}</span> @enderror
               </div>
             </div>
             <div class="col-md-4">
               <div class="form-group">
                 <label for="recibo_numero">Número Recibo</label>
-                <input type="text" wire:model.defer="recibo_numero" class="form-control" id="recibo_numero">
+                <input type="text" wire:model="recibo_numero" class="form-control" id="recibo_numero">
                 @error('recibo_numero') <span class="text-danger">{{ $message }}</span> @enderror
               </div>
             </div>
             <div class="col-md-4">
               <div class="form-group">
                 <label for="recibo_fecha">Fecha Recibo</label>
-                <input type="date" wire:model.defer="recibo_fecha" class="form-control" id="recibo_fecha">
+                <input type="date" wire:model="recibo_fecha" class="form-control" id="recibo_fecha">
                 @error('recibo_fecha') <span class="text-danger">{{ $message }}</span> @enderror
               </div>
             </div>
@@ -37,14 +37,14 @@
             <div class="col-md-6">
               <div class="form-group">
                 <label for="orden_cobro">Orden de Cobro</label>
-                <input type="text" wire:model.defer="orden_cobro" class="form-control" id="orden_cobro">
+                <input type="text" wire:model="orden_cobro" class="form-control" id="orden_cobro">
                 @error('orden_cobro') <span class="text-danger">{{ $message }}</span> @enderror
               </div>
             </div>
             <div class="col-md-6">
               <div class="form-group">
                 <label for="concepto">Concepto</label>
-                <input type="text" wire:model.defer="concepto" class="form-control" id="concepto">
+                <input type="text" wire:model="concepto" class="form-control" id="concepto">
                 @error('concepto') <span class="text-danger">{{ $message }}</span> @enderror
               </div>
             </div>
@@ -54,21 +54,21 @@
             <div class="col-md-4">
               <div class="form-group">
                 <label for="titular">Titular</label>
-                <input type="text" wire:model.defer="titular" class="form-control" id="titular">
+                <input type="text" wire:model="titular" class="form-control" id="titular">
                 @error('titular') <span class="text-danger">{{ $message }}</span> @enderror
               </div>
             </div>
             <div class="col-md-4">
               <div class="form-group">
                 <label for="cedula">Cédula</label>
-                <input type="text" wire:model.defer="cedula" class="form-control" id="cedula">
+                <input type="text" wire:model="cedula" class="form-control" id="cedula">
                 @error('cedula') <span class="text-danger">{{ $message }}</span> @enderror
               </div>
             </div>
             <div class="col-md-4">
               <div class="form-group">
                 <label for="telefono">Teléfono</label>
-                <input type="text" wire:model.defer="telefono" class="form-control" id="telefono">
+                <input type="text" wire:model="telefono" class="form-control" id="telefono">
                 @error('telefono') <span class="text-danger">{{ $message }}</span> @enderror
               </div>
             </div>
@@ -78,14 +78,14 @@
             <div class="col-md-6">
               <div class="form-group">
                 <label for="monto">Monto</label>
-                <input type="number" step="0.01" wire:model.defer="monto" class="form-control" id="monto">
+                <input type="number" step="0.01" wire:model="monto" class="form-control" id="monto">
                 @error('monto') <span class="text-danger">{{ $message }}</span> @enderror
               </div>
             </div>
             <div class="col-md-6">
               <div class="form-group">
                 <label for="medio_pago_id">Medio de Pago</label>
-                <select wire:model.defer="medio_pago_id" class="form-control" id="medio_pago_id">
+                <select wire:model="medio_pago_id" class="form-control" id="medio_pago_id">
                   <option value="">Seleccione...</option>
                   @foreach($mediosPago as $medio)
                     <option value="{{ $medio->id }}">{{ $medio->nombre }}</option>

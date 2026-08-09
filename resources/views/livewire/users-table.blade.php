@@ -9,18 +9,18 @@
     <!-- Filtros -->
     <div class="row mb-3">
         <div class="col-md-4">
-            <input wire:model.debounce.300ms="search" type="text" class="form-control"
+            <input wire:model.live.debounce.300ms="search" type="text" class="form-control"
                 placeholder="Buscar por nombre, email o cédula...">
         </div>
         <div class="col-md-2">
-            <select wire:model="statusFilter" class="form-control">
+            <select wire:model.live="statusFilter" class="form-control">
                 <option value="all">Todos los estados</option>
                 <option value="active">Activos</option>
                 <option value="inactive">Inactivos</option>
             </select>
         </div>
         <div class="col-md-2">
-            <select wire:model="moduleFilter" class="form-control">
+            <select wire:model.live="moduleFilter" class="form-control">
                 @if ($modulos->count() > 1)
                 <option value="all">Todos los módulos</option>
                 @endif
@@ -30,7 +30,7 @@
             </select>
         </div>
         <div class="col-md-2">
-            <select wire:model="perPage" class="form-control">
+            <select wire:model.live="perPage" class="form-control">
                 <option value="10">10 por página</option>
                 <option value="25">25 por página</option>
                 <option value="50">50 por página</option>
@@ -200,7 +200,7 @@
                     cancelButtonText: 'Cancelar'
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        Livewire.emit('resetUserPassword', userId);
+                        Livewire.dispatch('resetUserPassword', userId);
                     }
                 });
             }
@@ -217,7 +217,7 @@
                     cancelButtonText: 'Cancelar'
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        Livewire.emit('toggleUserStatus', userId);
+                        Livewire.dispatch('toggleUserStatus', userId);
                     }
                 });
             }
@@ -234,7 +234,7 @@
                     cancelButtonText: 'Cancelar'
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        Livewire.emit('deleteUser', userId);
+                        Livewire.dispatch('deleteUser', userId);
                     }
                 });
             }

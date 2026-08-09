@@ -23,24 +23,24 @@
               <div class="form-row px-2">
                 <div class="form-group col-md-3 mb-2">
                   <label class="small mb-1 font-weight-bold text-muted">Fecha Egreso</label>
-                  <input type="date" class="form-control form-control-sm @error('pago.fechaEgresoPagos') is-invalid @enderror" wire:model.defer="pago.fechaEgresoPagos">
+                  <input type="date" class="form-control form-control-sm @error('pago.fechaEgresoPagos') is-invalid @enderror" wire:model="pago.fechaEgresoPagos">
                   @error('pago.fechaEgresoPagos') <span class="invalid-feedback" style="font-size: 0.7rem;">{{ $message }}</span> @enderror
                 </div>
                 <div class="form-group col-md-3 mb-2">
                   <label class="small mb-1 font-weight-bold text-muted">Fecha Efec.</label>
-                  <input type="date" class="form-control form-control-sm @error('pago.fechaEgresoEfectivoPagos') is-invalid @enderror" wire:model.defer="pago.fechaEgresoEfectivoPagos" title="Fecha Egreso Efectivo">
+                  <input type="date" class="form-control form-control-sm @error('pago.fechaEgresoEfectivoPagos') is-invalid @enderror" wire:model="pago.fechaEgresoEfectivoPagos" title="Fecha Egreso Efectivo">
                   @error('pago.fechaEgresoEfectivoPagos') <span class="invalid-feedback" style="font-size: 0.7rem;">{{ $message }}</span> @enderror
                 </div>
                 <div class="form-group col-md-3 mb-2">
                   <label class="small mb-1 font-weight-bold text-muted">Nro. Egreso</label>
-                  <input type="text" class="form-control form-control-sm @error('pago.egresoPagos') is-invalid @enderror" wire:model.defer="pago.egresoPagos" placeholder="Opcional">
+                  <input type="text" class="form-control form-control-sm text-uppercase @error('pago.egresoPagos') is-invalid @enderror" wire:model="pago.egresoPagos" placeholder="Opcional">
                   @error('pago.egresoPagos') <span class="invalid-feedback" style="font-size: 0.7rem;">{{ $message }}</span> @enderror
                 </div>
                 <div class="form-group col-md-3 mb-2">
                   <label class="small mb-1 font-weight-bold text-muted">Monto Otorgado</label>
                   <div class="input-group input-group-sm">
                     <div class="input-group-prepend"><span class="input-group-text bg-white">$</span></div>
-                    <input type="number" class="form-control form-control-sm font-weight-bold @error('pago.montoPagos') is-invalid @enderror" step="0.01" wire:model.lazy="pago.montoPagos">
+                    <input type="number" class="form-control form-control-sm font-weight-bold @error('pago.montoPagos') is-invalid @enderror" step="0.01" wire:model.blur="pago.montoPagos">
                   </div>
                   @error('pago.montoPagos') <span class="text-danger d-block mt-1" style="font-size: 0.7rem;">{{ $message }}</span> @enderror
                 </div>
@@ -49,7 +49,7 @@
               <div class="form-row px-2">
                 <div class="form-group col-md-4 mb-1">
                   <label class="small mb-1 font-weight-bold text-muted">Acreedor</label>
-                  <select class="form-control form-control-sm @error('pago.relAcreedores') is-invalid @enderror" wire:model.defer="pago.relAcreedores">
+                  <select class="form-control form-control-sm @error('pago.relAcreedores') is-invalid @enderror" wire:model="pago.relAcreedores">
                     <option value="">Seleccione</option>
                     @foreach ($acreedores as $acreedor)
                     <option value="{{ $acreedor->idAcreedores }}">{{ $acreedor->acreedor }}</option>
@@ -59,7 +59,7 @@
                 </div>
                 <div class="form-group col-md-8 mb-1">
                   <label class="small mb-1 font-weight-bold text-muted">Concepto</label>
-                  <input type="text" class="form-control form-control-sm @error('pago.conceptoPagos') is-invalid @enderror" wire:model.defer="pago.conceptoPagos" placeholder="Descripción del pago">
+                  <input type="text" class="form-control form-control-sm @error('pago.conceptoPagos') is-invalid @enderror" wire:model="pago.conceptoPagos" placeholder="Descripción del pago">
                   @error('pago.conceptoPagos') <span class="invalid-feedback" style="font-size: 0.7rem;">{{ $message }}</span> @enderror
                 </div>
               </div>
@@ -87,26 +87,26 @@
                   <label class="small mb-1 font-weight-bold text-muted">Monto Rendido</label>
                   <div class="input-group input-group-sm">
                     <div class="input-group-prepend"><span class="input-group-text bg-white">$</span></div>
-                    <input type="number" class="form-control form-control-sm text-success font-weight-bold @error('pago.rendidoPagos') is-invalid @enderror" step="0.01" wire:model="pago.rendidoPagos" placeholder="Sin rendición">
+                    <input type="number" class="form-control form-control-sm text-success font-weight-bold @error('pago.rendidoPagos') is-invalid @enderror" step="0.01" wire:model.live="pago.rendidoPagos" placeholder="Sin rendición">
                   </div>
                   @error('pago.rendidoPagos') <span class="text-danger d-block mt-1" style="font-size: 0.7rem;">{{ $message }}</span> @enderror
                 </div>
                 <div class="form-group col-md-3 mb-2">
                   <label class="small mb-1 font-weight-bold text-muted">Fecha Rendición</label>
-                  <input type="date" class="form-control form-control-sm @error('pago.fechaRendicionPagos') is-invalid @enderror" wire:model.defer="pago.fechaRendicionPagos">
+                  <input type="date" class="form-control form-control-sm @error('pago.fechaRendicionPagos') is-invalid @enderror" wire:model="pago.fechaRendicionPagos">
                   @error('pago.fechaRendicionPagos') <span class="invalid-feedback" style="font-size: 0.7rem;">{{ $message }}</span> @enderror
                 </div>
                 <div class="form-group col-md-3 mb-2">
                   <label class="small mb-1 font-weight-bold text-muted">Reintegrado</label>
                   <div class="input-group input-group-sm">
                     <div class="input-group-prepend"><span class="input-group-text bg-light">$</span></div>
-                    <input type="number" class="form-control form-control-sm bg-light @error('pago.reintegradoPagos') is-invalid @enderror" step="0.01" wire:model.defer="pago.reintegradoPagos" readonly tabindex="-1">
+                    <input type="number" class="form-control form-control-sm bg-light @error('pago.reintegradoPagos') is-invalid @enderror" step="0.01" wire:model="pago.reintegradoPagos" readonly tabindex="-1">
                   </div>
                   @error('pago.reintegradoPagos') <span class="text-danger d-block mt-1" style="font-size: 0.7rem;">{{ $message }}</span> @enderror
                 </div>
                 <div class="form-group col-md-3 mb-2">
                   <label class="small mb-1 font-weight-bold text-muted">Ingreso Reintegro</label>
-                  <input type="text" class="form-control form-control-sm @error('pago.ingresoReintegroPagos') is-invalid @enderror" wire:model.defer="pago.ingresoReintegroPagos" placeholder="Nro. Ingreso">
+                  <input type="text" class="form-control form-control-sm text-uppercase @error('pago.ingresoReintegroPagos') is-invalid @enderror" wire:model="pago.ingresoReintegroPagos" placeholder="Nro. Ingreso">
                   @error('pago.ingresoReintegroPagos') <span class="invalid-feedback" style="font-size: 0.7rem;">{{ $message }}</span> @enderror
                 </div>
               </div>
@@ -134,18 +134,18 @@
                   <label class="small mb-1 font-weight-bold text-muted">Monto Recuperado</label>
                   <div class="input-group input-group-sm">
                     <div class="input-group-prepend"><span class="input-group-text bg-white">$</span></div>
-                    <input type="number" class="form-control form-control-sm text-info font-weight-bold @error('pago.recuperadoPagos') is-invalid @enderror" step="0.01" wire:model="pago.recuperadoPagos" placeholder="0.00">
+                    <input type="number" class="form-control form-control-sm text-info font-weight-bold @error('pago.recuperadoPagos') is-invalid @enderror" step="0.01" wire:model.live="pago.recuperadoPagos" placeholder="0.00">
                   </div>
                   @error('pago.recuperadoPagos') <span class="text-danger d-block mt-1" style="font-size: 0.7rem;">{{ $message }}</span> @enderror
                 </div>
                 <div class="form-group col-md-4 mb-1">
                   <label class="small mb-1 font-weight-bold text-muted">Fecha Ingreso</label>
-                  <input type="date" class="form-control form-control-sm @error('pago.fechaIngresoPagos') is-invalid @enderror" wire:model.defer="pago.fechaIngresoPagos">
+                  <input type="date" class="form-control form-control-sm @error('pago.fechaIngresoPagos') is-invalid @enderror" wire:model="pago.fechaIngresoPagos">
                   @error('pago.fechaIngresoPagos') <span class="invalid-feedback" style="font-size: 0.7rem;">{{ $message }}</span> @enderror
                 </div>
                 <div class="form-group col-md-4 mb-1">
                   <label class="small mb-1 font-weight-bold text-muted">Nro. Ingreso</label>
-                  <input type="text" class="form-control form-control-sm @error('pago.ingresoPagos') is-invalid @enderror" wire:model.defer="pago.ingresoPagos">
+                  <input type="text" class="form-control form-control-sm text-uppercase @error('pago.ingresoPagos') is-invalid @enderror" wire:model="pago.ingresoPagos">
                   @error('pago.ingresoPagos') <span class="invalid-feedback" style="font-size: 0.7rem;">{{ $message }}</span> @enderror
                 </div>
               </div>
@@ -174,12 +174,12 @@
               <div class="form-row px-2">
                 <div class="form-group col-md-6 mb-1">
                   <label class="small mb-1 font-weight-bold text-muted">Nro. Ingreso BSE</label>
-                  <input type="text" class="form-control form-control-sm @error('pago.ingresoPagosBSE') is-invalid @enderror" wire:model.defer="pago.ingresoPagosBSE" placeholder="Ingrese número BSE">
+                  <input type="text" class="form-control form-control-sm text-uppercase @error('pago.ingresoPagosBSE') is-invalid @enderror" wire:model="pago.ingresoPagosBSE" placeholder="Ingrese número BSE">
                   @error('pago.ingresoPagosBSE') <span class="invalid-feedback" style="font-size: 0.7rem;">{{ $message }}</span> @enderror
                 </div>
                 <div class="form-group col-md-6 mb-1">
                   <label class="small mb-1 font-weight-bold text-muted">Fecha BSE</label>
-                  <input type="date" class="form-control form-control-sm @error('pago.fechaIngresoBSEPagos') is-invalid @enderror" wire:model.defer="pago.fechaIngresoBSEPagos">
+                  <input type="date" class="form-control form-control-sm @error('pago.fechaIngresoBSEPagos') is-invalid @enderror" wire:model="pago.fechaIngresoBSEPagos">
                   @error('pago.fechaIngresoBSEPagos') <span class="invalid-feedback" style="font-size: 0.7rem;">{{ $message }}</span> @enderror
                 </div>
               </div>

@@ -37,15 +37,15 @@
           <form class="form-row align-items-end mb-2">
             <div class="col-md-2">
               <label class="small mb-0">Desde</label>
-              <input type="date" class="form-control form-control-sm" wire:model="fecha_desde">
+              <input type="date" class="form-control form-control-sm" wire:model.live="fecha_desde">
             </div>
             <div class="col-md-2">
               <label class="small mb-0">Hasta</label>
-              <input type="date" class="form-control form-control-sm" wire:model="fecha_hasta">
+              <input type="date" class="form-control form-control-sm" wire:model.live="fecha_hasta">
             </div>
             <div class="col-md-2">
               <label class="small mb-0">Tipo</label>
-              <select class="form-control form-control-sm" wire:model="filtro_tipo_id">
+              <select class="form-control form-control-sm" wire:model.live="filtro_tipo_id">
                 <option value="">Todos</option>
                 @foreach ($tipos as $tipo)
                   <option value="{{ $tipo->id }}">{{ $tipo->nombre }}</option>
@@ -54,7 +54,7 @@
             </div>
             <div class="col-md-2">
               <label class="small mb-0">Concepto</label>
-              <select class="form-control form-control-sm" wire:model="filtro_concepto_id">
+              <select class="form-control form-control-sm" wire:model.live="filtro_concepto_id">
                 <option value="">Todos</option>
                 @foreach ($conceptos as $concepto)
                   <option value="{{ $concepto->id }}">{{ $concepto->nombre }}</option>
@@ -63,7 +63,7 @@
             </div>
             <div class="col-md-2">
               <label class="small mb-0">Buscar</label>
-              <input type="text" class="form-control form-control-sm" wire:model="search" placeholder="Identidad / Denominación">
+              <input type="text" class="form-control form-control-sm" wire:model.live="search" placeholder="Identidad / Denominación">
             </div>
             <div class="col-md-1">
               <button class="btn btn-sm btn-outline-secondary w-100" wire:click="limpiarFiltros" title="Limpiar filtros">
@@ -122,9 +122,11 @@
                         class="btn btn-sm btn-info" title="Ver"><i class="fas fa-eye"></i></button>
                       <button wire:click="openEditModal({{ $item->id }})"
                         class="btn btn-sm btn-primary" title="Editar"><i class="fas fa-edit"></i></button>
+                      @if(!$item->cch_origen_type)
                       <button
                         onclick="event.preventDefault(); window.dispatchEvent(new CustomEvent('swal:confirm', { detail: { title: '¿Estás seguro?', text: '¡No podrás revertir esto! Se recalcularán los saldos.', method: 'destroy', id: {{ $item->id }}, confirmButtonText: 'Sí, elimínalo' } }))"
                         class="btn btn-sm btn-danger" title="Eliminar"><i class="fas fa-trash-alt"></i></button>
+                      @endif
                     </td>
                   </tr>
                 @empty
@@ -163,13 +165,13 @@
               <div class="form-group col-md-4">
                 <label for="fecha">Fecha *</label>
                 <input type="date" class="form-control @error('fecha') is-invalid @enderror"
-                  wire:model.defer="fecha" id="fecha">
+                  wire:model="fecha" id="fecha">
                 @error('fecha') <div class="invalid-feedback">{{ $message }}</div> @enderror
               </div>
               <div class="form-group col-md-4">
                 <label for="tipo_id">Tipo *</label>
                 <select class="form-control @error('tipo_id') is-invalid @enderror"
-                  wire:model.defer="tipo_id" id="tipo_id">
+                  wire:model="tipo_id" id="tipo_id">
                   <option value="">Seleccione...</option>
                   @foreach ($tipos as $tipo)
                     <option value="{{ $tipo->id }}">{{ $tipo->nombre }}</option>
@@ -180,7 +182,7 @@
               <div class="form-group col-md-4">
                 <label for="medio_id">Medio *</label>
                 <select class="form-control @error('medio_id') is-invalid @enderror"
-                  wire:model.defer="medio_id" id="medio_id">
+                  wire:model="medio_id" id="medio_id">
                   <option value="">Seleccione...</option>
                   @foreach ($medios as $medio)
                     <option value="{{ $medio->id }}">{{ $medio->nombre }}</option>
@@ -193,7 +195,7 @@
               <div class="form-group col-md-6">
                 <label for="concepto_id">Concepto *</label>
                 <select class="form-control @error('concepto_id') is-invalid @enderror"
-                  wire:model="concepto_id" id="concepto_id">
+                  wire:model.live="concepto_id" id="concepto_id">
                   <option value="">Seleccione...</option>
                   @foreach ($conceptos as $concepto)
                     <option value="{{ $concepto->id }}">{{ $concepto->nombre }}</option>
@@ -204,7 +206,7 @@
               <div class="form-group col-md-6">
                 <label for="detalle_id">Detalle *</label>
                 <select class="form-control @error('detalle_id') is-invalid @enderror"
-                  wire:model.defer="detalle_id" id="detalle_id" {{ !$concepto_id ? 'disabled' : '' }}>
+                  wire:model="detalle_id" id="detalle_id" {{ !$concepto_id ? 'disabled' : '' }}>
                   <option value="">Seleccione un concepto primero...</option>
                   @foreach ($detalles as $detalle)
                     <option value="{{ $detalle->id }}">{{ $detalle->nombre }}</option>
@@ -217,19 +219,19 @@
               <div class="form-group col-md-4">
                 <label for="monto">Monto *</label>
                 <input type="number" step="0.01" min="0.01" class="form-control @error('monto') is-invalid @enderror"
-                  wire:model.defer="monto" id="monto" placeholder="0.00">
+                  wire:model="monto" id="monto" placeholder="0.00">
                 @error('monto') <div class="invalid-feedback">{{ $message }}</div> @enderror
               </div>
               <div class="form-group col-md-4">
                 <label for="identidad">Identidad</label>
                 <input type="text" class="form-control @error('identidad') is-invalid @enderror"
-                  wire:model.defer="identidad" id="identidad" placeholder="Cédula / RUT">
+                  wire:model="identidad" id="identidad" placeholder="Cédula / RUT">
                 @error('identidad') <div class="invalid-feedback">{{ $message }}</div> @enderror
               </div>
               <div class="form-group col-md-4">
                 <label for="denominacion">Denominación</label>
                 <input type="text" class="form-control @error('denominacion') is-invalid @enderror"
-                  wire:model.defer="denominacion" id="denominacion" placeholder="Nombre / Razón social">
+                  wire:model="denominacion" id="denominacion" placeholder="Nombre / Razón social">
                 @error('denominacion') <div class="invalid-feedback">{{ $message }}</div> @enderror
               </div>
             </div>
@@ -265,7 +267,7 @@
               <div class="form-group mb-0 mt-2 mt-md-0">
                 <label for="rd_fecha" class="small text-uppercase font-weight-bold text-muted mb-1">Fecha *</label>
                 <input type="date" class="form-control @error('rd_fecha') is-invalid @enderror"
-                  wire:model.defer="rd_fecha" id="rd_fecha">
+                  wire:model="rd_fecha" id="rd_fecha">
                 @error('rd_fecha') <div class="invalid-feedback">{{ $message }}</div> @enderror
               </div>
             </div>
@@ -277,7 +279,7 @@
                   <div class="form-group">
                 <label for="rd_origen_concepto_id">Concepto origen *</label>
                 <select class="form-control @error('rd_origen_concepto_id') is-invalid @enderror"
-                  wire:model="rd_origen_concepto_id" id="rd_origen_concepto_id">
+                  wire:model.live="rd_origen_concepto_id" id="rd_origen_concepto_id">
                   <option value="">Seleccione...</option>
                   @foreach ($conceptos as $concepto)
                     <option value="{{ $concepto->id }}">{{ $concepto->nombre }}</option>
@@ -288,7 +290,7 @@
                   <div class="form-group mb-0">
                 <label for="rd_origen_detalle_id">Detalle origen *</label>
                 <select class="form-control @error('rd_origen_detalle_id') is-invalid @enderror"
-                  wire:model.defer="rd_origen_detalle_id" id="rd_origen_detalle_id" {{ !$rd_origen_concepto_id ? 'disabled' : '' }}>
+                  wire:model="rd_origen_detalle_id" id="rd_origen_detalle_id" {{ !$rd_origen_concepto_id ? 'disabled' : '' }}>
                   <option value="">Seleccione un concepto primero...</option>
                   @foreach ($rd_origen_detalles as $detalle)
                     <option value="{{ $detalle->id }}">{{ $detalle->nombre }}</option>
@@ -306,7 +308,7 @@
                   <div class="form-group">
                 <label for="rd_destino_concepto_id">Concepto destino *</label>
                 <select class="form-control @error('rd_destino_concepto_id') is-invalid @enderror"
-                  wire:model="rd_destino_concepto_id" id="rd_destino_concepto_id">
+                  wire:model.live="rd_destino_concepto_id" id="rd_destino_concepto_id">
                   <option value="">Seleccione...</option>
                   @foreach ($conceptos as $concepto)
                     <option value="{{ $concepto->id }}">{{ $concepto->nombre }}</option>
@@ -317,7 +319,7 @@
                   <div class="form-group mb-0">
                 <label for="rd_destino_detalle_id">Detalle destino *</label>
                 <select class="form-control @error('rd_destino_detalle_id') is-invalid @enderror"
-                  wire:model.defer="rd_destino_detalle_id" id="rd_destino_detalle_id" {{ !$rd_destino_concepto_id ? 'disabled' : '' }}>
+                  wire:model="rd_destino_detalle_id" id="rd_destino_detalle_id" {{ !$rd_destino_concepto_id ? 'disabled' : '' }}>
                   <option value="">Seleccione un concepto primero...</option>
                   @foreach ($rd_destino_detalles as $detalle)
                     <option value="{{ $detalle->id }}">{{ $detalle->nombre }}</option>
@@ -331,8 +333,8 @@
             <div class="row mt-3">
               <div class="col-lg-5">
                 <div class="bg-white border rounded shadow-sm p-3 h-100">
-                  <div class="form-group mb-3"><label for="rd_monto" class="small text-uppercase font-weight-bold text-muted">Importe a redistribuir *</label><input type="number" step="0.01" min="0.01" class="form-control @error('rd_monto') is-invalid @enderror" wire:model.defer="rd_monto" id="rd_monto" placeholder="0.00">@error('rd_monto') <div class="invalid-feedback">{{ $message }}</div> @enderror</div>
-                  <div class="form-group mb-0"><label for="rd_medio_id">Medio de pago *</label><select class="form-control @error('rd_medio_id') is-invalid @enderror" wire:model.defer="rd_medio_id" id="rd_medio_id"><option value="">Seleccione...</option>@foreach ($medios as $medio)<option value="{{ $medio->id }}">{{ $medio->nombre }}</option>@endforeach</select>@error('rd_medio_id') <div class="invalid-feedback">{{ $message }}</div> @enderror</div>
+                  <div class="form-group mb-3"><label for="rd_monto" class="small text-uppercase font-weight-bold text-muted">Importe a redistribuir *</label><input type="number" step="0.01" min="0.01" class="form-control @error('rd_monto') is-invalid @enderror" wire:model="rd_monto" id="rd_monto" placeholder="0.00">@error('rd_monto') <div class="invalid-feedback">{{ $message }}</div> @enderror</div>
+                  <div class="form-group mb-0"><label for="rd_medio_id">Medio de pago *</label><select class="form-control @error('rd_medio_id') is-invalid @enderror" wire:model="rd_medio_id" id="rd_medio_id"><option value="">Seleccione...</option>@foreach ($medios as $medio)<option value="{{ $medio->id }}">{{ $medio->nombre }}</option>@endforeach</select>@error('rd_medio_id') <div class="invalid-feedback">{{ $message }}</div> @enderror</div>
                 </div>
               </div>
               <div class="col-lg-7">
@@ -350,13 +352,13 @@
               <div class="form-group col-md-6 mb-md-0">
                 <label for="rd_destino_identidad">Identidad (destino)</label>
                 <input type="text" class="form-control @error('rd_destino_identidad') is-invalid @enderror"
-                  wire:model.defer="rd_destino_identidad" id="rd_destino_identidad" placeholder="Cédula / RUT">
+                  wire:model="rd_destino_identidad" id="rd_destino_identidad" placeholder="Cédula / RUT">
                 @error('rd_destino_identidad') <div class="invalid-feedback">{{ $message }}</div> @enderror
               </div>
               <div class="form-group col-md-6 mb-0">
                 <label for="rd_destino_denominacion">Denominación (destino)</label>
                 <input type="text" class="form-control @error('rd_destino_denominacion') is-invalid @enderror"
-                  wire:model.defer="rd_destino_denominacion" id="rd_destino_denominacion" placeholder="Nombre / Razón social">
+                  wire:model="rd_destino_denominacion" id="rd_destino_denominacion" placeholder="Nombre / Razón social">
                 @error('rd_destino_denominacion') <div class="invalid-feedback">{{ $message }}</div> @enderror
               </div>
               </div>
@@ -389,13 +391,13 @@
             <div class="form-group">
               <label for="edit_identidad">Identidad</label>
               <input type="text" class="form-control @error('edit_identidad') is-invalid @enderror"
-                wire:model.defer="edit_identidad" id="edit_identidad">
+                wire:model="edit_identidad" id="edit_identidad">
               @error('edit_identidad') <div class="invalid-feedback">{{ $message }}</div> @enderror
             </div>
             <div class="form-group">
               <label for="edit_denominacion">Denominación</label>
               <input type="text" class="form-control @error('edit_denominacion') is-invalid @enderror"
-                wire:model.defer="edit_denominacion" id="edit_denominacion">
+                wire:model="edit_denominacion" id="edit_denominacion">
               @error('edit_denominacion') <div class="invalid-feedback">{{ $message }}</div> @enderror
             </div>
           </form>
@@ -488,46 +490,56 @@
 
   @push('scripts')
     <script>
+      const getEventDataAsientos = (event) => Array.isArray(event.detail) ? event.detail[0] : event.detail;
+
       window.addEventListener('show-modal', event => {
-        $('#' + event.detail.id).modal('show');
+        const data = getEventDataAsientos(event);
+        const id = typeof data === 'string' ? data : (data.id || data);
+        $('#' + id).modal('show');
       });
 
       window.addEventListener('close-modal', event => {
-        $('#' + event.detail.id).modal('hide');
+        const data = getEventDataAsientos(event);
+        const id = typeof data === 'string' ? data : (data.id || data);
+        $('#' + id).modal('hide');
       });
 
       window.addEventListener('swal:confirm', event => {
+        const data = getEventDataAsientos(event);
         Swal.fire({
-          title: event.detail.title,
-          text: event.detail.text,
+          title: data.title,
+          text: data.text,
           icon: 'warning',
           showCancelButton: true,
           confirmButtonColor: '#3085d6',
           cancelButtonColor: '#d33',
-          confirmButtonText: event.detail.confirmButtonText,
+          confirmButtonText: data.confirmButtonText || 'Confirmar',
           cancelButtonText: 'Cancelar',
           focusConfirm: true
         }).then((result) => {
           if (result.isConfirmed) {
-            @this.call(event.detail.method, event.detail.id);
+            if (typeof Livewire !== 'undefined') {
+              Livewire.dispatch(data.method, { id: data.id });
+            }
           }
         });
       });
 
       window.addEventListener('alert', event => {
+        const data = getEventDataAsientos(event);
         Swal.fire({
           toast: true,
           position: 'top-end',
           showConfirmButton: false,
-          timer: 3000,
+          timer: 3500,
           timerProgressBar: true,
-          icon: event.detail.type,
-          title: event.detail.message,
+          icon: data.type || 'info',
+          title: data.message || '',
         });
       });
 
       window.addEventListener('swal:confirmar-eliminar-asiento-con-cfe', event => {
-        const data = event.detail;
+        const data = getEventDataAsientos(event);
         Swal.fire({
           title: '¿Está seguro?',
           html: `Este asiento está asociado al CFE <strong>${data.cfeTipo} ${data.cfeSerie}${data.cfeNumero}</strong> que también será eliminado. ¿Desea continuar?`,
@@ -539,7 +551,9 @@
           cancelButtonText: 'Cancelar'
         }).then((result) => {
           if (result.isConfirmed) {
-            @this.call('confirmarEliminarAsientoConCfe', data.asientoId);
+            if (typeof Livewire !== 'undefined') {
+              Livewire.dispatch('confirmarEliminarAsientoConCfe', { id: data.asientoId });
+            }
           }
         });
       });

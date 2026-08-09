@@ -22,14 +22,14 @@
                         <div class="input-group-prepend">
                             <span class="input-group-text"><i class="fas fa-search"></i></span>
                         </div>
-                        <input type="text" wire:model.debounce.400ms="search" class="form-control"
+                        <input type="text" wire:model.live.debounce.400ms="search" class="form-control"
                             placeholder="Buscar en descripción o datos...">
                     </div>
                 </div>
 
                 {{-- Filtro por evento --}}
                 <div class="col-md-2 mb-2">
-                    <select wire:model="event" class="form-control">
+                    <select wire:model.live="event" class="form-control">
                         <option value="">Todos los eventos</option>
                         <option value="created">Creado</option>
                         <option value="updated">Actualizado</option>
@@ -42,7 +42,7 @@
 
                 {{-- Filtro por tipo de registro --}}
                 <div class="col-md-2 mb-2">
-                    <select wire:model="subjectType" class="form-control">
+                    <select wire:model.live="subjectType" class="form-control">
                         <option value="">Todos los tipos</option>
                         @foreach($subjectTypes as $type)
                         <option value="{{ $type['value'] }}">{{ $type['label'] }}</option>
@@ -52,7 +52,7 @@
 
                 {{-- Filtro por usuario --}}
                 <div class="col-md-2 mb-2">
-                    <select wire:model="causerId" class="form-control">
+                    <select wire:model.live="causerId" class="form-control">
                         <option value="">Todos los usuarios</option>
                         @foreach($users as $user)
                         <option value="{{ $user['id'] }}">{{ $user['name'] }}</option>
@@ -62,7 +62,7 @@
 
                 {{-- Registros por página --}}
                 <div class="col-md-2 mb-2">
-                    <select wire:model="perPage" class="form-control">
+                    <select wire:model.live="perPage" class="form-control">
                         <option value="10">10 por página</option>
                         <option value="25">25 por página</option>
                         <option value="50">50 por página</option>
@@ -79,7 +79,7 @@
                         <div class="input-group-prepend">
                             <span class="input-group-text"><i class="fas fa-calendar"></i></span>
                         </div>
-                        <input type="date" wire:model="dateFrom" class="form-control" title="Desde">
+                        <input type="date" wire:model.live="dateFrom" class="form-control" title="Desde">
                     </div>
                 </div>
 
@@ -89,13 +89,13 @@
                         <div class="input-group-prepend">
                             <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
                         </div>
-                        <input type="date" wire:model="dateTo" class="form-control" title="Hasta">
+                        <input type="date" wire:model.live="dateTo" class="form-control" title="Hasta">
                     </div>
                 </div>
 
                 {{-- Filtro por módulo/log --}}
                 <div class="col-md-3 mb-2">
-                    <select wire:model="logName" class="form-control">
+                    <select wire:model.live="logName" class="form-control">
                         <option value="">Todos los módulos</option>
                         @foreach($logNames as $name)
                         <option value="{{ $name }}">{{ ucfirst($name) }}</option>

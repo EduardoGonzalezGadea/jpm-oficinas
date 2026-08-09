@@ -53,7 +53,7 @@
       <div class="row mb-2 align-items-center">
         <div class="col-md-5">
           <div class="input-group input-group-sm">
-            <input wire:model.debounce.800ms="search" type="text" class="form-control d-print-none" autofocus
+            <input wire:model.live.debounce.800ms="search" type="text" class="form-control d-print-none" autofocus
               placeholder="Buscar por código, grupo o descripción...">
             <div class="input-group-append d-print-none">
               <button class="btn btn-outline-danger" type="button" wire:click="$set('search', '')" title="Limpiar filtro">
@@ -71,18 +71,11 @@
           </span>
         </div>
         <div class="col-auto d-print-none">
-          <select wire:model="perPage" class="form-control form-control-sm">
+          <select wire:model.live="perPage" class="form-control form-control-sm">
             <option value="50">50</option>
             <option value="100">100</option>
             <option value="-1">Todos</option>
           </select>
-        </div>
-      </div>
-
-      <!-- Loader de Livewire -->
-      <div wire:loading wire:target="search, perPage, sortBy, delete" class="text-center py-4">
-        <div class="spinner-border text-primary" role="status" style="width: 2rem; height: 2rem;">
-          <span class="sr-only">Cargando...</span>
         </div>
       </div>
 
@@ -172,12 +165,12 @@
             <button type="button" class="close text-white" wire:click="closeModal()"><span>&times;</span></button>
           </div>
 
-          <form wire:submit.prevent="store">
+          <form wire:submit="store">
             <div class="modal-body py-3" style="overflow-y: auto; max-height: 70vh;">
               <div class="row">
                 <div class="col-md-8 form-group mb-2">
                   <label for="grupo" class="mb-1 small"><strong>Grupo de la Multa <span class="text-danger">*</span></strong></label>
-                  <input wire:model.defer="grupo" type="text" list="grupos-existentes" class="form-control form-control-sm @error('grupo') is-invalid @enderror" id="grupo" placeholder="Ej: Del uso de la vía pública">
+                  <input wire:model="grupo" type="text" list="grupos-existentes" class="form-control form-control-sm @error('grupo') is-invalid @enderror" id="grupo" placeholder="Ej: Del uso de la vía pública">
                   <datalist id="grupos-existentes">
                     @foreach($grupos as $g)
                       <option value="{{ $g }}">
@@ -187,21 +180,21 @@
                 </div>
                 <div class="col-md-4 form-group mb-2">
                   <label for="codigo" class="mb-1 small"><strong>Código <span class="text-danger">*</span></strong></label>
-                  <input wire:model.defer="codigo" type="text" class="form-control form-control-sm @error('codigo') is-invalid @enderror" id="codigo" placeholder="Ej: 2.2">
+                  <input wire:model="codigo" type="text" class="form-control form-control-sm @error('codigo') is-invalid @enderror" id="codigo" placeholder="Ej: 2.2">
                   @error('codigo')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
               </div>
 
               <div class="form-group mb-2">
                 <label for="descripcion" class="mb-1 small"><strong>Descripción <span class="text-danger">*</span></strong></label>
-                <textarea wire:model.defer="descripcion" class="form-control form-control-sm @error('descripcion') is-invalid @enderror" id="descripcion" rows="3" placeholder="Descripción detallada de la infracción"></textarea>
+                <textarea wire:model="descripcion" class="form-control form-control-sm @error('descripcion') is-invalid @enderror" id="descripcion" rows="3" placeholder="Descripción detallada de la infracción"></textarea>
                 @error('descripcion')<div class="invalid-feedback">{{ $message }}</div>@enderror
               </div>
 
               <div class="row">
                 <div class="col-md-6 form-group mb-2">
                   <label for="valor_ur" class="mb-1 small"><strong>Valor en UR <span class="text-danger">*</span></strong></label>
-                  <input wire:model.defer="valor_ur" type="text" class="form-control form-control-sm @error('valor_ur') is-invalid @enderror" id="valor_ur" placeholder="Ej: 3 o 2 x c/u">
+                  <input wire:model="valor_ur" type="text" class="form-control form-control-sm @error('valor_ur') is-invalid @enderror" id="valor_ur" placeholder="Ej: 3 o 2 x c/u">
                   <small class="text-muted d-block mt-1" style="font-size: 0.75rem;">Permite texto libre para casos especiales (ej: "2 x c/u", "Ver Cuadro 1").</small>
                   @error('valor_ur')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>

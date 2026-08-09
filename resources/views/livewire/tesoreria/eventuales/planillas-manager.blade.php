@@ -2,8 +2,9 @@
   <div class="card mt-4">
     <div class="card-header bg-info text-white card-header-gradient py-2 px-3 d-flex justify-content-between align-items-center">
       <h3 class="mb-0">Gestión de Planillas</h3>
-      <button type="button" class="btn btn-primary" wire:click="createPlanilla"
-          @if($eventualesDisponiblesCount == 0) disabled @endif>
+      <button type="button" class="btn btn-primary"
+          @if($eventualesDisponiblesCount == 0) disabled @endif
+onclick="event.preventDefault(); window.dispatchEvent(new CustomEvent('swal:confirm-with-input', { detail: { title: '¿Con qué fecha crear la planilla?', text: 'Seleccione la fecha para la nueva planilla de eventuales.', input: 'date', inputValue: '{{ date('Y-m-d') }}', method: 'createPlanilla', componentId: '{{ $this->getId() }}', confirmButtonText: 'Crear' } }))">
         Crear Nueva Planilla ({{ $eventualesDisponiblesCount }} eventuales disponibles)
       </button>
     </div>
@@ -43,36 +44,34 @@
       @endif
     </div>
   </div>
-
-  @push('scripts')
-  <script>
-    window.addEventListener('openNewTab', event => {
-      window.open(event.detail.url, '_blank');
-    });
-
-    window.addEventListener('swal:confirm', event => {
-      console.log('swal:confirm event received', event.detail); // Log the entire detail object
-      Swal.fire({
-        title: event.detail.title,
-        text: event.detail.text,
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#3085d6',
-        cancelButtonColor: '#d33',
-        confirmButtonText: event.detail.confirmButtonText,
-        cancelButtonText: 'Cancelar',
-        focusConfirm: true
-      }).then((result) => {
-        console.log('Swal result:', result); // Log the result object
-        if (result.isConfirmed) {
-          console.log('User confirmed. Method:', event.detail.method); // Log the method
-          if (event.detail.method === 'deletePlanilla') {
-            console.log('Calling deletePlanilla with ID:', event.detail.id);
-            @this.call('deletePlanilla', event.detail.id);
-          }
-        }
-      });
-    });
-  </script>
-  @endpush
 </div>
+
+@push('scripts')
+<script>
+  window.addEventListener('openNewTab', event => {
+    const d = window.LiveEvent(event);
+    window.open(d.url, '_blank');
+  });
+
+  window.addEventListener('swal:confirm', event => {
+    const d = window.LiveEvent(event);
+    Swal.fire({
+      title: d.title,
+      text: d.text,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: d.confirmButtonText,
+      cancelButtonText: 'Cancelar',
+      focusConfirm: true
+    }).then((result) => {
+      if (result.isConfirmed) {
+        if (d.method === 'deletePlanilla') {
+          @this.call('deletePlanilla', d.id);
+        }
+      }
+    });
+  });
+</script>
+@endpush

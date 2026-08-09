@@ -30,14 +30,14 @@
 
         <div class="card-body px-2 pt-1">
             {{-- Barra de filtros --}}
-            <div class="d-flex mb-2 align-items-center">
-                <div class="flex-grow-1 mr-2" style="min-width: 200px;">
-                    <div class="input-group">
+            <div class="d-flex mb-2 align-items-center flex-wrap" style="gap:6px;">
+                <div class="flex-grow-1" style="min-width:200px;">
+                    <div class="input-group input-group-sm">
                         <div class="input-group-prepend">
                             <span class="input-group-text"><i class="fas fa-search"></i></span>
                         </div>
-                        <input type="text" wire:model.debounce.300ms="search" class="form-control"
-                            placeholder="Buscar por planilla o N° documento CFE...">
+                        <input type="text" wire:model.live.debounce.300ms="search" class="form-control"
+                            placeholder="Planilla, ER, Egresos, Ingresos o CFE...">
                         <div class="input-group-append">
                             <button class="btn btn-outline-dark" wire:click="resetearBusqueda" title="Resetear búsqueda">
                                 <i class="fas fa-undo"></i>
@@ -45,11 +45,18 @@
                         </div>
                     </div>
                 </div>
-                <div class="dropdown mr-2" style="width: 200px;" id="dropdownMesesWrapper" wire:ignore.self>
-                    <button class="btn btn-white border form-control dropdown-toggle text-left d-flex justify-content-between align-items-center" type="button" id="dropdownMeses" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                        <span class="text-truncate">
+                <div>
+                    <select wire:model.live="filtroTurno" class="form-control form-control-sm" style="width:130px;">
+                        <option value="">Todos los turnos</option>
+                        <option value="diurno">Diurno</option>
+                        <option value="nocturno">Nocturno</option>
+                    </select>
+                </div>
+                <div class="dropdown" id="dropdownMesesWrapper" wire:ignore.self>
+                    <button class="btn btn-sm btn-white border dropdown-toggle text-left d-flex justify-content-between align-items-center" type="button" style="min-width:130px;" id="dropdownMeses" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <span class="text-truncate small">
                             @if(empty($filtroMeses))
-                                — Todos los meses —
+                                Todos los meses
                             @else
                                 {{ count($filtroMeses) }} {{ count($filtroMeses) === 1 ? 'mes' : 'meses' }}
                             @endif
@@ -71,20 +78,18 @@
                         @endphp
                         @foreach($mesesNombres as $num => $nombre)
                             <div class="custom-control custom-checkbox mb-2">
-                                <input type="checkbox" id="mes_{{ $num }}" value="{{ $num }}" wire:model="filtroMeses" class="custom-control-input">
+                                <input type="checkbox" id="mes_{{ $num }}" value="{{ $num }}" wire:model.live="filtroMeses" class="custom-control-input">
                                 <label for="mes_{{ $num }}" class="custom-control-label small cursor-pointer w-100">{{ $nombre }}</label>
                             </div>
                         @endforeach
                     </div>
                 </div>
-                <div class="mr-2" style="width: 170px;">
-                    <select wire:model="filtroAno" class="form-control">
-                        <option value="0">— Todos los años —</option>
-                        @foreach($anosRegistrados as $ano)
-                            <option value="{{ $ano }}">{{ $ano }}</option>
-                        @endforeach
-                    </select>
-                </div>
+                <select wire:model.live="filtroAno" class="form-control form-control-sm" style="width:100px;">
+                    <option value="0">Todos</option>
+                    @foreach($anosRegistrados as $ano)
+                        <option value="{{ $ano }}">{{ $ano }}</option>
+                    @endforeach
+                </select>
             </div>
 
             <div class="table-responsive">
@@ -198,7 +203,7 @@
                             );
                         }
                     @endphp
-                    <div class="mb-2 d-flex justify-content-between align-items-center">
+                    <div class="mb-2 d-flex justify-content-between align-items-center d-print-none">
                         <div class="btn-group btn-group-sm" role="group">
                             <button class="btn {{ $modoAgrupacionDetalles === 'distribucion' ? 'btn-primary' : 'btn-outline-primary' }}" wire:click="$set('modoAgrupacionDetalles', 'distribucion')">
                                 <i class="fas fa-layer-group mr-1"></i>Distribución SIIF
@@ -583,9 +588,9 @@
         ventana.document.write('.px-3{padding-left:12px;padding-right:12px}');
         ventana.document.write('.d-print-none,.modal-footer,.close,.custom-control{display:none!important}');
         ventana.document.write('@media print{body{padding:0}}');
-        ventana.document.write('</style></head><body>');
+        ventana.document.write('<\/style><\/head><body>');
         ventana.document.write(wrapper.innerHTML);
-        ventana.document.write('</body></html>');
+        ventana.document.write('<\/body><\/html>');
         ventana.document.close();
         ventana.focus();
         setTimeout(function() { ventana.print(); ventana.close(); }, 500);
@@ -639,15 +644,15 @@
         ventana.document.write('tbody{page-break-inside:avoid}');
         ventana.document.write('.d-print-none,.modal-footer,.close{display:none!important}');
         ventana.document.write('@media print{body{padding:0}}');
-        ventana.document.write('</style></head><body>');
+        ventana.document.write('<\/style><\/head><body>');
         ventana.document.write(wrapper.innerHTML);
-        ventana.document.write('</body></html>');
+        ventana.document.write('<\/body><\/html>');
         ventana.document.close();
         ventana.focus();
         setTimeout(function() { ventana.print(); ventana.close(); }, 500);
     }
 
-    document.addEventListener('livewire:load', function () {
+    document.addEventListener('livewire:init', function () {
         window.addEventListener('abrir-modal-detalles', () => {
             $('#modalDetallesPlanilla').modal('show');
         });

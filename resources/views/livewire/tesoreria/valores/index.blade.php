@@ -26,11 +26,11 @@
       <div class="d-flex mb-1">
         <!-- Buscador (Menos espacio) -->
         <div class="mr-1" style="flex: 1;">
-          <input type="text" wire:model.debounce.300ms="search" class="form-control" placeholder="Buscar serie o n°...">
+          <input type="text" wire:model.live.debounce.300ms="search" class="form-control" placeholder="Buscar serie o n°...">
         </div>
         <!-- Tipo de Libreta (Más espacio) -->
         <div class="mr-1" style="flex: 2;">
-          <select wire:model="selectedTipo" class="form-control">
+          <select wire:model.live="selectedTipo" class="form-control">
             <option value="">Todos los tipos</option>
             @foreach($tiposLibreta as $tipo)
             <option value="{{ $tipo->id }}">{{ $tipo->nombre }}</option>
@@ -39,7 +39,7 @@
         </div>
         <!-- Estado -->
         <div class="mr-1" style="flex: 1;">
-          <select wire:model="estado" class="form-control">
+          <select wire:model.live="estado" class="form-control">
             <option value="">Todos los estados</option>
             <option value="en_stock">En Stock</option>
             <option value="asignada">Asignada</option>
@@ -49,7 +49,7 @@
         <!-- Año y Limpieza (Integrados) -->
         <div class="input-group" style="width: {{ $estado !== 'en_stock' ? '140px' : '38px' }};">
           @if($estado !== 'en_stock')
-          <select wire:model="year" class="form-control">
+          <select wire:model.live="year" class="form-control">
             @foreach($years as $y)
             <option value="{{ $y }}">{{ $y }}</option>
             @endforeach
@@ -132,7 +132,7 @@
         <div class="modal-body">
           <div class="form-group">
             <label for="tipo_libreta_id">Tipo de Libreta</label>
-            <select wire:model="tipo_libreta_id" id="tipo_libreta_id" class="form-control @error('tipo_libreta_id') is-invalid @enderror" autofocus>
+            <select wire:model.live="tipo_libreta_id" id="tipo_libreta_id" class="form-control @error('tipo_libreta_id') is-invalid @enderror" autofocus>
               <option value="">Seleccione un tipo...</option>
               @foreach($tiposLibreta as $tipo)
               <option value="{{ $tipo->id }}">{{ $tipo->nombre }} ({{ $tipo->cantidad_recibos }} recibos)</option>
@@ -144,14 +144,14 @@
             <div class="col-md-6">
               <div class="form-group">
                 <label for="serie">Serie (opcional)</label>
-                <input type="text" wire:model.defer="serie" id="serie" class="form-control @error('serie') is-invalid @enderror">
+                <input type="text" wire:model="serie" id="serie" class="form-control @error('serie') is-invalid @enderror">
                 @error('serie') <span class="invalid-feedback">{{ $message }}</span> @enderror
               </div>
             </div>
             <div class="col-md-6">
               <div class="form-group">
                 <label for="fecha_recepcion">Fecha de Recepción</label>
-                <input type="date" wire:model.defer="fecha_recepcion" id="fecha_recepcion" class="form-control @error('fecha_recepcion') is-invalid @enderror">
+                <input type="date" wire:model="fecha_recepcion" id="fecha_recepcion" class="form-control @error('fecha_recepcion') is-invalid @enderror">
                 @error('fecha_recepcion') <span class="invalid-feedback">{{ $message }}</span> @enderror
               </div>
             </div>
@@ -160,14 +160,14 @@
             <div class="col-md-6">
               <div class="form-group">
                 <label for="numero_inicial">N° Recibo Inicial</label>
-                <input type="number" wire:model="numero_inicial" id="numero_inicial" class="form-control @error('numero_inicial') is-invalid @enderror">
+                <input type="number" wire:model.live="numero_inicial" id="numero_inicial" class="form-control @error('numero_inicial') is-invalid @enderror">
                 @error('numero_inicial') <span class="invalid-feedback">{{ $message }}</span> @enderror
               </div>
             </div>
             <div class="col-md-6">
               <div class="form-group">
                 <label for="cantidad_libretas">Cantidad de Libretas</label>
-                <input type="number" wire:model="cantidad_libretas" id="cantidad_libretas" class="form-control @error('cantidad_libretas') is-invalid @enderror">
+                <input type="number" wire:model.live="cantidad_libretas" id="cantidad_libretas" class="form-control @error('cantidad_libretas') is-invalid @enderror">
                 @error('cantidad_libretas') <span class="invalid-feedback">{{ $message }}</span> @enderror
               </div>
             </div>
@@ -208,7 +208,7 @@
           @endif
           <div class="form-group">
             <label for="servicio_entrega_id">Servicio de Asignación</label>
-            <select wire:model.defer="servicio_entrega_id" id="servicio_entrega_id" class="form-control @error('servicio_entrega_id') is-invalid @enderror" autofocus>
+            <select wire:model="servicio_entrega_id" id="servicio_entrega_id" class="form-control @error('servicio_entrega_id') is-invalid @enderror" autofocus>
               <option value="">Seleccione un servicio...</option>
               @foreach($servicios as $servicio)
               <option value="{{ $servicio->id }}">{{ $servicio->nombre }}</option>
@@ -220,21 +220,21 @@
             <div class="col-md-6">
               <div class="form-group">
                 <label for="numero_recibo_entrega">N° Recibo de Entrega</label>
-                <input type="text" wire:model.defer="numero_recibo_entrega" id="numero_recibo_entrega" class="form-control @error('numero_recibo_entrega') is-invalid @enderror" placeholder="Ingrese el número de recibo">
+                <input type="text" wire:model="numero_recibo_entrega" id="numero_recibo_entrega" class="form-control @error('numero_recibo_entrega') is-invalid @enderror" placeholder="Ingrese el número de recibo">
                 @error('numero_recibo_entrega') <span class="invalid-feedback">{{ $message }}</span> @enderror
               </div>
             </div>
             <div class="col-md-6">
               <div class="form-group">
                 <label for="fecha_entrega">Fecha de Entrega</label>
-                <input type="date" wire:model.defer="fecha_entrega" id="fecha_entrega" class="form-control @error('fecha_entrega') is-invalid @enderror">
+                <input type="date" wire:model="fecha_entrega" id="fecha_entrega" class="form-control @error('fecha_entrega') is-invalid @enderror">
                 @error('fecha_entrega') <span class="invalid-feedback">{{ $message }}</span> @enderror
               </div>
             </div>
           </div>
           <div class="form-group">
             <label for="observaciones_entrega">Observaciones (opcional)</label>
-            <textarea wire:model.defer="observaciones_entrega" id="observaciones_entrega" class="form-control @error('observaciones_entrega') is-invalid @enderror" rows="3" placeholder="Observaciones adicionales..."></textarea>
+            <textarea wire:model="observaciones_entrega" id="observaciones_entrega" class="form-control @error('observaciones_entrega') is-invalid @enderror" rows="3" placeholder="Observaciones adicionales..."></textarea>
             @error('observaciones_entrega') <span class="invalid-feedback">{{ $message }}</span> @enderror
           </div>
         </div>
@@ -253,7 +253,7 @@
 
   @push('scripts')
   <script>
-    document.addEventListener('livewire:load', function() {
+    document.addEventListener('livewire:init', function() {
       const modalId = 'modalIngresoLibreta';
       const modalEntregaId = 'modalEntregaLibreta';
 

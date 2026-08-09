@@ -4,6 +4,8 @@ namespace Tests\Unit\Services;
 
 use App\Services\ValorUrService;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Cache;
+use Mockery;
 use Tests\TestCase;
 
 class ValorUrServiceTest extends TestCase
@@ -71,5 +73,59 @@ class ValorUrServiceTest extends TestCase
 
         $this->assertSame('Mayo', $parseado['mesUr']);
         $this->assertFalse($this->service->esMesVigente($parseado['mesUr']));
+    }
+
+    public function test_descarga_de_mes_no_vigente_renueva_ultimo_valor_conocido(): void
+    {
+        Carbon::setTestNow(Carbon::create(2026, 8, 1, 12, 0, 0, 'America/Montevideo'));
+        Cache::flush();
+
+        $service = Mockery::mock(ValorUrService::class)->makePartial();
+        $service->shouldReceive('fetchFromBps')->andReturn([
+            'valorUr' => '$ 1.922,68',
+            'mesUr' => 'Julio',
+        ]);
+
+        $resultado = $service->obtener();
+
+        $this->assertSame('$ 1.922,68', $resultado['valorUr']);
+        $this->assertSame('Julio', $resultado['mesUr']);
+        $this->assertTrue($resultado['vencido']);
+        $this->assertSame('bps', $resultado['fuente']);
+
+        $ultimo = Cache::get('valor_ur_ultimo_valido');
+        $this->assertSame('$ 1.922,68', $ultimo['valorUr']);
+
+        // Si una descarga posterior falla, el fallback debe usar Julio (el último descargado)
+        Cache::forget('valor_ur_completo');
+
+        $service2 = Mockery::mock(ValorUrService::class)->makePartial();
+        $service2->shouldReceive('fetchFromBps')->andReturn(null);
+
+        $fallback = $service2->obtener();
+
+        $this->assertSame('$ 1.922,68', $fallback['valorUr']);
+        $this->assertSame('ultimo_valido', $fallback['fuente']);
+    }
+
+    public function test_devuelve_valor_cacheado_aunque_este_vencido(): void
+    {
+        Carbon::setTestNow(Carbon::create(2026, 8, 1, 12, 0, 0, 'America/Montevideo'));
+        Cache::flush();
+
+        Cache::put('valor_ur_completo', [
+            'valorUr' => '$ 1.922,68',
+            'mesUr' => 'Julio',
+            'vencido' => true,
+            'fuente' => 'bps',
+        ], now()->addMinutes(240));
+
+        $service = Mockery::mock(ValorUrService::class)->makePartial();
+        $service->shouldReceive('fetchFromBps')->never();
+
+        $resultado = $service->obtener();
+
+        $this->assertSame('$ 1.922,68', $resultado['valorUr']);
+        $this->assertTrue($resultado['vencido']);
     }
 }

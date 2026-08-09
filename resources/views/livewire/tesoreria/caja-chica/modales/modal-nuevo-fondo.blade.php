@@ -4,7 +4,7 @@
     style="background-color: rgba(0,0,0,0.5);" aria-modal="true">
     <div class="modal-dialog" role="document">
       <div class="modal-content">
-        <form wire:submit.prevent="guardar">
+        <form wire:submit="guardar">
           <div class="modal-header bg-warning text-white">
             <h5 class="modal-title">
               <i class="fas fa-comment-dollar"></i>
@@ -30,7 +30,7 @@
             @endif
             <div class="form-group"><label for="fondoMes">Mes:</label>
               <select class="form-control @error('mes') is-invalid @enderror" id="fondoMes"
-                wire:model.defer="mes" required>
+                wire:model="mes" required>
                 <option value="">Seleccionar Mes...</option>
                 <option value="enero">Enero</option>
                 <option value="febrero">Febrero</option>
@@ -51,14 +51,14 @@
             </div>
             <div class="form-group"><label for="fondoAnio">Año:</label><input type="number"
                 class="form-control @error('anio') is-invalid @enderror" id="fondoAnio"
-                wire:model.defer="anio" required min="2000" max="2100">
+                wire:model="anio" required min="2000" max="2100">
               @error('anio')
               <div class="invalid-feedback">{{ $message }}</div>
               @enderror
             </div>
             <div class="form-group"><label for="fondoMonto">Monto:</label><input type="text"
                 class="form-control @error('monto') is-invalid @enderror" id="fondoMonto"
-                wire:model.lazy="monto" required x-data
+                wire:model.blur="monto" required x-data
                 x-init="setTimeout(() => $el.focus(), 0)"
                 x-on:input="$event.target.value = $event.target.value.replace(/[^0-9,]/g, '').replace(/(,.*?),/g, '$1')"
                 placeholder="Ejemplo: 1.234,56">
