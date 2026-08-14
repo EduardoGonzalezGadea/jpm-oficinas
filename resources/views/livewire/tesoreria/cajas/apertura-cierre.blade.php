@@ -1,37 +1,5 @@
-<div class="caja-diaria-view">
-  <style>
-    .caja-diaria-view > .row {
-      margin-left: -0.25rem !important;
-      margin-right: -0.25rem !important;
-    }
-    .caja-diaria-view .card {
-      margin-bottom: 0.5rem !important;
-    }
-    .caja-diaria-view .card-header {
-      padding: 0.35rem 0.75rem !important;
-    }
-    .caja-diaria-view .card-body {
-      padding: 0.4rem 0.75rem !important;
-    }
-    .caja-diaria-view .table td,
-    .caja-diaria-view .table th {
-      padding: 0.3rem 0.5rem !important;
-    }
-    .caja-diaria-view .alert {
-      padding: 0.4rem 0.75rem !important;
-      margin-bottom: 0.5rem !important;
-    }
-    .caja-diaria-view .form-group {
-      margin-bottom: 0.5rem !important;
-    }
-    .caja-diaria-view .list-group-item {
-      padding: 0.35rem 0.75rem !important;
-    }
-    /* Separador grueso primary entre billetes y monedas */
-    .caja-diaria-view .fila-separador-monedas > td {
-      border-top: 4px solid #007bff !important;
-    }
-  </style>
+<div>
+  
 
   {{-- Barra de título --}}
   <div class="card shadow-sm mb-2">
@@ -39,7 +7,7 @@
       <h5 class="mb-0 text-premium-header">
         <i class="fas fa-arrows-alt-h mr-2"></i>Apertura / Cierre de Caja
       </h5>
-      <a href="{{ route('tesoreria.caja-diaria.index') }}" class="btn btn-light btn-sm py-0 px-2" wire:navigate>
+      <a href="{{ route('tesoreria.caja-diaria.index') }}" class="btn btn-light btn-sm py-0 px-2">
         <i class="fas fa-arrow-left mr-1"></i> Volver a la Caja Diaria
       </a>
     </div>
@@ -221,7 +189,7 @@
                   S @money($cajaAbierta->totalEgresosOtros())
                 </small>
               </li>
-              <li class="list-group-item d-flex justify-content-between align-items-center py-2 bg-light">
+              <li class="list-group-item d-flex justify-content-between align-items-center py-2">
                 <span class="font-weight-bold"><i class="fas fa-coins mr-2"></i>Saldo Final Esperado (Libro Diario)</span>
                 <strong class="h6 mb-0">@money($saldo_esperado_ld)</strong>
               </li>

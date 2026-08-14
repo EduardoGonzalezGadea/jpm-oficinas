@@ -20,6 +20,8 @@ trait WithConfirmacionCarga
     public array $datosExtraidos = [];
     public string $nombreArchivoOriginal = '';
     public string $rutaArchivoTemporal = '';
+    public $confirmacionInstitucionSeleccionada = null;
+    public bool $confirmacionConceptoRequiereInstitucion = false;
 
     public function updatedArchivoPdf(): void
     {
@@ -40,6 +42,14 @@ trait WithConfirmacionCarga
 
             $this->cajaConceptoSeleccionado = $this->detectarConceptoAutomatico($datos);
 
+            // Establecer si el concepto requiere institución
+            if ($this->cajaConceptoSeleccionado) {
+                $concepto = CajaConcepto::find($this->cajaConceptoSeleccionado);
+                $this->confirmacionConceptoRequiereInstitucion = $concepto ? $concepto->requiere_institucion : false;
+            } else {
+                $this->confirmacionConceptoRequiereInstitucion = false;
+            }
+
             $this->resetItemDistribuciones();
 
             if ($this->cajaConceptoSeleccionado && $this->siifDependenciaSeleccionado) {
@@ -49,7 +59,7 @@ trait WithConfirmacionCarga
             $this->mostrarModalConfirmacion = true;
             $this->dispatch('abrir-modal-confirmacion-cfe');
 
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $this->dispatch('swal:modal', type: 'error', title: 'Error al procesar', text: 'Hubo un problema procesando el archivo: ' . $e->getMessage());
         }
 
@@ -96,6 +106,13 @@ trait WithConfirmacionCarga
 
     public function updatedCajaConceptoSeleccionado($value): void
     {
+        $concepto = CajaConcepto::find($value);
+        $this->confirmacionConceptoRequiereInstitucion = $concepto ? $concepto->requiere_institucion : false;
+
+        if (!$this->confirmacionConceptoRequiereInstitucion) {
+            $this->confirmacionInstitucionSeleccionada = null;
+        }
+
         $this->resetItemDistribuciones();
 
         if (!empty($value) && !empty($this->siifDependenciaSeleccionado)) {
@@ -138,6 +155,8 @@ trait WithConfirmacionCarga
     #[On('confirmarCarga')]
     public function confirmarCarga($ignorarAdvertencias = false): void
     {
+        $force = (bool) $ignorarAdvertencias;
+
         if (empty($this->cajaConceptoSeleccionado)) {
             $this->dispatch('swal:toast-error', text: 'Debe seleccionar un concepto de caja antes de confirmar.');
             return;
@@ -150,6 +169,18 @@ trait WithConfirmacionCarga
 
         $cajaConcepto = CajaConcepto::find($this->cajaConceptoSeleccionado);
         $requiereDistribucion = $cajaConcepto ? $cajaConcepto->requiere_distribucion : false;
+        $requiereInstitucion = $cajaConcepto ? $cajaConcepto->requiere_institucion : false;
+
+        if ($requiereInstitucion && empty($this->confirmacionInstitucionSeleccionada)) {
+            $this->dispatch('swal:toast-error', text: 'El concepto de caja seleccionado requiere seleccionar una institución.');
+            return;
+        }
+
+        if ($requiereInstitucion) {
+            $rules['confirmacionInstitucionSeleccionada'] = 'required|integer|exists:tes_eventuales_instituciones,id';
+        } else {
+            $rules['confirmacionInstitucionSeleccionada'] = 'nullable|integer|exists:tes_eventuales_instituciones,id';
+        }
 
         if ($requiereDistribucion) {
             $hasMissingDistribution = false;
@@ -177,6 +208,8 @@ trait WithConfirmacionCarga
             'cajaConceptoSeleccionado.min' => 'Debe seleccionar un concepto de caja válido.',
             'cajaConceptoSeleccionado.exists' => 'El concepto de caja seleccionado no existe.',
             'siifDependenciaSeleccionado.exists' => 'La dependencia de distribución SIIF seleccionada no existe.',
+            'confirmacionInstitucionSeleccionada.required' => 'Debe seleccionar una institución.',
+            'confirmacionInstitucionSeleccionada.exists' => 'La institución seleccionada no existe.',
             'itemDistribuciones.*.required' => 'Debe seleccionar una distribución para todos los ítems.',
             'itemDistribuciones.*.exists' => 'La distribución SIIF seleccionada no existe.',
         ]);
@@ -255,6 +288,7 @@ trait WithConfirmacionCarga
                 receptor_documento_ruc: $this->datosExtraidos['receptor_documento_ruc'] ?? null,
                 tes_caja_concepto_id: $this->cajaConceptoSeleccionado,
                 siif_distribucion_dependencia_id: $this->siifDependenciaSeleccionado,
+                institucion_id: $this->confirmacionInstitucionSeleccionada,
                 items: $this->datosExtraidos['items'] ?? [],
                 medios_pago: $this->datosExtraidos['medios_pago'] ?? [],
                 item_distribuciones: $this->itemDistribuciones,
@@ -286,7 +320,7 @@ trait WithConfirmacionCarga
 
         } catch (CfeDuplicateException | CfeValidationException | \InvalidArgumentException $e) {
             $this->dispatch('swal:toast-error', text: $e->getMessage());
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $this->dispatch('swal:modal', type: 'error', title: 'Error al guardar', text: 'Hubo un problema guardando el CFE: ' . $e->getMessage());
         }
     }
@@ -301,6 +335,8 @@ trait WithConfirmacionCarga
         $this->cajaConceptoSeleccionado = null;
         $this->siifDependenciaSeleccionado = 1;
         $this->itemDistribuciones = [];
+        $this->confirmacionInstitucionSeleccionada = null;
+        $this->confirmacionConceptoRequiereInstitucion = false;
         $this->dispatch('cerrar-modal-confirmacion-cfe');
     }
 

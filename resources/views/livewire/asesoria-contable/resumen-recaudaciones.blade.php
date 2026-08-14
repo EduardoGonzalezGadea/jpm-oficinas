@@ -31,10 +31,17 @@
   </style>
 
   <div class="card">
-    <div class="card-header bg-info text-white p-2">
-      <h4 class="card-title px-1 m-0">
-        <strong><i class="fas fa-chart-pie mr-2"></i>Resumen de Recaudaciones</strong>
-      </h4>
+    <div class="card-header card-header-section card-header-gradient py-2 px-3">
+      <div class="d-flex justify-content-between align-items-center w-100">
+        <h4 class="mb-0 text-premium-header">
+          <i class="fas fa-chart-pie mr-2"></i>Resumen de Recaudaciones
+        </h4>
+        <div class="d-flex align-items-center">
+          <button type="button" class="btn btn-light btn-sm" onclick="imprimirResumenRecaudaciones()" title="Imprimir">
+            <i class="fas fa-print mr-1"></i> Imprimir
+          </button>
+        </div>
+      </div>
     </div>
     <div class="card-body">
       <div class="form-row align-items-end mb-3">
@@ -110,11 +117,7 @@
             @endforeach
           </select>
         </div>
-        <div class="col-6 col-md-2 col-lg-auto mb-2 mb-lg-0">
-          <button class="btn btn-primary btn-sm btn-block" onclick="imprimirResumenRecaudaciones()">
-            <i class="fas fa-print mr-1"></i> Imprimir
-          </button>
-        </div>
+
       </div>
 
       @php
@@ -164,23 +167,34 @@
                            <table class="table table-sm table-bordered mt-3 mb-2">
                             <thead>
                                <tr>
-                                 <th colspan="5" class="text-center py-1 font-weight-bold text-break">
+                                 <th colspan="{{ $mostrarColumnaConf ? 7 : 6 }}" class="text-center py-1 font-weight-bold text-break">
                                    {{ $distribucion['distribucion'] }}
                                  </th>
                                </tr>
                               <tr class="thead-light">
                                 <th class="align-middle">Recibo</th>
+                                <th class="align-middle">Receptor</th>
                                 <th class="text-right align-middle">Efectivo</th>
                                 <th class="text-right align-middle">Cheque</th>
                                 <th class="text-right align-middle">Transferencia</th>
                                 <th class="text-right align-middle">POS</th>
+                                @if($mostrarColumnaConf)
+                                  <th class="text-center align-middle">CONF.</th>
+                                @endif
                               </tr>
                             </thead>
                             <tbody>
                               @foreach($distribucion['items'] as $rowData)
+                                @php $cfeConfirmado = $rowData['cfe']->items->every(fn($i) => $i->confirmado); @endphp
                                 <tr>
                                   <td class="align-middle small">
                                     {{ $rowData['cfe']->documento_tipo }} {{ $rowData['cfe']->documento_serie }}-{{ $rowData['cfe']->documento_numero }}
+                                  </td>
+                                  <td class="align-middle small">
+                                    {{ $rowData['cfe']->receptor_nombre_denominacion ?? '—' }}
+                                    @if(!empty($rowData['cfe']->receptor_documento_ruc))
+                                      <small class="d-block text-muted">{{ $rowData['cfe']->receptor_documento_ruc }}</small>
+                                    @endif
                                   </td>
                                   <td class="align-middle small text-right">
                                     $ {{ number_format($rowData['efectivo'], 2, ',', '.') }}
@@ -194,16 +208,33 @@
                                   <td class="align-middle small text-right">
                                     $ {{ number_format($rowData['pos'], 2, ',', '.') }}
                                   </td>
+                                  @if($mostrarColumnaConf)
+                                  <td class="align-middle text-center d-print-none">
+                                    @if($rowData['cfe']->cajaConcepto?->requiere_confirmacion)
+                                    <div class="custom-control custom-switch d-inline-block">
+                                      <input type="checkbox" class="custom-control-input" id="confirmado-{{ $rowData['cfe']->id }}-{{ $loop->index }}"
+                                        wire:click="toggleConfirmado({{ $rowData['cfe']->id }})"
+                                        {{ $cfeConfirmado ? 'checked' : '' }}>
+                                      <label class="custom-control-label" for="confirmado-{{ $rowData['cfe']->id }}-{{ $loop->index }}"></label>
+                                    </div>
+                                    @else
+                                    <span class="text-muted">—</span>
+                                    @endif
+                                  </td>
+                                  @endif
                                 </tr>
                               @endforeach
                             </tbody>
                             <tfoot class="table-active">
                               <tr>
-                                <td class="text-right font-weight-bold small align-middle text-break">Subtotal {{ $distribucion['distribucion'] }}:</td>
+                                <td colspan="{{ $mostrarColumnaConf ? 2 : 2 }}" class="text-right font-weight-bold small align-middle text-break">Subtotal {{ $distribucion['distribucion'] }}:</td>
                                 <td class="text-right font-weight-bold small align-middle">$ {{ number_format($distribucion['total_efectivo'], 2, ',', '.') }}</td>
                                 <td class="text-right font-weight-bold small align-middle">$ {{ number_format($distribucion['total_cheque'], 2, ',', '.') }}</td>
                                 <td class="text-right font-weight-bold small align-middle">$ {{ number_format($distribucion['total_transferencia'], 2, ',', '.') }}</td>
                                 <td class="text-right font-weight-bold small align-middle">$ {{ number_format($distribucion['total_pos'], 2, ',', '.') }}</td>
+                                @if($mostrarColumnaConf)
+                                  <td></td>
+                                @endif
                               </tr>
                             </tfoot>
                            </table>
@@ -218,7 +249,7 @@
                   $totalGrupo = $grupo['total_efectivo'] + $grupo['total_cheque'] + $grupo['total_transferencia'] + $grupo['total_pos'];
                 @endphp
                 <div class="d-flex justify-content-end py-2 px-3">
-<div class="table-responsive">
+                  <div class="table-responsive">
                   <table class="table table-sm table-borderless mb-0 text-right w-auto ml-auto">
                     <thead>
                       <tr>
@@ -241,6 +272,7 @@
                       </tr>
                     </tbody>
                   </table>
+                  </div>
                 </div>
               </div>
             @endif

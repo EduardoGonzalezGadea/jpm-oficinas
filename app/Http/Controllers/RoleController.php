@@ -216,4 +216,174 @@ class RoleController extends Controller
             return back()->with('error', 'Error al remover el rol: ' . $e->getMessage());
         }
     }
+
+    public function getRoleData(Role $role = null)
+    {
+        $data = [
+            'availableRoles' => Role::with('permissions')->orderBy('name')->get(),
+        ];
+
+        if ($role) {
+            $role->load('permissions');
+            $data['role'] = $role;
+            $data['rolePermissionIds'] = $role->permissions->pluck('id')->toArray();
+        }
+
+        return response()->json($data);
+    }
+
+    public function export()
+    {
+        $roles = Role::with('permissions')->orderBy('name')->get()->map(function ($role) {
+            return [
+                'name' => $role->name,
+                'guard_name' => $role->guard_name,
+                'permissions' => $role->permissions->pluck('name')->toArray(),
+            ];
+        });
+
+        $filename = 'roles_export_' . date('Y-m-d') . '.json';
+
+        return response()->json($roles)
+            ->header('Content-Type', 'application/json')
+            ->header('Content-Disposition', 'attachment; filename="' . $filename . '"');
+    }
+
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:json',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $roles = json_decode(file_get_contents($request->file('file')), true);
+            $imported = [];
+            $existing = [];
+
+            foreach ($roles as $roleData) {
+                $role = Role::firstOrCreate([
+                    'name' => $roleData['name'],
+                    'guard_name' => $roleData['guard_name'] ?? 'web',
+                ]);
+
+                if (isset($roleData['permissions']) && is_array($roleData['permissions'])) {
+                    $permissions = Permission::whereIn('name', $roleData['permissions'])->get();
+                    $role->syncPermissions($permissions);
+                }
+
+                if ($role->wasRecentlyCreated) {
+                    $imported[] = $roleData['name'];
+                } else {
+                    $existing[] = $roleData['name'];
+                }
+            }
+
+            DB::commit();
+
+            $message = 'Proceso de importación completado. ';
+            if (count($imported) > 0) {
+                $message .= 'Importados: ' . count($imported) . ' roles. ';
+            }
+            if (count($existing) > 0) {
+                $message .= 'Ya existían: ' . count($existing) . ' roles.';
+            }
+
+            return redirect()->route('roles.index')->with('success', $message);
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return back()->withInput()->with('error', 'Error al importar los roles: ' . $e->getMessage());
+        }
+    }
+
+    public function bulkAssignToUsers(Request $request)
+    {
+        $request->validate([
+            'role_id' => 'required|exists:roles,id',
+            'user_ids' => 'required|array|min:1',
+            'user_ids.*' => 'exists:users,id',
+        ]);
+
+        try {
+            $role = Role::findOrFail($request->role_id);
+
+            foreach ($request->user_ids as $userId) {
+                $user = User::find($userId);
+                $user->assignRole($role);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Rol asignado a ' . count($request->user_ids) . ' usuario(s) correctamente.',
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al asignar el rol: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function updatePermissions(Request $request, Role $role)
+    {
+        if ($role->name === 'administrador') {
+            return response()->json([
+                'success' => false,
+                'message' => 'No se pueden modificar los permisos del rol de administrador.',
+            ], 403);
+        }
+
+        $request->validate([
+            'permissions' => 'nullable|array',
+            'permissions.*' => 'exists:permissions,id',
+        ]);
+
+        try {
+            $permissions = Permission::whereIn('id', $request->permissions ?? [])->get();
+            $role->syncPermissions($permissions);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Permisos del rol actualizados correctamente.',
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al actualizar los permisos: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function searchRoles(Request $request)
+    {
+        $search = $request->get('q', '');
+
+        $roles = Role::where('name', 'like', '%' . $search . '%')
+            ->orderBy('name')
+            ->limit(20)
+            ->get(['id', 'name']);
+
+        return response()->json($roles);
+    }
+
+    public function validateName(Request $request)
+    {
+        $name = $request->get('name');
+        $roleId = $request->get('role_id');
+
+        $query = Role::where('name', $name);
+
+        if ($roleId) {
+            $query->where('id', '!=', $roleId);
+        }
+
+        $exists = $query->exists();
+
+        return response()->json([
+            'valid' => !$exists,
+            'message' => $exists ? 'Este nombre de rol ya existe.' : 'Nombre disponible.',
+        ]);
+    }
 }

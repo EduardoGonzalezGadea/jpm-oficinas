@@ -442,7 +442,7 @@ CREATE TABLE `tes_caja_conceptos` (
   `requiere_confirmacion` tinyint(1) NOT NULL DEFAULT 0,
   `requiere_distribucion` tinyint(1) NOT NULL DEFAULT 0,
   `permite_planilla` tinyint(1) NOT NULL DEFAULT 0,
-  `requiere_organismo` tinyint(1) NOT NULL DEFAULT 0 COMMENT 'Indica si el concepto requiere seleccionar un organismo/entidad',
+  `requiere_institucion` tinyint(1) NOT NULL DEFAULT 0 COMMENT 'Indica si el concepto requiere seleccionar una institución',
   `siif_distribucion_tipo_id` bigint(20) unsigned DEFAULT NULL COMMENT 'Tipo de distribución SIIF asociado a este concepto',
   `created_by` bigint(20) unsigned DEFAULT NULL,
   `updated_by` bigint(20) unsigned DEFAULT NULL,

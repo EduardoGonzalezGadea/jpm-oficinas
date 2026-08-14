@@ -12,7 +12,7 @@
         cancelButtonText: 'Cancelar'
       }).then((result) => {
         if (result.isConfirmed) {
-          Livewire.dispatch('borrarCfe', { id: id });
+          Livewire.dispatch('borrarCfe', { cfeId: id });
         }
       });
     }

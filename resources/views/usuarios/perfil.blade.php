@@ -126,7 +126,7 @@
                         {{-- Pestaña Cambiar Contraseña --}}
                         <div class="tab-pane fade" id="contrasena" role="tabpanel">
                             <div class="mt-4">
-                                <form action="{{ route('usuarios.cambiarContraseña') }}" method="POST">
+                                <form action="{{ route('usuarios.cambiar-contrasena') }}" method="POST">
                                     @csrf
                                     @method('PUT')
 

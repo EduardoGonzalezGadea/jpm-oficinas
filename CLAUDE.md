@@ -2,6 +2,17 @@
 
 Este archivo proporciona guia a Claude Code (claude.ai/code) cuando trabaja con codigo en este repositorio.
 
+## Directiva de idioma (OBLIGATORIA)
+
+**Todas las respuestas, explicaciones, comentarios de código, mensajes de commit,
+documentación y resúmenes generados por cualquier IA DEBEN estar escritos en español.**
+- Esto aplica a cualquier asistente o IDE: Claude Code, Cursor, Google Antigravity IDE,
+  GitHub Copilot, opencode, etc.
+- Si una herramienta viene configurada por defecto en otro idioma, indicar en su
+  configuración o prompt que utilice español de forma permanente.
+- Se permite el inglés únicamente para: nombres de variables, clases, funciones,
+  identificadores, claves de array y textos literales del código fuente.
+
 ## Resumen del Proyecto
 
 Aplicacion administrativa interna para una oficina de Tesoreria construida con Laravel 9 + PHP 8 + Livewire 2.12. El sistema maneja autenticacion, permisos, auditoria y varios modulos financieros incluyendo pagos, multas, certificados y gestion de caja diaria.
@@ -98,8 +109,7 @@ La mayoria de modulos de Tesoreria siguen esta estructura:
 ## Infraestructura de Reportes
 
 Componentes compartidos para reportes avanzados:
-- `app/Http/Livewire/Shared/BaseReportComponent.php`
-- `app/Http/Livewire/Traits/WithAdvancedReportLogic.php`
+- `app/Livewire/Shared/BaseReportComponent.php`
 
 ## Navegacion en el Codigo
 

@@ -411,18 +411,22 @@
       if (diferencia > 0.01) {
         Swal.fire({
           title: '¡Discrepancia de Montos!',
-          html: `El monto total de la multa (<b>$ ${totalFactura.toLocaleString('es-UY', {minimumFractionDigits: 2})}</b>) no coincide con la suma de los medios de pago (<b>$ ${totalMedios.toLocaleString('es-UY', {minimumFractionDigits: 2})}</b>).<br><br>¿Deseas continuar de todas formas?`,
+          html: `El total a pagar (<b>$ ${totalFactura.toLocaleString('es-UY', {minimumFractionDigits: 2})}</b>) no coincide con la suma de los importes de los medios de pago (<b>$ ${totalMedios.toLocaleString('es-UY', {minimumFractionDigits: 2})}</b>).<br><br>¿Qué deseas hacer?`,
           icon: 'warning',
+          showDenyButton: true,
           showCancelButton: true,
-          confirmButtonColor: '#3085d6',
-          cancelButtonColor: '#d33',
-          confirmButtonText: 'SÍ, GUARDAR ASÍ',
-          cancelButtonText: 'CANCELAR Y CORREGIR',
+          confirmButtonColor: '#28a745',
+          denyButtonColor: '#3085d6',
+          cancelButtonColor: '#dc3545',
+          confirmButtonText: 'Continuar como está',
+          denyButtonText: 'Hacer cambios en los importes',
+          cancelButtonText: 'Cancelar',
           reverseButtons: true
         }).then((result) => {
           if (result.isConfirmed) {
             $wire.save(true);
           }
+          // deny (hacer cambios) o cancel: se mantiene el formulario para ajustar los importes
         });
       } else {
         $wire.save();

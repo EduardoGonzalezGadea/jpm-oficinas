@@ -1,37 +1,12 @@
-<div class="caja-diaria-view">
-  <style>
-    .caja-diaria-view > .row {
-      margin-left: -0.25rem !important;
-      margin-right: -0.25rem !important;
-    }
-    .caja-diaria-view .card {
-      margin-bottom: 0.5rem !important;
-    }
-    .caja-diaria-view .card-header {
-      padding: 0.35rem 0.75rem !important;
-    }
-    .caja-diaria-view .card-body {
-      padding: 0.4rem 0.75rem !important;
-    }
-    .caja-diaria-view .table td,
-    .caja-diaria-view .table th {
-      padding: 0.3rem 0.5rem !important;
-    }
-    .caja-diaria-view .alert {
-      padding: 0.4rem 0.75rem !important;
-      margin-bottom: 0.5rem !important;
-    }
-    .caja-diaria-view .form-group {
-      margin-bottom: 0.4rem !important;
-    }
-  </style>
+<div>
+  
 
   <div class="card shadow-sm mb-2">
     <div class="card-header card-header-section card-header-gradient py-1 px-3">
       <h5 class="mb-0 text-premium-header">
         <i class="fas fa-exchange-alt mr-2"></i>Movimientos de Caja
       </h5>
-      <a href="{{ route('tesoreria.caja-diaria.index') }}" class="btn btn-light btn-sm py-0 px-2" wire:navigate>
+      <a href="{{ route('tesoreria.caja-diaria.index') }}" class="btn btn-light btn-sm py-0 px-2">
         <i class="fas fa-arrow-left mr-1"></i> Volver a la Caja Diaria
       </a>
     </div>
@@ -178,7 +153,7 @@
         {{-- Totales por medio --}}
         @if ($totalesPorMedio->isNotEmpty())
           <div class="card shadow-sm mb-3">
-            <div class="card-header py-2 px-3 bg-light">
+            <div class="card-header py-2 px-3">
               <h6 class="mb-0"><i class="fas fa-chart-bar mr-1"></i>Totales por Medio de Pago</h6>
             </div>
             <div class="card-body py-2">

@@ -5,7 +5,6 @@ namespace App\Providers;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Blade;
-use Livewire\Livewire;
 use Illuminate\Support\Facades\URL;
 
 use Illuminate\Pagination\Paginator;
@@ -68,15 +67,8 @@ class AppServiceProvider extends ServiceProvider
             }
         }
 
-        // Registrar componentes Livewire manualmente.
-        // Nota: estos componentes viven en app/Livewire (App\Livewire\...), fuera del
-        // class_namespace configurado (App\Http\Livewire). Sin registro explicito, el
-        // render inicial funciona pero los requests posteriores (wire:model, wire:click)
-        // fallan con ComponentNotFoundException, porque auto-discovery no los encuentra.
-        Livewire::component('tesoreria.caja-diaria.index', \App\Livewire\Tesoreria\CajaDiaria\Index::class);
-        Livewire::component('tesoreria.caja-diaria.apertura-cierre', \App\Livewire\Tesoreria\CajaDiaria\AperturaCierre::class);
-        Livewire::component('tesoreria.caja-diaria.arqueo', \App\Livewire\Tesoreria\CajaDiaria\Arqueo::class);
-        Livewire::component('tesoreria.caja-diaria.movimientos', \App\Livewire\Tesoreria\CajaDiaria\Movimientos::class);
+        // Livewire v3 auto-descubre los componentes en app/Livewire (App\Livewire),
+        // por lo que no es necesario registrarlos manualmente.
 
         // Blade directives para formateo Uruguay
         Blade::directive('money', function ($expression) {

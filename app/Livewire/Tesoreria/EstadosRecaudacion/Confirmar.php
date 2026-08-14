@@ -15,8 +15,11 @@ class Confirmar extends Component
     public TesPlanillaEr $planilla;
 
     public int $toggleErrorCount = 0;
+    public string $busqueda = '';
+    public string $filtroDistribucion = '';
+    public bool $modoRevisionRapida = false;
 
-    protected $listeners = ['$refresh', 'eliminarPlanilla'];
+    protected $listeners = ['$refresh', 'eliminarPlanilla', 'anularPlanilla'];
 
     public function mount(TesPlanillaEr $planilla)
     {
@@ -344,6 +347,46 @@ class Confirmar extends Component
         return redirect()->route('tesoreria.gestion-cfe.estados-recaudacion.no-confirmadas');
     }
 
+    public function anularPlanilla($id = null, $motivo = null)
+    {
+        if (is_array($id)) {
+            $motivo = $id['motivo'] ?? $motivo;
+            $id = $id['id'] ?? null;
+        }
+
+        $id = $id ?? $this->planilla->id;
+
+        if ((int)$id !== (int)$this->planilla->id) {
+            abort(403);
+        }
+
+        $user = auth()->user();
+        if (!$user || !$user->hasAnyPermission(['tesoreria.supervisar'])) {
+            $this->dispatch('swal:toast-error', text: 'No tiene permisos para anular planillas.');
+            return;
+        }
+
+        try {
+            DB::beginTransaction();
+
+            $this->planilla->update([
+                'motivo_anulacion' => $motivo,
+                'confirmada' => false,
+            ]);
+
+            $this->planilla->items()->update(['planilla_er_id' => null]);
+            $this->planilla->delete();
+
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            $this->dispatch('swal:toast-error', text: 'Error al anular la planilla: ' . $e->getMessage());
+            return;
+        }
+
+        return redirect()->route('tesoreria.gestion-cfe.estados-recaudacion');
+    }
+
     public function toggleItemConfirmado(int $itemId)
     {
         $item = TesCfeItem::findOrFail($itemId);
@@ -448,9 +491,116 @@ class Confirmar extends Component
 
         $totalGeneral = $this->planilla->items->sum('importe');
 
+        $totalItems = $this->planilla->items->count();
+        $confirmados = $this->planilla->items->where('confirmado', true)->count();
+        $estadisticas = [
+            'total' => $totalItems,
+            'confirmados' => $confirmados,
+            'porcentaje_completado' => $totalItems > 0 ? round($confirmados / $totalItems * 100) : 0,
+        ];
+
+        $distribucionesPlanilla = $this->planilla->items
+            ->map(fn($i) => $i->siifDistribucion?->concepto ?? null)
+            ->filter()
+            ->unique()
+            ->sort()
+            ->values()
+            ->toArray();
+
+        $alertasCoherencia = $this->calcularAlertasCoherencia();
+
+        // Aplicar filtros a $itemsPorCfe
+        if ($this->busqueda !== '' || $this->filtroDistribucion !== '' || $this->modoRevisionRapida) {
+            $busquedaLower = mb_strtolower($this->busqueda);
+            foreach ($itemsPorCfe as $cfeLabel => $items) {
+                $filtrados = $items->filter(function ($item) use ($busquedaLower) {
+                    if ($busquedaLower === '') return true;
+                    $receptor = mb_strtolower($item->cfe?->receptor_nombre_denominacion ?? '');
+                    $doc = mb_strtolower("{$item->cfe?->documento_tipo} {$item->cfe?->documento_serie}-{$item->cfe?->documento_numero}");
+                    return str_contains($receptor, $busquedaLower) || str_contains($doc, $busquedaLower);
+                })->filter(function ($item) {
+                    if ($this->filtroDistribucion === '') return true;
+                    return ($item->siifDistribucion?->concepto ?? '') === $this->filtroDistribucion;
+                })->filter(function ($item) {
+                    if (!$this->modoRevisionRapida) return true;
+                    return $item->enPlanilla && !$item->confirmado;
+                });
+                if ($filtrados->isEmpty()) {
+                    unset($itemsPorCfe[$cfeLabel]);
+                } else {
+                    $itemsPorCfe[$cfeLabel] = $filtrados;
+                }
+            }
+        }
+
         return view('livewire.tesoreria.estados-recaudacion.confirmar', compact(
-            'itemsPorCfe', 'opcionesPorTipoDep', 'gruposRecaudacion', 'totalGeneral'
+            'itemsPorCfe', 'opcionesPorTipoDep', 'gruposRecaudacion', 'totalGeneral',
+            'estadisticas', 'distribucionesPlanilla', 'alertasCoherencia'
         ));
+    }
+
+    public function toggleModoRevisionRapida(): void
+    {
+        $this->modoRevisionRapida = !$this->modoRevisionRapida;
+    }
+
+    public function limpiarFiltros(): void
+    {
+        $this->busqueda = '';
+        $this->filtroDistribucion = '';
+        $this->modoRevisionRapida = false;
+    }
+
+    public function getEstadoItem($item): array
+    {
+        if (!$item->enPlanilla) {
+            return ['color' => 'secondary', 'icono' => 'minus-circle', 'mensaje' => 'No integra esta planilla', 'problemas' => []];
+        }
+        $problemas = [];
+        if (!$item->siif_distribucion_id) {
+            $problemas[] = 'Sin distribución SIIF';
+        }
+        if (!$item->confirmado) {
+            $problemas[] = 'Pendiente de confirmación';
+        }
+        if (!empty($problemas)) {
+            $color = !$item->siif_distribucion_id ? 'danger' : 'warning';
+            $icono = !$item->siif_distribucion_id ? 'exclamation-triangle' : 'exclamation-circle';
+            return ['color' => $color, 'icono' => $icono, 'mensaje' => implode(', ', $problemas), 'problemas' => $problemas];
+        }
+        return ['color' => 'success', 'icono' => 'check-circle', 'mensaje' => 'Configurado correctamente', 'problemas' => []];
+    }
+
+    public function formatRangoDocumentos(array $items): string
+    {
+        $porTipo = collect($items)
+            ->groupBy(fn($r) => $r['cfe']->documento_tipo)
+            ->map(function ($grupo, $tipo) {
+                $seriesNumeros = $grupo
+                    ->map(fn($r) => "{$r['cfe']->documento_serie}-{$r['cfe']->documento_numero}")
+                    ->unique()->sort()->values()->implode(', ');
+                return "{$tipo} {$seriesNumeros}";
+            });
+        return $porTipo->implode(' | ');
+    }
+
+    private function calcularAlertasCoherencia(): array
+    {
+        $alertas = [];
+        foreach ($this->planilla->items as $item) {
+            $cfe = $item->cfe;
+            if (!$cfe || !$item->siif_distribucion_id) continue;
+            $totalCfe = $cfe->total_a_pagar ?? 0;
+            $sumaItems = $cfe->items->sum('importe');
+            $diferencia = abs($totalCfe - $sumaItems);
+            if ($diferencia > 2) {
+                $alertas[] = [
+                    'cfe' => $cfe,
+                    'detalle' => "Diferencia de \${$diferencia} entre total a pagar y suma de ítems.",
+                ];
+            }
+        }
+        return $alertas;
     }
 
     private function calcularGruposRecaudacion(): array
@@ -486,6 +636,7 @@ class Confirmar extends Component
             if (!isset($grupos[$tabKey]['distribuciones'][$distKey])) {
                 $grupos[$tabKey]['distribuciones'][$distKey] = [
                     'concepto' => $distKey,
+                    'distribucion' => $distKey,
                     'items' => [],
                     'total_efectivo' => 0,
                     'total_cheque' => 0,
@@ -534,6 +685,7 @@ class Confirmar extends Component
 
             $rowData = [
                 'cfe' => $cfe,
+                'concepto' => $distKey,
                 'efectivo' => $efectivo,
                 'cheque' => $cheque,
                 'transferencia' => $transferencia,

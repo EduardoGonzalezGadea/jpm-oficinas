@@ -49,7 +49,7 @@ class Index extends Component
     public $edit_transferencia_fecha;
     public $edit_transferencia_confirmacion;
 
-    protected $listeners = ['cerrarModalNueva', 'cerrarModalDetalles', 'cerrarModalPlanilla', 'cerrarModalEditar', 'borrarPlanilla'];
+    protected $listeners = ['cerrarModalNueva', 'cerrarModalDetalles', 'cerrarModalPlanilla', 'cerrarModalEditar', 'borrarPlanilla', 'anularPlanilla'];
 
     public function mount()
     {
@@ -85,9 +85,8 @@ class Index extends Component
     public function abrirModalNueva()
     {
         $maxFecha = TesCfeItem::whereNull('planilla_er_id')
-            ->whereHas('cfe.cajaConcepto', fn($q) => $q->where('requiere_distribucion', true))
-            ->whereHas('cfe', fn($q) => $q->whereNotNull('siif_distribucion_tipo_id'))
-            ->whereHas('cfe', fn($q) => $q->whereNotNull('fecha'))
+            ->whereNotNull('siif_distribucion_id')
+            ->whereHas('cfe', fn($q) => $q->whereNull('deleted_at'))
             ->join('tes_cfes', 'tes_cfe_items.tes_cfe_id', '=', 'tes_cfes.id')
             ->max('tes_cfes.fecha');
 
@@ -277,25 +276,25 @@ class Index extends Component
     private function cargarGrupos(): void
     {
         $query = TesCfeItem::with([
-                'cfe.cajaConcepto',
                 'cfe.cajaConcepto.siifDistribucionTipo',
                 'cfe.siifDistribucionDependencia',
-                'siifDistribucion',
+                'siifDistribucion.tipo',
+                'siifDistribucion.dependencia',
             ])
             ->whereNull('planilla_er_id')
-            ->whereHas('cfe.cajaConcepto', fn($q) => $q->where('requiere_distribucion', true))
-            ->whereHas('cfe', fn($q) => $q->whereNotNull('siif_distribucion_tipo_id'));
+            ->whereNotNull('siif_distribucion_id')
+            ->whereHas('cfe', fn($q) => $q->whereNull('deleted_at'));
 
         if ($this->filtroFechaModal) {
             $query->whereHas('cfe', fn($q) => $q->where('fecha', $this->filtroFechaModal));
         }
         
         if ($this->filtroTipoModal) {
-            $query->whereHas('cfe', fn($q) => $q->where('siif_distribucion_tipo_id', $this->filtroTipoModal));
+            $query->whereHas('siifDistribucion', fn($sq) => $sq->where('tipo_id', $this->filtroTipoModal));
         }
 
         if ($this->filtroDependenciaModal) {
-            $query->whereHas('cfe', fn($q) => $q->where('siif_distribucion_dependencia_id', $this->filtroDependenciaModal));
+            $query->whereHas('siifDistribucion', fn($sq) => $sq->where('dependencia_id', $this->filtroDependenciaModal));
         }
 
         $items = $query->orderBy('id')->get();
@@ -303,8 +302,16 @@ class Index extends Component
         $this->grupos = [];
         foreach ($items as $item) {
             $cfe = $item->cfe;
-            $tipoId = $cfe->siif_distribucion_tipo_id;
-            $depId = $cfe->siif_distribucion_dependencia_id;
+            if (!$cfe || !$item->siifDistribucion) continue;
+
+            $tipoObj = $item->siifDistribucion->tipo ?? $cfe->siifDistribucionTipo;
+            $depObj = $item->siifDistribucion->dependencia ?? $cfe->siifDistribucionDependencia;
+
+            $tipoId = $tipoObj?->id;
+            $depId = $depObj?->id;
+
+            if (!$tipoId || !$depId) continue;
+
             $nocturno = mb_stripos($item->siifDistribucion?->concepto ?? '', 'nocturno') !== false;
             $turno = $nocturno ? 'Nocturno' : null;
             $key = $nocturno ? "{$tipoId}-{$depId}-Nocturno" : "{$tipoId}-{$depId}";
@@ -312,9 +319,9 @@ class Index extends Component
             if (!isset($this->grupos[$key])) {
                 $this->grupos[$key] = [
                     'tipo_id' => $tipoId,
-                    'tipo_nombre' => $cfe->siifDistribucionTipo->tipo ?? '—',
+                    'tipo_nombre' => $tipoObj->tipo ?? '—',
                     'dependencia_id' => $depId,
-                    'dependencia_nombre' => $cfe->siifDistribucionDependencia->dependencia ?? '—',
+                    'dependencia_nombre' => $depObj->dependencia ?? '—',
                     'turno' => $turno,
                     'items' => [],
                 ];
@@ -327,11 +334,11 @@ class Index extends Component
                 'fecha_cfe' => $item->cfe?->fecha?->format('d/m/Y'),
                 'fecha_cfe_raw' => $item->cfe?->fecha?->format('Y-m-d'),
                 'siif_distribucion_id' => $item->siif_distribucion_id,
-                'cfe' => $item->cfe ? [
+                'cfe' => [
                     'documento_tipo' => $item->cfe->documento_tipo,
                     'documento_serie' => $item->cfe->documento_serie,
                     'documento_numero' => $item->cfe->documento_numero,
-                ] : null,
+                ],
                 'siif_distribucion' => $item->siifDistribucion ? [
                     'concepto' => $item->siifDistribucion->concepto,
                 ] : null,
@@ -349,7 +356,7 @@ class Index extends Component
 
     public function verDetalles(int $id): void
     {
-        $this->planillaDetalles = TesPlanillaEr::with([
+        $this->planillaDetalles = TesPlanillaEr::withTrashed()->with([
             'tipo',
             'dependencia',
             'items.cfe',
@@ -370,7 +377,7 @@ class Index extends Component
 
     public function verPlanilla(int $id): void
     {
-        $this->planillaVer = TesPlanillaEr::with([
+        $this->planillaVer = TesPlanillaEr::withTrashed()->with([
             'tipo', 'dependencia',
             'items.cfe',
             'items.siifDistribucion',
@@ -392,7 +399,7 @@ class Index extends Component
         try {
             DB::beginTransaction();
 
-            $planilla = TesPlanillaEr::findOrFail($id);
+            $planilla = TesPlanillaEr::withTrashed()->findOrFail($id);
 
             TesCfeItem::where('planilla_er_id', $id)
                 ->update(['planilla_er_id' => null]);
@@ -408,6 +415,41 @@ class Index extends Component
         }
     }
 
+    public function anularPlanilla($id = null, $motivo = null): void
+    {
+        if (is_array($id)) {
+            $motivo = $id['motivo'] ?? $motivo;
+            $id = $id['id'] ?? null;
+        }
+
+        if (!$id) {
+            return;
+        }
+
+        try {
+            DB::beginTransaction();
+
+            $planilla = TesPlanillaEr::withTrashed()->findOrFail($id);
+
+            $planilla->update([
+                'motivo_anulacion' => $motivo,
+                'confirmada' => false,
+            ]);
+
+            TesCfeItem::where('planilla_er_id', $id)
+                ->update(['planilla_er_id' => null]);
+
+            $planilla->delete();
+
+            DB::commit();
+
+            $this->dispatch('swal:success', title: 'Planilla anulada', text: "La planilla {$planilla->numero} ha sido anulada con éxito.");
+        } catch (\Exception $e) {
+            DB::rollBack();
+            $this->dispatch('swal:toast-error', text: 'Error al anular la planilla: ' . $e->getMessage());
+        }
+    }
+
     public function toggleConfirmada(int $id): void
     {
         $user = auth()->user();
@@ -416,10 +458,10 @@ class Index extends Component
             return;
         }
 
-        $planilla = TesPlanillaEr::findOrFail($id);
+        $planilla = TesPlanillaEr::withTrashed()->findOrFail($id);
         $planilla->update(['confirmada' => !$planilla->confirmada]);
 
-        $this->planillaVer = TesPlanillaEr::with([
+        $this->planillaVer = TesPlanillaEr::withTrashed()->with([
             'tipo', 'dependencia',
             'items.cfe',
             'items.siifDistribucion',
@@ -428,7 +470,7 @@ class Index extends Component
 
     public function editarPlanilla(int $id): void
     {
-        $this->planillaEditar = TesPlanillaEr::with(['tipo', 'dependencia'])->findOrFail($id);
+        $this->planillaEditar = TesPlanillaEr::withTrashed()->with(['tipo', 'dependencia'])->findOrFail($id);
 
         $this->edit_er_numero = $this->planillaEditar->er_numero;
         $this->edit_egresos_numero = $this->planillaEditar->egresos_numero;

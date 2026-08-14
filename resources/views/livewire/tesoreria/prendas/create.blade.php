@@ -1,4 +1,4 @@
-﻿<div wire:ignore.self class="modal fade" id="createModal" tabindex="-1" role="dialog" aria-labelledby="createModalLabel" aria-hidden="true">
+<div wire:ignore.self class="modal fade" id="createModal" tabindex="-1" role="dialog" aria-labelledby="createModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-lg" role="document">
     <div class="modal-content">
       <div class="modal-header">
@@ -128,7 +128,7 @@
 <script>
   document.addEventListener('livewire:init', function() {
     Livewire.on('swal:confirm-duplicate-create', (payload) => {
-      const data = window.LiveEvent({ detail: payload });
+      const data = Array.isArray(payload) ? payload[0] : payload;
       Swal.fire({
         title: data.title || 'Transferencia Duplicada',
         text: data.text || 'El número de transferencia ya existe. ¿Desea continuar?',

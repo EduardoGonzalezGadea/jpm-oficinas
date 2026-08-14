@@ -322,8 +322,6 @@ class Index extends Component
                 : $data['saldoActual'];
         }
 
-        return view('livewire.tesoreria.cajas.index', $data)
-            ->extends('layouts.app')
-            ->section('content');
+        return view('livewire.tesoreria.cajas.index', $data);
     }
 }

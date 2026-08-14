@@ -28,7 +28,7 @@ Route::prefix('usuarios')->name('usuarios.')->group(function () {
     // Perfil propio (ANTES de las rutas con parámetros)
     Route::get('mi-perfil',              [UsuarioController::class, 'miPerfil'])          ->name('miPerfil');
     Route::put('actualizar-perfil',      [UsuarioController::class, 'actualizarPerfil'])  ->name('actualizarPerfil');
-    Route::put('cambiar-contrasena',     [UsuarioController::class, 'cambiarContrasena']) ->name('cambiarContraseña');
+    Route::put('cambiar-contrasena',     [UsuarioController::class, 'cambiarContrasena']) ->name('cambiar-contrasena');
 
     // AJAX y datos
     Route::get('data/roles/{usuario?}',       [UsuarioController::class, 'getRolesData'])       ->name('roles.data');

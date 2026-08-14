@@ -129,13 +129,7 @@ class CfePendientesIndex extends Component
     {
         return [
             'cfe-confirmado' => 'render',
-            'review-cfe' => 'forwardReviewCfe',
         ];
-    }
-
-    public function forwardReviewCfe(int $id): void
-    {
-        $this->dispatch('review-cfe', id: $id)->to('tesoreria.cfe-pendientes.review');
     }
 
     public function render()

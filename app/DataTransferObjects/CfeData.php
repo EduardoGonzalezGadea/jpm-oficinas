@@ -17,6 +17,7 @@ class CfeData
         public readonly ?string $adenda = null,
         public readonly ?int $tes_caja_concepto_id = null,
         public readonly ?int $siif_distribucion_dependencia_id = null,
+        public readonly ?int $institucion_id = null,
         public readonly array $items = [],
         public readonly array $medios_pago = [],
         public readonly array $item_distribuciones = [],

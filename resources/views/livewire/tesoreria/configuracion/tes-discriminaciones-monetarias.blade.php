@@ -1,4 +1,4 @@
-﻿<div>
+<div>
   <style>
     .text-nowrap-custom {
       white-space: nowrap;
@@ -41,7 +41,7 @@
               </thead>
               <tbody>
                 @forelse ($discriminaciones as $disc)
-                  <tr>
+                  <tr wire:key="discriminacion-{{ $disc->id }}">
                     <td class="text-left align-middle">
                       @if($disc->tipo == 'Billetes')
                         <i class="fas fa-money-bill text-success mr-1"></i>
@@ -92,7 +92,7 @@
   </div>
 
   <!-- Create/Edit Modal -->
-  <div wire:ignore.self class="modal fade" id="discriminacionModal" tabindex="-1" role="dialog"
+  <div wire:ignore.self wire:key="discriminacion-modal" class="modal fade" id="discriminacionModal" tabindex="-1" role="dialog"
     aria-labelledby="discriminacionModalLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
       <div class="modal-content">
@@ -165,7 +165,7 @@
   </div>
 
   <!-- Details Modal -->
-  <div wire:ignore.self class="modal fade" id="detailsModal" tabindex="-1" role="dialog"
+  <div wire:ignore.self wire:key="details-discriminacion-modal" class="modal fade" id="detailsDiscriminacionModal" tabindex="-1" role="dialog"
     aria-labelledby="detailsModalLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
       <div class="modal-content">

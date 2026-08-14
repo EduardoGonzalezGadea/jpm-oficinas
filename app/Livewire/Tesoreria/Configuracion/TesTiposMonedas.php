@@ -3,7 +3,6 @@
 namespace App\Livewire\Tesoreria\Configuracion;
 
 use App\Models\Tesoreria\TesTipoMoneda as Model;
-use Illuminate\Support\Facades\Cache;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -26,15 +25,9 @@ class TesTiposMonedas extends Component
 
     public function render()
     {
-        $version = Cache::get('tipos_monedas_version', 1);
-        $page = $this->getPage() ?: 1;
-        $cacheKey = 'tipos_monedas_v' . $version . '_search_' . $this->search . '_page_' . $page;
-
-        $tiposMonedas = Cache::remember($cacheKey, now()->addDay(), function () {
-            return Model::search($this->search)
-                ->ordenado()
-                ->paginate(10);
-        });
+        $tiposMonedas = Model::search($this->search)
+            ->ordenado()
+            ->paginate(10);
 
         return view('livewire.tesoreria.configuracion.tes-tipos-monedas', [
             'tiposMonedas' => $tiposMonedas,
@@ -61,7 +54,6 @@ class TesTiposMonedas extends Component
             'activo' => $this->activo,
         ]);
 
-        $this->clearCache();
         $this->resetInput();
         $this->dispatch('tipoMonedaStore');
         $this->dispatch('alert', type: 'success', message: 'Tipo de moneda creado con éxito!', toast: true);
@@ -94,7 +86,6 @@ class TesTiposMonedas extends Component
                 'descripcion' => $this->descripcion,
                 'activo' => $this->activo,
             ]);
-            $this->clearCache();
             $this->resetInput();
             $this->dispatch('tipoMonedaUpdate');
             $this->dispatch('alert', type: 'success', message: 'Tipo de moneda actualizado con éxito!', toast: true);
@@ -104,16 +95,14 @@ class TesTiposMonedas extends Component
     public function destroy($id)
     {
         $tipoMoneda = Model::findOrFail($id);
-
         $tipoMoneda->delete();
-        $this->clearCache();
         $this->dispatch('alert', type: 'success', message: 'Tipo de moneda eliminado con éxito!', toast: true);
     }
 
     public function showDetails($id)
     {
         $this->selectedTipoMoneda = Model::findOrFail($id);
-        $this->dispatch('show-modal', id: 'detailsModal');
+        $this->dispatch('show-modal', id: 'detailsTipoMonedaModal');
     }
 
     public function resetDetails()
@@ -137,11 +126,5 @@ class TesTiposMonedas extends Component
     public function updatingSearch()
     {
         $this->resetPage();
-        $this->clearCache();
-    }
-    private function clearCache()
-    {
-        $version = Cache::get('tipos_monedas_version', 1);
-        Cache::put('tipos_monedas_version', $version + 1, now()->addYear());
     }
 }

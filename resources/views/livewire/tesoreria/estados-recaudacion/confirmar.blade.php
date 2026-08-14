@@ -644,7 +644,9 @@
               <div class="d-flex flex-wrap align-items-center mb-3 mb-md-0">
                 <div class="custom-control custom-switch d-inline-block">
                   <input type="checkbox" class="custom-control-input" id="switchConfirmar"
+                    onclick="event.preventDefault()"
                     wire:click="toggleConfirmada"
+                    wire:key="switchConfirmar-{{ $planilla->confirmada ? 'on' : 'off' }}"
                     {{ $planilla->confirmada ? 'checked' : '' }}>
                   <label class="custom-control-label font-weight-bold" for="switchConfirmar">
                     {{ $planilla->confirmada ? 'Planilla Confirmada' : 'Marcar como Confirmada' }}

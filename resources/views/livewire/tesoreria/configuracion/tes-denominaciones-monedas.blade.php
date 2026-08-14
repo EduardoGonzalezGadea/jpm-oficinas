@@ -1,4 +1,4 @@
-﻿<div>
+<div>
   <style>
     .text-nowrap-custom {
       white-space: nowrap;
@@ -41,7 +41,7 @@
               </thead>
               <tbody>
                 @forelse ($denominaciones as $denominacion)
-                  <tr>
+                  <tr wire:key="denominacion-{{ $denominacion->id }}">
                     <td class="text-left align-middle">
                       <span class="badge badge-info">{{ $denominacion->tipo_moneda_formateado }}</span>
                     </td>
@@ -87,7 +87,7 @@
   </div>
 
   <!-- Create/Edit Modal -->
-  <div wire:ignore.self class="modal fade" id="denominacionModal" tabindex="-1" role="dialog"
+  <div wire:ignore.self wire:key="denominacion-modal" class="modal fade" id="denominacionModal" tabindex="-1" role="dialog"
     aria-labelledby="denominacionModalLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
       <div class="modal-content">
@@ -158,7 +158,7 @@
   </div>
 
   <!-- Details Modal -->
-  <div wire:ignore.self class="modal fade" id="detailsModal" tabindex="-1" role="dialog"
+  <div wire:ignore.self wire:key="details-denominacion-modal" class="modal fade" id="detailsDenominacionModal" tabindex="-1" role="dialog"
     aria-labelledby="detailsModalLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
       <div class="modal-content">

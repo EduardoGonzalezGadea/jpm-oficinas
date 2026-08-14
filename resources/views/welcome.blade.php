@@ -553,14 +553,6 @@
                                                 <i class="fas fa-globe mr-2"></i>Consultas Públicas
                                             </a>
                                         </div>
-
-                                        @if (Route::has('register'))
-                                            <div class="mt-2">
-                                                <a href="{{ route('register') }}" class="text-muted small">
-                                                    <i class="fas fa-user-plus mr-1"></i>Registrar nuevo usuario
-                                                </a>
-                                            </div>
-                                        @endif
                                     </div>
                                 </div>
                             </div>

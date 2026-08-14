@@ -11,6 +11,7 @@ use App\Models\User;
 use Database\Factories\Tesoreria\TesCfeFactory;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Livewire\Livewire;
+use Spatie\Permission\Models\Permission;
 use Tests\TestCase;
 
 class GestionCfeTest extends TestCase
@@ -27,10 +28,12 @@ class GestionCfeTest extends TestCase
     {
         parent::setUp();
 
+        foreach (['tesoreria.cfe.ver', 'tesoreria.supervisar'] as $permiso) {
+            Permission::firstOrCreate(['name' => $permiso, 'guard_name' => 'web']);
+        }
+
         $this->user = User::factory()->create();
-        try {
-            $this->user->givePermissionTo(['tesoreria.cfe.ver', 'tesoreria.supervisar']);
-        } catch (\Exception $e) {} // Ignorar si el trait no está presente
+        $this->user->givePermissionTo(['tesoreria.cfe.ver', 'tesoreria.supervisar']);
         $this->actingAs($this->user);
 
         $this->tipo = SiifDistribucionTipo::create(['tipo' => 'Test Tipo']);
@@ -233,5 +236,102 @@ class GestionCfeTest extends TestCase
             ->set('filtroConcepto', $conceptoFiltro->id)
             ->assertSee('FILTRO001')
             ->assertDontSee('NOFILTRO');
+    }
+
+    /** @test */
+    public function muestra_columna_conf_cuando_hay_cfe_con_concepto_que_requiere_confirmacion(): void
+    {
+        $conceptoConfirmable = CajaConcepto::create([
+            'caja_concepto' => 'Concepto Confirmable',
+            'requiere_distribucion' => false,
+            'requiere_confirmacion' => true,
+            'siif_distribucion_tipo_id' => $this->tipo->id,
+        ]);
+
+        TesCfe::factory()->create([
+            'tes_caja_concepto_id' => $conceptoConfirmable->id,
+            'documento_numero' => 'CONF001',
+        ]);
+
+        Livewire::test(\App\Livewire\Tesoreria\GestionCfe\Index::class)
+            ->set('filtroConcepto', $conceptoConfirmable->id)
+            ->assertSee('CONF001')
+            ->assertSee('CONF.');
+    }
+
+    /** @test */
+    public function no_muestra_columna_conf_sin_concepto_filtrado_aunque_haya_cfe_confirmable(): void
+    {
+        $conceptoConfirmable = CajaConcepto::create([
+            'caja_concepto' => 'Concepto Confirmable',
+            'requiere_distribucion' => false,
+            'requiere_confirmacion' => true,
+            'siif_distribucion_tipo_id' => $this->tipo->id,
+        ]);
+
+        TesCfe::factory()->create([
+            'tes_caja_concepto_id' => $conceptoConfirmable->id,
+            'documento_numero' => 'CONF001',
+        ]);
+
+        Livewire::test(\App\Livewire\Tesoreria\GestionCfe\Index::class)
+            ->assertSee('CONF001')
+            ->assertDontSee('CONF.');
+    }
+
+    /** @test */
+    public function no_muestra_columna_conf_sin_cfe_con_concepto_que_requiera_confirmacion(): void
+    {
+        TesCfe::factory()->create([
+            'tes_caja_concepto_id' => $this->concepto->id,
+            'documento_numero' => 'SINCONF',
+        ]);
+
+        Livewire::test(\App\Livewire\Tesoreria\GestionCfe\Index::class)
+            ->assertSee('SINCONF')
+            ->assertDontSee('CONF.');
+    }
+
+    /** @test */
+    public function toggle_confirmado_alterna_items_del_cfe(): void
+    {
+        $conceptoConfirmable = CajaConcepto::create([
+            'caja_concepto' => 'Concepto Confirmable',
+            'requiere_distribucion' => false,
+            'requiere_confirmacion' => true,
+            'siif_distribucion_tipo_id' => $this->tipo->id,
+        ]);
+
+        $cfe = TesCfe::factory()->create([
+            'tes_caja_concepto_id' => $conceptoConfirmable->id,
+        ]);
+        $cfe->items()->create(['detalle' => 'Item 1', 'importe' => 100]);
+
+        Livewire::test(\App\Livewire\Tesoreria\GestionCfe\Index::class)
+            ->call('toggleConfirmado', $cfe->id)
+            ->assertDispatched('swal:toast-success');
+
+        $this->assertDatabaseHas('tes_cfe_items', [
+            'tes_cfe_id' => $cfe->id,
+            'confirmado' => 1,
+        ]);
+    }
+
+    /** @test */
+    public function toggle_confirmado_rechazado_cuando_concepto_no_requiere_confirmacion(): void
+    {
+        $cfe = TesCfe::factory()->create([
+            'tes_caja_concepto_id' => $this->concepto->id,
+        ]);
+        $cfe->items()->create(['detalle' => 'Item 1', 'importe' => 100]);
+
+        Livewire::test(\App\Livewire\Tesoreria\GestionCfe\Index::class)
+            ->call('toggleConfirmado', $cfe->id)
+            ->assertStatus(403);
+
+        $this->assertDatabaseHas('tes_cfe_items', [
+            'tes_cfe_id' => $cfe->id,
+            'confirmado' => 0,
+        ]);
     }
 }

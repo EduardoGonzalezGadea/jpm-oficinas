@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Tesoreria\Recaudaciones;
 
+use App\Models\Tesoreria\CajaConcepto;
 use App\Models\Tesoreria\TesCfe;
 use App\Models\Tesoreria\TesCfeItem;
 use App\Models\Tesoreria\SiifDistribucionDependencia;
@@ -19,6 +20,7 @@ class Index extends Component
     public $search = '';
     public $dependencia_id = '';
     public $tipo_id = '';
+    public $concepto_id = '';
     public $monto_desde = '';
     public $monto_hasta = '';
 
@@ -32,6 +34,12 @@ class Index extends Component
     public function opcionesTipos()
     {
         return SiifDistribucionTipo::orderBy('tipo')->get();
+    }
+
+    #[Computed]
+    public function opcionesConceptos()
+    {
+        return CajaConcepto::orderBy('caja_concepto')->get();
     }
 
     public function mount()
@@ -87,6 +95,10 @@ class Index extends Component
 
         if ($this->tipo_id !== '') {
             $items->where('tes_caja_conceptos.siif_distribucion_tipo_id', $this->tipo_id);
+        }
+
+        if ($this->concepto_id !== '') {
+            $items->where('tes_cfes.tes_caja_concepto_id', $this->concepto_id);
         }
 
         if ($this->monto_desde !== '') {
@@ -212,7 +224,7 @@ class Index extends Component
             $grupos[$tabKey]['total_pos'] += $pos;
         }
 
-        $grupos = collect($grupos)->sortBy('label')->toArray();
+        $grupos = collect($grupos)->sortBy('label')->all();
 
         foreach ($grupos as &$grupo) {
             krsort($grupo['fechas']);
@@ -229,9 +241,40 @@ class Index extends Component
             ->orderBy('ano', 'desc')
             ->pluck('ano');
 
+        $mostrarColumnaConf = false;
+        if ($this->concepto_id !== '') {
+            $conceptoFiltrado = CajaConcepto::find($this->concepto_id);
+            $mostrarColumnaConf = $conceptoFiltrado && (bool) $conceptoFiltrado->requiere_confirmacion;
+        }
+
         return view('livewire.tesoreria.recaudaciones.index', [
             'grupos' => $grupos,
             'anosRegistrados' => $anosRegistrados,
+            'mostrarColumnaConf' => $mostrarColumnaConf,
         ]);
+    }
+
+    public function toggleConfirmado($cfeId)
+    {
+        if (auth()->user()->cannot('tesoreria.supervisar')) {
+            abort(403);
+        }
+
+        $cfe = TesCfe::with('cajaConcepto')->findOrFail($cfeId);
+
+        if (!$cfe->cajaConcepto || !$cfe->cajaConcepto->requiere_confirmacion) {
+            abort(403);
+        }
+
+        $items = TesCfeItem::where('tes_cfe_id', $cfeId)->get();
+        if ($items->isEmpty()) {
+            return;
+        }
+
+        $todosConfirmados = $items->every(fn($i) => $i->confirmado);
+
+        TesCfeItem::where('tes_cfe_id', $cfeId)->update(['confirmado' => !$todosConfirmados]);
+
+        $this->dispatch('swal:toast-success', text: 'Estado de confirmación actualizado.');
     }
 }

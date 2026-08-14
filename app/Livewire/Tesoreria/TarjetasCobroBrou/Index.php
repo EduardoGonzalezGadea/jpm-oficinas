@@ -22,11 +22,6 @@ class Index extends Component
     protected $listeners = [
         'pg:eventRefresh-default' => 'refreshData',
         'delete',
-        'showCreateModal' => 'forwardShowCreateModal',
-        'showDeliverModal' => 'forwardShowDeliverModal',
-        'showReturnModal' => 'forwardShowReturnModal',
-        'showDetailModal' => 'forwardShowDetailModal',
-        'showEditModal' => 'forwardShowEditModal',
     ];
 
     public function confirmDelete($id)
@@ -125,30 +120,5 @@ class Index extends Component
     public function updatingEstado()
     {
         $this->resetPage();
-    }
-
-    public function forwardShowCreateModal(): void
-    {
-        $this->dispatch('showCreateModal')->to('tesoreria.tarjetas-cobro-brou.create');
-    }
-
-    public function forwardShowDeliverModal($id): void
-    {
-        $this->dispatch('showDeliverModal', id: (int) $id)->to('tesoreria.tarjetas-cobro-brou.update');
-    }
-
-    public function forwardShowReturnModal($id): void
-    {
-        $this->dispatch('showReturnModal', id: (int) $id)->to('tesoreria.tarjetas-cobro-brou.update');
-    }
-
-    public function forwardShowDetailModal($id): void
-    {
-        $this->dispatch('showDetailModal', id: (int) $id)->to('tesoreria.tarjetas-cobro-brou.show');
-    }
-
-    public function forwardShowEditModal($id): void
-    {
-        $this->dispatch('showEditModal', id: (int) $id)->to('tesoreria.tarjetas-cobro-brou.edit');
     }
 }

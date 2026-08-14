@@ -50,6 +50,7 @@ class CfeCreatorService
                 'adenda' => $data->adenda ?: null,
                 'tes_caja_concepto_id' => $data->tes_caja_concepto_id,
                 'siif_distribucion_dependencia_id' => $data->siif_distribucion_dependencia_id,
+                'institucion_id' => $data->institucion_id ?: null,
             ]);
 
             $this->createItems($cfe, $itemsRedondeados, $data->item_distribuciones);
@@ -103,6 +104,7 @@ class CfeCreatorService
                 'archivo_pdf_path' => $rutaArchivoTemporal,
                 'tes_caja_concepto_id' => $data->tes_caja_concepto_id,
                 'siif_distribucion_dependencia_id' => $data->siif_distribucion_dependencia_id,
+                'institucion_id' => $data->institucion_id ?: null,
             ]);
 
             $this->appendDetalleFromDescripcionArticulo222($itemsRedondeados, $cajaConcepto);

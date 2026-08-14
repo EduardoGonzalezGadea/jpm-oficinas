@@ -24,9 +24,6 @@ class Index extends Component
     protected $listeners = [
         'pg:eventRefresh-default' => 'refreshData',
         'delete',
-        'showCreateModal' => 'forwardShowCreateModal',
-        'showDetailModal' => 'forwardShowDetailModal',
-        'showEditModal' => 'forwardShowEditModal',
     ];
 
     public function mount()
@@ -139,20 +136,5 @@ class Index extends Component
             ->paginate(10);
 
         return view('livewire.tesoreria.deposito-vehiculos.index', compact('depositos'));
-    }
-
-    public function forwardShowCreateModal(): void
-    {
-        $this->dispatch('showCreateModal')->to('tesoreria.deposito-vehiculos.create');
-    }
-
-    public function forwardShowDetailModal($id): void
-    {
-        $this->dispatch('showDetailModal', id: (int) $id)->to('tesoreria.deposito-vehiculos.show');
-    }
-
-    public function forwardShowEditModal($id): void
-    {
-        $this->dispatch('showEditModal', id: (int) $id)->to('tesoreria.deposito-vehiculos.edit');
     }
 }

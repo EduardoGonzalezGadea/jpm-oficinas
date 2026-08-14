@@ -53,7 +53,7 @@
                                         Ver Detalles
                                     </button>
                                     <button
-                                        wire:click="$dispatch('review-cfe', {{ $cfe->id }})"
+                                        wire:click="$dispatch('review-cfe', { id: {{ $cfe->id }} })"
                                         class="btn btn-sm btn-info ms-1"
                                         data-bs-toggle="modal"
                                         data-bs-target="#reviewModal">

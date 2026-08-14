@@ -120,6 +120,29 @@
                 </div>
               </div>
             </div>
+
+            @if($confirmacionConceptoRequiereInstitucion)
+              <div class="row mt-3">
+                <div class="col-12">
+                  <h6 class="text-uppercase small font-weight-bold mb-2">
+                    <i class="fas fa-university mr-1 text-primary"></i> Institución
+                  </h6>
+                  <div class="form-group mb-0">
+                    <select wire:model="confirmacionInstitucionSeleccionada"
+                      class="form-control @error('confirmacionInstitucionSeleccionada') is-invalid @enderror">
+                      <option value="">— Seleccione institución —</option>
+                      @foreach($instituciones as $institucion)
+                        <option value="{{ $institucion->id }}">{{ $institucion->descripcion }}</option>
+                      @endforeach
+                    </select>
+                    @error('confirmacionInstitucionSeleccionada')
+                      <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                    <small class="form-text text-muted">Institución requerida para este concepto.</small>
+                  </div>
+                </div>
+              </div>
+            @endif
           </div>
 
           {{-- Tabla de Ítems --}}

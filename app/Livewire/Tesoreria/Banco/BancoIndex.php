@@ -3,7 +3,6 @@
 namespace App\Livewire\Tesoreria\Banco;
 
 use App\Models\Tesoreria\Banco;
-use Illuminate\Support\Facades\Cache;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -11,64 +10,97 @@ class BancoIndex extends Component
 {
     use WithPagination;
 
-    public $search = '';
-    public $showCreate = false, $showEdit = false;
-    public $bancoId;
+    protected $paginationTheme = 'bootstrap';
 
-    protected $listeners = ['delete', 'closeModal', 'bancoStore' => '$refresh', 'bancoUpdate' => '$refresh'];
+    public string $search = '';
 
-    public function render()
-    {
-        $page = $this->getPage() ?: 1;
-        $cacheKey = 'bancos_search_' . $this->search . '_page_' . $page;
+    // Formulario crear / editar
+    public ?int $bancoId = null;
+    public string $nombre = '';
+    public string $codigo = '';
+    public string $observaciones = '';
 
-        $bancos = Cache::remember($cacheKey, now()->addDay(), function () {
-            return Banco::where('nombre', 'like', "%{$this->search}%")
-                ->orWhere('codigo', 'like', "%{$this->search}%")
-                ->paginate(10);
-        });
-
-        return view('livewire.tesoreria.banco.banco-index', compact('bancos'));
-    }
-
-    public function updatingSearch()
+    public function updatedSearch(): void
     {
         $this->resetPage();
-        Cache::flush();
     }
 
-    public function create()
+    // ── Crear ──────────────────────────────────────────────────────────────
+    public function create(): void
     {
-        $this->showCreate = true;
-        $this->showEdit = false;
-        $this->dispatch('show-modal', id: 'modal');
-        session()->flash('debug', 'Create method called');
+        $this->resetInput();
+        $this->dispatch('show-modal', id: 'bancoModal');
     }
 
-    public function edit($id)
+    // ── Editar ─────────────────────────────────────────────────────────────
+    public function edit(int $id): void
     {
-        $this->bancoId = $id;
-        $this->showCreate = false;
-        $this->showEdit = true;
-        $this->dispatch('show-modal', id: 'modal');
+        $banco = Banco::findOrFail($id);
+        $this->bancoId       = $banco->id;
+        $this->nombre        = $banco->nombre;
+        $this->codigo        = $banco->codigo;
+        $this->observaciones = $banco->observaciones ?? '';
+        $this->dispatch('show-modal', id: 'bancoModal');
     }
 
-    public function closeModal()
+    // ── Guardar (crear o actualizar) ───────────────────────────────────────
+    public function store(): void
     {
-        $this->showCreate = false;
-        $this->showEdit = false;
+        $rules = [
+            'nombre' => 'required|string|max:100',
+            'codigo' => 'required|string|max:20|unique:tes_bancos,codigo',
+        ];
+
+        if ($this->bancoId) {
+            $rules['codigo'] = "required|string|max:20|unique:tes_bancos,codigo,{$this->bancoId}";
+        }
+
+        $this->validate($rules);
+
+        $data = [
+            'nombre'        => $this->nombre,
+            'codigo'        => $this->codigo,
+            'observaciones' => $this->observaciones,
+        ];
+
+        if ($this->bancoId) {
+            Banco::findOrFail($this->bancoId)->update($data);
+            $msg = 'Banco actualizado con éxito.';
+        } else {
+            Banco::create($data);
+            $msg = 'Banco creado con éxito.';
+        }
+
+        $this->resetInput();
         $this->dispatch('close-modal');
+        $this->dispatch('alert', type: 'success', message: $msg, toast: true);
     }
 
-    public function deleteConfirm($id)
+    // ── Eliminar ───────────────────────────────────────────────────────────
+    public function destroy(int $id): void
     {
-        $this->dispatch('swal:confirm', type: 'warning', title: '¿Estás seguro?', text: 'Se eliminará el banco.', id: $id);
+        Banco::findOrFail($id)->delete();
+        $this->dispatch('alert', type: 'success', message: 'Banco eliminado.', toast: true);
     }
 
-    public function delete($id)
+    // ── Reset ──────────────────────────────────────────────────────────────
+    public function resetInput(): void
     {
-        Banco::find($id)->delete();
-        Cache::flush();
-        $this->dispatch('swal', title: 'Eliminado!', type: 'success');
+        $this->bancoId       = null;
+        $this->nombre        = '';
+        $this->codigo        = '';
+        $this->observaciones = '';
+        $this->resetErrorBag();
+    }
+
+    // ── Render ─────────────────────────────────────────────────────────────
+    public function render()
+    {
+        $bancos = Banco::where('nombre', 'like', "%{$this->search}%")
+            ->orWhere('codigo', 'like', "%{$this->search}%")
+            ->orderBy('nombre')
+            ->paginate(15);
+
+        return view('livewire.tesoreria.banco.banco-index', compact('bancos'));
     }
 }

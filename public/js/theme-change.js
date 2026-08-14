@@ -140,64 +140,47 @@
         // Actualizar el indicador de activo en el menú al cargar la página
         updateActiveThemeIndicator(currentThemeName);
 
-        // Manejar el clic en los botones del selector
-        const themeButtons = document.querySelectorAll(".theme-select-button");
-
-        themeButtons.forEach((button) => {
-            // Evitar registrar múltiples listeners
-            if (button.dataset.themeHandlerAttached) return;
-            button.dataset.themeHandlerAttached = true;
-
-            button.addEventListener("click", function (event) {
+        // Manejar el clic en los botones del selector mediante delegación de eventos
+        // (evita que balanceSistemaMenu() rompa los listeners al reconstruir el DOM)
+        if (!document._themeClickDelegated) {
+            document._themeClickDelegated = true;
+            document.addEventListener('click', function (event) {
+                const button = event.target.closest('.theme-select-button');
+                if (!button) return;
                 event.preventDefault();
-
-                const themeName = this.dataset.themeName;
-                const themePath = this.dataset.themePath;
-
+                const themeName = button.dataset.themeName;
+                const themePath = button.dataset.themePath;
                 applyThemeChange(themeName, themePath);
-
-                // IMPORTANTE: Solo notificar al backend si el usuario está logueado
-                if (!userAuthenticated) {
-                    return;
-                }
-
-                // Notificar al backend para persistir en BD
+                const userAuth = document.querySelector('meta[name="user-authenticated"]')?.content === 'true';
+                if (!userAuth) return;
                 fetch(baseUrl + "/tema/cambiar", {
                     method: "POST",
                     credentials: "include",
                     headers: {
                         "Content-Type": "application/json",
                         "Accept": "application/json",
-                        "X-CSRF-TOKEN": document
-                            .querySelector('meta[name="csrf-token"]')
-                            .getAttribute("content"),
+                        "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').getAttribute("content"),
                     },
                     body: JSON.stringify({ theme: themeName }),
                 })
-                    .then(response => {
-                        if (response.status === 419 || response.status === 401) {
-                            if (window.handleSessionExpired) {
-                                response.clone().json().then(function (payload) {
-                                    window.handleSessionExpired({ message: payload.message || payload.error, redirect: payload.redirect });
-                                }).catch(function () { window.handleSessionExpired(); });
-                            } else {
-                                window.location.href = baseUrl + '/login';
-                            }
-                            return;
+                .then(response => {
+                    if (response.status === 419 || response.status === 401) {
+                        if (window.handleSessionExpired) {
+                            response.clone().json().then(function (payload) {
+                                window.handleSessionExpired({ message: payload.message || payload.error, redirect: payload.redirect });
+                            }).catch(function () { window.handleSessionExpired(); });
+                        } else {
+                            window.location.href = baseUrl + '/login';
                         }
-                        if (!response.ok) {
-                            console.error('Error al guardar el tema en el servidor');
-                        }
-                        return response.json();
-                    })
-                    .then(data => {
-                        if (data) console.log('Tema guardado exitosamente:', data);
-                    })
-                    .catch(error => {
-                        console.error('Error de red al intentar guardar el tema:', error);
-                    });
+                        return;
+                    }
+                    if (!response.ok) console.error('Error al guardar el tema en el servidor');
+                    return response.json();
+                })
+                .then(data => { if (data) console.log('Tema guardado:', data); })
+                .catch(error => { console.error('Error de red al guardar el tema:', error); });
             });
-        });
+        }
     };
 
     function applyThemeChange(themeName, themePath) {

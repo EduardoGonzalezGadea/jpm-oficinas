@@ -13,6 +13,7 @@ use App\Http\Controllers\Tesoreria\Armas\ImpresionController as ArmasImpresionCo
 use App\Http\Controllers\Tesoreria\ArrendamientoController;
 use App\Http\Controllers\Tesoreria\BancoController;
 use App\Http\Controllers\Tesoreria\CajaChica\CajaChicaController;
+use App\Http\Controllers\Tesoreria\CajaDiaria\CajaDiariaController;
 use App\Http\Controllers\Tesoreria\CajaChica\ImpresionController as CajaChicaImpresionController;
 use App\Http\Controllers\Tesoreria\CajaChica\PendienteController;
 use App\Http\Controllers\Tesoreria\CuentaBancariaController;
@@ -232,6 +233,8 @@ Route::prefix('gestion-cfe')->name('gestion-cfe.')->group(function () {
         ->name('estados-recaudacion.no-confirmadas');
     Route::get('/estados-recaudacion/confirmar/{planilla}', \App\Livewire\Tesoreria\EstadosRecaudacion\Confirmar::class)
         ->name('estados-recaudacion.confirmar');
+    Route::get('/planillas-comunes', \App\Livewire\Tesoreria\PlanillasComunes\Index::class)
+        ->name('planillas-comunes');
     Route::get('/recaudaciones', \App\Livewire\Tesoreria\Recaudaciones\Index::class)
         ->name('recaudaciones');
 });
@@ -256,10 +259,12 @@ Route::prefix('libro-diario')->name('libro-diario.')->group(function () {
 });
 
 Route::prefix('caja-diaria')->name('caja-diaria.')->middleware(['modulo:tesoreria'])->group(function () {
-    Route::get('/', \App\Livewire\Tesoreria\CajaDiaria\Index::class)->name('index');
-    Route::get('apertura-cierre', \App\Livewire\Tesoreria\CajaDiaria\AperturaCierre::class)->name('apertura-cierre');
-    Route::get('arqueo', \App\Livewire\Tesoreria\CajaDiaria\Arqueo::class)->name('arqueo');
-    Route::get('movimientos', \App\Livewire\Tesoreria\CajaDiaria\Movimientos::class)->name('movimientos');
+    Route::get('/', [CajaDiariaController::class, 'index'])->name('index');
+    Route::get('apertura-cierre', [CajaDiariaController::class, 'aperturaCierre'])->name('apertura-cierre');
+    Route::get('cobrar', [CajaDiariaController::class, 'cobrar'])->name('cobrar');
+    Route::get('pagar', [CajaDiariaController::class, 'pagar'])->name('pagar');
+    Route::get('arqueo', [CajaDiariaController::class, 'arqueo'])->name('arqueo');
+    Route::get('movimientos', [CajaDiariaController::class, 'movimientos'])->name('movimientos');
 });
 
 Route::prefix('cfe')->name('cfe.')->group(function () {
@@ -327,6 +332,9 @@ Route::prefix('configuracion')->name('configuracion.')->middleware('modulo:tesor
 
     Route::view('caja-conceptos', 'tesoreria.configuracion.caja-conceptos.index-livewire')
         ->name('caja-conceptos.index');
+
+    Route::view('eventuales-instituciones', 'tesoreria.configuracion.eventuales-instituciones.index-livewire')
+        ->name('eventuales-instituciones.index');
 
     Route::view('siif-distribucion-dependencias', 'tesoreria.configuracion.siif-distribucion-dependencias.index-livewire')
         ->name('siif-distribucion-dependencias.index');

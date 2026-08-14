@@ -223,6 +223,6 @@ class Arqueo extends Component
             'observaciones' => $this->observaciones,
             'arqueos_previos' => $this->arqueos_previos,
             'desglose_invalido' => $this->desglose_invalido,
-        ])->extends('layouts.app')->section('content');
+        ]);
     }
 }

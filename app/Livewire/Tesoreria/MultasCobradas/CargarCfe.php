@@ -20,6 +20,9 @@ class CargarCfe extends Component
     public $mensajeError = null;
     public $sugerenciaItem = null;
 
+    // Medios de pago editables antes de guardar
+    public $mediosPagoForm = [];
+
     protected $rules = [
         'archivo' => 'required|mimes:pdf|max:10240', // 10MB max
     ];
@@ -32,6 +35,7 @@ class CargarCfe extends Component
             $cacheData = Cache::get('cfe_prefill_' . $prefillId);
             if (in_array($cacheData['tipo'] ?? '', ['multas_cobradas', 'Multas Cobradas'])) {
                 $this->datosExtraidos = $cacheData['datos'];
+                $this->inicializarMediosPagoForm();
                 Cache::forget('cfe_prefill_' . $prefillId); // Limpiar
                 return;
             }
@@ -40,6 +44,7 @@ class CargarCfe extends Component
         // 2. Fallback: Verificar si hay datos pre-cargados desde la sesión (Antiguo método)
         if (session()->has('cfe_datos_precargados') && session('cfe_tipo') === 'multas_cobradas') {
             $this->datosExtraidos = session('cfe_datos_precargados');
+            $this->inicializarMediosPagoForm();
             session()->forget(['cfe_datos_precargados', 'cfe_tipo', 'cfe_filepath']);
         }
     }
@@ -74,6 +79,7 @@ class CargarCfe extends Component
             }
 
             $this->datosExtraidos = $datos;
+            $this->inicializarMediosPagoForm();
         } catch (\App\Exceptions\CfeExtraccionInvalidaException $e) {
             $resultado = $this->handleMontoAnulacion($text, $e->getMessage());
             if ($resultado === 'confirmar') {
@@ -309,7 +315,7 @@ class CargarCfe extends Component
         return $datos;
     }
 
-    public function guardarRegistro()
+    public function guardarRegistro($force = false)
     {
         if (!$this->datosExtraidos || empty($this->datosExtraidos['items'])) {
             $this->mensajeError = "No se detectaron ítems válidos para guardar.";
@@ -338,6 +344,24 @@ class CargarCfe extends Component
                 return;
             }
             // ---------------------------------------------
+
+            // --- VALIDACIÓN SUMA MEDIOS DE PAGO vs TOTAL A PAGAR ---
+            // Reconstruir la forma de pago desde los medios editables del formulario
+            if (!empty($this->mediosPagoForm)) {
+                $this->datosExtraidos['forma_pago'] = $this->reconstruirFormaPago();
+            }
+
+            $sumaMedios = $this->sumarImportesMediosPago($this->datosExtraidos['forma_pago'] ?? null);
+
+            if (!$force && abs($montoTotal - $sumaMedios) > 0.01) {
+                $this->dispatch('swal:confirm-discrepancia-multas', [
+                    'monto'      => round($montoTotal, 2),
+                    'sumaMedios' => round($sumaMedios, 2),
+                ]);
+                DB::rollBack();
+                return;
+            }
+            // -------------------------------------------------------
 
             $fecha = \Carbon\Carbon::createFromFormat('d/m/Y', $this->datosExtraidos['fecha']);
             $recibo = $this->datosExtraidos['serie'] . '-' . $this->datosExtraidos['numero'];
@@ -398,14 +422,128 @@ class CargarCfe extends Component
         $this->archivo = null;
         $this->datosExtraidos = null;
         $this->mensajeError = null;
+        $this->mediosPagoForm = [];
         $this->limpiarAnulacion();
+    }
+
+    // =========================================================================
+    // MEDIOS DE PAGO EDITABLES
+    // =========================================================================
+
+    /**
+     * Inicializa la lista de medios de pago editables desde la forma de pago detectada.
+     */
+    private function inicializarMediosPagoForm(): void
+    {
+        $this->mediosPagoForm = [];
+
+        $formaPago = $this->datosExtraidos['forma_pago'] ?? null;
+        if (empty($formaPago) || mb_strtoupper(trim($formaPago)) === 'SIN DATOS') {
+            return;
+        }
+
+        $medioPagoService = app(MedioPagoService::class);
+        foreach ($medioPagoService->parsearMedioPago($formaPago) as $parte) {
+            $this->mediosPagoForm[] = [
+                'nombre' => $parte['nombre_original'] ?? $parte['nombre'] ?? '',
+                'importe' => $parte['valor'] !== null ? (string) $parte['valor'] : '',
+            ];
+        }
+    }
+
+    /**
+     * Reconstruye la cadena de forma de pago a partir de los medios editables.
+     */
+    private function reconstruirFormaPago(): string
+    {
+        $medioPagoService = app(MedioPagoService::class);
+        $partes = [];
+
+        foreach ($this->mediosPagoForm as $medio) {
+            $nombre = trim($medio['nombre'] ?? '');
+            if ($nombre === '') {
+                continue;
+            }
+
+            $importe = trim((string)($medio['importe'] ?? ''));
+            if ($importe === '') {
+                $partes[] = $nombre;
+            } else {
+                $valor = $medioPagoService->parsearValorNumerico($importe);
+                if ($valor === null) {
+                    continue;
+                }
+                $partes[] = $nombre . ':' . number_format($valor, 2, '.', '');
+            }
+        }
+
+        if (empty($partes)) {
+            return 'SIN DATOS';
+        }
+
+        return implode('/', $partes);
+    }
+
+    public function agregarMedio()
+    {
+        $this->mediosPagoForm[] = ['nombre' => '', 'importe' => ''];
+    }
+
+    public function quitarMedio($index)
+    {
+        unset($this->mediosPagoForm[$index]);
+        $this->mediosPagoForm = array_values($this->mediosPagoForm);
+    }
+
+    /**
+     * Suma los importes explícitos de los medios de pago editables.
+     */
+    public function getSumaMediosPagoFormProperty(): float
+    {
+        $medioPagoService = app(MedioPagoService::class);
+        $suma = 0.0;
+
+        foreach ($this->mediosPagoForm as $medio) {
+            $importe = trim((string)($medio['importe'] ?? ''));
+            if ($importe === '') {
+                continue;
+            }
+            $valor = $medioPagoService->parsearValorNumerico($importe);
+            if ($valor !== null) {
+                $suma += $valor;
+            }
+        }
+
+        return round($suma, 2);
+    }
+
+    /**
+     * Suma los importes explícitos de los medios de pago extraídos del CFE.
+     * Devuelve 0 cuando no hay medios de pago o ninguno tiene importe asignado,
+     * de modo que la discrepancia frente al total a pagar siempre pueda detectarse.
+     */
+    private function sumarImportesMediosPago(?string $formaPago): float
+    {
+        if (empty($formaPago) || mb_strtoupper(trim($formaPago)) === 'SIN DATOS') {
+            return 0.0;
+        }
+
+        $partes = app(MedioPagoService::class)->parsearMedioPago($formaPago);
+        $valores = array_filter(array_column($partes, 'valor'), fn ($v) => $v !== null);
+
+        if (count($valores) === 0) {
+            return 0.0;
+        }
+
+        return round((float) array_sum($valores), 2);
     }
 
     public function render()
     {
         $items = TesMultasItems::orderBy('detalle')->get();
         return view('livewire.tesoreria.multas-cobradas.cargar-cfe', [
-            'items' => $items
+            'items' => $items,
+            'mediosDisponibles' => app(MedioPagoService::class)->obtenerMediosDisponibles(),
         ]);
     }
 }

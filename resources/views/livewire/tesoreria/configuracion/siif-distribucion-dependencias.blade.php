@@ -1,4 +1,4 @@
-﻿<div>
+<div>
   <div class="row">
     <div class="col-md-12">
       <div class="card">
@@ -34,7 +34,7 @@
               </thead>
               <tbody>
                 @forelse ($dependencias as $dep)
-                  <tr>
+                  <tr wire:key="dependencia-{{ $dep->id }}">
                     <td class="align-middle text-left">{{ $dep->dependencia }}</td>
                     <td class="align-middle text-center"><strong>{{ $dep->abreviatura }}</strong></td>
                     <td class="text-center align-middle">
@@ -72,7 +72,7 @@
   </div>
 
   {{-- Modal Crear / Editar --}}
-  <div wire:ignore.self class="modal fade" id="siifDependenciaModal" tabindex="-1" role="dialog"
+  <div wire:ignore.self wire:key="siif-dependencia-modal" class="modal fade" id="siifDependenciaModal" tabindex="-1" role="dialog"
     aria-labelledby="siifDependenciaModalLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
       <div class="modal-content">
@@ -126,7 +126,7 @@
   </div>
 
   {{-- Modal Detalles --}}
-  <div wire:ignore.self class="modal fade" id="detailsDependenciaModal" tabindex="-1" role="dialog"
+  <div wire:ignore.self wire:key="details-dependencia-modal" class="modal fade" id="detailsDependenciaModal" tabindex="-1" role="dialog"
     aria-labelledby="detailsDependenciaModalLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
       <div class="modal-content">
@@ -156,13 +156,6 @@
 
   @push('scripts')
     <script>
-      window.addEventListener('show-modal', event => {
-        const d = window.LiveEvent(event);
-        if (d.id === 'siifDependenciaModal') {
-          $('#siifDependenciaModal').modal('show');
-        }
-      });
-
       document.addEventListener('livewire:init', function() {
       Livewire.on('siifDependenciaStore', () => {
         $('#siifDependenciaModal').modal('hide');

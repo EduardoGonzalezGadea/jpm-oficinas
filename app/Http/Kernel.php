@@ -14,7 +14,6 @@ class Kernel extends HttpKernel
      * @var array<int, class-string|string>
      */
     protected $middleware = [
-        // \App\Http\Middleware\TrustHosts::class,
         \App\Http\Middleware\TrustProxies::class,
         \Illuminate\Http\Middleware\HandleCors::class,
         \App\Http\Middleware\PreventRequestsDuringMaintenance::class,
@@ -78,10 +77,10 @@ class Kernel extends HttpKernel
         // Middleware personalizado para verificar rol de administrador
         'admin.only' => \App\Http\Middleware\CheckAdminRole::class,
 
-        // Middleware de autenticaciÃ³n de dos factores
+        // Middleware de autenticación de dos factores
         'two-factor' => \App\Http\Middleware\TwoFactorMiddleware::class,
 
-        // Middleware unificado de mÃ³dulo y nivel
+        // Middleware unificado de módulo y nivel
         'modulo' => \App\Http\Middleware\ModuloAcceso::class,
     ];
 }

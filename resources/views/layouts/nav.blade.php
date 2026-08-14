@@ -56,7 +56,7 @@
                     </a>
                     {{-- Link Caja Diaria (solo administradores) --}}
                     @if(auth()->user()->esAdministrador())
-                    <a class="dropdown-item" href="{{ route('tesoreria.caja-diaria.index') }}" wire:navigate>
+                    <a class="dropdown-item" href="{{ route('tesoreria.caja-diaria.index') }}">
                         <i class="fas fa-cash-register mr-2"></i> Caja Diaria
                     </a>
                     @endif
@@ -204,6 +204,9 @@
                                 <a class="dropdown-item" href="{{ route('tesoreria.configuracion.caja-conceptos.index') }}">
                                     <i class="fas fa-tags mr-2"></i>Conceptos de Caja
                                 </a>
+                                <a class="dropdown-item" href="{{ route('tesoreria.configuracion.eventuales-instituciones.index') }}">
+                                    <i class="fas fa-building mr-2"></i>Instituciones
+                                </a>
                                 <a class="dropdown-item" href="{{ route('tesoreria.configuracion.siif-distribucion-dependencias.index') }}">
                                     <i class="fas fa-sitemap mr-2"></i>Dist. SIIF Deps.
                                 </a>
@@ -325,10 +328,6 @@
 @once
 @push('scripts')
 <script data-navigate-once>
-    document.addEventListener('DOMContentLoaded', function() {
-        balanceSistemaMenu();
-    });
-
     function balanceSistemaMenu() {
         const menu = document.getElementById('sistema-menu');
         if (!menu || !menu.classList.contains('sistema-menu-columns')) return;
@@ -362,6 +361,14 @@
 
         dividers.forEach(function(d) { menu.appendChild(d); });
     }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        balanceSistemaMenu();
+    });
+
+    document.addEventListener('livewire:navigated', function() {
+        balanceSistemaMenu();
+    });
 
     $(function () {
         function showSpinner() {

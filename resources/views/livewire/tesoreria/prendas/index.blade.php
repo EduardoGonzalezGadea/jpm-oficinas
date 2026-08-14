@@ -15,7 +15,7 @@
         <a href="{{ route('tesoreria.prendas.cargar-cfe') }}" class="btn btn-warning">
           <i class="fas fa-file-upload"></i> Cargar CFE
         </a>
-        <button wire:click="$dispatch('showCreateModal')" class="btn btn-primary">
+        <button @click="$dispatch('showCreateModal')" class="btn btn-primary">
           <i class="fas fa-plus"></i> Nuevo
         </button>
       </div>
@@ -82,10 +82,10 @@
               <td class="align-middle">{{ $prenda->medioPago->nombre ?? '-' }}</td>
               <td class="align-middle text-center py-1 px-2 d-print-none" style="white-space: nowrap;">
                 <div class="btn-group btn-group-sm" role="group">
-                  <button wire:click="$dispatch('showDetailModal', {{ $prenda->id }})" class="btn btn-primary" title="Ver detalles">
+                  <button @click="$dispatch('showDetailModal', { id: {{ $prenda->id }} })" class="btn btn-primary" title="Ver detalles">
                     <i class="fas fa-eye"></i>
                   </button>
-                  <button wire:click="$dispatch('showEditModal', {{ $prenda->id }})" class="btn btn-info" title="Editar">
+                  <button @click="$dispatch('showEditModal', { id: {{ $prenda->id }} })" class="btn btn-info" title="Editar">
                     <i class="fas fa-edit"></i>
                   </button>
                   <button wire:click="confirmDelete({{ $prenda->id }})" class="btn btn-danger" title="Eliminar">
@@ -108,15 +108,15 @@
     </div>
   </div>
 
-  <livewire:tesoreria.prendas.create />
-  <livewire:tesoreria.prendas.edit />
-  <livewire:tesoreria.prendas.show />
+  <livewire:tesoreria.prendas.create wire:key="prendas-create-modal" />
+  <livewire:tesoreria.prendas.edit wire:key="prendas-edit-modal" />
+  <livewire:tesoreria.prendas.show wire:key="prendas-show-modal" />
 
   @if($autoEditPrendaId)
   <script>
     document.addEventListener('DOMContentLoaded', function() {
       setTimeout(function() {
-        window.Livewire.dispatch('showEditModal', @json($autoEditPrendaId));
+        window.Livewire.dispatch('showEditModal', { id: @json($autoEditPrendaId) });
       }, 500);
     });
   </script>

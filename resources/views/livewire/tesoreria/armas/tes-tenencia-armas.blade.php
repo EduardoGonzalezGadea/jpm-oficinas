@@ -1,4 +1,4 @@
-﻿<div wire:init="checkEditId">
+<div>
   <div class="card">
     <div class="card-header card-header-section card-header-gradient py-2 px-3">
       <h4 class="mb-0"><strong><i class="fas fa-address-card mr-2"></i>Listado de Tenencia de Armas</strong></h4>
@@ -64,7 +64,7 @@
         </thead>
         <tbody>
           @forelse($registros as $registro)
-          <tr>
+          <tr wire:key="tenencia-{{ $registro->id }}">
             <td class="align-middle text-center">
               @if(!$registro->planilla_id)
               <div class="custom-control custom-checkbox">
@@ -121,16 +121,15 @@
   </div>
 
   <!-- Modal de Crear/Editar -->
-  <div class="modal fade @if($showModal) show @endif"
-    style="@if($showModal) display: block; @endif"
-    tabindex="-1" role="dialog">
+  <div wire:ignore.self class="modal fade" id="tenenciaFormModal"
+       tabindex="-1" role="dialog" aria-labelledby="tenenciaFormModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-scrollable" role="document">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title">
+          <h5 class="modal-title" id="tenenciaFormModalLabel">
             {{ $editMode ? 'Editar' : 'Nuevo' }} Registro de Tenencia de Armas
           </h5>
-          <button type="button" class="close" wire:click="closeModal">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close" wire:click="closeModal">
             <span aria-hidden="true">&times;</span>
           </button>
         </div>
@@ -141,7 +140,7 @@
                 <div class="form-group">
                   <label>Fecha <span class="text-danger">*</span></label>
                   <input type="date" class="form-control @error('fecha') is-invalid @enderror"
-                    wire:model.live="fecha" id="fecha">
+                    wire:model="fecha" id="fecha">
                   @error('fecha')
                   <div class="invalid-feedback">{{ $message }}</div>
                   @enderror
@@ -151,7 +150,7 @@
                 <div class="form-group">
                   <label>Monto <span class="text-danger">*</span></label>
                   <input type="number" step="0.01" class="form-control @error('monto') is-invalid @enderror"
-                    wire:model.live="monto" id="monto">
+                    wire:model="monto" id="monto">
                   @error('monto')
                   <div class="invalid-feedback">{{ $message }}</div>
                   @enderror
@@ -164,7 +163,7 @@
                 <div class="form-group">
                   <label>Titular <span class="text-danger">*</span></label>
                   <input type="text" class="form-control @error('titular') is-invalid @enderror"
-                    wire:model.live="titular" id="titular">
+                    wire:model="titular" id="titular">
                   @error('titular')
                   <div class="invalid-feedback">{{ $message }}</div>
                   @enderror
@@ -174,7 +173,7 @@
                 <div class="form-group">
                   <label>Cédula <span class="text-danger">*</span></label>
                   <input type="text" class="form-control @error('cedula') is-invalid @enderror"
-                    wire:model.live="cedula" id="cedula">
+                    wire:model="cedula" id="cedula">
                   @error('cedula')
                   <div class="invalid-feedback">{{ $message }}</div>
                   @enderror
@@ -187,7 +186,7 @@
                 <div class="form-group">
                   <label>Orden de Cobro</label>
                   <input type="text" class="form-control @error('orden_cobro') is-invalid @enderror"
-                    wire:model.live="orden_cobro" id="orden_cobro">
+                    wire:model="orden_cobro" id="orden_cobro">
                   @error('orden_cobro')
                   <div class="invalid-feedback">{{ $message }}</div>
                   @enderror
@@ -197,7 +196,7 @@
                 <div class="form-group">
                   <label>Número de Trámite</label>
                   <input type="text" class="form-control @error('numero_tramite') is-invalid @enderror"
-                    wire:model.live="numero_tramite" id="numero_tramite">
+                    wire:model="numero_tramite" id="numero_tramite">
                   @error('numero_tramite')
                   <div class="invalid-feedback">{{ $message }}</div>
                   @enderror
@@ -210,7 +209,7 @@
                 <div class="form-group">
                   <label>Ingreso Contabilidad</label>
                   <input type="text" class="form-control @error('ingreso_contabilidad') is-invalid @enderror"
-                    wire:model.live="ingreso_contabilidad" id="ingreso_contabilidad">
+                    wire:model="ingreso_contabilidad" id="ingreso_contabilidad">
                   @error('ingreso_contabilidad')
                   <div class="invalid-feedback">{{ $message }}</div>
                   @enderror
@@ -220,7 +219,7 @@
                 <div class="form-group">
                   <label>Recibo</label>
                   <input type="text" class="form-control @error('recibo') is-invalid @enderror"
-                    wire:model.live="recibo" id="recibo">
+                    wire:model="recibo" id="recibo">
                   @error('recibo')
                   <div class="invalid-feedback">{{ $message }}</div>
                   @enderror
@@ -233,7 +232,7 @@
                 <div class="form-group">
                   <label>Teléfono</label>
                   <input type="text" class="form-control @error('telefono') is-invalid @enderror"
-                    wire:model.live="telefono" id="telefono">
+                    wire:model="telefono" id="telefono">
                   @error('telefono')
                   <div class="invalid-feedback">{{ $message }}</div>
                   @enderror
@@ -243,7 +242,7 @@
           </form>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" wire:click="closeModal">Cancelar</button>
+          <button type="button" class="btn btn-secondary" data-dismiss="modal" wire:click="closeModal">Cancelar</button>
           <button type="button" class="btn btn-primary" wire:click="save" id="btnGuardar">Guardar</button>
         </div>
       </div>
@@ -251,14 +250,13 @@
   </div>
 
   <!-- Modal de Confirmación de Eliminación -->
-  <div class="modal fade @if($showDeleteModal) show @endif"
-    style="@if($showDeleteModal) display: block; @endif"
-    tabindex="-1" role="dialog">
+  <div wire:ignore.self class="modal fade" id="tenenciaDeleteModal"
+       tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog" role="document">
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title">Confirmar Eliminación</h5>
-          <button type="button" class="close" wire:click="closeDeleteModal">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close" wire:click="closeDeleteModal">
             <span aria-hidden="true">&times;</span>
           </button>
         </div>
@@ -266,24 +264,21 @@
           <p>¿Está seguro que desea eliminar este registro?</p>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" wire:click="closeDeleteModal">Cancelar</button>
+          <button type="button" class="btn btn-secondary" data-dismiss="modal" wire:click="closeDeleteModal">Cancelar</button>
           <button type="button" class="btn btn-danger" wire:click="delete">Eliminar</button>
         </div>
       </div>
     </div>
   </div>
 
-  @if($showModal || $showDeleteModal || $showDetailModal)
-  <div class="modal-backdrop fade show"></div>
-  @endif
-
   <!-- Modal de Detalle -->
-  <div class="modal fade @if($showDetailModal) show @endif" style="@if($showDetailModal) display: block; @endif" tabindex="-1" role="dialog">
+  <div wire:ignore.self class="modal fade" id="tenenciaDetailModal"
+       tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-scrollable" role="document">
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title">Detalle del Registro de Tenencia de Armas</h5>
-          <button type="button" class="close" wire:click="closeDetailModal">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close" wire:click="closeDetailModal">
             <span aria-hidden="true">&times;</span>
           </button>
         </div>
@@ -303,7 +298,7 @@
           @endif
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" wire:click="closeDetailModal">Cerrar</button>
+          <button type="button" class="btn btn-secondary" data-dismiss="modal" wire:click="closeDetailModal">Cerrar</button>
         </div>
       </div>
     </div>
@@ -312,7 +307,6 @@
   @push('scripts')
   <script>
     document.addEventListener('livewire:init', function() {
-      // Manejo del Enter para navegar entre campos
       document.addEventListener('keydown', function(e) {
         if (e.key === 'Enter' && e.target.tagName === 'INPUT') {
           e.preventDefault();
@@ -320,7 +314,6 @@
           if (form) {
             const inputs = Array.from(form.querySelectorAll('input:not([type="hidden"])'));
             const index = inputs.indexOf(e.target);
-
             if (index < inputs.length - 1) {
               inputs[index + 1].focus();
             } else {
@@ -329,19 +322,17 @@
           }
         }
       });
+    });
 
-      // Listener for modal opened event
-      Livewire.on('modalOpened', () => {
-        setTimeout(() => {
-          const modalBody = document.querySelector('.modal.show .modal-body');
-          if (modalBody) {
-            modalBody.scrollTop = 0;
-          }
-          const fechaInput = document.getElementById('fecha');
-          if (fechaInput) {
-            fechaInput.focus();
-          }
-        }, 100); // Small delay to ensure modal is fully rendered
+    $(document).ready(function () {
+      $('#tenenciaFormModal').on('hidden.bs.modal', function () {
+        Livewire.dispatch('resetForm');
+      });
+      $('#tenenciaDeleteModal').on('hidden.bs.modal', function () {
+        Livewire.dispatch('closeDeleteModal');
+      });
+      $('#tenenciaDetailModal').on('hidden.bs.modal', function () {
+        Livewire.dispatch('closeDetailModal');
       });
     });
   </script>
