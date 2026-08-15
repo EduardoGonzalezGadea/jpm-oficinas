@@ -53,19 +53,17 @@ class AppServiceProvider extends ServiceProvider
 
             config(['app.url' => $baseUrl]);
 
-            // Livewire v3 genera data-update-uri usando app('url')->toRoute($route, [], false),
-            // que devuelve el path relativo del route sin el subdirectorio.
-            // En XAMPP, el browser resuelve /livewire/update desde la raíz de Apache (404).
-            // La solución: registrar el route con el prefijo del subdirectorio para que
-            // toRoute() devuelva /oficinas/public/livewire/update.
-            if ($basePath !== '') {
-                \Livewire\Livewire::setUpdateRoute(function ($handle) use ($basePath) {
-                    return \Illuminate\Support\Facades\Route::post(
-                        $basePath . '/livewire/update',
-                        $handle
-                    )->middleware('web');
-                });
-            }
+            // Livewire 4: setUpdateRoute() ha sido removido o cambiado.
+            // La configuración de rutas ahora se maneja automáticamente.
+            // TODO: Verificar si XAMPP requiere configuración especial para subdirectorios
+            // if ($basePath !== '') {
+            //     \Livewire\Livewire::setUpdateRoute(function ($handle) use ($basePath) {
+            //         return \Illuminate\Support\Facades\Route::post(
+            //             $basePath . '/livewire/update',
+            //             $handle
+            //         )->middleware('web');
+            //     });
+            // }
         }
 
         // Livewire v3 auto-descubre los componentes en app/Livewire (App\Livewire),
