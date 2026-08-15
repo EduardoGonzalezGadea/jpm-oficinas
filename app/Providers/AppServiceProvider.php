@@ -49,6 +49,16 @@ class AppServiceProvider extends ServiceProvider
             $basePath = rtrim(dirname($scriptName), '/');
             $basePath = ($basePath === '/' || $basePath === '\\') ? '' : $basePath;
 
+            // IMPORTANTE: php artisan serve siempre sirve desde raíz,
+            // incluso si el proyecto está en un subdirectorio del filesystem.
+            // Solo configurar basePath si NO estamos en el puerto 8000 (artisan serve default)
+            // o si explícitamente detectamos que estamos bajo Apache/servidor web real
+            $isArtisanServe = ($port === 8000 && $host === '127.0.0.1');
+            
+            if ($isArtisanServe) {
+                $basePath = ''; // Forzar vacío para artisan serve
+            }
+
             $baseUrl = $protocol . $host . $portSuffix . $basePath;
 
             config(['app.url' => $baseUrl]);
