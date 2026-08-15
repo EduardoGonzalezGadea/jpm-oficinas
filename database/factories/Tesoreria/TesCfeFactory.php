@@ -28,16 +28,14 @@ class TesCfeFactory extends Factory
             'fecha' => $this->faker->dateTimeBetween('-30 days', 'now'),
             'vencimiento' => $this->faker->dateTimeBetween('now', '+30 days'),
             'receptor_nombre_denominacion' => $this->faker->company(),
-            'receptor_ruc' => $this->faker->numerify('21########0018'),
-            'receptor_domicilio' => $this->faker->address(),
+            'receptor_documento_ruc' => $this->faker->numerify('21########0018'), // Corregido: era receptor_ruc
+            'receptor_domicilio_fiscal' => $this->faker->address(), // Corregido: era receptor_domicilio
             'monto_no_facturable' => 0.00,
             'monto_total' => $montoTotal = $this->faker->randomFloat(2, 1000, 10000),
             'total_a_pagar' => $montoTotal,
             'referencias' => null,
             'adenda' => null,
-            'pdf_file_name' => null,
-            'pdf_hash' => null,
-            'status' => 'pendiente',
+            'archivo_pdf_path' => null, // Corregido: era pdf_file_name
             'tes_caja_concepto_id' => null,
             'siif_distribucion_dependencia_id' => null,
             'institucion_id' => null,
@@ -79,22 +77,22 @@ class TesCfeFactory extends Factory
     }
 
     /**
-     * CFE pendiente de procesamiento
+     * CFE pendiente de procesamiento (usado en tes_cfe_pendientes)
      */
     public function pendiente(): static
     {
         return $this->state(fn (array $attributes) => [
-            'status' => 'pendiente',
+            // El status se maneja en tes_cfe_pendientes, no en tes_cfes
         ]);
     }
 
     /**
-     * CFE confirmado
+     * CFE confirmado (usado en tes_cfe_pendientes)
      */
     public function confirmado(): static
     {
         return $this->state(fn (array $attributes) => [
-            'status' => 'confirmado',
+            // El status se maneja en tes_cfe_pendientes, no en tes_cfes
         ]);
     }
 
@@ -104,8 +102,7 @@ class TesCfeFactory extends Factory
     public function conPdf(): static
     {
         return $this->state(fn (array $attributes) => [
-            'pdf_file_name' => 'cfe_' . $this->faker->uuid() . '.pdf',
-            'pdf_hash' => $this->faker->sha256(),
+            'archivo_pdf_path' => 'cfe_' . $this->faker->uuid() . '.pdf', // Corregido: era pdf_file_name
         ]);
     }
 
