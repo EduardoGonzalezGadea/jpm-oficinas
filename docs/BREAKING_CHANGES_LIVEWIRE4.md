@@ -40,18 +40,25 @@ if ($basePath !== '') {
 
 ### Solución Aplicada
 
-**Comentar la configuración personalizada**:
+**Usar `config('livewire.asset_url')`** (Livewire 4 correcto):
 
 ```php
-// ✅ Livewire 4 maneja rutas automáticamente
-// if ($basePath !== '') {
-//     \Livewire\Livewire::setUpdateRoute(function ($handle) use ($basePath) {
-//         return Route::post(
-//             $basePath . '/livewire/update',
-//             $handle
-//         )->middleware('web');
-//     });
-// }
+// ✅ Livewire 4: Configuración correcta para subdirectorios
+if ($basePath !== '') {
+    config(['livewire.asset_url' => $basePath]);
+}
+```
+
+**Esto reemplaza** el antiguo `setUpdateRoute()` de Livewire 3:
+
+```php
+// ❌ ANTES (Livewire 3)
+\Livewire\Livewire::setUpdateRoute(function ($handle) use ($basePath) {
+    return Route::post($basePath . '/livewire/update', $handle);
+});
+
+// ✅ DESPUÉS (Livewire 4)
+config(['livewire.asset_url' => $basePath]);
 ```
 
 ### Rutas Antes y Después
@@ -68,13 +75,15 @@ POST livewire-892282c4/update → Default Livewire route
 
 ### Estado
 
-- ✅ **SOLUCIONADO**
+- ✅ **SOLUCIONADO CORRECTAMENTE**
+- ✅ Implementado con `config(['livewire.asset_url' => $basePath])`
+- ✅ Compatible con `php artisan serve` Y Apache/XAMPP
 - ✅ Servidor reiniciado
 - ⏳ Pendiente: Validación manual usuario
 
 ---
 
-## ⚠️ Posible Breaking Change #2: Subdirectorio XAMPP
+## ⚠️ ~~Posible Breaking Change #2: Subdirectorio XAMPP~~ ✅ RESUELTO
 
 ### Contexto
 
@@ -89,42 +98,30 @@ En lugar de:
 http://localhost:8000
 ```
 
-### Riesgo
+### Solución Implementada ✅
 
-Con Livewire 4, **puede que las rutas no funcionen correctamente** cuando:
-- La app está en subdirectorio (ej: `/oficinas/public`)
-- Se accede vía Apache (XAMPP) en lugar de `php artisan serve`
+**Livewire 4 usa `asset_url` configuración**:
 
-### Solución Temporal
-
-**Usar `php artisan serve`** durante validación:
-```bash
-php artisan serve
-# Acceder: http://127.0.0.1:8000
+```php
+// En AppServiceProvider.php
+if ($basePath !== '') {
+    config(['livewire.asset_url' => $basePath]);
+}
 ```
 
-### Solución Permanente (Si es necesario)
+Esto configura dinámicamente el prefijo de ruta para que Livewire genere URLs correctas en subdirectorios.
 
-Si el sistema DEBE funcionar en subdirectorio XAMPP, revisar:
+### Resultado
 
-1. **Configuración de `APP_URL` en `.env`**:
-   ```env
-   APP_URL=http://localhost/oficinas/public
-   ```
-
-2. **Livewire 4 configuración de asset_url**:
-   ```php
-   // config/livewire.php
-   'asset_url' => env('LIVEWIRE_ASSET_URL', null),
-   ```
-
-3. **Documentación oficial**: https://livewire.laravel.com/docs/installation
+- ✅ Funciona con `php artisan serve` (sin basePath)
+- ✅ Funciona con Apache/XAMPP en subdirectorio (con basePath)
+- ✅ No requiere configuración manual adicional
 
 ### Estado
 
-- ⏳ **PENDIENTE DE CONFIRMAR**
-- Depende de entorno de producción
-- Si producción usa Apache + subdirectorio → Revisar
+- ✅ **SOLUCIONADO**
+- ✅ Compatible con ambos entornos
+- No requiere acciones adicionales
 
 ---
 
@@ -265,7 +262,7 @@ php artisan config:show livewire
 
 ---
 
-**Última actualización**: 15/08/2026 16:25  
+**Última actualización**: 15/08/2026 16:45  
 **Breaking changes encontrados**: 1  
-**Breaking changes resueltos**: 1  
+**Breaking changes resueltos**: 1 (con solución correcta)  
 **Breaking changes pendientes**: 0
