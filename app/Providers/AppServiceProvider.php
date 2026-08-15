@@ -53,17 +53,12 @@ class AppServiceProvider extends ServiceProvider
 
             config(['app.url' => $baseUrl]);
 
-            // Livewire 4: setUpdateRoute() ha sido removido o cambiado.
-            // La configuración de rutas ahora se maneja automáticamente.
-            // TODO: Verificar si XAMPP requiere configuración especial para subdirectorios
-            // if ($basePath !== '') {
-            //     \Livewire\Livewire::setUpdateRoute(function ($handle) use ($basePath) {
-            //         return \Illuminate\Support\Facades\Route::post(
-            //             $basePath . '/livewire/update',
-            //             $handle
-            //         )->middleware('web');
-            //     });
-            // }
+            // Livewire 4: Configurar asset_url para subdirectorios (ej: XAMPP)
+            // En Livewire 4, se usa config('livewire.asset_url') en lugar de setUpdateRoute()
+            // Esto asegura que las rutas de Livewire funcionen en subdirectorios como /oficinas/public
+            if ($basePath !== '') {
+                config(['livewire.asset_url' => $basePath]);
+            }
         }
 
         // Livewire v3 auto-descubre los componentes en app/Livewire (App\Livewire),
