@@ -25,6 +25,8 @@ return [
                     storage_path(),
                 ],
                 'follow_links' => false,
+                'ignore_unreadable_directories' => false,
+                'relative_path' => null,
             ],
 
             'databases' => [
@@ -80,34 +82,34 @@ return [
     */
     'notifications' => [
         'notifications' => [
-            \Spatie\Backup\Notifications\Notifications\BackupHasFailedNotification::class => [],
-            \Spatie\Backup\Notifications\Notifications\UnhealthyBackupWasFoundNotification::class => [],
-            \Spatie\Backup\Notifications\Notifications\CleanupHasFailedNotification::class => [],
-            \Spatie\Backup\Notifications\Notifications\BackupWasSuccessfulNotification::class => [],
-            \Spatie\Backup\Notifications\Notifications\HealthyBackupWasFoundNotification::class => [],
-            \Spatie\Backup\Notifications\Notifications\CleanupWasSuccessfulNotification::class => [],
+            \Spatie\Backup\Notifications\Notifications\BackupHasFailedNotification::class => ['null'],
+            \Spatie\Backup\Notifications\Notifications\UnhealthyBackupWasFoundNotification::class => ['null'],
+            \Spatie\Backup\Notifications\Notifications\CleanupHasFailedNotification::class => ['null'],
+            \Spatie\Backup\Notifications\Notifications\BackupWasSuccessfulNotification::class => ['null'],
+            \Spatie\Backup\Notifications\Notifications\HealthyBackupWasFoundNotification::class => ['null'],
+            \Spatie\Backup\Notifications\Notifications\CleanupWasSuccessfulNotification::class => ['null'],
         ],
 
         'notifiable' => \Spatie\Backup\Notifications\Notifiable::class,
 
         'mail' => [
-            'to' => null,
+            'to' => 'backup@example.com',
 
             'from' => [
-                'address' => env('MAIL_FROM_ADDRESS', 'hello@example.com'),
-                'name' => env('MAIL_FROM_NAME', 'Example'),
+                'address' => 'noreply@example.com',
+                'name' => 'Oficinas Backup',
             ],
         ],
 
         'slack' => [
-            'webhook_url' => null,
+            'webhook_url' => 'https://hooks.slack.com/services/example',
             'channel' => null,
             'username' => null,
             'icon' => null,
         ],
 
         'discord' => [
-            'webhook_url' => null,
+            'webhook_url' => 'https://discord.com/api/webhooks/example',
             'username' => '',
             'avatar_url' => '',
         ],
@@ -133,8 +135,10 @@ return [
         [
             'name' => env('APP_NAME', 'laravel'),
             'disks' => ['local'],
-            'newest_backup_should_not_be_older_than_days' => 1,
-            'storage_used_in_megabytes_should_be_less_than' => 5000,
+            'health_checks' => [
+                \Spatie\Backup\Tasks\Monitor\HealthChecks\MaximumAgeInDays::class => 1,
+                \Spatie\Backup\Tasks\Monitor\HealthChecks\MaximumStorageInMegabytes::class => 5000,
+            ],
         ],
     ],
 
