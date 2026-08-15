@@ -289,7 +289,7 @@ php artisan config:show livewire
 
 ---
 
-**Última actualización**: 15/08/2026 17:00  
-**Breaking changes encontrados**: 1 (con 2 sub-problemas)  
+**Última actualización**: 15/08/2026 17:25  
+**Breaking changes encontrados**: 1 (con 3 sub-problemas)  
 **Breaking changes resueltos**: 1 (completamente)  
 **Breaking changes pendientes**: 0
