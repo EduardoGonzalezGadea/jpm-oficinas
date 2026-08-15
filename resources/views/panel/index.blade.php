@@ -510,23 +510,26 @@
         // Función para sincronizar usando el endpoint backend
         async function syncWithInternet() {
             try {
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 10000); // Timeout de 10 segundos
+                // Livewire 4 Fix: Usar timeout Promise en lugar de AbortController
+                // que es interceptado por Livewire 4
+                const timeoutPromise = new Promise((_, reject) => {
+                    setTimeout(() => reject(new Error('Timeout de 10 segundos')), 10000);
+                });
 
                 const localTimeBefore = Date.now();
                 
-                // Livewire 4: Añadir header para evitar que Livewire intercepte este fetch
-                const response = await fetch('{{ route("utilidad.hora-uruguay") }}', {
+                // Fetch sin AbortController para evitar conflicto con Livewire 4
+                const fetchPromise = fetch('{{ route("utilidad.hora-uruguay") }}', {
                     method: 'GET',
                     cache: 'no-cache',
                     headers: {
                         'Accept': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'X-Livewire-Ignore': 'true' // Indicar a Livewire que ignore este request
-                    },
-                    signal: controller.signal
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
                 });
-                clearTimeout(timeoutId);
+
+                // Race entre fetch y timeout
+                const response = await Promise.race([fetchPromise, timeoutPromise]);
                 const localTimeAfter = Date.now();
 
                 if (!response.ok) {
