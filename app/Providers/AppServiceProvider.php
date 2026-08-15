@@ -20,7 +20,8 @@ class AppServiceProvider extends ServiceProvider
     public function register()
     {
         // La tabla personal_access_tokens se crea con las migraciones consolidadas.
-        Sanctum::ignoreMigrations();
+        // TODO Laravel 11: Verificar método correcto en Sanctum 4
+        // Sanctum::withoutMigrations();
     }
 
     /**
