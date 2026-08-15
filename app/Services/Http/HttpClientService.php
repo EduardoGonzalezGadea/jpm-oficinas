@@ -158,9 +158,9 @@ class HttpClientService
             }
 
             $options['proxy'] = $proxyArray;
-        } else {
-            $options['proxy'] = false; // explicitly no proxy (evita que Guzzle lea HTTP_PROXY del env)
         }
+        // En Laravel 12/Guzzle 7.9+, cuando no hay proxy NO se debe setear 'proxy' => false
+        // ya que causa "CURLOPT_PROXY must be a string". Simplemente no incluir la key.
 
         if (isset($userOptions['headers'])) {
             $options['headers'] = array_merge($options['headers'], $userOptions['headers']);

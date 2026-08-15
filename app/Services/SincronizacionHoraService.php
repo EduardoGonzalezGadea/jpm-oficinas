@@ -22,13 +22,6 @@ class SincronizacionHoraService
 
     public function obtener(): array
     {
-        // Si estamos en desarrollo local (artisan serve), usar hora local directamente
-        // para evitar timeout con APIs externas
-        if (app()->environment('local') && request()->getHost() === '127.0.0.1') {
-            Log::debug("SincronizacionHoraService: Modo desarrollo detectado, usando hora local del servidor");
-            return $this->fallbackServidorLocal();
-        }
-
         $cached = Cache::get(self::CACHE_KEY);
         if (is_array($cached)) {
             // Recalcular datetime usando el offset sincronizado en lugar del reloj local,
