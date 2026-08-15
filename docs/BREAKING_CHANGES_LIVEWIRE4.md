@@ -5,9 +5,9 @@
 
 ---
 
-## ❌ Breaking Change #1: `Livewire::setUpdateRoute()` Removido
+## ❌ Breaking Change #1: `Livewire::setUpdateRoute()` Removido ✅ RESUELTO
 
-### Problema Detectado
+### Problema Detectado #1.1: Método Removido
 
 **Error**:
 ```
@@ -21,6 +21,19 @@ Supported methods: GET, HEAD.
 - Livewire 3 permitía `Livewire::setUpdateRoute()` para personalizar rutas
 - Livewire 4 **removió este método**
 - Configuración personalizada causaba conflicto de rutas
+
+### Problema Detectado #1.2: Assets Desactualizados
+
+**Error**:
+```
+Livewire: The published Livewire assets are out of date
+Uncaught SyntaxError: Unexpected token '<'
+```
+
+**Causa**:
+- Livewire 4 tiene nuevos assets JavaScript
+- Assets publicados eran de versión anterior
+- JavaScript no cargaba correctamente
 
 ### Código Problemático
 
@@ -40,7 +53,7 @@ if ($basePath !== '') {
 
 ### Solución Aplicada
 
-**Usar `config('livewire.asset_url')`** (Livewire 4 correcto):
+**1. Reemplazar `setUpdateRoute()` con `asset_url`** (Livewire 4 correcto):
 
 ```php
 // ✅ Livewire 4: Configuración correcta para subdirectorios
@@ -49,7 +62,20 @@ if ($basePath !== '') {
 }
 ```
 
-**Esto reemplaza** el antiguo `setUpdateRoute()` de Livewire 3:
+**2. Publicar assets de Livewire 4**:
+
+```bash
+php artisan vendor:publish --tag=livewire:assets --force
+```
+
+Esto copia los archivos de `vendor/livewire/livewire/dist/` a `public/vendor/livewire/`:
+- livewire.js
+- livewire.min.js
+- livewire.esm.js
+- livewire.csp.js (nuevo en v4)
+- Y mapas de source
+
+**Antes vs Después**:
 
 ```php
 // ❌ ANTES (Livewire 3)
@@ -75,8 +101,9 @@ POST livewire-892282c4/update → Default Livewire route
 
 ### Estado
 
-- ✅ **SOLUCIONADO CORRECTAMENTE**
-- ✅ Implementado con `config(['livewire.asset_url' => $basePath])`
+- ✅ **SOLUCIONADO COMPLETAMENTE**
+- ✅ Implementado `config(['livewire.asset_url' => $basePath])`
+- ✅ Assets de Livewire 4 publicados en `public/vendor/livewire/`
 - ✅ Compatible con `php artisan serve` Y Apache/XAMPP
 - ✅ Servidor reiniciado
 - ⏳ Pendiente: Validación manual usuario
@@ -262,7 +289,7 @@ php artisan config:show livewire
 
 ---
 
-**Última actualización**: 15/08/2026 16:45  
-**Breaking changes encontrados**: 1  
-**Breaking changes resueltos**: 1 (con solución correcta)  
+**Última actualización**: 15/08/2026 17:00  
+**Breaking changes encontrados**: 1 (con 2 sub-problemas)  
+**Breaking changes resueltos**: 1 (completamente)  
 **Breaking changes pendientes**: 0
