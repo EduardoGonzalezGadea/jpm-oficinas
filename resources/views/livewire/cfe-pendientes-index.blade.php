@@ -1,5 +1,14 @@
-<div>
-    <h2>CFEs Pendientes de Confirmación</h2>
+<div wire:poll.visible.300s>
+    {{-- Auto-refresh cada 5 minutos solo cuando la vista está activa --}}
+    
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="mb-0">CFEs Pendientes de Confirmación</h2>
+        
+        {{-- Indicador de actualización --}}
+        <span wire:loading wire:target="$refresh" class="badge bg-info">
+            <i class="fas fa-sync-alt fa-spin"></i> Actualizando...
+        </span>
+    </div>
 
     @if($cfePendientes->isEmpty())
         <p>No hay CFEs pendientes.</p>
@@ -68,6 +77,13 @@
         </div>
 
         {{ $cfePendientes->links() }}
+        
+        <div class="mt-2">
+            <small class="text-muted">
+                <i class="fas fa-info-circle"></i>
+                Los datos se actualizan automáticamente cada 5 minutos mientras la vista está activa
+            </small>
+        </div>
     @endif
 </div>
 

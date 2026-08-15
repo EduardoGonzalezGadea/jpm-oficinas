@@ -1,10 +1,21 @@
-<div class="container-fluid py-3">
+<div class="container-fluid py-3" wire:poll.visible.60s>
+  {{-- Auto-refresh cada 1 minuto para monitoreo en tiempo real --}}
+  
   <div class="d-flex justify-content-between align-items-center mb-3">
     <h4 class="mb-0"><i class="fas fa-chart-line mr-2"></i>Monitoreo CFE</h4>
-    <div class="btn-group btn-group-sm">
-      <button wire:click="cambiarPeriodo('24h')" class="btn {{ $periodo === '24h' ? 'btn-primary' : 'btn-outline-primary' }}">24h</button>
-      <button wire:click="cambiarPeriodo('7d')" class="btn {{ $periodo === '7d' ? 'btn-primary' : 'btn-outline-primary' }}">7 días</button>
-      <button wire:click="cambiarPeriodo('30d')" class="btn {{ $periodo === '30d' ? 'btn-primary' : 'btn-outline-primary' }}">30 días</button>
+    
+    <div class="d-flex align-items-center">
+      {{-- Indicador de actualización --}}
+      <span wire:loading wire:target="$refresh" class="badge badge-info mr-2">
+        <i class="fas fa-sync-alt fa-spin"></i> Actualizando...
+      </span>
+      
+      <div class="btn-group btn-group-sm">
+      <div class="btn-group btn-group-sm">
+        <button wire:click="cambiarPeriodo('24h')" class="btn {{ $periodo === '24h' ? 'btn-primary' : 'btn-outline-primary' }}">24h</button>
+        <button wire:click="cambiarPeriodo('7d')" class="btn {{ $periodo === '7d' ? 'btn-primary' : 'btn-outline-primary' }}">7 días</button>
+        <button wire:click="cambiarPeriodo('30d')" class="btn {{ $periodo === '30d' ? 'btn-primary' : 'btn-outline-primary' }}">30 días</button>
+      </div>
     </div>
   </div>
 

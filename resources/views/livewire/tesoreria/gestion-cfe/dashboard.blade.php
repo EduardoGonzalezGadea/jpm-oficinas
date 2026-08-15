@@ -1,4 +1,6 @@
-<div class="container-fluid px-0">
+<div class="container-fluid px-0" wire:poll.visible.60s>
+    {{-- Auto-refresh cada 1 minuto para dashboard (datos críticos) --}}
+    
     @section('title', 'Indicadores - Recaudaciones')
 
     <div class="card">
@@ -8,6 +10,11 @@
                 <h4 class="mb-0 text-premium-header">
                     <i class="fas fa-chart-pie mr-2"></i>Indicadores de Recaudaciones
                 </h4>
+                
+                {{-- Indicador de actualización --}}
+                <span wire:loading wire:target="$refresh" class="badge badge-light ml-2">
+                    <i class="fas fa-sync-alt fa-spin"></i> Actualizando...
+                </span>
                 <div class="d-flex align-items-center">
                     <div class="btn-group mb-0 mr-2 position-relative" role="group" x-data="{ open: false }" @click.outside="open = false">
                         <button type="button" class="btn btn-light btn-sm dropdown-toggle" @click="open = !open" aria-haspopup="true" :aria-expanded="open">

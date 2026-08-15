@@ -71,12 +71,22 @@
       </div>
     </div>
 
-    <div class="card-body px-2 pt-1 position-relative">
+    <div class="card-body px-2 pt-1 position-relative" wire:poll.visible.300s>
+      {{-- Auto-refresh cada 5 minutos solo cuando la vista está activa --}}
+      
       <div wire:loading.style="display: flex" wire:target="archivoPdf,confirmarCarga,editarCfe,nuevoCfe" class="upload-loading-overlay">
         <div class="text-white font-weight-bold h4 mb-0">
           <i class="fas fa-spinner fa-spin mr-2"></i> CARGANDO
         </div>
       </div>
+      
+      {{-- Indicador de auto-refresh --}}
+      <div wire:loading wire:target="$refresh" class="position-absolute" style="top: 10px; right: 10px; z-index: 1000;">
+        <span class="badge badge-info">
+          <i class="fas fa-sync-alt fa-spin"></i> Actualizando datos...
+        </span>
+      </div>
+      
       {{-- Barra de filtros --}}
       <div class="d-flex mb-2 align-items-center">
         <div class="flex-grow-1 mr-2" style="max-width: 40%;">
@@ -357,6 +367,13 @@
 
       <div class="mt-3 d-flex justify-content-center d-print-none">
         {{ $cfes->links() }}
+      </div>
+      
+      <div class="mt-2 text-center">
+        <small class="text-muted">
+          <i class="fas fa-info-circle"></i>
+          Los datos se actualizan automáticamente cada 5 minutos mientras la vista está activa
+        </small>
       </div>
     </div>
   </div>
