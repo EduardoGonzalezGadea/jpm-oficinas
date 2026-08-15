@@ -20,7 +20,7 @@ class DependenciaFactory extends Factory
     public function definition(): array
     {
         return [
-            'dependencias' => $this->faker->randomElement([
+            'dependencia' => $this->faker->randomElement([ // Corregido: era 'dependencias' (plural)
                 'Dirección General',
                 'Departamento Administrativo',
                 'Departamento Financiero',
@@ -39,7 +39,7 @@ class DependenciaFactory extends Factory
     public function conNombre(string $nombre): static
     {
         return $this->state(fn (array $attributes) => [
-            'dependencias' => $nombre,
+            'dependencia' => $nombre, // Corregido: era 'dependencias' (plural)
         ]);
     }
 }

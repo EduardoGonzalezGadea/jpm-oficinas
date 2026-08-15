@@ -64,7 +64,7 @@ abstract class TesoreriaTestCase extends TestCase
      */
     protected function assertCajaChicaCreada(array $attributes): void
     {
-        $this->assertDatabaseHas('tes_cch_cajas', $attributes);
+        $this->assertDatabaseHas('tes_caja_chica', $attributes); // Corregido: era tes_cch_cajas
     }
 
     /**
@@ -88,7 +88,7 @@ abstract class TesoreriaTestCase extends TestCase
      */
     protected function assertCfeCreado(array $attributes): void
     {
-        $this->assertDatabaseHas('tes_cfe', $attributes);
+        $this->assertDatabaseHas('tes_cfes', $attributes); // Corregido: era tes_cfe
     }
 
     /**
