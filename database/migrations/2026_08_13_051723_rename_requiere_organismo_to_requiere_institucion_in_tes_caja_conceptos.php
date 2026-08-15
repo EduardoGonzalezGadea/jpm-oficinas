@@ -3,6 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
@@ -11,9 +12,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('tes_caja_conceptos', function (Blueprint $table) {
-            $table->renameColumn('requiere_organismo', 'requiere_institucion');
-        });
+        // Laravel 11: renameColumn() con Doctrine DBAL tiene bugs
+        // Usamos SQL directo en su lugar
+        // Solo ejecutar si la columna requiere_organismo existe
+        if (Schema::hasColumn('tes_caja_conceptos', 'requiere_organismo')) {
+            DB::statement('ALTER TABLE tes_caja_conceptos CHANGE COLUMN requiere_organismo requiere_institucion BOOLEAN NOT NULL DEFAULT 0');
+        }
     }
 
     /**
@@ -21,8 +25,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('tes_caja_conceptos', function (Blueprint $table) {
-            $table->renameColumn('requiere_institucion', 'requiere_organismo');
-        });
+        if (Schema::hasColumn('tes_caja_conceptos', 'requiere_institucion')) {
+            DB::statement('ALTER TABLE tes_caja_conceptos CHANGE COLUMN requiere_institucion requiere_organismo BOOLEAN NOT NULL DEFAULT 0');
+        }
     }
 };
