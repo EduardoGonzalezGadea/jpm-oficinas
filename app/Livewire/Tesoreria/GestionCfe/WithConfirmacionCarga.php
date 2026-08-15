@@ -200,7 +200,6 @@ trait WithConfirmacionCarga
         );
     }
 
-    #[On('confirmarCarga')]
     public function confirmarCarga($ignorarAdvertencias = false): void
     {
         $force = (bool) $ignorarAdvertencias;
@@ -373,7 +372,6 @@ trait WithConfirmacionCarga
         }
     }
 
-    #[On('cancelarCarga')]
     public function cancelarCarga(): void
     {
         $this->mostrarModalConfirmacion = false;
