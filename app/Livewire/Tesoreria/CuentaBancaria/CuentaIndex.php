@@ -2,72 +2,119 @@
 // app/Http/Livewire/Tesoreria/CuentaBancaria/CuentaIndex.php
 namespace App\Livewire\Tesoreria\CuentaBancaria;
 
+use App\Models\Tesoreria\Banco;
 use App\Models\Tesoreria\CuentaBancaria;
-use Illuminate\Support\Facades\Cache;
 use Livewire\Component;
 use Livewire\WithPagination;
 
 class CuentaIndex extends Component
 {
     use WithPagination;
-    public $search = '';
-    public $showCreate = false, $showEdit = false;
-    public $cuentaId;
 
-    protected $listeners = ['delete', 'closeModal', 'cuentaStore' => '$refresh', 'cuentaUpdate' => '$refresh'];
+    protected $paginationTheme = 'bootstrap';
 
-    public function render()
-    {
-        $page = $this->getPage() ?: 1;
-        $cacheKey = 'cuentas_bancarias_search_' . $this->search . '_page_' . $page;
+    public string $search = '';
 
-        $cuentas = Cache::remember($cacheKey, now()->addDay(), function () {
-            return CuentaBancaria::with('banco')
-                ->whereHas('banco', fn($q) => $q->where('nombre', 'like', "%{$this->search}%"))
-                ->orWhere('numero_cuenta', 'like', "%{$this->search}%")
-                ->paginate(10);
-        });
+    // Formulario
+    public ?int $cuentaId     = null;
+    public ?int $banco_id     = null;
+    public string $numero_cuenta = '';
+    public string $tipo          = 'Corriente';
+    public bool   $activa        = true;
+    public string $observaciones = '';
 
-        return view('livewire.tesoreria.cuenta-bancaria.cuenta-index', compact('cuentas'));
-    }
-
-    public function updatingSearch()
+    public function updatedSearch(): void
     {
         $this->resetPage();
-        Cache::flush();
     }
 
-    public function create()
+    // ── Crear ──────────────────────────────────────────────────────────────
+    public function create(): void
     {
-        $this->showCreate = true;
-        $this->showEdit = false;
-        $this->dispatch('show-modal', id: 'modal');
+        $this->resetInput();
+        $this->dispatch('show-modal', id: 'cuentaModal');
     }
 
-    public function edit($id)
+    // ── Editar ─────────────────────────────────────────────────────────────
+    public function edit(int $id): void
     {
-        $this->cuentaId = $id;
-        $this->showCreate = false;
-        $this->showEdit = true;
-        $this->dispatch('show-modal', id: 'modal');
+        $cuenta = CuentaBancaria::findOrFail($id);
+        $this->cuentaId       = $cuenta->id;
+        $this->banco_id       = $cuenta->banco_id;
+        $this->numero_cuenta  = $cuenta->numero_cuenta;
+        $this->tipo           = $cuenta->tipo;
+        $this->activa         = (bool) $cuenta->activa;
+        $this->observaciones  = $cuenta->observaciones ?? '';
+        $this->dispatch('show-modal', id: 'cuentaModal');
     }
 
-    public function closeModal()
+    // ── Guardar ────────────────────────────────────────────────────────────
+    public function store(): void
     {
-        $this->showCreate = false;
-        $this->showEdit = false;
+        $uniqueRule = $this->cuentaId
+            ? "required|string|max:50|unique:tes_cuentas_bancarias,numero_cuenta,{$this->cuentaId}"
+            : 'required|string|max:50|unique:tes_cuentas_bancarias,numero_cuenta';
+
+        $this->validate([
+            'banco_id'     => 'required|exists:tes_bancos,id',
+            'numero_cuenta'=> $uniqueRule,
+            'tipo'         => 'required|string|max:20',
+            'activa'       => 'boolean',
+        ]);
+
+        $data = [
+            'banco_id'      => $this->banco_id,
+            'numero_cuenta' => $this->numero_cuenta,
+            'tipo'          => $this->tipo,
+            'activa'        => $this->activa,
+            'observaciones' => $this->observaciones,
+        ];
+
+        if ($this->cuentaId) {
+            CuentaBancaria::findOrFail($this->cuentaId)->update($data);
+            $msg = 'Cuenta bancaria actualizada con éxito.';
+        } else {
+            CuentaBancaria::create($data);
+            $msg = 'Cuenta bancaria creada con éxito.';
+        }
+
+        $this->resetInput();
         $this->dispatch('close-modal');
+        $this->dispatch('alert', type: 'success', message: $msg, toast: true);
     }
 
-    public function deleteConfirm($id)
+    // ── Eliminar ───────────────────────────────────────────────────────────
+    public function destroy(int $id): void
     {
-        $this->dispatch('swal:confirm', type: 'warning', title: '¿Estás seguro?', text: 'Se eliminará la cuenta bancaria.', id: $id);
+        CuentaBancaria::findOrFail($id)->delete();
+        $this->dispatch('alert', type: 'success', message: 'Cuenta bancaria eliminada.', toast: true);
     }
 
-    public function delete($id)
+    // ── Reset ──────────────────────────────────────────────────────────────
+    public function resetInput(): void
     {
-        CuentaBancaria::find($id)->delete();
-        Cache::flush();
-        $this->dispatch('swal', title: 'Eliminado!', type: 'success');
+        $this->cuentaId      = null;
+        $this->banco_id      = null;
+        $this->numero_cuenta = '';
+        $this->tipo          = 'Corriente';
+        $this->activa        = true;
+        $this->observaciones = '';
+        $this->resetErrorBag();
+    }
+
+    // ── Render ─────────────────────────────────────────────────────────────
+    public function render()
+    {
+        $cuentas = CuentaBancaria::with('banco')
+            ->where(function ($q) {
+                $q->whereHas('banco', fn ($b) => $b->where('nombre', 'like', "%{$this->search}%"))
+                  ->orWhere('numero_cuenta', 'like', "%{$this->search}%");
+            })
+            ->orderBy('numero_cuenta')
+            ->paginate(15);
+
+        $bancos = Banco::orderBy('nombre')->get();
+
+        return view('livewire.tesoreria.cuenta-bancaria.cuenta-index', compact('cuentas', 'bancos'));
     }
 }

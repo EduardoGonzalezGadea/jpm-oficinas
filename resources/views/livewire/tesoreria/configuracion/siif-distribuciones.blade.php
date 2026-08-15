@@ -1,4 +1,4 @@
-﻿<div>
+<div>
   <div class="row">
     <div class="col-md-12">
       <div class="card">
@@ -163,7 +163,7 @@
   </div>
 
   {{-- Modal Crear / Editar --}}
-  <div wire:ignore.self class="modal fade" id="siifDistribucionModal" tabindex="-1" role="dialog"
+  <div wire:ignore.self wire:key="siif-distribucion-modal" class="modal fade" id="siifDistribucionModal" tabindex="-1" role="dialog"
     aria-labelledby="siifDistribucionModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg" role="document">
       <div class="modal-content">
@@ -328,7 +328,7 @@
   </div>
 
   {{-- Modal Detalles --}}
-  <div wire:ignore.self class="modal fade" id="detailsDistribucionModal" tabindex="-1" role="dialog"
+  <div wire:ignore.self wire:key="details-distribucion-modal" class="modal fade" id="detailsDistribucionModal" tabindex="-1" role="dialog"
     aria-labelledby="detailsDistribucionModalLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
       <div class="modal-content">
@@ -368,13 +368,6 @@
 
   @push('scripts')
     <script>
-      window.addEventListener('show-modal', event => {
-        const d = window.LiveEvent(event);
-        if (d.id === 'siifDistribucionModal') {
-          $('#siifDistribucionModal').modal('show');
-        }
-      });
-
       document.addEventListener('livewire:init', function() {
       Livewire.on('siifDistribucionStore', () => {
         $('#siifDistribucionModal').modal('hide');

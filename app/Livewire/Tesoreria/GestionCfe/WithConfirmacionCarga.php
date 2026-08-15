@@ -20,19 +20,45 @@ trait WithConfirmacionCarga
     public array $datosExtraidos = [];
     public string $nombreArchivoOriginal = '';
     public string $rutaArchivoTemporal = '';
+    public $confirmacionInstitucionSeleccionada = null;
+    public bool $confirmacionConceptoRequiereInstitucion = false;
 
     public function updatedArchivoPdf(): void
     {
-        $this->validate([
-            'archivoPdf' => 'required|mimes:pdf|max:5120',
+        if (!$this->archivoPdf) {
+            Log::warning('updatedArchivoPdf: No se recibió archivo');
+            return;
+        }
+
+        Log::info('updatedArchivoPdf: Iniciando carga de archivo', [
+            'archivo_nombre' => $this->archivoPdf->getClientOriginalName(),
+            'archivo_size' => $this->archivoPdf->getSize(),
+            'archivo_mime' => $this->archivoPdf->getMimeType(),
         ]);
 
         try {
+            $this->validate([
+                'archivoPdf' => 'required|mimes:pdf|max:5120',
+            ], [
+                'archivoPdf.required' => 'Debe seleccionar un archivo.',
+                'archivoPdf.mimes' => 'El archivo debe ser un PDF.',
+                'archivoPdf.max' => 'El archivo no debe superar 5MB.',
+            ]);
+
+            Log::info('updatedArchivoPdf: Validación exitosa');
+
             $parser = app(CfeUniversalParserService::class);
             $datos = $parser->parsePdf($this->archivoPdf->getRealPath());
             $nombreOriginal = $this->archivoPdf->getClientOriginalName();
 
+            Log::info('updatedArchivoPdf: PDF parseado exitosamente', [
+                'items_encontrados' => count($datos['items'] ?? []),
+                'medios_pago_encontrados' => count($datos['medios_pago'] ?? []),
+            ]);
+
             $path = $this->archivoPdf->storeAs('cfes_cargados', time() . '_' . $nombreOriginal, 'local');
+
+            Log::info('updatedArchivoPdf: Archivo almacenado', ['path' => $path]);
 
             $this->datosExtraidos = $datos;
             $this->nombreArchivoOriginal = $nombreOriginal;
@@ -40,20 +66,52 @@ trait WithConfirmacionCarga
 
             $this->cajaConceptoSeleccionado = $this->detectarConceptoAutomatico($datos);
 
+            Log::info('updatedArchivoPdf: Concepto detectado', ['concepto_id' => $this->cajaConceptoSeleccionado]);
+
+            // Establecer si el concepto requiere institución
+            if ($this->cajaConceptoSeleccionado) {
+                $concepto = CajaConcepto::find($this->cajaConceptoSeleccionado);
+                $this->confirmacionConceptoRequiereInstitucion = $concepto ? $concepto->requiere_institucion : false;
+            } else {
+                $this->confirmacionConceptoRequiereInstitucion = false;
+            }
+
             $this->resetItemDistribuciones();
 
             if ($this->cajaConceptoSeleccionado && $this->siifDependenciaSeleccionado) {
                 $this->autoAsignarDistribuciones();
             }
 
+            Log::info('updatedArchivoPdf: Abriendo modal de confirmación');
+
             $this->mostrarModalConfirmacion = true;
             $this->dispatch('abrir-modal-confirmacion-cfe');
+            
+            // Forzar re-render del componente
+            $this->dispatch('$refresh');
 
-        } catch (\Exception $e) {
-            $this->dispatch('swal:modal', type: 'error', title: 'Error al procesar', text: 'Hubo un problema procesando el archivo: ' . $e->getMessage());
+            Log::info('updatedArchivoPdf: Proceso completado exitosamente');
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            Log::error('updatedArchivoPdf: Error de validación', [
+                'errors' => $e->errors(),
+            ]);
+
+            $errores = collect($e->errors())->flatten()->implode(' ');
+            $this->dispatch('swal:toast-error', text: "Error de validación: {$errores}");
+
+        } catch (\Throwable $e) {
+            Log::error('updatedArchivoPdf: Error general', [
+                'mensaje' => $e->getMessage(),
+                'archivo' => $e->getFile(),
+                'linea' => $e->getLine(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            $this->dispatch('swal:toast-error', text: 'Error al procesar el archivo: ' . $e->getMessage());
+        } finally {
+            $this->reset('archivoPdf');
         }
-
-        $this->reset('archivoPdf');
     }
 
     private function detectarConceptoAutomatico(array $datos): ?int
@@ -96,6 +154,13 @@ trait WithConfirmacionCarga
 
     public function updatedCajaConceptoSeleccionado($value): void
     {
+        $concepto = CajaConcepto::find($value);
+        $this->confirmacionConceptoRequiereInstitucion = $concepto ? $concepto->requiere_institucion : false;
+
+        if (!$this->confirmacionConceptoRequiereInstitucion) {
+            $this->confirmacionInstitucionSeleccionada = null;
+        }
+
         $this->resetItemDistribuciones();
 
         if (!empty($value) && !empty($this->siifDependenciaSeleccionado)) {
@@ -138,6 +203,8 @@ trait WithConfirmacionCarga
     #[On('confirmarCarga')]
     public function confirmarCarga($ignorarAdvertencias = false): void
     {
+        $force = (bool) $ignorarAdvertencias;
+
         if (empty($this->cajaConceptoSeleccionado)) {
             $this->dispatch('swal:toast-error', text: 'Debe seleccionar un concepto de caja antes de confirmar.');
             return;
@@ -150,6 +217,18 @@ trait WithConfirmacionCarga
 
         $cajaConcepto = CajaConcepto::find($this->cajaConceptoSeleccionado);
         $requiereDistribucion = $cajaConcepto ? $cajaConcepto->requiere_distribucion : false;
+        $requiereInstitucion = $cajaConcepto ? $cajaConcepto->requiere_institucion : false;
+
+        if ($requiereInstitucion && empty($this->confirmacionInstitucionSeleccionada)) {
+            $this->dispatch('swal:toast-error', text: 'El concepto de caja seleccionado requiere seleccionar una institución.');
+            return;
+        }
+
+        if ($requiereInstitucion) {
+            $rules['confirmacionInstitucionSeleccionada'] = 'required|integer|exists:tes_eventuales_instituciones,id';
+        } else {
+            $rules['confirmacionInstitucionSeleccionada'] = 'nullable|integer|exists:tes_eventuales_instituciones,id';
+        }
 
         if ($requiereDistribucion) {
             $hasMissingDistribution = false;
@@ -177,6 +256,8 @@ trait WithConfirmacionCarga
             'cajaConceptoSeleccionado.min' => 'Debe seleccionar un concepto de caja válido.',
             'cajaConceptoSeleccionado.exists' => 'El concepto de caja seleccionado no existe.',
             'siifDependenciaSeleccionado.exists' => 'La dependencia de distribución SIIF seleccionada no existe.',
+            'confirmacionInstitucionSeleccionada.required' => 'Debe seleccionar una institución.',
+            'confirmacionInstitucionSeleccionada.exists' => 'La institución seleccionada no existe.',
             'itemDistribuciones.*.required' => 'Debe seleccionar una distribución para todos los ítems.',
             'itemDistribuciones.*.exists' => 'La distribución SIIF seleccionada no existe.',
         ]);
@@ -255,6 +336,7 @@ trait WithConfirmacionCarga
                 receptor_documento_ruc: $this->datosExtraidos['receptor_documento_ruc'] ?? null,
                 tes_caja_concepto_id: $this->cajaConceptoSeleccionado,
                 siif_distribucion_dependencia_id: $this->siifDependenciaSeleccionado,
+                institucion_id: $this->confirmacionInstitucionSeleccionada,
                 items: $this->datosExtraidos['items'] ?? [],
                 medios_pago: $this->datosExtraidos['medios_pago'] ?? [],
                 item_distribuciones: $this->itemDistribuciones,
@@ -286,7 +368,7 @@ trait WithConfirmacionCarga
 
         } catch (CfeDuplicateException | CfeValidationException | \InvalidArgumentException $e) {
             $this->dispatch('swal:toast-error', text: $e->getMessage());
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $this->dispatch('swal:modal', type: 'error', title: 'Error al guardar', text: 'Hubo un problema guardando el CFE: ' . $e->getMessage());
         }
     }
@@ -301,6 +383,8 @@ trait WithConfirmacionCarga
         $this->cajaConceptoSeleccionado = null;
         $this->siifDependenciaSeleccionado = 1;
         $this->itemDistribuciones = [];
+        $this->confirmacionInstitucionSeleccionada = null;
+        $this->confirmacionConceptoRequiereInstitucion = false;
         $this->dispatch('cerrar-modal-confirmacion-cfe');
     }
 

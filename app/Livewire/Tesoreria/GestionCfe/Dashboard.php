@@ -195,7 +195,7 @@ class Dashboard extends Component
                 'alertas' => [],
             ];
 
-            return view('', [
+            return view('livewire.tesoreria.gestion-cfe.dashboard', [
                 'kpis' => $kpis,
                 'periodoTexto' => 'Error al cargar período',
                 'carbonInicio' => Carbon::today(),

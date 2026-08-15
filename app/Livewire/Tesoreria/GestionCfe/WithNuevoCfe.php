@@ -22,21 +22,23 @@ trait WithNuevoCfe
     public string $nuevoReceptorRuc = '';
     public $nuevoCajaConceptoSeleccionado = null;
     public $nuevoSiifDependenciaSeleccionado = 1;
+    public $nuevoInstitucionSeleccionada = null;
     public array $nuevoItems = [];
     public array $nuevoMediosPago = [];
     public array $nuevoItemDistribuciones = [];
     public string $nuevoReferencias = '';
     public string $nuevoAdenda = '';
     public bool $nuevoConceptoRequiereDistribucion = false;
+    public bool $nuevoConceptoRequiereInstitucion = false;
 
     public function nuevoCfe(): void
     {
         $this->reset([
             'nuevoDocumentoTipo', 'nuevoDocumentoSerie', 'nuevoDocumentoNumero',
             'nuevoReceptorNombre', 'nuevoReceptorRuc',
-            'nuevoCajaConceptoSeleccionado', 'nuevoMediosPago',
+            'nuevoCajaConceptoSeleccionado', 'nuevoInstitucionSeleccionada', 'nuevoMediosPago',
             'nuevoItemDistribuciones', 'nuevoConceptoRequiereDistribucion',
-            'nuevoReferencias', 'nuevoAdenda',
+            'nuevoConceptoRequiereInstitucion', 'nuevoReferencias', 'nuevoAdenda',
         ]);
         $this->nuevoFecha = now()->format('Y-m-d');
         $this->nuevoSiifDependenciaSeleccionado = 1;
@@ -56,8 +58,9 @@ trait WithNuevoCfe
             'nuevoDocumentoTipo', 'nuevoDocumentoSerie', 'nuevoDocumentoNumero',
             'nuevoFecha', 'nuevoReceptorNombre', 'nuevoReceptorRuc',
             'nuevoCajaConceptoSeleccionado', 'nuevoSiifDependenciaSeleccionado',
-            'nuevoItems', 'nuevoMediosPago', 'nuevoItemDistribuciones',
-            'nuevoConceptoRequiereDistribucion', 'nuevoReferencias', 'nuevoAdenda',
+            'nuevoInstitucionSeleccionada', 'nuevoItems', 'nuevoMediosPago', 'nuevoItemDistribuciones',
+            'nuevoConceptoRequiereDistribucion', 'nuevoConceptoRequiereInstitucion',
+            'nuevoReferencias', 'nuevoAdenda',
         ]);
         $this->nuevoSiifDependenciaSeleccionado = 1;
         $this->dispatch('cerrar-modal-nuevo-cfe');
@@ -106,6 +109,12 @@ trait WithNuevoCfe
     {
         $concepto = CajaConcepto::find($value);
         $this->nuevoConceptoRequiereDistribucion = $concepto ? $concepto->requiere_distribucion : false;
+        $this->nuevoConceptoRequiereInstitucion = $concepto ? $concepto->requiere_institucion : false;
+
+        // Resetear institución si el nuevo concepto no la requiere
+        if (!$this->nuevoConceptoRequiereInstitucion) {
+            $this->nuevoInstitucionSeleccionada = null;
+        }
 
         $this->nuevoItemDistribuciones = [];
         foreach ($this->nuevoItems as $idx => $item) {
@@ -159,6 +168,7 @@ trait WithNuevoCfe
 
         $concepto = CajaConcepto::find($this->nuevoCajaConceptoSeleccionado);
         $requiereDistribucion = $concepto ? $concepto->requiere_distribucion : false;
+        $requiereInstitucion = $concepto ? $concepto->requiere_institucion : false;
 
         if ($requiereDistribucion) {
             $hasMissing = false;
@@ -179,12 +189,19 @@ trait WithNuevoCfe
             $rules['nuevoItemDistribuciones.*'] = 'nullable|integer|exists:siif_distribucions,id';
         }
 
+        // Validar institución si el concepto lo requiere
+        if ($requiereInstitucion) {
+            $rules['nuevoInstitucionSeleccionada'] = 'required|integer|exists:tes_eventuales_instituciones,id';
+        }
+
         $this->validate($rules, [
             'nuevoDocumentoTipo.required' => 'El tipo de documento es obligatorio.',
             'nuevoDocumentoNumero.required' => 'El número de documento es obligatorio.',
             'nuevoFecha.required' => 'La fecha es obligatoria.',
             'nuevoReceptorNombre.required' => 'El nombre del receptor es obligatorio.',
             'nuevoCajaConceptoSeleccionado.required' => 'Debe seleccionar un concepto de caja.',
+            'nuevoInstitucionSeleccionada.required' => 'Debe seleccionar una institución para este concepto.',
+            'nuevoInstitucionSeleccionada.exists' => 'La institución seleccionada no existe.',
             'nuevoItems.required' => 'Debe agregar al menos un ítem.',
             'nuevoItems.*.detalle.required' => 'El detalle del ítem es obligatorio.',
             'nuevoItems.*.importe.required' => 'El importe del ítem es obligatorio.',
@@ -203,6 +220,7 @@ trait WithNuevoCfe
                 receptor_documento_ruc: $this->nuevoReceptorRuc ?: null,
                 tes_caja_concepto_id: $this->nuevoCajaConceptoSeleccionado,
                 siif_distribucion_dependencia_id: $this->nuevoSiifDependenciaSeleccionado,
+                institucion_id: $this->nuevoInstitucionSeleccionada ?: null,
                 items: $this->nuevoItems,
                 medios_pago: $this->nuevoMediosPago,
                 item_distribuciones: $this->nuevoItemDistribuciones,
@@ -223,7 +241,7 @@ trait WithNuevoCfe
 
         } catch (CfeDuplicateException | CfeValidationException | \InvalidArgumentException $e) {
             $this->dispatch('swal:toast-error', text: $e->getMessage());
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $this->dispatch('swal:modal', type: 'error', title: 'Error al guardar', text: 'Hubo un problema guardando el CFE: ' . $e->getMessage());
         }
     }

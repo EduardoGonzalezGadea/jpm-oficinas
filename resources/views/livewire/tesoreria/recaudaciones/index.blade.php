@@ -26,14 +26,14 @@
   @section('title', 'Recaudaciones')
 
   <div class="card">
-    <div class="card-header bg-info text-white p-2">
-      <div class="d-flex justify-content-between align-items-center">
-        <h4 class="card-title px-1 m-0">
-          <strong><i class="fas fa-hand-holding-usd mr-2"></i>Recaudaciones</strong>
+    <div class="card-header card-header-section card-header-gradient py-2 px-3">
+      <div class="d-flex justify-content-between align-items-center w-100">
+        <h4 class="mb-0 text-premium-header">
+          <i class="fas fa-hand-holding-usd mr-2"></i>Recaudaciones
         </h4>
         <div class="d-flex align-items-center">
           <div class="btn-group mr-2 position-relative" x-data="{ open: false }" @click.outside="open = false">
-            <button type="button" class="btn btn-sm btn-outline-light dropdown-toggle" @click="open = !open" :aria-expanded="open">
+            <button type="button" class="btn btn-sm btn-light dropdown-toggle" @click="open = !open" :aria-expanded="open">
               <i class="fas fa-hand-holding-usd mr-1"></i> Resumen
             </button>
             <div class="dropdown-menu dropdown-menu-right" :class="{ 'show': open }" style="display: block;" x-show="open" x-cloak>
@@ -45,7 +45,10 @@
               </a>
             </div>
           </div>
-          <a href="{{ route('tesoreria.gestion-cfe.index') }}" class="btn btn-sm btn-outline-light">
+          <button type="button" class="btn btn-light btn-sm mr-2" onclick="imprimirRecaudaciones()" title="Imprimir">
+            <i class="fas fa-print mr-1"></i> Imprimir
+          </button>
+          <a href="{{ route('tesoreria.gestion-cfe.index') }}" class="btn btn-sm btn-light">
             <i class="fas fa-arrow-left mr-1"></i> Volver
           </a>
         </div>
@@ -105,6 +108,15 @@
             @endforeach
           </select>
         </div>
+        <div class="col-6 col-md-4 col-lg-2 mb-2 mb-lg-0">
+          <label class="small mb-1">Concepto de caja</label>
+          <select class="form-control form-control-sm" wire:model.live="concepto_id" wire:change="$refresh">
+            <option value="">Todos</option>
+            @foreach($this->opcionesConceptos as $concepto)
+              <option value="{{ $concepto->id }}">{{ $concepto->caja_concepto }}</option>
+            @endforeach
+          </select>
+        </div>
         <div class="col-6 col-md-3 col-lg-1 mb-2 mb-lg-0">
           <label class="small mb-1">Monto desde</label>
           <input type="number" step="0.01" class="form-control form-control-sm" wire:model.live="monto_desde" wire:change="$refresh" placeholder="0.00">
@@ -124,11 +136,7 @@
             </div>
           </div>
         </div>
-        <div class="col-auto mb-2 mb-lg-0 d-flex align-items-end">
-          <button class="btn btn-primary btn-sm" onclick="imprimirRecaudaciones()">
-            <i class="fas fa-print mr-1"></i> Imprimir
-          </button>
-        </div>
+
       </div>
 
       @php
@@ -175,7 +183,7 @@
                       @foreach($fecha['distribuciones'] as $distKey => $distribucion)
                           @if(!empty($distribucion['items']))
                           <div class="table-responsive">
-                           <table class="table table-sm table-bordered mt-3 mb-2">
+                            <table class="table table-sm table-bordered mt-3 mb-2">
                              <thead>
                                <tr>
                                  <th colspan="6" class="text-center py-1 font-weight-bold text-break">
@@ -191,15 +199,18 @@
                                  <th class="text-right align-middle">POS</th>
                                </tr>
                              </thead>
-                             <tbody>
-                               @foreach($distribucion['items'] as $rowData)
+                               <tbody>
+                                 @foreach($distribucion['items'] as $rowData)
                                  <tr>
                                    <td class="align-middle small">
                                      {{ $rowData['cfe']->documento_tipo }} {{ $rowData['cfe']->documento_serie }}-{{ $rowData['cfe']->documento_numero }}
                                    </td>
-                                   <td class="align-middle small">
-                                     {{ $rowData['cfe']->receptor_nombre_denominacion ?? '—' }}
-                                   </td>
+                                    <td class="align-middle small">
+                                      {{ $rowData['cfe']->receptor_nombre_denominacion ?? '—' }}
+                                      @if(!empty($rowData['cfe']->receptor_documento_ruc))
+                                        <small class="d-block text-muted">{{ $rowData['cfe']->receptor_documento_ruc }}</small>
+                                      @endif
+                                    </td>
                                    <td class="align-middle small text-right">
                                      $ {{ number_format($rowData['efectivo'], 2, ',', '.') }}
                                    </td>
@@ -208,10 +219,10 @@
                                    </td>
                                    <td class="align-middle small text-right">
                                      $ {{ number_format($rowData['transferencia'], 2, ',', '.') }}
-                                   </td>
-                                   <td class="align-middle small text-right">
-                                     $ {{ number_format($rowData['pos'], 2, ',', '.') }}
-                                   </td>
+                                    </td>
+                                    <td class="align-middle small text-right">
+                                      $ {{ number_format($rowData['pos'], 2, ',', '.') }}
+                                    </td>
                                  </tr>
                                @endforeach
                              </tbody>
@@ -274,6 +285,36 @@
 
 @push('scripts')
   <script>
+    document.addEventListener('livewire:init', function () {
+      window.addEventListener('swal:toast-success', (event) => {
+        const data = window.LiveEvent(event);
+        Swal.fire({
+          icon: 'success',
+          title: 'Éxito',
+          text: data.text || 'Operación completada.',
+          toast: true,
+          position: 'top-end',
+          showConfirmButton: false,
+          timer: 3000,
+          timerProgressBar: true,
+        });
+      });
+
+      window.addEventListener('swal:toast-error', (event) => {
+        const data = window.LiveEvent(event);
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: data.text || 'Ocurrió un error inesperado.',
+          toast: true,
+          position: 'top-end',
+          showConfirmButton: false,
+          timer: 5000,
+          timerProgressBar: true,
+        });
+      });
+    });
+
     function imprimirRecaudaciones() {
       var tabActivo = document.querySelector('#recaudacionesTab .nav-link.active');
       if (!tabActivo) return;

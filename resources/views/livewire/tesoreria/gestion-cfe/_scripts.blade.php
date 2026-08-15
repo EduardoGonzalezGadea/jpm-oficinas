@@ -12,7 +12,7 @@
         cancelButtonText: 'Cancelar'
       }).then((result) => {
         if (result.isConfirmed) {
-          Livewire.dispatch('borrarCfe', { id: id });
+          Livewire.dispatch('borrarCfe', { cfeId: id });
         }
       });
     }
@@ -25,10 +25,21 @@
       });
 
       window.addEventListener('abrir-modal-confirmacion-cfe', () => {
-        $('#modalConfirmacionCfe').modal('show');
+        console.log('Evento recibido: abrir-modal-confirmacion-cfe');
+        setTimeout(() => {
+          const modal = $('#modalConfirmacionCfe');
+          console.log('Intentando abrir modal, existe:', modal.length > 0);
+          if (modal.length > 0) {
+            modal.modal('show');
+            console.log('Modal abierto');
+          } else {
+            console.error('Modal no encontrado en el DOM');
+          }
+        }, 100);
       });
 
       window.addEventListener('cerrar-modal-confirmacion-cfe', () => {
+        console.log('Evento recibido: cerrar-modal-confirmacion-cfe');
         $('#modalConfirmacionCfe').modal('hide');
       });
 

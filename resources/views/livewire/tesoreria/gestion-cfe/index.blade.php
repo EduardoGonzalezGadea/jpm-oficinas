@@ -42,7 +42,7 @@
           </a>
           <div class="btn-group mb-0 position-relative" role="group" x-data="{ open: false }" @click.outside="open = false">
             <button type="button" class="btn btn-info dropdown-toggle" @click="open = !open" aria-haspopup="true" :aria-expanded="open">
-              <i class="fas fa-hand-holding-usd mr-1"></i> Resumen
+              <i class="fas fa-hand-holding-usd mr-1"></i> Reportes
             </button>
             <div class="dropdown-menu" :class="{ 'show': open }" style="display: block;" x-show="open" x-cloak>
               <a class="dropdown-item" href="{{ route('tesoreria.gestion-cfe.recaudaciones') }}">
@@ -50,6 +50,10 @@
               </a>
               <a class="dropdown-item" href="{{ route('tesoreria.gestion-cfe.dashboard') }}">
                 <i class="fas fa-chart-pie mr-2"></i>Indicadores
+              </a>
+              <div class="dropdown-divider"></div>
+              <a class="dropdown-item" href="{{ route('tesoreria.gestion-cfe.planillas-comunes') }}">
+                <i class="fas fa-folder mr-2"></i>Planillas Comunes
               </a>
             </div>
           </div>
@@ -137,6 +141,13 @@
             <i class="fas fa-undo"></i>
           </button>
         </div>
+        @if($mostrarSelectorPlanillas && !empty($cfesSeleccionados))
+          <div class="mr-2">
+            <button type="button" class="btn btn-sm btn-primary" wire:click="crearPlanillaComun">
+              <i class="fas fa-folder-plus mr-1"></i> Crear Planilla ({{ count($cfesSeleccionados) }})
+            </button>
+          </div>
+        @endif
       <div class="text-nowrap ml-auto">
         <small class="font-weight-bold text-secondary">{{ $cfes->total() }} registros</small>
       </div>
@@ -144,31 +155,30 @@
       </div>
 
       {{-- Tabla principal --}}
-        <table class="table table-sm table-bordered table-striped table-hover w-100" style="table-layout: fixed;">
-          <colgroup>
-            <col style="width:11%">
-            <col style="width:24%">
-            <col style="width:14%">
-            <col style="width:9%">
-            <col style="width:12%">
-            <col style="width:16%">
-            <col style="width:14%">
-          </colgroup>
+        <table class="table table-sm table-bordered table-striped table-hover w-100">
           <thead class="align-middle">
             <tr>
-              <th class="align-middle">Nro. Doc.</th>
+              @if($mostrarSelectorPlanillas)
+                <th class="align-middle text-center" style="width: 1%; white-space: nowrap;">
+                  <i class="fas fa-check-square"></i>
+                </th>
+              @endif
+              <th class="align-middle" style="width: 1%; white-space: nowrap;">Nro. Doc.</th>
               <th class="align-middle">Receptor</th>
-              <th class="align-middle">Doc. Receptor</th>
-              <th class="align-middle">Fecha</th>
-              <th class="align-middle text-right">Total a Pagar</th>
+              <th class="align-middle" style="width: 1%; white-space: nowrap;">Doc. Receptor</th>
+              <th class="align-middle" style="width: 1%; white-space: nowrap;">Fecha</th>
+              <th class="align-middle text-right" style="width: 1%; white-space: nowrap;">Total a Pagar</th>
               <th class="align-middle">Concepto / ER</th>
-              <th class="align-middle text-center d-print-only">Acciones</th>
+              @if($mostrarColumnaConf)
+                <th class="align-middle text-center" style="width: 1%; white-space: nowrap;">CONF.</th>
+              @endif
+              <th class="align-middle text-center" style="width: 1%; white-space: nowrap;">Acciones</th>
             </tr>
           </thead>
           <tbody class="align-middle">
             {{-- Skeleton loader durante carga inicial o filtros --}}
             <tr wire:loading.block wire:target="search,filtroConcepto,filtroMeses,filtroAno,limpiarFiltroMeses" class="d-none">
-              <td colspan="7" class="py-3">
+              <td colspan="{{ $mostrarSelectorPlanillas ? ($mostrarColumnaConf ? 9 : 8) : ($mostrarColumnaConf ? 8 : 7) }}" class="py-3">
                 <div class="w-100">
                   @for($i = 0; $i < 5; $i++)
                     <div class="skeleton-row d-flex align-items-center border-bottom px-2 py-2">
@@ -185,13 +195,43 @@
               </td>
             </tr>
             @forelse($cfes as $cfe)
-              @php $simbolo = $cfe->moneda === 'UYU' ? '$' : $cfe->moneda; @endphp
+              @php 
+                $simbolo = $cfe->moneda === 'UYU' ? '$' : $cfe->moneda;
+                $cfeYaTienePlanilla = $cfe->planilla_comun_id !== null;
+                $cfeConfirmado = $cfe->items->every(fn($i) => $i->confirmado);
+                
+                // Si el concepto requiere confirmación y el CFE NO está confirmado, no mostrar checkbox
+                $mostrarCheckbox = $mostrarSelectorPlanillas && 
+                                   (!($conceptoPermitePlanilla && $conceptoPermitePlanilla->requiere_confirmacion) || $cfeConfirmado);
+                
+                // Checkbox deshabilitado si ya tiene planilla o si está confirmado (y concepto requiere confirmación)
+                $checkboxDeshabilitado = $cfeYaTienePlanilla || 
+                                         ($conceptoPermitePlanilla && $conceptoPermitePlanilla->requiere_confirmacion && $cfeConfirmado);
+              @endphp
               <tr wire:loading.remove wire:target="search,filtroConcepto,filtroMeses,filtroAno">
+                @if($mostrarSelectorPlanillas)
+                  <td class="align-middle text-center">
+                    @if($mostrarCheckbox)
+                      <input type="checkbox" 
+                        wire:click="toggleCfeSeleccionado({{ $cfe->id }})"
+                        {{ in_array($cfe->id, $cfesSeleccionados) ? 'checked' : '' }}
+                        {{ $checkboxDeshabilitado ? 'disabled' : '' }}
+                        style="{{ $checkboxDeshabilitado ? 'opacity: 0.3; cursor: not-allowed;' : '' }}">
+                      @if($cfeYaTienePlanilla)
+                        <small class="d-block text-muted" style="font-size: 0.7rem;">En planilla</small>
+                      @elseif($conceptoPermitePlanilla && $conceptoPermitePlanilla->requiere_confirmacion && $cfeConfirmado)
+                        <small class="d-block text-success" style="font-size: 0.7rem;">Confirmado</small>
+                      @endif
+                    @else
+                      <span class="text-muted">—</span>
+                    @endif
+                  </td>
+                @endif
                 <td class="align-middle">
                   <strong>{{ $cfe->documento_serie }}-{{ $cfe->documento_numero }}</strong>
                   <span class="text-muted d-block text-small-custom">{{ $cfe->documento_tipo }}</span>
                 </td>
-                <td class="align-middle text-break">
+                <td class="align-middle">
                   {{ $cfe->receptor_nombre_denominacion ?: '—' }}
                 </td>
                 <td class="align-middle">
@@ -203,7 +243,7 @@
                 <td class="align-middle text-right font-weight-bold text-nowrap">
                   {{ $simbolo }} {{ number_format($cfe->total_a_pagar, 2, ',', '.') }}
                 </td>
-                <td class="align-middle text-break">
+                <td class="align-middle">
                   @if($cfe->cajaConcepto)
                     <span class="font-weight-bold text-success">{{ $cfe->cajaConcepto->caja_concepto }}</span>
                     @php
@@ -220,6 +260,22 @@
                     <span class="badge badge-warning">Sin asignar</span>
                   @endif
                 </td>
+                @if($mostrarColumnaConf)
+                  <td class="align-middle text-center d-print-none{{ !$cfeConfirmado ? ' table-warning' : '' }}">
+                    @if($cfe->cajaConcepto && $cfe->cajaConcepto->requiere_confirmacion)
+                      @php
+                        $cfeConfirmado = $cfe->items->every(fn($i) => $i->confirmado);
+                      @endphp
+                      <div class="custom-control custom-switch d-inline-block">
+                        <input type="checkbox" class="custom-control-input" id="confirmado-gc-{{ $cfe->id }}"
+                          wire:click="toggleConfirmado({{ $cfe->id }})" {{ $cfeConfirmado ? 'checked' : '' }}>
+                        <label class="custom-control-label" for="confirmado-gc-{{ $cfe->id }}"></label>
+                      </div>
+                    @else
+                      <span class="text-muted">—</span>
+                    @endif
+                  </td>
+                @endif
                 <td class="align-middle text-center d-print-none">
                   <div class="btn-group btn-group-sm">
                   <button class="btn btn-info btn-action-fixed" title="Ver Detalles" data-toggle="modal"
@@ -241,7 +297,7 @@
               </tr>
             @empty
               <tr>
-                <td colspan="7" class="text-center py-5">
+                <td colspan="{{ $mostrarSelectorPlanillas ? ($mostrarColumnaConf ? 9 : 8) : ($mostrarColumnaConf ? 8 : 7) }}" class="text-center py-5">
                   <div class="my-4">
                     <i class="fas fa-file-invoice fa-4x text-muted mb-3 d-block"></i>
                     <p class="text-muted mb-1 font-weight-bold" style="font-size:1.1rem">No hay CFEs registrados</p>
@@ -262,6 +318,42 @@
             @endforelse
           </tbody>
         </table>
+
+      @if($mostrarTotalesInstitucion && !empty($totalesPorInstitucion) && count($totalesPorInstitucion) > 0)
+        <div class="mt-3 mb-3">
+          <h6 class="mb-2 font-weight-bold text-uppercase">
+            <i class="fas fa-university mr-2"></i>Totales por Institución
+          </h6>
+          <table class="table table-sm table-bordered table-striped">
+            <thead class="bg-light">
+              <tr>
+                <th class="align-middle">Institución</th>
+                <th class="align-middle text-right" style="width: 1%; white-space: nowrap;">Monto Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              @foreach ($totalesPorInstitucion as $total)
+                <tr>
+                  <td class="align-middle">
+                    {{ $total->institucion ? $total->institucion->descripcion : 'SIN INSTITUCIÓN' }}
+                  </td>
+                  <td class="align-middle text-right font-weight-bold text-nowrap">
+                    $ {{ number_format((float) $total->total_monto, 2, ',', '.') }}
+                  </td>
+                </tr>
+              @endforeach
+            </tbody>
+            <tfoot class="bg-light">
+              <tr>
+                <td class="align-middle text-right font-weight-bold">Total General:</td>
+                <td class="align-middle text-right font-weight-bold text-success text-nowrap">
+                  $ {{ number_format($totalesPorInstitucion->sum('total_monto'), 2, ',', '.') }}
+                </td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      @endif
 
       <div class="mt-3 d-flex justify-content-center d-print-none">
         {{ $cfes->links() }}

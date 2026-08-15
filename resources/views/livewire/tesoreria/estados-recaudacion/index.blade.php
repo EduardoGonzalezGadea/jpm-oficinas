@@ -655,6 +655,7 @@
               <input type="checkbox" class="custom-control-input" id="switchConfirmada"
                 onclick="event.preventDefault()"
                 wire:click="toggleConfirmada({{ $planillaVer->id }})"
+                wire:key="switchConfirmada-{{ $planillaVer->id }}-{{ $planillaVer->confirmada ? 'on' : 'off' }}"
                 {{ $planillaVer->confirmada ? 'checked' : '' }}>
               <label class="custom-control-label" for="switchConfirmada">Confirmada</label>
             </div>

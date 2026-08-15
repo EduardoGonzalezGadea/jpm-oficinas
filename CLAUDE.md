@@ -2,6 +2,17 @@
 
 Este archivo proporciona guia a Claude Code (claude.ai/code) cuando trabaja con codigo en este repositorio.
 
+## Directiva de idioma (OBLIGATORIA)
+
+**Todas las respuestas, explicaciones, comentarios de código, mensajes de commit,
+documentación y resúmenes generados por cualquier IA DEBEN estar escritos en español.**
+- Esto aplica a cualquier asistente o IDE: Claude Code, Cursor, Google Antigravity IDE,
+  GitHub Copilot, opencode, etc.
+- Si una herramienta viene configurada por defecto en otro idioma, indicar en su
+  configuración o prompt que utilice español de forma permanente.
+- Se permite el inglés únicamente para: nombres de variables, clases, funciones,
+  identificadores, claves de array y textos literales del código fuente.
+
 ## Resumen del Proyecto
 
 Aplicacion administrativa interna para una oficina de Tesoreria construida con Laravel 9 + PHP 8 + Livewire 2.12. El sistema maneja autenticacion, permisos, auditoria y varios modulos financieros incluyendo pagos, multas, certificados y gestion de caja diaria.
@@ -26,6 +37,12 @@ php artisan test --filter=MedioPagoServiceTest  # Test especifico
 
 # Generacion de clave
 php artisan key:generate   # Generar clave de aplicacion
+
+# Caja Chica - Libro Diario
+php artisan caja-chica:crear-asientos-historicos --dry-run  # Simular creación de asientos históricos
+php artisan caja-chica:crear-asientos-historicos            # Crear asientos históricos de caja chica
+php artisan libro-diario:recalcular-saldos                  # Recalcular saldos del libro diario
+php artisan caja-chica:reparar-asientos                     # Reparar asientos faltantes
 ```
 
 ## Arquitectura
@@ -98,8 +115,7 @@ La mayoria de modulos de Tesoreria siguen esta estructura:
 ## Infraestructura de Reportes
 
 Componentes compartidos para reportes avanzados:
-- `app/Http/Livewire/Shared/BaseReportComponent.php`
-- `app/Http/Livewire/Traits/WithAdvancedReportLogic.php`
+- `app/Livewire/Shared/BaseReportComponent.php`
 
 ## Navegacion en el Codigo
 
@@ -115,6 +131,83 @@ Componentes compartidos para reportes avanzados:
 - Logica de negocio embebida en componentes Livewire grandes
 - Baja cobertura de tests para operaciones financieras criticas
 - Parser CFE fragil (extraccion basada en regex sobre texto)
+
+## Sistema de Libro Diario y Caja Chica
+
+### Arquitectura
+
+El sistema de libro diario está integrado con el módulo de caja chica, registrando automáticamente todos los movimientos contables.
+
+#### Servicios Clave
+
+- **LibroDiarioService**: Gestión de asientos, redistribuciones, confirmaciones y saldos
+- **CajaChicaService**: Lógica de pendientes, pagos, movimientos y recuperaciones
+- **CajaChicaAsientosService**: Puente entre caja chica y libro diario (registra asientos automáticamente)
+
+#### Comandos de Sincronización
+
+##### 1. Crear Asientos Históricos
+Crea asientos del libro diario para registros históricos de caja chica creados antes de la implementación del sistema:
+
+```bash
+# Simular (recomendado primero)
+php artisan caja-chica:crear-asientos-historicos --dry-run
+
+# Aplicar todos
+php artisan caja-chica:crear-asientos-historicos
+
+# Por mes y año específico
+php artisan caja-chica:crear-asientos-historicos --mes=enero --anio=2026
+
+# Por ID de caja chica
+php artisan caja-chica:crear-asientos-historicos --caja-chica-id=1
+```
+
+**Qué hace:**
+1. Crea asiento de fondo fijo (constitución inicial)
+2. Registra redistribuciones de pendientes (Fondo Fijo → Pendiente)
+3. Registra redistribuciones de pagos directos (Fondo Fijo → Pagos)
+4. Registra rendiciones y recuperaciones de pendientes y pagos
+
+**Seguridad:**
+- Detecta automáticamente asientos existentes (no crea duplicados)
+- Respeta fechas y montos originales
+- Usa transacciones de base de datos
+
+##### 2. Reparar Asientos Faltantes
+Registra asientos faltantes para registros puntuales:
+
+```bash
+php artisan caja-chica:reparar-asientos --dry-run
+php artisan caja-chica:reparar-asientos --desde=2026-01-01
+```
+
+##### 3. Recalcular Saldos
+Recalcula los saldos acumulados de todas las subcuentas:
+
+```bash
+php artisan libro-diario:recalcular-saldos --dry-run
+php artisan libro-diario:recalcular-saldos
+```
+
+#### Flujo Recomendado para Datos Históricos
+
+```bash
+# 1. Simular creación de asientos
+php artisan caja-chica:crear-asientos-historicos --dry-run
+
+# 2. Si todo está correcto, aplicar
+php artisan caja-chica:crear-asientos-historicos
+
+# 3. Recalcular saldos
+php artisan libro-diario:recalcular-saldos
+```
+
+#### Documentación
+
+Ver archivos de documentación:
+- `CAJA_CHICA_HISTORICA_README.md` - Guía rápida del comando
+- `docs/comandos/caja-chica-crear-asientos-historicos.md` - Documentación completa
 
 ## Documentacion
 

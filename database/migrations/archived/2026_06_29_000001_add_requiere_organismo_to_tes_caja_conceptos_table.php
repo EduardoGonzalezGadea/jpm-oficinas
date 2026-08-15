@@ -9,17 +9,17 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('tes_caja_conceptos', function (Blueprint $table) {
-            $table->boolean('requiere_organismo')
+            $table->boolean('requiere_institucion')
                   ->default(false)
                   ->after('permite_planilla')
-                  ->comment('Indica si el concepto requiere seleccionar un organismo/entidad');
+                  ->comment('Indica si el concepto requiere seleccionar una institución');
         });
     }
 
     public function down(): void
     {
         Schema::table('tes_caja_conceptos', function (Blueprint $table) {
-            $table->dropColumn('requiere_organismo');
+            $table->dropColumn('requiere_institucion');
         });
     }
 };

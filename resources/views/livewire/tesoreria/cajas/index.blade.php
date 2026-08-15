@@ -1,32 +1,6 @@
-<div class="caja-diaria-view">
+<div>
+
   <style>
-    .caja-diaria-view > .row {
-      margin-left: -0.25rem !important;
-      margin-right: -0.25rem !important;
-    }
-    .caja-diaria-view .stat-card-body {
-      padding: 0.35rem 0.6rem !important;
-    }
-    .caja-diaria-view .card {
-      margin-bottom: 0.5rem !important;
-    }
-    .caja-diaria-view .card-header {
-      padding: 0.35rem 0.75rem !important;
-    }
-    .caja-diaria-view .card-body {
-      padding: 0.4rem 0.75rem !important;
-    }
-    .caja-diaria-view .card-footer {
-      padding: 0.35rem 0.75rem !important;
-    }
-    .caja-diaria-view .table td,
-    .caja-diaria-view .table th {
-      padding: 0.3rem 0.5rem !important;
-    }
-    .caja-diaria-view .alert {
-      padding: 0.4rem 0.75rem !important;
-      margin-bottom: 0.5rem !important;
-    }
     .nav-tabs {
       border-bottom: 2px solid #dee2e6;
     }
@@ -35,7 +9,6 @@
       border-top-left-radius: 6px;
       border-top-right-radius: 6px;
       margin-bottom: -2px;
-      padding: 0.3rem 0.65rem;
       font-weight: 500;
     }
     .nav-tabs .nav-link.active {
@@ -63,13 +36,13 @@
         <i class="fas fa-cash-register mr-2"></i>Caja Diaria
       </h5>
       <div>
-        <a href="{{ route('tesoreria.caja-diaria.apertura-cierre') }}" class="btn btn-light btn-sm" wire:navigate>
+        <a href="{{ route('tesoreria.caja-diaria.apertura-cierre') }}" class="btn btn-light btn-sm">
           <i class="fas fa-arrows-alt-h mr-1"></i>Apertura / Cierre
         </a>
-        <a href="{{ route('tesoreria.caja-diaria.arqueo') }}" class="btn btn-light btn-sm" wire:navigate>
+        <a href="{{ route('tesoreria.caja-diaria.arqueo') }}" class="btn btn-light btn-sm">
           <i class="fas fa-list-ol mr-1"></i>Arqueo
         </a>
-        <a href="{{ route('tesoreria.caja-diaria.movimientos') }}" class="btn btn-light btn-sm" wire:navigate>
+        <a href="{{ route('tesoreria.caja-diaria.movimientos') }}" class="btn btn-light btn-sm">
           <i class="fas fa-exchange-alt mr-1"></i>Movimientos
         </a>
       </div>
@@ -113,7 +86,7 @@
         <i class="fas fa-exclamation-triangle mr-2"></i>
         No tenés una caja abierta para el día de hoy. Para comenzar la jornada, abrí una caja.
       </div>
-      <a href="{{ route('tesoreria.caja-diaria.apertura-cierre') }}" class="btn btn-info btn-sm py-0" wire:navigate>
+      <a href="{{ route('tesoreria.caja-diaria.apertura-cierre') }}" class="btn btn-info btn-sm py-0">
         <i class="fas fa-arrows-alt-h mr-1"></i>Abrir Caja
       </a>
     </div>
@@ -249,15 +222,21 @@
       {{-- Acciones rápidas --}}
       @if ($cajaTrabajo->estado === 'abierta')
         <div class="card shadow-sm mb-2">
-          <div class="card-body py-1.5 px-2">
+          <div class="card-body py-2 px-2">
             <div class="d-flex flex-wrap" style="gap:.4rem;">
-              <a href="{{ route('tesoreria.caja-diaria.movimientos') }}" class="btn btn-primary btn-sm py-0.5 px-2" wire:navigate>
+              <a href="{{ route('tesoreria.caja-diaria.movimientos') }}" class="btn btn-primary btn-sm">
                 <i class="fas fa-plus-circle mr-1"></i>Registrar movimiento
               </a>
-              <a href="{{ route('tesoreria.caja-diaria.arqueo') }}" class="btn btn-outline-primary btn-sm py-0.5 px-2" wire:navigate>
+              <a href="{{ route('tesoreria.caja-diaria.cobrar') }}" class="btn btn-success btn-sm">
+                <i class="fas fa-hand-holding-usd mr-1"></i>Cobrar
+              </a>
+              <a href="{{ route('tesoreria.caja-diaria.pagar') }}" class="btn btn-danger btn-sm">
+                <i class="fas fa-money-bill-wave mr-1"></i>Pagar
+              </a>
+              <a href="{{ route('tesoreria.caja-diaria.arqueo') }}" class="btn btn-outline-primary btn-sm">
                 <i class="fas fa-list-ol mr-1"></i>Realizar arqueo
               </a>
-              <a href="{{ route('tesoreria.caja-diaria.apertura-cierre') }}" class="btn btn-outline-danger btn-sm py-0.5 px-2 ml-auto" wire:navigate>
+              <a href="{{ route('tesoreria.caja-diaria.apertura-cierre') }}" class="btn btn-outline-danger btn-sm ml-auto">
                 <i class="fas fa-lock mr-1"></i>Cerrar caja
               </a>
             </div>
@@ -268,7 +247,7 @@
       {{-- Totales del día por medio de pago (desde Libro Diario) --}}
       @if ($totalesDiaPorMedio->isNotEmpty())
         <div class="card shadow-sm mb-2">
-          <div class="card-header py-1 px-2 bg-light d-flex justify-content-between align-items-center">
+          <div class="card-header d-flex justify-content-between align-items-center">
             <h6 class="mb-0 font-weight-bold"><i class="fas fa-chart-bar mr-1"></i>Movimientos del Día por Medio de Pago</h6>
             <small class="text-muted">Sincronizado con el Libro Diario</small>
           </div>
@@ -311,7 +290,7 @@
       {{-- Referencia Caja Chica (informativo) --}}
       @if ($cajaChicaDia && ($cajaChicaDia->entradas > 0 || $cajaChicaDia->salidas > 0))
         <div class="card border-warning shadow-sm mb-2">
-          <div class="card-header py-1 px-2 bg-light d-flex justify-content-between align-items-center">
+          <div class="card-header d-flex justify-content-between align-items-center">
             <h6 class="mb-0 font-weight-bold"><i class="fas fa-coins mr-1 text-warning"></i>Caja Chica — Referencia del Día</h6>
             <small class="text-muted">No forma parte de la caja diaria</small>
           </div>
@@ -340,7 +319,7 @@
           <h6 class="mb-0 text-premium-header">
             <i class="fas fa-exchange-alt mr-2"></i>Movimientos de la Caja
           </h6>
-          <a href="{{ route('tesoreria.caja-diaria.movimientos') }}" class="btn btn-light btn-sm py-0 px-2" wire:navigate>
+          <a href="{{ route('tesoreria.caja-diaria.movimientos') }}" class="btn btn-light btn-sm py-0 px-2">
             <i class="fas fa-plus mr-1"></i>Registrar
           </a>
         </div>
@@ -407,7 +386,7 @@
         </div>
       </div>
     @else
-      <div class="alert alert-secondary shadow-sm mb-0 py-1.5 px-3">
+      <div class="alert alert-secondary shadow-sm mb-0 py-2 px-3">
         <i class="fas fa-info-circle mr-2"></i>
         No existe una caja abierta para el usuario actual.
         Las cajas de la fecha se muestran en la pestaña <strong>Cajas del Día</strong>.
@@ -431,8 +410,8 @@
           @endphp
           <div class="col-12 mb-2">
             <div class="card shadow-sm h-100 {{ $esPropia ? 'border-primary' : '' }}">
-              <div class="card-header py-1 px-2 d-flex justify-content-between align-items-center
-                {{ $esPropia ? 'card-header-section card-header-gradient' : 'bg-light' }}">
+              <div class="card-header d-flex justify-content-between align-items-center
+                {{ $esPropia ? 'card-header-section card-header-gradient' : '' }}">
                 <div class="font-weight-bold">
                   <i class="fas fa-user-circle mr-1"></i>{{ $caja->cajero->nombre_completo ?? '—' }}
                   @if ($esPropia)
@@ -445,7 +424,7 @@
                   <span class="badge badge-secondary"><i class="fas fa-lock mr-1"></i>Cerrada</span>
                 @endif
               </div>
-              <div class="card-body py-1.5 px-2">
+              <div class="card-body py-2 px-2">
                 <div class="row text-center">
                   <div class="col-4 border-right">
                     <small class="d-block text-muted">Saldo Inicial</small>
@@ -478,7 +457,7 @@
                   </div>
                 </div>
               </div>
-              <div class="card-footer py-1 px-2 d-flex justify-content-between align-items-center bg-white">
+              <div class="card-footer py-1 px-2 d-flex justify-content-between align-items-center">
                 <small class="text-muted">
                   <i class="far fa-clock mr-1"></i>{{ optional($caja->fecha_apertura)->format('d/m/Y') }} {{ $caja->hora_apertura_formateada }}
                 </small>
@@ -489,11 +468,11 @@
                   </button>
                   @if ($esPropia && $caja->estado === 'abierta')
                     <a href="{{ route('tesoreria.caja-diaria.apertura-cierre') }}"
-                      class="btn btn-outline-secondary btn-sm py-0 px-2" wire:navigate title="Apertura / Cierre">
+                      class="btn btn-outline-secondary btn-sm py-0 px-2" title="Apertura / Cierre">
                       <i class="fas fa-arrows-alt-h"></i>
                     </a>
                     <a href="{{ route('tesoreria.caja-diaria.arqueo') }}"
-                      class="btn btn-outline-secondary btn-sm py-0 px-2" wire:navigate title="Arqueo">
+                      class="btn btn-outline-secondary btn-sm py-0 px-2" title="Arqueo">
                       <i class="fas fa-list-ol"></i>
                     </a>
                   @endif
@@ -504,7 +483,7 @@
         @endforeach
       </div>
     @else
-      <div class="alert alert-secondary shadow-sm mb-0 py-1.5 px-3">
+      <div class="alert alert-secondary shadow-sm mb-0 py-2 px-3">
         <i class="fas fa-info-circle mr-2"></i>
         No hay cajas registradas para la fecha <strong>@urudate($fechaSeleccionada)</strong>.
       </div>
@@ -592,7 +571,7 @@
                       <td class="text-center py-1">
                         @if ($cajaSeleccionada && $cajaSeleccionada->estado === 'abierta')
                           <button type="button"
-                                  class="btn btn-sm btn-outline-danger py-0 px-1.5"
+                                  class="btn btn-sm btn-outline-danger py-0 px-2"
                                   title="Eliminar movimiento y su asiento del Libro Diario"
                                   wire:click="confirmarEliminarMovimiento({{ $movimiento->id }})">
                             <i class="fas fa-trash-alt"></i>

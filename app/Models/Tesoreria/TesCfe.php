@@ -34,7 +34,7 @@ class TesCfe extends Model
                 'documento_tipo', 'documento_serie', 'documento_numero',
                 'fecha', 'receptor_nombre_denominacion', 'total_a_pagar',
                 'tes_caja_concepto_id', 'siif_distribucion_dependencia_id',
-                'referencias', 'adenda',
+                'institucion_id', 'planilla_comun_id', 'referencias', 'adenda',
             ])
             ->logOnlyDirty()
             ->dontSubmitEmptyLogs()
@@ -121,5 +121,14 @@ class TesCfe extends Model
         return $this->belongsTo(SiifDistribucionDependencia::class, 'siif_distribucion_dependencia_id');
     }
 
-}
+    public function institucion()
+    {
+        return $this->belongsTo(EventualInstitucion::class, 'institucion_id');
+    }
 
+    public function planillaComun()
+    {
+        return $this->belongsTo(TesPlanillaComun::class, 'planilla_comun_id');
+    }
+
+}

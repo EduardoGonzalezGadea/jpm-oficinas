@@ -1,4 +1,4 @@
-﻿<div>
+<div>
   <style>
     .text-nowrap-custom {
       white-space: nowrap;
@@ -42,7 +42,7 @@
               </thead>
               <tbody>
                 @forelse ($mediosDePago as $medio)
-                  <tr>
+                  <tr wire:key="medio-{{ $medio->id }}">
                     <td class="text-left align-middle">{{ $medio->nombre }}</td>
                     <td class="text-center align-middle">{{ $medio->nombre_corto ?: '—' }}</td>
                     <td class="text-center align-middle">{{ $medio->orden }}</td>
@@ -92,7 +92,7 @@
   </div>
 
   <!-- Create/Edit Modal -->
-  <div wire:ignore.self class="modal fade" id="medioDePagoModal" tabindex="-1" role="dialog"
+  <div wire:ignore.self wire:key="medio-de-pago-modal" class="modal fade" id="medioDePagoModal" tabindex="-1" role="dialog"
     aria-labelledby="medioDePagoModalLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
       <div class="modal-content">
@@ -198,7 +198,7 @@
   </div>
 
   <!-- Details Modal -->
-  <div wire:ignore.self class="modal fade" id="detailsModal" tabindex="-1" role="dialog"
+  <div wire:ignore.self wire:key="details-medio-de-pago-modal" class="modal fade" id="detailsMedioDePagoModal" tabindex="-1" role="dialog"
     aria-labelledby="detailsModalLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
       <div class="modal-content">

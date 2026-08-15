@@ -133,6 +133,12 @@
   </div>
 
   @if($datosExtraidos)
+  <datalist id="sugerencias-medios">
+    @foreach($mediosDisponibles as $medio)
+    <option value="{{ $medio }}">
+      @endforeach
+  </datalist>
+
   <div class="card border-success shadow-sm">
     <div class="card-header bg-success text-white py-1 px-3 d-flex justify-content-between align-items-center">
       <h6 class="mb-0 font-weight-bold"><i class="fas fa-check-double mr-2"></i>Datos Detectados</h6>
@@ -158,10 +164,64 @@
         </div>
       </div>
 
-      <div class="row mb-3 border-top pt-2">
+      <div class="row mb-3 border-top pt-2" id="seccion-medios-pago">
         <div class="col-md-12">
-          <label class="text-upper small text-muted font-weight-bold d-block text-primary">Medio de Pago Detectado</label>
-          <div class="font-weight-bold">{{ $datosExtraidos['forma_pago'] ?: 'SIN DATOS' }}</div>
+          <label class="text-upper small text-muted font-weight-bold d-block text-primary">Medios de Pago</label>
+
+          <div class="table-responsive">
+            <table class="table table-sm table-bordered">
+              <thead class="bg-light small">
+                <tr>
+                  <th style="width: 50%;">Medio</th>
+                  <th style="width: 35%;">Importe</th>
+                  <th style="width: 15%;"></th>
+                </tr>
+              </thead>
+              <tbody>
+                @forelse($mediosPagoForm as $index => $medio)
+                <tr wire:key="medio-{{ $index }}">
+                  <td>
+                    <input type="text" wire:model.live="mediosPagoForm.{{ $index }}.nombre"
+                      class="form-control form-control-sm" list="sugerencias-medios"
+                      placeholder="Medio de pago...">
+                  </td>
+                  <td>
+                    <div class="input-group input-group-sm">
+                      <div class="input-group-prepend"><span class="input-group-text bg-transparent border-right-0 text-muted">$</span></div>
+                      <input type="text" inputmode="decimal" wire:model.live="mediosPagoForm.{{ $index }}.importe"
+                        class="form-control form-control-sm text-right font-weight-bold"
+                        placeholder="0,00">
+                    </div>
+                  </td>
+                  <td class="text-center align-middle">
+                    <button type="button" wire:click="quitarMedio({{ $index }})"
+                      class="btn btn-link text-danger p-0" title="Quitar medio">
+                      <i class="fas fa-times-circle"></i>
+                    </button>
+                  </td>
+                </tr>
+                @empty
+                <tr>
+                  <td colspan="3" class="text-center text-muted small py-2">
+                    No se detectaron medios de pago con importes.
+                  </td>
+                </tr>
+                @endforelse
+              </tbody>
+              <tfoot>
+                <tr class="bg-light">
+                  <th colspan="2" class="text-right">Suma de importes:</th>
+                  <th class="text-right text-success">$ {{ number_format($this->suma_medios_pago_form, 2, ',', '.') }}</th>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+
+          <div class="d-flex justify-content-end">
+            <button type="button" wire:click="agregarMedio" class="btn btn-outline-success btn-sm">
+              <i class="fas fa-plus mr-1"></i> Agregar medio
+            </button>
+          </div>
         </div>
       </div>
 
@@ -203,3 +263,47 @@
   </div>
   @endif
 </div>
+
+@push('scripts')
+<script>
+  document.addEventListener('livewire:init', function () {
+    window.addEventListener('swal:confirm-discrepancia-multas', function (event) {
+      var data = window.LiveEvent(event);
+      var fmt = function (v) {
+        return '$ ' + Number(v || 0).toLocaleString('es-UY', {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2
+        });
+      };
+
+      Swal.fire({
+        title: '¡Discrepancia de Montos!',
+        html: 'El total a pagar (<b>' + fmt(data.monto) + '</b>) no coincide con la suma de los importes de los medios de pago (<b>' + fmt(data.sumaMedios) + '</b>).<br><br>¿Qué deseas hacer?',
+        icon: 'warning',
+        showDenyButton: true,
+        showCancelButton: true,
+        confirmButtonColor: '#28a745',
+        denyButtonColor: '#3085d6',
+        cancelButtonColor: '#dc3545',
+        confirmButtonText: 'Continuar como está',
+        denyButtonText: 'Hacer cambios en los importes',
+        cancelButtonText: 'Cancelar',
+        reverseButtons: true
+      }).then(function (result) {
+        if (result.isConfirmed) {
+          @this.call('guardarRegistro', true);
+        } else if (result.isDenied) {
+          // Hacer cambios en los importes: llevar al usuario a la sección de medios de pago
+          var mediosSection = document.getElementById('seccion-medios-pago');
+          if (mediosSection) {
+            mediosSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            var primerInput = mediosSection.querySelector('input');
+            if (primerInput) primerInput.focus();
+          }
+        }
+        // cancel (cancelar): no se guarda, el usuario permanece en la pantalla de datos detectados.
+      });
+    });
+  });
+</script>
+@endpush

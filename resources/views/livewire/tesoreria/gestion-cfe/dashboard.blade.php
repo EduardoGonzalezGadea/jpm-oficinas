@@ -3,10 +3,10 @@
 
     <div class="card">
         {{-- Header --}}
-        <div class="card-header bg-info text-white card-header-gradient p-2">
-            <div class="d-flex justify-content-between align-items-center">
-                <h4 class="card-title px-1 m-0">
-                    <strong><i class="fas fa-chart-pie mr-2"></i>Indicadores de Recaudaciones</strong>
+        <div class="card-header card-header-section card-header-gradient py-2 px-3">
+            <div class="d-flex justify-content-between align-items-center w-100">
+                <h4 class="mb-0 text-premium-header">
+                    <i class="fas fa-chart-pie mr-2"></i>Indicadores de Recaudaciones
                 </h4>
                 <div class="d-flex align-items-center">
                     <div class="btn-group mb-0 mr-2 position-relative" role="group" x-data="{ open: false }" @click.outside="open = false">

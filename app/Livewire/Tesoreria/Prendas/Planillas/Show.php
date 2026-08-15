@@ -30,7 +30,7 @@ class Show extends Component
 
     public function generarPDF()
     {
-        return redirect()->route('tesoreria.prendas.planillas.pdf', $this->planillaId);
+        return redirect()->route('tesoreria.prendas.planillas.print', $this->planillaId);
     }
 
     public function render()

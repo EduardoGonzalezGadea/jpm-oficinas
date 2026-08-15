@@ -90,7 +90,7 @@ class SiifDistribucionTipos extends Component
     public function showDetails($id)
     {
         $this->selectedTipo = Model::findOrFail($id);
-        $this->dispatch('show-modal', id: 'detailsModal');
+        $this->dispatch('show-modal', id: 'detailsTipoModal');
     }
 
     public function resetDetails()

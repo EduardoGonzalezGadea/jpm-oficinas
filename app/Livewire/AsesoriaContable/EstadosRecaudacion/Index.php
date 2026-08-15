@@ -18,6 +18,9 @@ class Index extends Component
     public $search = '';
     public array $filtroMeses = [];
     public $filtroAno = null;
+    public $filtroTurno = '';
+
+    public $modoAgrupacionDetalles = 'distribucion';
 
     public $mostrarModalDetalles = false;
     public $planillaDetalles = null;
@@ -47,6 +50,11 @@ class Index extends Component
         $this->resetPage();
     }
 
+    public function updatedFiltroTurno()
+    {
+        $this->resetPage();
+    }
+
     public function limpiarFiltroMeses(): void
     {
         $this->filtroMeses = [];
@@ -57,6 +65,7 @@ class Index extends Component
         $this->search = '';
         $this->filtroMeses = [];
         $this->filtroAno = (int) date('Y');
+        $this->filtroTurno = '';
     }
 
     public function verDetalles(int $id): void
@@ -147,6 +156,7 @@ class Index extends Component
                     }
                 });
             })
+            ->when($this->filtroTurno, fn($q) => $q->where('turno', $this->filtroTurno))
             ->orderBy('fecha', 'desc')->orderBy('id', 'desc');
 
         $todasPlanillas = $query->get();

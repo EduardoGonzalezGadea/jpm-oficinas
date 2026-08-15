@@ -476,6 +476,6 @@ class AperturaCierre extends Component
             'diferencia' => $this->diferencia,
             'saldo_esperado_ld' => $this->saldo_esperado_ld,
             'desglose_invalido' => $this->desglose_invalido,
-        ])->extends('layouts.app')->section('content');
+        ]);
     }
 }

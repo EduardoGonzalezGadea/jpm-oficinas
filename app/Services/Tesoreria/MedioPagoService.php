@@ -14,7 +14,7 @@ class MedioPagoService
      * Parsea un valor numérico que puede estar en formato uruguayo (1.234,56)
      * o en formato estándar (1234.56). Detecta automáticamente el formato.
      */
-    protected function parsearValorNumerico(string $valorStr): ?float
+    public function parsearValorNumerico(string $valorStr): ?float
     {
         $valorStr = trim($valorStr);
         if (empty($valorStr)) return null;

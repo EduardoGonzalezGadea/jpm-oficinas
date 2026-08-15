@@ -150,12 +150,17 @@
     const roles = <?php echo json_encode($allRoles ?? []); ?>;
     const permissions = <?php echo json_encode($allPermissions ?? []); ?>;
 
+    const rolesDataUrl = "{{ route('usuarios.roles.data', ['usuario' => '__ID__']) }}";
+    const permissionsDataUrl = "{{ route('usuarios.permissions.data', ['usuario' => '__ID__']) }}";
+    const rolesUpdateUrl = "{{ route('usuarios.roles.update', ['usuario' => '__ID__']) }}";
+    const permissionsUpdateUrl = "{{ route('usuarios.permissions.update', ['usuario' => '__ID__']) }}";
+
     function manageUserRoles(userId, userName) {
         document.getElementById('userNameRoles').textContent = userName;
-        document.getElementById('manageRolesForm').action = `/usuarios/${userId}/roles`;
+        document.getElementById('manageRolesForm').action = rolesUpdateUrl.replace('__ID__', userId);
 
-        // Obtener roles actuales del usuario (necesitarías hacer una petición AJAX o tener los datos)
-        fetch(`/usuarios/${userId}/roles-data`)
+        // Obtener roles actuales del usuario
+        fetch(rolesDataUrl.replace('__ID__', userId))
             .then(response => response.json())
             .then(data => {
                 let html = '';
@@ -180,10 +185,10 @@
 
     function manageUserPermissions(userId, userName) {
         document.getElementById('userNamePermissions').textContent = userName;
-        document.getElementById('managePermissionsForm').action = `/usuarios/${userId}/permissions`;
+        document.getElementById('managePermissionsForm').action = permissionsUpdateUrl.replace('__ID__', userId);
 
         // Obtener permisos directos actuales del usuario
-        fetch(`/usuarios/${userId}/permissions-data`)
+        fetch(permissionsDataUrl.replace('__ID__', userId))
             .then(response => response.json())
             .then(data => {
                 let html = '';

@@ -1,5 +1,6 @@
-﻿<div>
-  <div class="row">
+<div class="caja-concepto-root">
+  <div>
+    <div class="row">
     <div class="col-md-12">
       <div class="card">
         <div class="card-header card-header-section card-header-gradient py-2 px-3 d-flex justify-content-between align-items-center">
@@ -32,13 +33,13 @@
                   <th class="text-center align-middle">Req. Confirmación</th>
                   <th class="text-center align-middle">Req. Distribución</th>
                   <th class="text-center align-middle">Permite Planilla</th>
-                  <th class="text-center align-middle">Req. Organismo</th>
+                  <th class="text-center align-middle">Req. Institución</th>
                   <th class="text-center align-middle">Acciones</th>
                 </tr>
               </thead>
               <tbody>
                 @forelse ($conceptos as $concepto)
-                  <tr>
+                  <tr wire:key="concepto-{{ $concepto->id }}">
                     <td class="align-middle">{{ $concepto->caja_concepto }}</td>
                     <td class="text-center align-middle">
                       @if ($concepto->siifDistribucionTipo)
@@ -91,12 +92,12 @@
                     <td class="text-center align-middle">
                       <div class="custom-control custom-switch d-inline-block">
                         <input type="checkbox" class="custom-control-input"
-                          wire:click="toggleOrganismo({{ $concepto->id }})"
-                          id="organismo-switch-{{ $concepto->id }}"
-                          @if($concepto->requiere_organismo) checked @endif>
-                        <label class="custom-control-label" for="organismo-switch-{{ $concepto->id }}">
-                          <span class="badge badge-{{ $concepto->requiere_organismo ? 'primary' : 'secondary' }}">
-                            {{ $concepto->requiere_organismo ? 'Sí' : 'No' }}
+                          wire:click="toggleInstitucion({{ $concepto->id }})"
+                          id="institucion-switch-{{ $concepto->id }}"
+                          @if($concepto->requiere_institucion) checked @endif>
+                        <label class="custom-control-label" for="institucion-switch-{{ $concepto->id }}">
+                          <span class="badge badge-{{ $concepto->requiere_institucion ? 'primary' : 'secondary' }}">
+                            {{ $concepto->requiere_institucion ? 'Sí' : 'No' }}
                           </span>
                         </label>
                       </div>
@@ -210,12 +211,12 @@
               </div>
               <div class="custom-control custom-switch">
                 <input type="checkbox" class="custom-control-input"
-                  wire:model="requiere_organismo"
-                  id="requiere_organismo">
-                <label class="custom-control-label" for="requiere_organismo">
-                  Requiere Organismo
+                  wire:model="requiere_institucion"
+                  id="requiere_institucion">
+                <label class="custom-control-label" for="requiere_institucion">
+                  Requiere Institución
                 </label>
-                <small class="form-text text-muted">El concepto requiere seleccionar un organismo/entidad.</small>
+                <small class="form-text text-muted">El concepto requiere seleccionar una institución.</small>
               </div>
             </div>
           </form>
@@ -269,9 +270,9 @@
                 {{ $selectedConcepto->permite_planilla ? 'Sí' : 'No' }}
               </span>
             </p>
-            <p class="mb-1"><strong>Requiere Organismo:</strong>
-              <span class="badge badge-{{ $selectedConcepto->requiere_organismo ? 'primary' : 'secondary' }}">
-                {{ $selectedConcepto->requiere_organismo ? 'Sí' : 'No' }}
+            <p class="mb-1"><strong>Requiere Institución:</strong>
+              <span class="badge badge-{{ $selectedConcepto->requiere_institucion ? 'primary' : 'secondary' }}">
+                {{ $selectedConcepto->requiere_institucion ? 'Sí' : 'No' }}
               </span>
             </p>
             <hr>
@@ -285,6 +286,7 @@
         </div>
       </div>
     </div>
+  </div>
   </div>
 
   @push('scripts')
@@ -306,10 +308,6 @@
             @this.call(d.method, d.id);
           }
         });
-      });
-
-      window.addEventListener('show-modal', event => {
-        $('#' + window.LiveEvent(event).id).modal('show');
       });
 
       window.addEventListener('alert', event => {
@@ -339,13 +337,13 @@
       });
 
       document.addEventListener('livewire:init', function() {
-      Livewire.on('cajaConceptoStore', () => {
-        $('#cajaConceptoModal').modal('hide');
-      });
+        Livewire.on('cajaConceptoStore', () => {
+          $('#cajaConceptoModal').modal('hide');
+        });
 
-      Livewire.on('cajaConceptoUpdate', () => {
-        $('#cajaConceptoModal').modal('hide');
-      });
+        Livewire.on('cajaConceptoUpdate', () => {
+          $('#cajaConceptoModal').modal('hide');
+        });
       });
 
       $(document).ready(function() {

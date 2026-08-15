@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\Modulo;
 use App\Services\AlertService;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 
 class PanelController extends Controller
 {
@@ -33,5 +35,20 @@ class PanelController extends Controller
         $alertas = $this->alertService->getAllAlerts($usuario);
 
         return view('panel.index', compact('usuario', 'estadisticas', 'alertas'));
+    }
+
+    public function getDashboardStats()
+    {
+        $stats = [
+            'total_usuarios' => User::activos()->count(),
+            'total_modulos' => Modulo::activos()->count(),
+            'total_roles' => Role::count(),
+            'total_permisos' => Permission::count(),
+            'usuarios_tesoreria' => User::activos()->whereHas('modulo', function ($q) {
+                $q->where('nombre', 'Tesorería');
+            })->count(),
+        ];
+
+        return response()->json($stats);
     }
 }

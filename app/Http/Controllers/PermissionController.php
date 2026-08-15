@@ -522,6 +522,55 @@ class PermissionController extends Controller
     }
 
     /**
+     * Mostrar roles que tienen asignado un permiso (AJAX)
+     */
+    public function roles(Permission $permission)
+    {
+        $roles = Role::whereHas('permissions', function ($query) use ($permission) {
+            $query->where('id', $permission->id);
+        })->with('users')->orderBy('name')->get();
+
+        return response()->json([
+            'permission' => $permission,
+            'roles' => $roles,
+        ]);
+    }
+
+    /**
+     * Asignar un permiso a uno o más roles (AJAX)
+     */
+    public function assignToRole(Request $request, Permission $permission)
+    {
+        $request->validate([
+            'roles' => 'required|array|min:1',
+            'roles.*' => 'exists:roles,id',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            foreach ($request->roles as $roleId) {
+                $role = Role::findOrFail($roleId);
+                $role->givePermissionTo($permission);
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Permiso asignado a ' . count($request->roles) . ' rol(es) correctamente.',
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al asignar el permiso: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
      * Buscar permisos para el autocompletado
      */
     public function searchPermissions(Request $request)

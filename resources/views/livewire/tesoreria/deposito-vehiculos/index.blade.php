@@ -12,7 +12,7 @@
         <button class="btn btn-warning" @if(count($selectedDepositos)==0) disabled @endif onclick="event.preventDefault(); window.dispatchEvent(new CustomEvent('swal:confirm-with-input', { detail: { title: '¿Con qué fecha crear la planilla?', text: 'Seleccione la fecha para la nueva planilla de depósito de vehículos.', input: 'date', inputValue: '{{ date('Y-m-d') }}', method: 'createPlanilla', componentId: '{{ $this->getId() }}', confirmButtonText: 'Crear' } }))">
           <i class="fas fa-plus-circle"></i> Crear Planilla @if(count($selectedDepositos) > 0) ({{ count($selectedDepositos) }}) @endif
         </button>
-        <button wire:click="$dispatch('showCreateModal')" class="btn btn-primary">
+        <button @click="$dispatch('showCreateModal')" class="btn btn-primary">
           <i class="fas fa-plus"></i> Nuevo
         </button>
       </div>
@@ -72,10 +72,10 @@
               <td class="align-middle text-right text-nowrap">${{ number_format($deposito->monto, 2, ',', '.') }}</td>
               <td class="align-middle">{{ $deposito->medioPago->nombre ?? '-' }}</td>
               <td class="align-middle text-center d-print-none">
-                <button wire:click="$dispatch('showDetailModal', {{ $deposito->id }})" class="btn btn-sm btn-primary" title="Ver detalles">
+                <button @click="$dispatch('showDetailModal', { id: {{ $deposito->id }} })" class="btn btn-sm btn-primary" title="Ver detalles">
                   <i class="fas fa-eye"></i>
                 </button>
-                <button wire:click="$dispatch('showEditModal', {{ $deposito->id }})" class="btn btn-sm btn-info" title="Editar">
+                <button @click="$dispatch('showEditModal', { id: {{ $deposito->id }} })" class="btn btn-sm btn-info" title="Editar">
                   <i class="fas fa-edit"></i>
                 </button>
                 <button wire:click="confirmDelete({{ $deposito->id }})" class="btn btn-sm btn-danger" title="Eliminar">
@@ -97,7 +97,7 @@
     </div>
   </div>
 
-  <livewire:tesoreria.deposito-vehiculos.create />
-  <livewire:tesoreria.deposito-vehiculos.edit />
-  <livewire:tesoreria.deposito-vehiculos.show />
+  <livewire:tesoreria.deposito-vehiculos.create wire:key="deposito-create-modal" />
+  <livewire:tesoreria.deposito-vehiculos.edit wire:key="deposito-edit-modal" />
+  <livewire:tesoreria.deposito-vehiculos.show wire:key="deposito-show-modal" />
 </div>

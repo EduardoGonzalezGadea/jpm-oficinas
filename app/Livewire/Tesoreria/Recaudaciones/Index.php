@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Tesoreria\Recaudaciones;
 
+use App\Models\Tesoreria\CajaConcepto;
 use App\Models\Tesoreria\TesCfe;
 use App\Models\Tesoreria\TesCfeItem;
 use App\Models\Tesoreria\SiifDistribucionDependencia;
@@ -19,6 +20,7 @@ class Index extends Component
     public $search = '';
     public $dependencia_id = '';
     public $tipo_id = '';
+    public $concepto_id = '';
     public $monto_desde = '';
     public $monto_hasta = '';
 
@@ -32,6 +34,12 @@ class Index extends Component
     public function opcionesTipos()
     {
         return SiifDistribucionTipo::orderBy('tipo')->get();
+    }
+
+    #[Computed]
+    public function opcionesConceptos()
+    {
+        return CajaConcepto::orderBy('caja_concepto')->get();
     }
 
     public function mount()
@@ -87,6 +95,10 @@ class Index extends Component
 
         if ($this->tipo_id !== '') {
             $items->where('tes_caja_conceptos.siif_distribucion_tipo_id', $this->tipo_id);
+        }
+
+        if ($this->concepto_id !== '') {
+            $items->where('tes_cfes.tes_caja_concepto_id', $this->concepto_id);
         }
 
         if ($this->monto_desde !== '') {
@@ -212,7 +224,7 @@ class Index extends Component
             $grupos[$tabKey]['total_pos'] += $pos;
         }
 
-        $grupos = collect($grupos)->sortBy('label')->toArray();
+        $grupos = collect($grupos)->sortBy('label')->all();
 
         foreach ($grupos as &$grupo) {
             krsort($grupo['fechas']);

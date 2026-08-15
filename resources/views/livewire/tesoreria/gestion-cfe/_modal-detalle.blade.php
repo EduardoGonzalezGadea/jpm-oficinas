@@ -190,6 +190,19 @@
           </div>
         </div>
 
+        @if($cfe->institucion)
+          <div class="row mt-3">
+            <div class="col-12">
+              <h6 class="text-uppercase small font-weight-bold mb-1 border-bottom pb-1">
+                <i class="fas fa-university mr-1"></i> Institución
+              </h6>
+              <span class="badge badge-primary px-3 py-2" style="font-size:0.9rem">
+                {{ $cfe->institucion->descripcion }}
+              </span>
+            </div>
+          </div>
+        @endif
+
       </div>
 
       <div class="modal-footer py-2">

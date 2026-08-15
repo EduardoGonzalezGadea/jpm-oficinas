@@ -1,0 +1,9 @@
+@extends('layouts.app')
+
+@section('title', 'Tesorería | Oficinas - Caja Diaria')
+
+@section('content')
+    <div class="container-fluid py-0 px-0 caja-diaria-view">
+        <livewire:tesoreria.caja-diaria.index />
+    </div>
+@endsection

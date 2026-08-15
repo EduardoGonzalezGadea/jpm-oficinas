@@ -22,22 +22,24 @@ La aplicación está pensada para cubrir la operativa diaria de una oficina admi
 
 | Componente | Versión |
 |---|---|
-| Laravel | 9.52.21 |
-| PHP | ^8.0 |
-| Livewire | 2.12.7 |
-| Laravel Sanctum | ^2.14 |
-| JWT Auth | 1.4.2 (`php-open-source-saver/jwt-auth`) |
+| Laravel | 10.x |
+| PHP | ^8.1 |
+| Livewire | 3.8 |
+| Laravel Sanctum | 3.3 |
+| JWT Auth | 2.8 (`php-open-source-saver/jwt-auth`) |
 | Spatie Permission | 5.11 |
-| Spatie Activitylog | ^4.7 |
-| Spatie Backup | ^8.2 |
-| PhpSpreadsheet | 4.1 |
-| Smalot PDF Parser | ^2.0 |
-| Google2FA | ^2.3 (`pragmarx/google2fa-laravel`) |
-| Intervention Image | ^3.11 |
-| Bacon QR Code | ^3.0 |
-| Doctrine DBAL | ^3.0 |
-| Ziggy | ^2.5 (`tightenco/ziggy`) |
+| Spatie Activitylog | 4.12 |
+| Spatie Backup | 8.8 |
+| PhpSpreadsheet | 5.8 |
+| Smalot PDF Parser | 2.12 |
+| Google2FA | 2.3 (`pragmarx/google2fa-laravel`) |
+| Intervention Image | 3.11 |
+| Bacon QR Code | 3.1 |
+| Doctrine DBAL | 3.10 |
+| Ziggy | 2.6 (`tightenco/ziggy`) |
 | Laravel Mix | 6 |
+| JavaScript | Axios, Lodash y Flatpickr |
+| Base de datos | MySQL por defecto; soporte para MariaDB, PostgreSQL y SQLite |
 
 La referencia exacta de dependencias está en:
 - `composer.json`
@@ -213,10 +215,10 @@ Nota: la cobertura automatizada aún es baja pero está en crecimiento.
 
 ### Requisitos
 
-- PHP 8
+- PHP 8.1 o superior
 - Composer
 - Node.js y npm
-- Base de datos compatible con Laravel 9 (MySQL / MariaDB)
+- Base de datos compatible con Laravel 10 (MySQL o MariaDB; también hay configuración para PostgreSQL y SQLite)
 
 ### Instalación
 

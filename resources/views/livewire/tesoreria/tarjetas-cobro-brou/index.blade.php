@@ -105,17 +105,17 @@
               <td class="align-middle text-center d-print-none">
                 <div class="btn-group" role="group" aria-label="Acciones">
                   @if($tarjeta->estado == 'Recibido')
-                  <button class="btn btn-sm btn-info" title="Entregar" wire:click="$dispatch('showDeliverModal', {{ $tarjeta->id }})">
+                  <button class="btn btn-sm btn-info" title="Entregar" wire:click="$dispatch('showDeliverModal', { id: {{ $tarjeta->id }} })">
                     <i class="fas fa-check"></i>
                   </button>
-                  <button class="btn btn-sm btn-warning" title="Devolver" wire:click="$dispatch('showReturnModal', {{ $tarjeta->id }})">
+                  <button class="btn btn-sm btn-warning" title="Devolver" wire:click="$dispatch('showReturnModal', { id: {{ $tarjeta->id }} })">
                     <i class="fas fa-undo"></i>
                   </button>
                   @endif
-                  <button class="btn btn-sm btn-secondary" title="Ver Detalles" wire:click="$dispatch('showDetailModal', {{ $tarjeta->id }})">
+                  <button class="btn btn-sm btn-secondary" title="Ver Detalles" wire:click="$dispatch('showDetailModal', { id: {{ $tarjeta->id }} })">
                     <i class="fas fa-eye"></i>
                   </button>
-                  <button class="btn btn-sm btn-primary" title="Editar" wire:click="$dispatch('showEditModal', {{ $tarjeta->id }})">
+                  <button class="btn btn-sm btn-primary" title="Editar" wire:click="$dispatch('showEditModal', { id: {{ $tarjeta->id }} })">
                     <i class="fas fa-edit"></i>
                   </button>
                   <button class="btn btn-sm btn-danger" title="Eliminar" wire:click="confirmDelete({{ $tarjeta->id }})">

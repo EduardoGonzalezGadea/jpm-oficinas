@@ -255,7 +255,7 @@ class Movimientos extends Component
                 'caja_actual' => null,
                 'movimientos' => collect(),
                 'totalesPorMedio' => collect(),
-            ])->extends('layouts.app')->section('content');
+            ]);
         }
 
         $query = CajaMovimiento::where('caja_apertura_id', $this->caja_actual->id)
@@ -281,6 +281,6 @@ class Movimientos extends Component
             'medios'          => $medios,
             'detalles'        => $this->detalles,
             'asientos_base'   => $this->asientos_base,
-        ])->extends('layouts.app')->section('content');
+        ]);
     }
 }

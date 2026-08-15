@@ -4,6 +4,7 @@ namespace App\Livewire\Tesoreria\Armas;
 
 use Livewire\Component;
 use Livewire\WithPagination;
+use Livewire\Attributes\On;
 use App\Models\Tesoreria\TesPorteArmas as TesPorteArmasModel;
 use App\Traits\ConvertirMayusculas;
 use App\Traits\WithOrdenCobroValidation;
@@ -41,19 +42,13 @@ class TesPorteArmas extends Component
 
     public $edit_id;
     protected $queryString = ['anio', 'edit_id' => ['except' => null]];
+
     public function showDetails($id)
     {
-        $this->showModal = false;
-        $this->showDeleteModal = false;
         $this->editMode = false;
         $this->selectedRegistro = TesPorteArmasModel::findOrFail($id);
         $this->showDetailModal = true;
-    }
-
-    public function closeDetailModal()
-    {
-        $this->showDetailModal = false;
-        $this->selectedRegistro = null;
+        $this->dispatch('show-modal', id: 'porteDetailModal');
     }
 
     protected $rules = [
@@ -80,6 +75,13 @@ class TesPorteArmas extends Component
     {
         $this->fecha = date('Y-m-d');
         $this->anio = $anio ?: date('Y');
+
+        $id = $this->edit_id ?: session('edit_id');
+        if ($id) {
+            $this->edit($id);
+            $this->edit_id = null;
+            session()->forget('edit_id');
+        }
     }
 
     public function checkEditId()
@@ -88,8 +90,8 @@ class TesPorteArmas extends Component
 
         if ($id) {
             $this->edit($id);
-            // Limpiar el parámetro para que no se re-abra si se refresca la página
             $this->edit_id = null;
+            session()->forget('edit_id');
         }
     }
 
@@ -228,7 +230,7 @@ class TesPorteArmas extends Component
         $this->recibo = ($ultimoRegistro && $ultimoRegistro->recibo) ? intval($ultimoRegistro->recibo) + 1 : '';
 
         $this->showModal = true;
-        $this->dispatch('modalOpened');
+        $this->dispatch('show-modal', id: 'porteFormModal');
     }
 
     public function edit($id)
@@ -248,7 +250,7 @@ class TesPorteArmas extends Component
 
         $this->editMode = true;
         $this->showModal = true;
-        $this->dispatch('modalOpened');
+        $this->dispatch('show-modal', id: 'porteFormModal');
     }
 
     public function save()
@@ -288,12 +290,14 @@ class TesPorteArmas extends Component
         });
 
         $this->closeModal();
+        $this->dispatch('hide-modal', id: 'porteFormModal');
     }
 
     public function confirmDelete($id)
     {
         $this->deleteId = $id;
         $this->showDeleteModal = true;
+        $this->dispatch('show-modal', id: 'porteDeleteModal');
     }
 
     public function delete()
@@ -305,18 +309,28 @@ class TesPorteArmas extends Component
         });
         $this->showDeleteModal = false;
         $this->deleteId = null;
+        $this->dispatch('hide-modal', id: 'porteDeleteModal');
     }
 
+    #[On('resetForm')]
     public function closeModal()
     {
         $this->showModal = false;
         $this->resetForm();
     }
 
+    #[On('closeDeleteModal')]
     public function closeDeleteModal()
     {
         $this->showDeleteModal = false;
         $this->deleteId = null;
+    }
+
+    #[On('closeDetailModal')]
+    public function closeDetailModal()
+    {
+        $this->showDetailModal = false;
+        $this->selectedRegistro = null;
     }
 
     private function resetForm()

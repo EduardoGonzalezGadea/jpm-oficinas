@@ -33,6 +33,7 @@ class SiifDistribuciones extends Component
     public $financiacion;
     public $inciso;
     public $unidad_ejecutora;
+    public $distribucion;
     public $selectedDistribucion = null;
 
     public function render()
@@ -102,6 +103,7 @@ class SiifDistribuciones extends Component
             'financiacion' => 'nullable|string|max:255',
             'inciso' => 'nullable|string|max:255',
             'unidad_ejecutora' => 'nullable|string|max:255',
+            'distribucion' => 'nullable|string|max:255',
         ]);
 
         Model::create([
@@ -116,6 +118,7 @@ class SiifDistribuciones extends Component
             'financiacion' => $this->financiacion,
             'inciso' => $this->inciso,
             'unidad_ejecutora' => $this->unidad_ejecutora,
+            'distribucion' => $this->distribucion,
         ]);
 
         $this->resetInput();
@@ -139,6 +142,7 @@ class SiifDistribuciones extends Component
         $this->financiacion = $d->financiacion;
         $this->inciso = $d->inciso;
         $this->unidad_ejecutora = $d->unidad_ejecutora;
+        $this->distribucion = $d->distribucion;
 
         $this->dispatch('show-modal', id: 'siifDistribucionModal');
     }
@@ -162,6 +166,7 @@ class SiifDistribuciones extends Component
             'financiacion' => 'nullable|string|max:255',
             'inciso' => 'nullable|string|max:255',
             'unidad_ejecutora' => 'nullable|string|max:255',
+            'distribucion' => 'nullable|string|max:255',
         ]);
 
         if ($this->siif_distribucion_id) {
@@ -178,6 +183,7 @@ class SiifDistribuciones extends Component
                 'financiacion' => $this->financiacion,
                 'inciso' => $this->inciso,
                 'unidad_ejecutora' => $this->unidad_ejecutora,
+                'distribucion' => $this->distribucion,
             ]);
 
             $this->resetInput();
@@ -203,7 +209,7 @@ class SiifDistribuciones extends Component
     public function showDetails($id)
     {
         $this->selectedDistribucion = Model::with(['tipo', 'dependencia'])->findOrFail($id);
-        $this->dispatch('show-modal', id: 'detailsModal');
+        $this->dispatch('show-modal', id: 'detailsDistribucionModal');
     }
 
     public function resetDetails()
@@ -253,5 +259,6 @@ class SiifDistribuciones extends Component
         $this->financiacion = null;
         $this->inciso = null;
         $this->unidad_ejecutora = null;
+        $this->distribucion = null;
     }
 }

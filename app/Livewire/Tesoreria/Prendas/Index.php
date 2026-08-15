@@ -6,6 +6,9 @@ use Livewire\Component;
 use Livewire\WithPagination;
 use Livewire\Attributes\Layout;
 use App\Models\Tesoreria\Prenda;
+use App\Livewire\Tesoreria\Prendas\Create;
+use App\Livewire\Tesoreria\Prendas\Edit;
+use App\Livewire\Tesoreria\Prendas\Show;
 
 #[Layout('layouts.app')]
 /**
@@ -37,9 +40,6 @@ class Index extends Component
     protected $listeners = [
         'pg:eventRefresh-default' => 'refreshData',
         'delete',
-        'showCreateModal' => 'forwardShowCreateModal',
-        'showDetailModal' => 'forwardShowDetailModal',
-        'showEditModal' => 'forwardShowEditModal',
     ];
 
     public function mount()
@@ -164,20 +164,5 @@ class Index extends Component
             ->paginate(10);
 
         return view('livewire.tesoreria.prendas.index', compact('prendas'));
-    }
-
-    public function forwardShowCreateModal(): void
-    {
-        $this->dispatch('showCreateModal')->to('tesoreria.prendas.create');
-    }
-
-    public function forwardShowDetailModal($id): void
-    {
-        $this->dispatch('showDetailModal', id: (int) $id)->to('tesoreria.prendas.show');
-    }
-
-    public function forwardShowEditModal($id): void
-    {
-        $this->dispatch('showEditModal', id: (int) $id)->to('tesoreria.prendas.edit');
     }
 }

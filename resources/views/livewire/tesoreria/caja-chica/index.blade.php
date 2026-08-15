@@ -41,7 +41,7 @@
 
   <!-- Tabla Caja Chica (Fondo Permanente) -->
   <h4 class="mt-1 mb-0">Fondo Permanente</h4>
-  <div class="table-responsive" wire:loading.class="loading-overlay">
+  <div class="table-responsive">
     <table class="table table-sm table-striped table-bordered table-hover table-compact" id="tablaCajaChica">
       <thead>
         <tr>
@@ -104,7 +104,7 @@
     </div>
   </div>
 
-  <div class="table-responsive" wire:loading.class="loading-overlay">
+  <div class="table-responsive">
     <table class="table table-sm table-bordered mb-1 table-compact" id="tablaTotales">
       <thead>
         <tr>
@@ -202,7 +202,7 @@
   <!-- Título solo para impresión -->
   <h4 class="mt-4 d-none d-print-block">Pendientes</h4>
 
-  <div class="table-responsive table-container" wire:loading.class="loading-overlay">
+  <div class="table-responsive table-container">
     <table class="table table-sm table-striped table-bordered table-hover table-compact" id="tablaPendientesDetalle">
       <thead>
         <tr>
@@ -418,7 +418,7 @@
   <!-- Título solo para impresión -->
   <h4 class="mt-4 d-none d-print-block">Pagos Directos</h4>
 
-  <div class="table-responsive table-container" wire:loading.class="loading-overlay">
+  <div class="table-responsive table-container">
     <table class="table table-sm table-striped table-bordered table-hover table-compact" id="tablaPagos">
       <thead>
         <tr>
@@ -559,7 +559,7 @@
   <livewire:tesoreria.caja-chica.modales.modal-editar-pago />
 
   <!-- Modal Dependencias -->
-  <div class="modal fade" id="modalDependencias" tabindex="-1" role="dialog"
+  <div wire:ignore.self class="modal fade" id="modalDependencias" tabindex="-1" role="dialog"
     aria-labelledby="modalDependenciasLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-scrollable" role="document">
       <div class="modal-content">
@@ -567,7 +567,7 @@
           <h6 class="modal-title" id="modalDependenciasLabel">
             <i class="fas fa-building"></i> Gestión de Dependencias
           </h6>
-          <button type="button" class="close" wire:click="closeModalDependencias">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
             <span aria-hidden="true">&times;</span>
           </button>
         </div>
@@ -579,7 +579,7 @@
   </div>
 
   <!-- Modal Acreedores -->
-  <div class="modal fade" id="modalAcreedores" tabindex="-1" role="dialog"
+  <div wire:ignore.self class="modal fade" id="modalAcreedores" tabindex="-1" role="dialog"
     aria-labelledby="modalAcreedoresLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-scrollable" role="document">
       <div class="modal-content">
@@ -587,7 +587,7 @@
           <h6 class="modal-title" id="modalAcreedoresLabel">
             <i class="fas fa-users"></i> Gestión de Acreedores
           </h6>
-          <button type="button" class="close" wire:click="closeModalAcreedores">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
             <span aria-hidden="true">&times;</span>
           </button>
         </div>
@@ -597,5 +597,6 @@
       </div>
     </div>
   </div>
+
 
 </div>

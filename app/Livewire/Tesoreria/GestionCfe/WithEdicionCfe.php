@@ -25,6 +25,8 @@ trait WithEdicionCfe
     public $editDocumentoTipo = '';
     public $editDocumentoSerie = '';
     public $editDocumentoNumero = '';
+    public $editInstitucionSeleccionada = null;
+    public bool $editConceptoRequiereInstitucion = false;
 
     public function editarCfe(int $cfeId): void
     {
@@ -57,9 +59,11 @@ trait WithEdicionCfe
 
         $concepto = $cfe->tes_caja_concepto_id ? CajaConcepto::find($cfe->tes_caja_concepto_id) : null;
         $this->editConceptoRequiereDistribucion = $concepto ? $concepto->requiere_distribucion : false;
+        $this->editConceptoRequiereInstitucion = $concepto ? $concepto->requiere_institucion : false;
 
         $this->editCajaConceptoSeleccionado = $cfe->tes_caja_concepto_id;
         $this->editSiifDependenciaSeleccionado = $cfe->siif_distribucion_dependencia_id;
+        $this->editInstitucionSeleccionada = $cfe->institucion_id;
 
         $this->mostrarModalEditar = true;
         $this->dispatch('abrir-modal-editar-cfe');
@@ -69,6 +73,11 @@ trait WithEdicionCfe
     {
         $concepto = CajaConcepto::find($value);
         $this->editConceptoRequiereDistribucion = $concepto ? $concepto->requiere_distribucion : false;
+        $this->editConceptoRequiereInstitucion = $concepto ? $concepto->requiere_institucion : false;
+
+        if (!$this->editConceptoRequiereInstitucion) {
+            $this->editInstitucionSeleccionada = null;
+        }
 
         $this->resetEditItemDistribuciones();
 
@@ -119,6 +128,12 @@ trait WithEdicionCfe
             'editSiifDependenciaSeleccionado' => 'nullable|integer|exists:siif_distribucion_dependencias,id',
         ];
 
+        if ($this->editConceptoRequiereInstitucion) {
+            $rules['editInstitucionSeleccionada'] = 'required|integer|exists:tes_eventuales_instituciones,id';
+        } else {
+            $rules['editInstitucionSeleccionada'] = 'nullable|integer|exists:tes_eventuales_instituciones,id';
+        }
+
         if ($this->editConceptoRequiereDistribucion) {
             $hasMissing = false;
             foreach ($this->editCfeItems as $index => $item) {
@@ -143,6 +158,8 @@ trait WithEdicionCfe
             'editCajaConceptoSeleccionado.min' => 'Debe seleccionar un concepto de caja válido.',
             'editCajaConceptoSeleccionado.exists' => 'El concepto de caja seleccionado no existe.',
             'editSiifDependenciaSeleccionado.exists' => 'La dependencia de distribución SIIF seleccionada no existe.',
+            'editInstitucionSeleccionada.required' => 'Debe seleccionar una institución.',
+            'editInstitucionSeleccionada.exists' => 'La institución seleccionada no existe.',
             'editItemDistribuciones.*.required' => 'Debe seleccionar una distribución para todos los ítems.',
             'editItemDistribuciones.*.exists' => 'La distribución SIIF seleccionada no existe.',
         ]);
@@ -152,6 +169,7 @@ trait WithEdicionCfe
                 fecha: $this->editFecha ?: null,
                 tes_caja_concepto_id: $this->editCajaConceptoSeleccionado,
                 siif_distribucion_dependencia_id: $this->editSiifDependenciaSeleccionado,
+                institucion_id: $this->editInstitucionSeleccionada,
                 items: $this->editCfeItems,
                 item_distribuciones: $this->editItemDistribuciones,
             );
@@ -165,7 +183,7 @@ trait WithEdicionCfe
 
         } catch (CfeNotFoundException | CfeValidationException | \RuntimeException $e) {
             $this->dispatch('swal:toast-error', text: $e->getMessage());
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $this->dispatch('swal:toast-error', text: 'Error al guardar la edición: ' . $e->getMessage());
         }
     }
@@ -185,5 +203,7 @@ trait WithEdicionCfe
         $this->editDocumentoTipo = '';
         $this->editDocumentoSerie = '';
         $this->editDocumentoNumero = '';
+        $this->editInstitucionSeleccionada = null;
+        $this->editConceptoRequiereInstitucion = false;
     }
 }

@@ -59,9 +59,13 @@ class UsuarioController extends Controller
             $totalUsers = 0;
         }
 
+        $allRoles = Role::with('permissions')->orderBy('name')->get();
+        $allPermissions = Permission::orderBy('name')->get();
+
         return view('usuarios.index', compact(
             'usuarios', 'modulos', 'roles',
             'totalPermissions', 'totalRoles', 'totalUsers',
+            'allRoles', 'allPermissions',
         ));
     }
 
@@ -266,6 +270,91 @@ class UsuarioController extends Controller
 
         return redirect()->route('usuarios.index')
             ->with('success', "Usuario " . ($usuario->activo ? 'activado' : 'desactivado') . " exitosamente.");
+    }
+
+    public function getRolesData(User $usuario = null)
+    {
+        return response()->json([
+            'userRoles' => $usuario ? $usuario->roles->pluck('id')->toArray() : [],
+        ]);
+    }
+
+    public function getPermissionsData(User $usuario = null)
+    {
+        return response()->json([
+            'userDirectPermissions' => $usuario ? $usuario->getDirectPermissions()->pluck('id')->toArray() : [],
+            'userAllPermissions' => $usuario ? $usuario->getAllPermissions()->pluck('id')->toArray() : [],
+        ]);
+    }
+
+    public function updateRoles(Request $request, User $usuario)
+    {
+        $this->authorize('usuarios.gestionar');
+        $this->verificarAccesoModulo($usuario);
+
+        $request->validate([
+            'roles' => 'nullable|array',
+            'roles.*' => 'exists:roles,id',
+        ]);
+
+        $usuario->syncRoles($request->roles ?? []);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Roles del usuario actualizados correctamente.',
+        ]);
+    }
+
+    public function updatePermissions(Request $request, User $usuario)
+    {
+        $this->authorize('usuarios.gestionar');
+        $this->verificarAccesoModulo($usuario);
+
+        $request->validate([
+            'permissions' => 'nullable|array',
+            'permissions.*' => 'exists:permissions,id',
+        ]);
+
+        $permissions = Permission::whereIn('id', $request->permissions ?? [])->pluck('name')->toArray();
+        $usuario->syncPermissions($permissions);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Permisos del usuario actualizados correctamente.',
+        ]);
+    }
+
+    public function searchUsers(Request $request)
+    {
+        $search = $request->get('q', '');
+
+        $users = User::where('nombre', 'like', '%' . $search . '%')
+            ->orWhere('apellido', 'like', '%' . $search . '%')
+            ->orWhere('email', 'like', '%' . $search . '%')
+            ->orderBy('nombre')
+            ->limit(20)
+            ->get(['id', 'nombre', 'apellido', 'email']);
+
+        return response()->json($users);
+    }
+
+    public function validateEmail(Request $request)
+    {
+        $email = $request->get('email');
+        $userId = $request->get('user_id');
+
+        $query = User::where('email', $email);
+
+        if ($userId) {
+            $query->where('id', '!=', $userId);
+        }
+
+        $exists = $query->exists();
+
+        return response()->json([
+            'valid' => !$exists,
+            'message' => $exists ? 'Este correo electrónico ya está en uso.' : 'Correo electrónico disponible.',
+        ]);
     }
 
     protected function verificarAccesoModulo(User $usuario): void

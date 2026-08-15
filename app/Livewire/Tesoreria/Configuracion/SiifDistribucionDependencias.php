@@ -96,7 +96,7 @@ class SiifDistribucionDependencias extends Component
     public function showDetails($id)
     {
         $this->selectedDependencia = Model::findOrFail($id);
-        $this->dispatch('show-modal', id: 'detailsModal');
+        $this->dispatch('show-modal', id: 'detailsDependenciaModal');
     }
 
     public function resetDetails()

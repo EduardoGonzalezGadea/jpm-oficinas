@@ -3,7 +3,6 @@
 namespace App\Livewire\Tesoreria\Configuracion;
 
 use App\Models\Tesoreria\TesDenominacionMoneda as Model;
-use Illuminate\Support\Facades\Cache;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -16,7 +15,11 @@ class TesDenominacionesMonedas extends Component
     protected $paginationTheme = 'bootstrap';
 
     public $search;
-    public $denominacion_moneda_id, $tipo_moneda, $denominacion, $descripcion, $activo;
+    public $denominacion_moneda_id;
+    public $tipo_moneda;
+    public $denominacion;
+    public $descripcion;
+    public $activo;
     public $selectedDenominacion = null;
 
     // Opciones para el dropdown de tipo de moneda
@@ -30,22 +33,14 @@ class TesDenominacionesMonedas extends Component
     public function mount()
     {
         $this->activo = true;
-        $this->tipo_moneda = 'Billetes'; // Valor por defecto
+        $this->tipo_moneda = 'Billetes';
     }
 
     public function render()
     {
-
-
-        $page = $this->getPage() ?: 1;
-        $version = Cache::get('denominaciones_version', 1);
-        $cacheKey = 'denominaciones_v' . $version . '_search_' . $this->search . '_page_' . $page;
-
-        $denominaciones = Cache::remember($cacheKey, now()->addDay(), function () {
-            return Model::search($this->search)
-                ->ordenado()
-                ->paginate(15);
-        });
+        $denominaciones = Model::search($this->search)
+            ->ordenado()
+            ->paginate(15);
 
         return view('livewire.tesoreria.configuracion.tes-denominaciones-monedas', [
             'denominaciones' => $denominaciones,
@@ -71,10 +66,9 @@ class TesDenominacionesMonedas extends Component
             'tipo_moneda' => $this->tipo_moneda,
             'denominacion' => $this->denominacion,
             'descripcion' => $this->descripcion,
-            'activo' => $this->activo,
+            'activo' => $this->activo ?? true,
         ]);
 
-        $this->clearCache();
         $this->resetInput();
         $this->dispatch('denominacionStore');
         $this->dispatch('alert', type: 'success', message: 'Denominación creada con éxito!', toast: true);
@@ -88,7 +82,7 @@ class TesDenominacionesMonedas extends Component
         $this->tipo_moneda = $denominacion->tipo_moneda;
         $this->denominacion = $denominacion->denominacion;
         $this->descripcion = $denominacion->descripcion;
-        $this->activo = $denominacion->activo;
+        $this->activo = (bool) $denominacion->activo;
 
         $this->dispatch('show-modal', id: 'denominacionModal');
     }
@@ -108,9 +102,9 @@ class TesDenominacionesMonedas extends Component
                 'tipo_moneda' => $this->tipo_moneda,
                 'denominacion' => $this->denominacion,
                 'descripcion' => $this->descripcion,
-                'activo' => $this->activo,
+                'activo' => $this->activo ?? true,
             ]);
-            $this->clearCache();
+
             $this->resetInput();
             $this->dispatch('denominacionUpdate');
             $this->dispatch('alert', type: 'success', message: 'Denominación actualizada con éxito!', toast: true);
@@ -121,14 +115,13 @@ class TesDenominacionesMonedas extends Component
     {
         $denominacion = Model::findOrFail($id);
         $denominacion->delete();
-        $this->clearCache();
         $this->dispatch('alert', type: 'success', message: 'Denominación eliminada con éxito!', toast: true);
     }
 
     public function showDetails($id)
     {
         $this->selectedDenominacion = Model::findOrFail($id);
-        $this->dispatch('show-modal', id: 'detailsModal');
+        $this->dispatch('show-modal', id: 'detailsDenominacionModal');
     }
 
     public function resetDetails()
@@ -153,12 +146,5 @@ class TesDenominacionesMonedas extends Component
     public function updatingSearch()
     {
         $this->resetPage();
-        $this->clearCache();
-    }
-
-    private function clearCache()
-    {
-        $version = Cache::get('denominaciones_version', 1);
-        Cache::put('denominaciones_version', $version + 1, now()->addYear());
     }
 }

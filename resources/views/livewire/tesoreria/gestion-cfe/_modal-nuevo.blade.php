@@ -130,6 +130,31 @@
             </div>
           </div>
         </div>
+
+        {{-- Selector de Institución (condicional) --}}
+        @if($nuevoConceptoRequiereInstitucion)
+        <div class="row mt-3">
+          <div class="col-md-12">
+            <h6 class="text-uppercase small font-weight-bold mb-2">
+              <i class="fas fa-building mr-1 text-warning"></i> Institución
+              <span class="badge badge-warning">REQUERIDO</span>
+            </h6>
+            <div class="form-group mb-0">
+              <select wire:model="nuevoInstitucionSeleccionada"
+                class="form-control @error('nuevoInstitucionSeleccionada') is-invalid @enderror">
+                <option value="">— Seleccione institución —</option>
+                @foreach($instituciones as $inst)
+                  <option value="{{ $inst->id }}">{{ $inst->nombre }}</option>
+                @endforeach
+              </select>
+              @error('nuevoInstitucionSeleccionada')
+                <div class="invalid-feedback">{{ $message }}</div>
+              @enderror
+              <small class="form-text text-muted">El concepto seleccionado requiere especificar una institución.</small>
+            </div>
+          </div>
+        </div>
+        @endif
       </div>
 
       <div class="d-flex justify-content-between align-items-center mb-1 border-bottom pb-1">

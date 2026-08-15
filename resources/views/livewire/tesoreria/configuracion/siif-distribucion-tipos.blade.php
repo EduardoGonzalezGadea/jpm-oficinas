@@ -1,4 +1,4 @@
-﻿<div>
+<div>
   <div class="row">
     <div class="col-md-12">
       <div class="card">
@@ -33,7 +33,7 @@
               </thead>
               <tbody>
                 @forelse ($tipos as $item)
-                  <tr>
+                  <tr wire:key="tipo-{{ $item->id }}">
                     <td class="align-middle text-left">{{ $item->tipo }}</td>
                     <td class="text-center align-middle">
                       <button wire:click="showDetails({{ $item->id }})"
@@ -70,7 +70,7 @@
   </div>
 
   {{-- Modal Crear / Editar --}}
-  <div wire:ignore.self class="modal fade" id="siifTipoModal" tabindex="-1" role="dialog"
+  <div wire:ignore.self wire:key="siif-tipo-modal" class="modal fade" id="siifTipoModal" tabindex="-1" role="dialog"
     aria-labelledby="siifTipoModalLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
       <div class="modal-content">
@@ -111,7 +111,7 @@
   </div>
 
   {{-- Modal Detalles --}}
-  <div wire:ignore.self class="modal fade" id="detailsTipoModal" tabindex="-1" role="dialog"
+  <div wire:ignore.self wire:key="details-tipo-modal" class="modal fade" id="detailsTipoModal" tabindex="-1" role="dialog"
     aria-labelledby="detailsTipoModalLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
       <div class="modal-content">
@@ -140,13 +140,6 @@
 
   @push('scripts')
     <script>
-      window.addEventListener('show-modal', event => {
-        const d = window.LiveEvent(event);
-        if (d.id === 'siifTipoModal') {
-          $('#siifTipoModal').modal('show');
-        }
-      });
-
       document.addEventListener('livewire:init', function() {
       Livewire.on('siifTipoStore', () => {
         $('#siifTipoModal').modal('hide');
