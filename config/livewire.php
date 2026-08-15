@@ -170,6 +170,32 @@ return [
 
     /*
     |---------------------------------------------------------------------------
+    | Asset URL
+    |---------------------------------------------------------------------------
+    |
+    | This value sets the base path for Livewire's assets. When serving your app
+    | from a subdirectory (like /oficinas/public on XAMPP), set this to match
+    | that subdirectory. This is auto-configured in AppServiceProvider.boot().
+    |
+    */
+
+    'asset_url' => null,
+
+    /*
+    |---------------------------------------------------------------------------
+    | App URL
+    |---------------------------------------------------------------------------
+    |
+    | The base URL to use when generating absolute URLs for Livewire components.
+    | This is typically set via APP_URL in your .env file, but can be overridden
+    | here if needed. This is auto-configured in AppServiceProvider.boot().
+    |
+    */
+
+    'app_url' => null,
+
+    /*
+    |---------------------------------------------------------------------------
     | Auto-inject Frontend Assets
     |---------------------------------------------------------------------------
     |

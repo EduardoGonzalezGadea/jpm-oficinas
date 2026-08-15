@@ -62,12 +62,15 @@ class AppServiceProvider extends ServiceProvider
             $baseUrl = $protocol . $host . $portSuffix . $basePath;
 
             config(['app.url' => $baseUrl]);
+            
+            // Forzar la URL base ANTES de que otros servicios la usen
+            URL::forceRootUrl($baseUrl);
 
-            // Livewire 4: Configurar asset_url para subdirectorios (ej: XAMPP)
-            // En Livewire 4, se usa config('livewire.asset_url') en lugar de setUpdateRoute()
-            // Esto asegura que las rutas de Livewire funcionen en subdirectorios como /oficinas/public
+            // Livewire 4: Solo configurar app_url, NO asset_url
+            // asset_url causa problemas cuando se usa con subdirectorios en XAMPP
+            // porque Livewire lo interpreta de manera incorrecta
             if ($basePath !== '') {
-                config(['livewire.asset_url' => $basePath]);
+                config(['livewire.app_url' => $baseUrl]);
             }
         }
 

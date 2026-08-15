@@ -59,16 +59,6 @@
     <link href="{{ asset('libs/flatpickr/flatpickr.min.css') }}" rel="stylesheet">
     <link href="{{ asset('libs/flatpickr/material_blue.css') }}" rel="stylesheet">
 
-    <!-- Livewire v3: estilos -->
-    @livewireStyles
-
-
-
-
-
-
-
-
     {{-- @routes --}}
 </head>
 
@@ -112,8 +102,6 @@
 
     <script data-navigate-once src="{{ asset('libs/fontawesome-free-5.15.4-web/js/all.min.js') }}"></script>
     <script data-navigate-once src="{{ asset('libs/sweetalert2/dist/sweetalert2.all.min.js') }}"></script>
-
-    @livewireScripts
 
     @yield('scripts')
 
