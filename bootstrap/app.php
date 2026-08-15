@@ -14,7 +14,28 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware) {
         // Middleware global de la aplicación
-        // Los middleware específicos se configuran en routes/web.php
+        
+        // Registrar alias de middleware (antes en Kernel::$routeMiddleware)
+        $middleware->alias([
+            // JWT Middlewares personalizados
+            'jwt.verify' => \App\Http\Middleware\JWTVerify::class,
+            'jwt.role' => \App\Http\Middleware\JWTRole::class,
+            'jwt.permission' => \App\Http\Middleware\JWTPermission::class,
+            
+            // Spatie Permission Middlewares
+            'role' => \Spatie\Permission\Middlewares\RoleMiddleware::class,
+            'permission' => \Spatie\Permission\Middlewares\PermissionMiddleware::class,
+            'role_or_permission' => \Spatie\Permission\Middlewares\RoleOrPermissionMiddleware::class,
+            
+            // Middleware personalizado para verificar rol de administrador
+            'admin.only' => \App\Http\Middleware\CheckAdminRole::class,
+            
+            // Middleware de autenticación de dos factores
+            'two-factor' => \App\Http\Middleware\TwoFactorMiddleware::class,
+            
+            // Middleware unificado de módulo y nivel
+            'modulo' => \App\Http\Middleware\ModuloAcceso::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         // Configuración de excepciones
