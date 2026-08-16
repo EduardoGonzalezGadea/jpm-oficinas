@@ -104,13 +104,21 @@ $schedule->command('backup:run')
 
 **Antes** (v8.x):
 ```php
-BackupJobFactory::createFromArray(config('backup'))
+use Spatie\Backup\Tasks\Backup\BackupJobFactory;
+
+$backupJob = BackupJobFactory::createFromArray(config('backup'));
+$backupJob->disableNotifications();
+$backupJob->run();
 ```
 
 **Ahora** (v9.x):
 ```php
-// Ya no se usa directamente, Laravel lo maneja internamente
-php artisan backup:run
+use Illuminate\Support\Facades\Artisan;
+
+Artisan::call('backup:run', [
+    '--only-db' => true,
+    '--disable-notifications' => true,
+]);
 ```
 
 ### Estructura de Configuración Actualizada
