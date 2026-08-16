@@ -54,6 +54,87 @@ class Arqueo extends Component
         }
     }
 
+    /**
+     * Cargar el desglose del último arqueo realizado en esta caja
+     */
+    public function cargarUltimoArqueo()
+    {
+        if (!$this->caja_actual) {
+            $this->dispatch('alert', ['type' => 'error', 'message' => 'No hay una caja abierta.']);
+            return;
+        }
+
+        $ultimoArqueo = $this->caja_actual->arqueos()
+            ->with('desgloses')
+            ->latest()
+            ->first();
+
+        if (!$ultimoArqueo) {
+            $this->dispatch('alert', ['type' => 'warning', 'message' => 'No hay arqueos previos para cargar.']);
+            return;
+        }
+
+        // Reiniciar desglose
+        $this->inicializarDesglose();
+
+        // Cargar desglose del último arqueo
+        foreach ($ultimoArqueo->desgloses as $desg) {
+            if (isset($this->desglose[$desg->tes_discriminacion_monetaria_id])) {
+                $this->desglose[$desg->tes_discriminacion_monetaria_id] = [
+                    'cantidad' => $desg->cantidad,
+                    'total' => $desg->subtotal,
+                ];
+            }
+        }
+
+        $this->recalcular();
+        $this->dispatch('alert', [
+            'type' => 'success',
+            'message' => 'Desglose del último arqueo cargado exitosamente.'
+        ]);
+    }
+
+    /**
+     * Cargar el desglose del saldo inicial (apertura de caja)
+     */
+    public function cargarSaldoInicial()
+    {
+        if (!$this->caja_actual) {
+            $this->dispatch('alert', ['type' => 'error', 'message' => 'No hay una caja abierta.']);
+            return;
+        }
+
+        // Reiniciar desglose
+        $this->inicializarDesglose();
+
+        // Cargar desglose de la apertura
+        $desglosesApertura = CajaDesglose::where('caja_apertura_id', $this->caja_actual->id)
+            ->where('tipo_referencia', 'apertura')
+            ->whereNull('arqueo_id')
+            ->whereNull('cierre_id')
+            ->get();
+
+        if ($desglosesApertura->isEmpty()) {
+            $this->dispatch('alert', ['type' => 'warning', 'message' => 'No hay desglose de apertura para cargar.']);
+            return;
+        }
+
+        foreach ($desglosesApertura as $desg) {
+            if (isset($this->desglose[$desg->tes_discriminacion_monetaria_id])) {
+                $this->desglose[$desg->tes_discriminacion_monetaria_id] = [
+                    'cantidad' => $desg->cantidad,
+                    'total' => $desg->subtotal,
+                ];
+            }
+        }
+
+        $this->recalcular();
+        $this->dispatch('alert', [
+            'type' => 'success',
+            'message' => 'Desglose del saldo inicial cargado exitosamente.'
+        ]);
+    }
+
     protected function calcularTotalesMedios()
     {
         $this->total_transferencias = (float) $this->caja_actual->movimientos()

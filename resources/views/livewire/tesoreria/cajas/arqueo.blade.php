@@ -22,6 +22,31 @@
             <h5 class="mb-0"><i class="fas fa-coins mr-2"></i>Conteo de Efectivo</h5>
           </div>
           <div class="card-body" data-enter-next>
+            {{-- Botones para cargar arqueo previo o saldo inicial --}}
+            <div class="row mb-3">
+              <div class="col-md-6 mb-2 mb-md-0">
+                <button type="button" wire:click="cargarUltimoArqueo" class="btn btn-outline-info btn-sm btn-block"
+                  @if(!$arqueos_previos || $arqueos_previos->isEmpty()) disabled @endif
+                  title="Cargar las cantidades del último arqueo realizado">
+                  <i class="fas fa-history mr-1"></i>Cargar Último Arqueo
+                </button>
+              </div>
+              <div class="col-md-6">
+                <button type="button" wire:click="cargarSaldoInicial" class="btn btn-outline-success btn-sm btn-block"
+                  title="Cargar las cantidades del saldo inicial de apertura">
+                  <i class="fas fa-folder-open mr-1"></i>Cargar Saldo Inicial
+                </button>
+              </div>
+            </div>
+
+            <div class="alert alert-light border py-2 px-3 mb-3">
+              <small class="text-muted mb-0">
+                <i class="fas fa-info-circle mr-1"></i>
+                <strong>Ayuda:</strong> Puede cargar el desglose del último arqueo o del saldo inicial 
+                como punto de partida para facilitar el conteo.
+              </small>
+            </div>
+
             {{-- Selector de modo de cálculo (igual que apertura/cierre) --}}
             <div class="btn-group btn-group-sm w-100 mb-2" role="group" aria-label="Modo de cálculo">
               <button type="button"
