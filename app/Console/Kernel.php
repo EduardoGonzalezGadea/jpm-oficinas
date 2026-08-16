@@ -21,8 +21,8 @@ class Kernel extends ConsoleKernel
                  ->withoutOverlapping()
                  ->onOneServer();
 
-        // Crear backup completo a las 03:00 todos los días
-        $schedule->command('backup:run')
+        // Crear backup de base de datos a las 02:00 todos los días
+        $schedule->command('backup:run --only-db')
                  ->dailyAt('02:00')
                  ->withoutOverlapping()
                  ->onOneServer();

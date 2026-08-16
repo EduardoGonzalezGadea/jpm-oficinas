@@ -26,6 +26,14 @@ return [
                 'exclude' => [
                     base_path('vendor'),
                     base_path('node_modules'),
+                    base_path('.git'),
+                    base_path('.kilo'),
+                    base_path('.kilocode'),
+                    base_path('.opencode'),
+                    base_path('storage'),
+                    base_path('bootstrap/cache'),
+                    base_path('docs'),
+                    base_path('.phpunit.cache'),
                 ],
 
                 /*
