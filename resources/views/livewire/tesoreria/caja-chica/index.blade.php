@@ -1,10 +1,18 @@
-<div>
+<div wire:poll.visible.300s>
+  {{-- Auto-refresh cada 5 minutos solo cuando la vista está activa --}}
+  
   <!-- Cabecera de Caja Chica -->
   <div class="card mb-3 shadow-sm">
     <div class="card-header card-header-section card-header-gradient py-2 px-3">
       <h4 class="mb-0">
         <strong><i class="fas fa-coins mr-2"></i>Caja Chica</strong>
       </h4>
+      
+      {{-- Indicador de actualización --}}
+      <span wire:loading wire:target="$refresh" class="badge badge-light ml-2">
+        <i class="fas fa-sync-alt fa-spin"></i> Actualizando...
+      </span>
+      
       <div class="d-flex align-items-center">
         <!-- Selectores de Mes y Año -->
         <div class="form-inline mr-3">

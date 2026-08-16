@@ -1,12 +1,22 @@
-<div class="reporte-avanzado-container">
+<div class="reporte-avanzado-container" wire:poll.visible.600s>
+  {{-- Auto-refresh cada 10 minutos (reportes, menos crítico) --}}
+  
   <div class="row">
     <div class="col-md-12">
       <div class="card shadow-sm mb-3">
         <div class="card-header bg-info text-white py-2 d-flex justify-content-between align-items-center">
           <h5 class="mb-0"><i class="fas fa-print mr-2"></i>Reporte Avanzado de Multas Cobradas</h5>
-          <a href="{{ route('tesoreria.multas-cobradas.index') }}" class="btn btn-sm btn-light text-dark font-weight-bold">
-            <i class="fas fa-arrow-left mr-1"></i> Volver a la Vista Principal
-          </a>
+          
+          <div class="d-flex align-items-center">
+            {{-- Indicador de actualización --}}
+            <span wire:loading wire:target="$refresh" class="badge badge-light mr-2">
+              <i class="fas fa-sync-alt fa-spin"></i> Actualizando...
+            </span>
+            
+            <a href="{{ route('tesoreria.multas-cobradas.index') }}" class="btn btn-sm btn-light text-dark font-weight-bold">
+              <i class="fas fa-arrow-left mr-1"></i> Volver a la Vista Principal
+            </a>
+          </div>
         </div>
         <div class="card-body py-2">
           <form wire:submit="buscar">

@@ -1,4 +1,5 @@
-<div>
+<div wire:poll.visible.300s>
+  {{-- Auto-refresh cada 5 minutos solo cuando la vista está activa --}}
 
   <style>
     .nav-tabs {
@@ -35,6 +36,12 @@
       <h5 class="mb-0 text-premium-header">
         <i class="fas fa-cash-register mr-2"></i>Caja Diaria
       </h5>
+      
+      {{-- Indicador de actualización --}}
+      <span wire:loading wire:target="$refresh" class="badge badge-light ml-2">
+        <i class="fas fa-sync-alt fa-spin"></i> Actualizando...
+      </span>
+      
       <div>
         <a href="{{ route('tesoreria.caja-diaria.apertura-cierre') }}" class="btn btn-light btn-sm">
           <i class="fas fa-arrows-alt-h mr-1"></i>Apertura / Cierre

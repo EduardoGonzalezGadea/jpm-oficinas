@@ -1,9 +1,17 @@
-<div>
+<div wire:poll.visible.600s>
+  {{-- Auto-refresh cada 10 minutos (gestión de stock, menos crítico) --}}
+  
   <div class="card">
     <div class="card-header bg-info text-white card-header-gradient py-2 px-3 d-flex justify-content-between align-items-center">
       <h4 class="card-title mb-0">
         <strong><i class="fas fa-barcode mr-2"></i>Gestión de Valores</strong>
       </h4>
+      
+      {{-- Indicador de actualización --}}
+      <span wire:loading wire:target="$refresh" class="badge badge-light ml-2">
+        <i class="fas fa-sync-alt fa-spin"></i> Actualizando...
+      </span>
+      
       <div>
         <a href="{{ route('tesoreria.valores.reportes') }}" class="btn btn-info mr-1">
           <i class="fas fa-chart-bar mr-1"></i> Stock

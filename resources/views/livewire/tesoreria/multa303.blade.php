@@ -1,4 +1,4 @@
-<div x-data="{
+<div wire:poll.visible.600s x-data="{
   valorUr: '',
   mesUr: '',
   urVencida: false,
@@ -26,6 +26,12 @@
             <strong>Multas de Tránsito Dec. 303/2023</strong>
           </h4>
         </div>
+        
+        {{-- Indicador de actualización --}}
+        <span wire:loading wire:target="$refresh" class="badge badge-light mx-2">
+          <i class="fas fa-sync-alt fa-spin"></i> Actualizando...
+        </span>
+        
         <div class="text-center flex-grow-1 mx-2">
           <span id="ur-value-container" class="text-white font-weight-bold" style="font-size: 1.1rem;">
             <template x-if="!loading && valorUr">

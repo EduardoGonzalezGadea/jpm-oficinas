@@ -1,4 +1,6 @@
-<div>
+<div wire:poll.visible.600s>
+    {{-- Auto-refresh cada 10 minutos (gestión de usuarios, menos crítico) --}}
+    
     <style>
         .table-vmiddle th,
         .table-vmiddle td {
@@ -9,8 +11,15 @@
     <!-- Filtros -->
     <div class="row mb-3">
         <div class="col-md-4">
-            <input wire:model.live.debounce.300ms="search" type="text" class="form-control"
-                placeholder="Buscar por nombre, email o cédula...">
+            <div class="d-flex align-items-center">
+                <input wire:model.live.debounce.300ms="search" type="text" class="form-control"
+                    placeholder="Buscar por nombre, email o cédula...">
+                
+                {{-- Indicador de actualización --}}
+                <span wire:loading wire:target="$refresh" class="badge badge-info ml-2" style="white-space: nowrap;">
+                    <i class="fas fa-sync-alt fa-spin"></i> Actualizando...
+                </span>
+            </div>
         </div>
         <div class="col-md-2">
             <select wire:model.live="statusFilter" class="form-control">

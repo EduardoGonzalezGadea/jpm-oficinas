@@ -1,4 +1,6 @@
-<div class="container-fluid px-0">
+<div class="container-fluid px-0" wire:poll.visible.600s>
+  {{-- Auto-refresh cada 10 minutos (datos históricos, menos críticos) --}}
+  
   @section('title', 'Libro Diario')
 
   <div class="card">
@@ -7,6 +9,12 @@
         <h4 class="card-title px-1 m-0">
           <strong><i class="fas fa-book mr-2"></i>Libro Diario</strong>
         </h4>
+        
+        {{-- Indicador de actualización --}}
+        <span wire:loading wire:target="$refresh" class="badge badge-light ml-2">
+          <i class="fas fa-sync-alt fa-spin"></i> Actualizando...
+        </span>
+        
         <div class="d-flex d-print-none">
           <div class="btn-group mr-2">
             <button type="button" class="btn btn-light btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
