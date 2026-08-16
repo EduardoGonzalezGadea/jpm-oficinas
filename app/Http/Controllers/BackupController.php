@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Storage;
-use Spatie\Backup\Tasks\Backup\BackupJobFactory;
 use Symfony\Component\Process\Process;
 use Symfony\Component\Process\Exception\ProcessFailedException;
 
@@ -41,13 +41,16 @@ class BackupController extends Controller
     public function create(Request $request)
     {
         try {
-            $backupJob = BackupJobFactory::createFromArray(config('backup'));
-            $backupJob->disableNotifications();
-            $backupJob->disableSignals();
-            $backupJob->run();
+            // En Spatie Backup 9.x, ejecutamos el comando Artisan directamente
+            Artisan::call('backup:run', [
+                '--only-db' => true,
+                '--disable-notifications' => true,
+            ]);
+
+            $output = Artisan::output();
 
             if ($request->ajax()) {
-                return response()->json(['message' => 'Respaldo creado exitosamente.']);
+                return response()->json(['message' => 'Respaldo creado exitosamente.', 'output' => $output]);
             }
 
             return redirect()->route('system.backups.index')
