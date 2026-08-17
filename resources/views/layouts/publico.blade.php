@@ -7,7 +7,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="user-authenticated" content="{{ auth()->check() ? 'true' : 'false' }}">
 
-    <link rel="icon" type="image/x-icon" href="{{ asset('images/icons/jpm.png') }}">
+    <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
 
     <title>@yield('title', 'Tesorería | Oficinas')</title>
 

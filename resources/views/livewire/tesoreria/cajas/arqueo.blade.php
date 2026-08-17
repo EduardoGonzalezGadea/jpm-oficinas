@@ -64,30 +64,30 @@
               <table class="table table-sm table-hover mb-0">
                 <thead class="thead-light">
                   <tr>
-                    <th>Denominación</th>
-                    <th style="width: 90px;">Cantidad</th>
-                    <th style="width: 150px;">Total $</th>
+                    <th class="align-middle">Denominación</th>
+                    <th style="width: 90px;" class="align-middle">Cantidad</th>
+                    <th style="width: 150px;" class="align-middle">Total $</th>
                   </tr>
                 </thead>
                 <tbody>
                   @foreach ($denominaciones as $den)
                     @php $esInvalido = in_array((string) $den->id, $desglose_invalido ?? []); @endphp
                     <tr class="{{ $esInvalido ? 'table-warning' : '' }}">
-                      <td class="text-nowrap">
+                      <td class="text-nowrap align-middle">
                         @if($esInvalido)
                           <i class="fas fa-exclamation-triangle text-warning mr-1" title="Valor no exacto"></i>
                         @endif
-                        @money($den->valor)
+                        <span class="text-nowrap">@money($den->valor)</span>
                         <small class="text-muted">({{ $den->tipo }})</small>
                       </td>
-                      <td style="width: 90px;">
+                      <td style="width: 90px;" class="align-middle">
                         <input type="number"
                           wire:model.blur="desglose.{{ $den->id }}.cantidad"
                           class="form-control form-control-sm"
                           @if ($modo_calculo === 'total') readonly @endif
                           min="0">
                       </td>
-                      <td style="width: 150px;">
+                      <td style="width: 150px;" class="align-middle">
                         <div class="input-group input-group-sm">
                           <div class="input-group-prepend">
                             <span class="input-group-text">$</span>
@@ -103,8 +103,8 @@
                 </tbody>
                 <tfoot>
                   <tr class="table-primary font-weight-bold">
-                    <th colspan="2" class="text-right">Total Efectivo</th>
-                    <th>@money($total_efectivo)</th>
+                    <th colspan="2" class="text-right align-middle">Total Efectivo</th>
+                    <th class="align-middle">@money($total_efectivo)</th>
                   </tr>
                 </tfoot>
               </table>
@@ -164,27 +164,27 @@
               </h6>
               <table class="table table-sm table-borderless mb-0">
                 <tr>
-                  <td class="text-muted"><i class="fas fa-wallet mr-1"></i>Saldo Inicial</td>
-                  <td class="text-right font-weight-bold">@money($caja_actual->saldo_inicial)</td>
+                  <td class="text-muted align-middle"><i class="fas fa-wallet mr-1"></i>Saldo Inicial</td>
+                  <td class="text-right font-weight-bold align-middle">@money($caja_actual->saldo_inicial)</td>
                 </tr>
                 <tr>
-                  <td class="text-muted"><i class="fas fa-long-arrow-alt-down mr-1"></i>Total Entradas (Efectivo)</td>
-                  <td class="text-right font-weight-bold">@money($caja_actual->totalIngresos())</td>
+                  <td class="text-muted align-middle"><i class="fas fa-long-arrow-alt-down mr-1"></i>Total Entradas (Efectivo)</td>
+                  <td class="text-right font-weight-bold align-middle"><span class="text-nowrap">@money($caja_actual->totalIngresos())</span></td>
                 </tr>
                 <tr>
-                  <td class="text-muted"><i class="fas fa-long-arrow-alt-up mr-1"></i>Total Salidas (Efectivo)</td>
-                  <td class="text-right font-weight-bold">@money($caja_actual->totalEgresos())</td>
+                  <td class="text-muted align-middle"><i class="fas fa-long-arrow-alt-up mr-1"></i>Total Salidas (Efectivo)</td>
+                  <td class="text-right font-weight-bold align-middle"><span class="text-nowrap">@money($caja_actual->totalEgresos())</span></td>
                 </tr>
                 <tr>
-                  <td class="text-muted"><i class="fas fa-coins mr-1"></i>Total Efectivo Contado</td>
-                  <td class="text-right font-weight-bold">@money($total_efectivo)</td>
+                  <td class="text-muted align-middle"><i class="fas fa-coins mr-1"></i>Total Efectivo Contado</td>
+                  <td class="text-right font-weight-bold align-middle">@money($total_efectivo)</td>
                 </tr>
                 <tr class="font-weight-bold">
-                  <td>
+                  <td class="align-middle">
                     <i class="fas fa-{{ $diferencia == 0 ? 'check-circle' : 'exclamation-circle' }} mr-1"></i>
                     Diferencia
                   </td>
-                  <td class="text-right">@money($diferencia)</td>
+                  <td class="text-right align-middle">@money($diferencia)</td>
                 </tr>
               </table>
               <small class="text-muted">
@@ -221,26 +221,26 @@
               <table class="table table-sm table-hover table-striped mb-0">
                 <thead class="thead-dark">
                   <tr>
-                    <th>Fecha/Hora</th>
-                    <th class="text-right">Efectivo</th>
-                    <th class="text-right">Otros Medios</th>
-                    <th class="text-right">Diferencia</th>
-                    <th>Usuario</th>
+                    <th class="align-middle">Fecha/Hora</th>
+                    <th class="text-right align-middle">Efectivo</th>
+                    <th class="text-right align-middle">Otros Medios</th>
+                    <th class="text-right align-middle">Diferencia</th>
+                    <th class="align-middle">Usuario</th>
                   </tr>
                 </thead>
                 <tbody>
                   @foreach ($arqueos_previos as $arqueo)
                     <tr>
-                      <td class="text-nowrap">{{ $arqueo->created_at->format('d/m/Y H:i') }}</td>
-                      <td class="text-right">@money($arqueo->total_efectivo)</td>
-                      <td class="text-right">@money($arqueo->total_transferencias + $arqueo->total_cheques)</td>
-                      <td class="text-right">
+                      <td class="text-nowrap align-middle">{{ $arqueo->created_at->format('d/m/Y H:i') }}</td>
+                      <td class="text-right align-middle">@money($arqueo->total_efectivo)</td>
+                      <td class="text-right align-middle">@money($arqueo->total_transferencias + $arqueo->total_cheques)</td>
+                      <td class="text-right align-middle">
                         <span
                           class="font-weight-bold text-{{ $arqueo->diferencia == 0 ? 'success' : ($arqueo->diferencia > 0 ? 'info' : 'danger') }}">
-                          @money($arqueo->diferencia)
+                          <span class="text-nowrap">@money($arqueo->diferencia)</span>
                         </span>
                       </td>
-                      <td>{{ $arqueo->usuarioRegistro->nombre_completo ?? '—' }}</td>
+                      <td class="align-middle">{{ $arqueo->usuarioRegistro->nombre_completo ?? '—' }}</td>
                     </tr>
                   @endforeach
                 </tbody>

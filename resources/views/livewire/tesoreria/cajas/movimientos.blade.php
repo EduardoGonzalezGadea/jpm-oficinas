@@ -161,27 +161,27 @@
                 <table class="table table-sm mb-0">
                   <thead class="thead-light">
                     <tr>
-                      <th>Medio</th>
-                      <th class="text-right text-success">Entradas</th>
-                      <th class="text-right text-danger">Salidas</th>
-                      <th class="text-right">Neto</th>
+                      <th class="align-middle">Medio</th>
+                      <th class="text-right text-success align-middle">Entradas</th>
+                      <th class="text-right text-danger align-middle">Salidas</th>
+                      <th class="text-right align-middle">Neto</th>
                     </tr>
                   </thead>
                   <tbody>
                     @foreach ($totalesPorMedio as $fila)
                       @php $neto = $fila->entradas - $fila->salidas; @endphp
                       <tr>
-                        <td>
+                        <td class="align-middle">
                           @if ($fila->medio_nombre === 'Efectivo')
                             <strong><i class="fas fa-money-bill-wave mr-1 text-success"></i>{{ $fila->medio_nombre }}</strong>
                           @else
                             {{ $fila->medio_nombre }}
                           @endif
                         </td>
-                        <td class="text-right text-success">@money($fila->entradas)</td>
-                        <td class="text-right text-danger">@money($fila->salidas)</td>
-                        <td class="text-right font-weight-bold {{ $neto >= 0 ? 'text-success' : 'text-danger' }}">
-                          @money($neto)
+                        <td class="text-right text-success align-middle">@money($fila->entradas)</td>
+                        <td class="text-right text-danger align-middle">@money($fila->salidas)</td>
+                        <td class="text-right font-weight-bold align-middle {{ $neto >= 0 ? 'text-success' : 'text-danger' }}">
+                          <span class="text-nowrap">@money($neto)</span>
                         </td>
                       </tr>
                     @endforeach
@@ -217,24 +217,24 @@
               <table class="table table-sm table-hover mb-0">
                 <thead class="thead-dark">
                   <tr>
-                    <th>Fecha/Hora</th>
-                    <th>Tipo</th>
-                    <th>Concepto / Detalle</th>
-                    <th>Identidad</th>
-                    <th>Medio</th>
-                    <th class="text-right">Monto</th>
+                    <th class="align-middle">Fecha/Hora</th>
+                    <th class="align-middle">Tipo</th>
+                    <th class="align-middle">Concepto / Detalle</th>
+                    <th class="align-middle">Identidad</th>
+                    <th class="align-middle">Medio</th>
+                    <th class="align-middle text-right">Monto</th>
                   </tr>
                 </thead>
                 <tbody>
                   @forelse ($movimientos as $mov)
                     <tr>
-                      <td class="text-nowrap">{{ $mov->created_at->format('d/m/Y H:i') }}</td>
-                      <td>
+                      <td class="text-nowrap align-middle">{{ $mov->created_at->format('d/m/Y H:i') }}</td>
+                      <td class="align-middle">
                         <span class="badge badge-{{ $mov->tipo_movimiento === 'INGRESO' ? 'success' : 'danger' }}">
                           {{ $mov->tipo_movimiento }}
                         </span>
                       </td>
-                      <td>
+                      <td class="align-middle">
                         @if ($mov->libroDiario)
                           <span class="font-weight-bold">{{ $mov->libroDiario->concepto->nombre ?? '—' }}</span>
                           <small class="d-block text-muted">{{ $mov->libroDiario->detalle->nombre ?? '' }}</small>
@@ -260,7 +260,7 @@
                           @endif
                         @endif
                       </td>
-                      <td>
+                      <td class="align-middle">
                         @if ($mov->libroDiario && ($mov->libroDiario->denominacion || $mov->libroDiario->identidad))
                           @if ($mov->libroDiario->denominacion)
                             <span>{{ $mov->libroDiario->denominacion }}</span>
@@ -272,14 +272,14 @@
                           <span class="text-muted">—</span>
                         @endif
                       </td>
-                      <td>{{ $mov->medioPago->nombre ?? '—' }}</td>
-                      <td class="text-right font-weight-bold {{ $mov->tipo_movimiento === 'INGRESO' ? 'text-success' : 'text-danger' }}">
-                        @money($mov->monto)
+                      <td class="align-middle">{{ $mov->medioPago->nombre ?? '—' }}</td>
+                      <td class="text-right font-weight-bold align-middle {{ $mov->tipo_movimiento === 'INGRESO' ? 'text-success' : 'text-danger' }}">
+                        <span class="text-nowrap">@money($mov->monto)</span>
                       </td>
                     </tr>
                   @empty
                     <tr>
-                      <td colspan="6" class="text-center text-muted py-4">
+                      <td colspan="6" class="text-center text-muted py-4 align-middle">
                         No hay movimientos registrados en esta caja.
                       </td>
                     </tr>

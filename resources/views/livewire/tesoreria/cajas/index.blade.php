@@ -1,6 +1,17 @@
 <div wire:poll.visible.300s>
   {{-- Auto-refresh cada 5 minutos solo cuando la vista está activa --}}
 
+  {{-- Mensajes flash de sesión --}}
+  @if (session('alert'))
+    <div class="alert alert-{{ session('alert.type') }} alert-dismissible fade show mb-2" role="alert">
+      <i class="fas fa-{{ session('alert.type') === 'success' ? 'check-circle' : (session('alert.type') === 'error' ? 'exclamation-circle' : 'info-circle') }} mr-2"></i>
+      {{ session('alert.message') }}
+      <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+      </button>
+    </div>
+  @endif
+
   <style>
     .nav-tabs {
       border-bottom: 2px solid #dee2e6;
@@ -27,6 +38,13 @@
       border-right-color: rgba(255,255,255,.2);
       border-top-color: #5bc0de;
       border-bottom-color: transparent;
+    }
+    /* Asegurar que SweetAlert2 se muestre sobre modales de Bootstrap */
+    .swal-sobre-modal {
+      z-index: 9999 !important;
+    }
+    .swal-sobre-modal .swal2-popup {
+      z-index: 10000 !important;
     }
   </style>
 
@@ -123,42 +141,42 @@
       <div class="row mb-1">
         <div class="col-6 col-lg-3 px-1">
           <div class="card text-white bg-primary shadow-sm h-100">
-            <div class="card-body stat-card-body d-flex align-items-center">
+            <div class="card-body stat-card-body d-flex align-items-center py-1 px-2">
               <i class="fas fa-wallet fa-lg mr-2 d-none d-sm-block"></i>
               <div>
                 <div class="text-white-50 small" style="font-size:75%">Saldo Inicial</div>
-                <div class="font-weight-bold h6 mb-0">@money($cajaTrabajo->saldo_inicial)</div>
+                <div class="font-weight-bold h6 mb-0 text-nowrap">@money($cajaTrabajo->saldo_inicial)</div>
               </div>
             </div>
           </div>
         </div>
         <div class="col-6 col-lg-3 px-1">
           <div class="card text-white bg-success shadow-sm h-100">
-            <div class="card-body stat-card-body d-flex align-items-center">
+            <div class="card-body stat-card-body d-flex align-items-center py-1 px-2">
               <i class="fas fa-long-arrow-alt-down fa-lg mr-2 d-none d-sm-block"></i>
               <div>
                 <div class="text-white-50 small" style="font-size:75%">Entradas (Efectivo)</div>
-                <div class="font-weight-bold h6 mb-0">@money($totalIngresos ?? 0)</div>
-                <small class="text-white-50" style="font-size:70%">Otras Ent.: @money($totalIngresosOtros ?? 0)</small>
+                <div class="font-weight-bold h6 mb-0 text-nowrap">@money($totalIngresos ?? 0)</div>
+                <small class="text-white-50" style="font-size:70%">Otras Ent.: <span class="text-nowrap">@money($totalIngresosOtros ?? 0)</span></small>
               </div>
             </div>
           </div>
         </div>
         <div class="col-6 col-lg-3 px-1">
           <div class="card text-white bg-danger shadow-sm h-100">
-            <div class="card-body stat-card-body d-flex align-items-center">
+            <div class="card-body stat-card-body d-flex align-items-center py-1 px-2">
               <i class="fas fa-long-arrow-alt-up fa-lg mr-2 d-none d-sm-block"></i>
               <div>
                 <div class="text-white-50 small" style="font-size:75%">Salidas (Efectivo)</div>
-                <div class="font-weight-bold h6 mb-0">@money($totalEgresos ?? 0)</div>
-                <small class="text-white-50" style="font-size:70%">Otras Sal.: @money($totalEgresosOtros ?? 0)</small>
+                <div class="font-weight-bold h6 mb-0 text-nowrap">@money($totalEgresos ?? 0)</div>
+                <small class="text-white-50" style="font-size:70%">Otras Sal.: <span class="text-nowrap">@money($totalEgresosOtros ?? 0)</span></small>
               </div>
             </div>
           </div>
         </div>
         <div class="col-6 col-lg-3 px-1">
           <div class="card text-white bg-dark shadow-sm h-100">
-            <div class="card-body stat-card-body d-flex align-items-center">
+            <div class="card-body stat-card-body d-flex align-items-center py-1 px-2">
               <i class="fas fa-coins fa-lg mr-2 d-none d-sm-block"></i>
               <div>
                 <div class="text-white-50 small" style="font-size:75%">
@@ -168,7 +186,7 @@
                     Saldo Final
                   @endif
                 </div>
-                <div class="font-weight-bold h6 mb-0">@money($saldoFinal ?? 0)</div>
+                <div class="font-weight-bold h6 mb-0 text-nowrap">@money($saldoFinal ?? 0)</div>
               </div>
             </div>
           </div>
@@ -178,19 +196,19 @@
       <div class="row mb-1">
         <div class="col-md-4 px-1">
           <div class="card border-info shadow-sm h-100">
-            <div class="card-body stat-card-body d-flex align-items-center">
+            <div class="card-body stat-card-body d-flex align-items-center py-1 px-2">
               <i class="fas fa-receipt fa-lg text-info mr-2"></i>
               <div>
                 <div class="text-muted small" style="font-size:75%">Recaudaciones del Día</div>
                 <div class="font-weight-bold h6 mb-0">{{ $recaudacionesDia }}</div>
-                <small class="text-muted" style="font-size:70%">por @money($totalRecaudadoDia)</small>
+                <small class="text-muted" style="font-size:70%">por <span class="text-nowrap">@money($totalRecaudadoDia)</span></small>
               </div>
             </div>
           </div>
         </div>
         <div class="col-md-4 px-1">
           <div class="card border-warning shadow-sm h-100">
-            <div class="card-body stat-card-body d-flex align-items-center">
+            <div class="card-body stat-card-body d-flex align-items-center py-1 px-2">
               <i class="fas fa-clock fa-lg text-warning mr-2"></i>
               <div>
                 <div class="text-muted small" style="font-size:75%">Estado de la Caja</div>
@@ -214,7 +232,7 @@
         </div>
         <div class="col-md-4 px-1">
           <div class="card border-secondary shadow-sm h-100">
-            <div class="card-body stat-card-body d-flex align-items-center">
+            <div class="card-body stat-card-body d-flex align-items-center py-1 px-2">
               <i class="fas fa-user fa-lg text-secondary mr-2"></i>
               <div>
                 <div class="text-muted small" style="font-size:75%">Cajero</div>
@@ -240,10 +258,10 @@
               <a href="{{ route('tesoreria.caja-diaria.pagar') }}" class="btn btn-danger btn-sm">
                 <i class="fas fa-money-bill-wave mr-1"></i>Pagar
               </a>
-              <a href="{{ route('tesoreria.caja-diaria.arqueo') }}" class="btn btn-outline-primary btn-sm">
+              <a href="{{ route('tesoreria.caja-diaria.arqueo') }}" class="btn btn-outline-primary btn-sm ml-auto">
                 <i class="fas fa-list-ol mr-1"></i>Realizar arqueo
               </a>
-              <a href="{{ route('tesoreria.caja-diaria.apertura-cierre') }}" class="btn btn-outline-danger btn-sm ml-auto">
+              <a href="{{ route('tesoreria.caja-diaria.apertura-cierre') }}" class="btn btn-outline-danger btn-sm">
                 <i class="fas fa-lock mr-1"></i>Cerrar caja
               </a>
             </div>
@@ -263,27 +281,27 @@
               <table class="table table-sm mb-0">
                 <thead class="thead-light">
                   <tr>
-                    <th>Medio</th>
-                    <th class="text-right text-success">Entradas</th>
-                    <th class="text-right text-danger">Salidas</th>
-                    <th class="text-right">Neto</th>
+                    <th class="align-middle">Medio</th>
+                    <th class="text-right text-success align-middle">Entradas</th>
+                    <th class="text-right text-danger align-middle">Salidas</th>
+                    <th class="text-right align-middle">Neto</th>
                   </tr>
                 </thead>
                 <tbody>
                   @foreach ($totalesDiaPorMedio as $fila)
                     @php $neto = $fila->entradas - $fila->salidas; @endphp
                     <tr>
-                      <td>
+                      <td class="align-middle">
                         @if ($fila->medio_nombre === 'Efectivo')
                           <strong><i class="fas fa-money-bill-wave mr-1 text-success"></i>{{ $fila->medio_nombre }}</strong>
                         @else
                           {{ $fila->medio_nombre }}
                         @endif
                       </td>
-                      <td class="text-right text-success">@money($fila->entradas)</td>
-                      <td class="text-right text-danger">@money($fila->salidas)</td>
-                      <td class="text-right font-weight-bold {{ $neto >= 0 ? 'text-success' : 'text-danger' }}">
-                        @money($neto)
+                      <td class="text-right text-success align-middle">@money($fila->entradas)</td>
+                      <td class="text-right text-danger align-middle">@money($fila->salidas)</td>
+                      <td class="text-right font-weight-bold align-middle {{ $neto >= 0 ? 'text-success' : 'text-danger' }}">
+                        <span class="text-nowrap">@money($neto)</span>
                       </td>
                     </tr>
                   @endforeach
@@ -334,30 +352,31 @@
           <table class="table table-sm table-hover table-striped mb-0">
             <thead class="thead-dark">
               <tr>
-                <th>Fecha/Hora</th>
-                <th>Tipo</th>
-                <th>Concepto</th>
-                <th>Identidad</th>
-                <th>Medio</th>
-                <th class="text-right">Monto</th>
+                <th class="align-middle">Fecha/Hora</th>
+                <th class="align-middle">Tipo</th>
+                <th class="align-middle">Concepto</th>
+                <th class="align-middle">Identidad</th>
+                <th class="align-middle">Medio</th>
+                <th class="align-middle text-right">Monto</th>
+                <th class="align-middle text-center">Acciones</th>
               </tr>
             </thead>
             <tbody>
               @forelse ($movimientos as $movimiento)
                 <tr>
-                  <td class="text-nowrap">{{ $movimiento->created_at ? $movimiento->created_at->format('d/m/Y H:i') : '—' }}</td>
-                  <td>
+                  <td class="text-nowrap align-middle">{{ $movimiento->created_at ? $movimiento->created_at->format('d/m/Y H:i') : '—' }}</td>
+                  <td class="align-middle">
                     <span class="badge badge-{{ $movimiento->tipo_movimiento === 'INGRESO' ? 'success' : 'danger' }}">
                       {{ $movimiento->tipo_movimiento }}
                     </span>
                   </td>
-                  <td>
+                  <td class="align-middle">
                     {{ $movimiento->concepto }}
                     @if ($movimiento->descripcion)
                       <small class="d-block text-muted">{{ $movimiento->descripcion }}</small>
                     @endif
                   </td>
-                  <td>
+                  <td class="align-middle">
                     @if ($movimiento->libroDiario && ($movimiento->libroDiario->denominacion || $movimiento->libroDiario->identidad))
                       @if ($movimiento->libroDiario->denominacion)
                         <span>{{ $movimiento->libroDiario->denominacion }}</span>
@@ -369,21 +388,33 @@
                       <span class="text-muted">—</span>
                     @endif
                   </td>
-                  <td>
+                  <td class="align-middle">
                     @if ($movimiento->medioPago && $movimiento->medioPago->nombre === 'Efectivo')
                       <span class="font-weight-bold">Efectivo</span>
                     @else
                       {{ $movimiento->medioPago->nombre ?? '—' }}
                     @endif
                   </td>
-                  <td class="text-right font-weight-bold
+                  <td class="text-right font-weight-bold align-middle
                     {{ $movimiento->tipo_movimiento === 'INGRESO' ? 'text-success' : 'text-danger' }}">
-                    @money($movimiento->monto)
+                    <span class="text-nowrap">@money($movimiento->monto)</span>
+                  </td>
+                  <td class="text-center py-1 align-middle">
+                    @if ($cajaTrabajo && $cajaTrabajo->estado === 'abierta')
+                      <button type="button"
+                              class="btn btn-sm btn-outline-danger py-0 px-2"
+                              title="Eliminar movimiento y su asiento del Libro Diario"
+                              wire:click="confirmarEliminarMovimiento({{ $movimiento->id }})">
+                        <i class="fas fa-trash-alt"></i>
+                      </button>
+                    @else
+                      <span class="text-muted" title="Caja cerrada"><i class="fas fa-lock"></i></span>
+                    @endif
                   </td>
                 </tr>
               @empty
                 <tr>
-                  <td colspan="6" class="text-center text-muted py-3">
+                  <td colspan="7" class="text-center text-muted py-3 align-middle">
                     No hay movimientos registrados en esta caja.
                   </td>
                 </tr>
@@ -431,7 +462,7 @@
                   <span class="badge badge-secondary"><i class="fas fa-lock mr-1"></i>Cerrada</span>
                 @endif
               </div>
-              <div class="card-body py-2 px-2">
+              <div class="card-body py-1 px-2">
                 <div class="row text-center">
                   <div class="col-4 border-right">
                     <small class="d-block text-muted">Saldo Inicial</small>
@@ -528,31 +559,31 @@
               <table class="table table-sm table-hover table-striped mb-0">
                 <thead class="thead-dark">
                   <tr>
-                    <th>Fecha/Hora</th>
-                    <th>Tipo</th>
-                    <th>Concepto</th>
-                    <th>Identidad</th>
-                    <th>Medio</th>
-                    <th class="text-right">Monto</th>
-                    <th class="text-center">Acciones</th>
+                    <th class="align-middle">Fecha/Hora</th>
+                    <th class="align-middle">Tipo</th>
+                    <th class="align-middle">Concepto</th>
+                    <th class="align-middle">Identidad</th>
+                    <th class="align-middle">Medio</th>
+                    <th class="align-middle text-right">Monto</th>
+                    <th class="align-middle text-center">Acciones</th>
                   </tr>
                 </thead>
                 <tbody>
                   @forelse ($movimientosCaja as $movimiento)
                     <tr>
-                      <td class="text-nowrap">{{ $movimiento->created_at ? $movimiento->created_at->format('d/m/Y H:i') : '—' }}</td>
-                      <td>
+                      <td class="text-nowrap align-middle">{{ $movimiento->created_at ? $movimiento->created_at->format('d/m/Y H:i') : '—' }}</td>
+                      <td class="align-middle">
                         <span class="badge badge-{{ $movimiento->tipo_movimiento === 'INGRESO' ? 'success' : 'danger' }}">
                           {{ $movimiento->tipo_movimiento }}
                         </span>
                       </td>
-                      <td>
+                      <td class="align-middle">
                         {{ $movimiento->concepto }}
                         @if ($movimiento->descripcion)
                           <small class="d-block text-muted">{{ $movimiento->descripcion }}</small>
                         @endif
                       </td>
-                      <td>
+                      <td class="align-middle">
                         @if ($movimiento->libroDiario && ($movimiento->libroDiario->denominacion || $movimiento->libroDiario->identidad))
                           @if ($movimiento->libroDiario->denominacion)
                             <span>{{ $movimiento->libroDiario->denominacion }}</span>
@@ -564,18 +595,18 @@
                           <span class="text-muted">—</span>
                         @endif
                       </td>
-                      <td>
+                      <td class="align-middle">
                         @if ($movimiento->medioPago && $movimiento->medioPago->nombre === 'Efectivo')
                           <span class="font-weight-bold">Efectivo</span>
                         @else
                           {{ $movimiento->medioPago->nombre ?? '—' }}
                         @endif
                       </td>
-                      <td class="text-right font-weight-bold
+                      <td class="text-right font-weight-bold align-middle
                         {{ $movimiento->tipo_movimiento === 'INGRESO' ? 'text-success' : 'text-danger' }}">
-                        @money($movimiento->monto)
+                        <span class="text-nowrap">@money($movimiento->monto)</span>
                       </td>
-                      <td class="text-center py-1">
+                      <td class="text-center py-1 align-middle">
                         @if ($cajaSeleccionada && $cajaSeleccionada->estado === 'abierta')
                           <button type="button"
                                   class="btn btn-sm btn-outline-danger py-0 px-2"
@@ -590,7 +621,7 @@
                     </tr>
                   @empty
                     <tr>
-                      <td colspan="7" class="text-center text-muted py-3">
+                      <td colspan="7" class="text-center text-muted py-3 align-middle">
                         No hay movimientos registrados en esta caja.
                       </td>
                     </tr>
@@ -619,8 +650,95 @@
     return (Array.isArray(d) && d.length > 0) ? d[0] : (d || {});
   }
 
+  // Función para limpiar completamente todos los backdrops
+  function limpiarTodosLosBackdrops() {
+    // Remover todos los backdrops de Bootstrap
+    document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+    
+    // Remover todos los contenedores de SweetAlert2
+    document.querySelectorAll('.swal2-container').forEach(el => el.remove());
+    
+    // Limpiar clases del body
+    document.body.classList.remove('modal-open', 'swal2-shown', 'swal2-height-auto');
+    document.body.style.overflow = '';
+    document.body.style.paddingRight = '';
+    
+    // Limpiar clases del html
+    document.documentElement.classList.remove('swal2-shown', 'swal2-height-auto');
+    
+    // Remover aria-hidden solo de elementos que NO son modales
+    document.querySelectorAll('[aria-hidden="true"]').forEach(el => {
+      if (!el.classList.contains('modal')) {
+        el.removeAttribute('aria-hidden');
+      }
+    });
+  }
+
+  // Función para reabrir modal
+  function reabrirModal(modal) {
+    if (modal.length === 0) {
+      return;
+    }
+    
+    // Destruir cualquier instancia previa de Bootstrap modal
+    try {
+      modal.data('bs.modal', null);
+    } catch(e) {
+      // Ignorar error si no había instancia previa
+    }
+    
+    // Limpiar eventos previos
+    modal.off('show.bs.modal hide.bs.modal hidden.bs.modal shown.bs.modal');
+    
+    // Asegurar que el modal esté en el estado correcto
+    modal.removeClass('show');
+    modal.css('display', 'none');
+    modal.attr('aria-hidden', 'true');
+    
+    // Limpiar TODOS los backdrops antes de intentar abrir
+    $('.modal-backdrop').remove();
+    
+    // Reinicializar el modal y abrirlo
+    setTimeout(() => {
+      modal.modal({
+        backdrop: true,
+        keyboard: true,
+        focus: true,
+        show: true
+      });
+      
+      // Verificar estado después de 100ms
+      setTimeout(() => {
+        // Si aún no está visible, forzar manualmente
+        if (!modal.hasClass('show')) {
+          // Limpiar backdrops residuales antes de forzar
+          $('.modal-backdrop').remove();
+          
+          // Aplicar estilos y clases para abrir el modal
+          modal.addClass('show');
+          modal.css({
+            'display': 'block',
+            'padding-right': '17px'
+          });
+          modal.attr('aria-hidden', 'false');
+          modal.attr('aria-modal', 'true');
+          
+          // Agregar clase modal-open al body y ajustar padding
+          $('body').addClass('modal-open');
+          $('body').css('padding-right', '17px');
+          
+          // Agregar backdrop manualmente con z-index correcto
+          const backdrop = $('<div class="modal-backdrop fade show"></div>');
+          backdrop.css('z-index', parseInt(modal.css('z-index')) - 10);
+          backdrop.appendTo('body');
+        }
+      }, 100);
+    }, 50);
+  }
+
   window.addEventListener('alert', event => {
     const data = unwrapDetail(event);
+    
     Swal.fire({
       toast: true,
       position: 'top-end',
@@ -632,23 +750,102 @@
     });
   });
 
+  // Mostrar mensaje flash de sesión como toast al cargar la página
   document.addEventListener('DOMContentLoaded', function () {
+    @if (session('alert'))
+      Swal.fire({
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+        icon: '{{ session('alert.type') }}',
+        title: '{{ session('alert.message') }}',
+      });
+    @endif
+
+    // Listener global para limpiar backdrops cuando se cierra cualquier modal
+    $(document).on('hidden.bs.modal', '.modal', function () {
+      setTimeout(() => {
+        // Limpiar todos los backdrops residuales
+        $('.modal-backdrop').remove();
+        
+        // Si no hay modales abiertos, limpiar el body
+        if ($('.modal.show').length === 0) {
+          $('body').removeClass('modal-open');
+          $('body').css('overflow', '');
+          $('body').css('paddingRight', '');
+        }
+      }, 100);
+    });
+
+    // Listener para abrir el modal de movimientos
+    window.addEventListener('show-modal', event => {
+      const data = unwrapDetail(event);
+      
+      if (data.id) {
+        const modal = $(`#${data.id}`);
+        
+        if (modal.length) {
+          limpiarTodosLosBackdrops();
+          setTimeout(() => {
+            reabrirModal(modal);
+          }, 100);
+        }
+      }
+    });
+
     window.addEventListener('confirm-eliminar-movimiento', event => {
       const data = unwrapDetail(event);
-      Swal.fire({
-        title: '¿Está seguro?',
-        html: 'Se eliminará este movimiento y su asiento asociado en el Libro Diario. Esta acción no se puede deshacer.',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#d33',
-        cancelButtonColor: '#3085d6',
-        confirmButtonText: 'Sí, eliminar',
-        cancelButtonText: 'Cancelar'
-      }).then((result) => {
-        if (result.isConfirmed) {
-          @this.call('eliminarMovimiento', data.id);
-        }
-      });
+      
+      // Cerrar el modal antes de mostrar SweetAlert2
+      const modal = $('#modalMovimientosCaja');
+      const modalEstabaAbierto = modal.hasClass('show');
+      
+      if (modalEstabaAbierto) {
+        modal.modal('hide');
+      }
+      
+      // Esperar a que el modal termine de cerrarse
+      setTimeout(() => {
+        Swal.fire({
+          title: '¿Está seguro?',
+          html: 'Se eliminará este movimiento y su asiento asociado en el Libro Diario. Esta acción no se puede deshacer.',
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonColor: '#d33',
+          cancelButtonColor: '#3085d6',
+          confirmButtonText: 'Sí, eliminar',
+          cancelButtonText: 'Cancelar'
+        }).then((result) => {
+          if (result.isConfirmed) {
+            // Eliminar el movimiento
+            @this.call('eliminarMovimiento', data.id).then(() => {
+              // Limpiar backdrops y reabrir el modal después de eliminar
+              if (modalEstabaAbierto) {
+                setTimeout(() => {
+                  limpiarTodosLosBackdrops();
+                  setTimeout(() => {
+                    reabrirModal(modal);
+                  }, 150);
+                }, 200);
+              } else {
+                limpiarTodosLosBackdrops();
+              }
+            }).catch(err => {
+              limpiarTodosLosBackdrops();
+            });
+          } else {
+            // Si cancela, limpiar y reabrir el modal
+            limpiarTodosLosBackdrops();
+            if (modalEstabaAbierto) {
+              setTimeout(() => {
+                reabrirModal(modal);
+              }, 150);
+            }
+          }
+        });
+      }, 400);
     });
 
     window.addEventListener('swal:confirmar-eliminar-recaudacion', event => {
@@ -656,20 +853,53 @@
       const texto = data.cantidad === 1
         ? 'Este CFE de recaudación tiene 1 asiento asociado en el Libro Diario que también será eliminado y los saldos serán recalculados. ¿Desea continuar?'
         : `Este CFE de recaudación tiene ${data.cantidad} asientos asociados en el Libro Diario que también serán eliminados y los saldos serán recalculados. ¿Desea continuar?`;
-      Swal.fire({
-        title: '¿Eliminar la recaudación?',
-        html: `Se eliminará la recaudación <strong>${data.cfeTipo || ''} ${data.cfeSerie || ''}${data.cfeNumero}</strong>, sus asientos en el Libro Diario y este movimiento de caja.<br><br>${texto}`,
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#d33',
-        cancelButtonColor: '#3085d6',
-        confirmButtonText: 'Sí, eliminar todo',
-        cancelButtonText: 'Cancelar'
-      }).then((result) => {
-        if (result.isConfirmed) {
-          @this.call('eliminarMovimiento', data.movimientoId);
-        }
-      });
+      
+      // Cerrar el modal antes de mostrar SweetAlert2
+      const modal = $('#modalMovimientosCaja');
+      const modalEstabaAbierto = modal.hasClass('show');
+      
+      if (modalEstabaAbierto) {
+        modal.modal('hide');
+      }
+      
+      // Esperar a que el modal termine de cerrarse
+      setTimeout(() => {
+        Swal.fire({
+          title: '¿Eliminar la recaudación?',
+          html: `Se eliminará la recaudación <strong>${data.cfeTipo || ''} ${data.cfeSerie || ''}${data.cfeNumero}</strong>, sus asientos en el Libro Diario y este movimiento de caja.<br><br>${texto}`,
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonColor: '#d33',
+          cancelButtonColor: '#3085d6',
+          confirmButtonText: 'Sí, eliminar todo',
+          cancelButtonText: 'Cancelar'
+        }).then((result) => {
+          if (result.isConfirmed) {
+            // Eliminar el movimiento/recaudación
+            @this.call('eliminarMovimiento', data.movimientoId).then(() => {
+              // Limpiar backdrops y reabrir el modal después de eliminar
+              if (modalEstabaAbierto) {
+                setTimeout(() => {
+                  limpiarTodosLosBackdrops();
+                  setTimeout(() => {
+                    modal.modal('show');
+                  }, 100);
+                }, 200);
+              } else {
+                limpiarTodosLosBackdrops();
+              }
+            });
+          } else {
+            // Si cancela, limpiar y reabrir el modal
+            limpiarTodosLosBackdrops();
+            if (modalEstabaAbierto) {
+              setTimeout(() => {
+                modal.modal('show');
+              }, 100);
+            }
+          }
+        });
+      }, 400);
     });
   });
 </script>

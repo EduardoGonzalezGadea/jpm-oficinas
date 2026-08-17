@@ -111,7 +111,6 @@ class Arqueo extends Component
         $desglosesApertura = CajaDesglose::where('caja_apertura_id', $this->caja_actual->id)
             ->where('tipo_referencia', 'apertura')
             ->whereNull('arqueo_id')
-            ->whereNull('cierre_id')
             ->get();
 
         if ($desglosesApertura->isEmpty()) {
@@ -267,7 +266,13 @@ class Arqueo extends Component
 
         $this->arqueos_previos = $this->caja_actual->arqueos()->with('usuarioRegistro')->latest()->take(5)->get();
         $this->observaciones = '';
-        $this->dispatch('alert', ['type' => 'success', 'message' => 'Arqueo guardado exitosamente.']);
+        
+        session()->flash('alert', [
+            'type' => 'success',
+            'message' => 'Arqueo guardado exitosamente.'
+        ]);
+        
+        return redirect()->route('tesoreria.caja-diaria.index');
     }
 
     protected function recalcular()

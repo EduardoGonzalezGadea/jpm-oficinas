@@ -81,6 +81,13 @@ class Index extends Component
             return;
         }
 
+        // Recargar la caja seleccionada para obtener datos actualizados
+        $this->cajaSeleccionada = CajaApertura::with('cajero')->find($this->cajaSeleccionada->id);
+
+        if (!$this->cajaSeleccionada) {
+            return;
+        }
+
         $this->movimientosCaja = $this->cajaSeleccionada->movimientos()
             ->conLibroVigente()
             ->with(['medioPago', 'creador', 'libroDiario'])

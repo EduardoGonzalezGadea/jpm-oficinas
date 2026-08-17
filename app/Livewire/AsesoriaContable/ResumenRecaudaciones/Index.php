@@ -6,9 +6,11 @@ use App\Models\Tesoreria\SiifDistribucionTipo;
 use App\Models\Tesoreria\SiifDistribucionDependencia;
 use App\Models\Tesoreria\TesCfe;
 use App\Models\Tesoreria\TesCfeItem;
+use App\Models\Tesoreria\CajaConcepto;
 use Livewire\Component;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Computed;
+use Illuminate\Support\Collection;
 
 #[Layout('layouts.app')]
 class Index extends Component
@@ -18,8 +20,11 @@ class Index extends Component
     public $filtroAno = null;
     public $dependencia_id = '';
     public $tipo_id = '';
+    public $concepto_id = '';
     public $monto_desde = '';
     public $monto_hasta = '';
+    
+    public Collection $totalesPorInstitucion;
 
     #[Computed]
     public function opcionesDependencias()
@@ -33,10 +38,17 @@ class Index extends Component
         return SiifDistribucionTipo::orderBy('tipo')->get();
     }
 
+    #[Computed]
+    public function opcionesConceptos()
+    {
+        return CajaConcepto::orderBy('caja_concepto')->get();
+    }
+
     public function mount()
     {
         $this->filtroAno = (int) date('Y');
         $this->filtroMeses = [(int) date('m')];
+        $this->totalesPorInstitucion = collect();
     }
 
     public function limpiarFiltroMeses(): void
@@ -51,6 +63,7 @@ class Index extends Component
         $this->filtroAno = (int) date('Y');
         $this->dependencia_id = '';
         $this->tipo_id = '';
+        $this->concepto_id = '';
         $this->monto_desde = '';
         $this->monto_hasta = '';
     }
@@ -109,6 +122,10 @@ class Index extends Component
 
         if ($this->tipo_id !== '') {
             $items->where('tes_caja_conceptos.siif_distribucion_tipo_id', $this->tipo_id);
+        }
+
+        if ($this->concepto_id !== '') {
+            $items->where('tes_cfes.tes_caja_concepto_id', $this->concepto_id);
         }
 
         if ($this->monto_desde !== '') {
@@ -251,9 +268,72 @@ class Index extends Component
             ->orderBy('ano', 'desc')
             ->pluck('ano');
 
+        // Calcular totales por institución si el concepto filtrado requiere institución
+        $mostrarTotalesInstitucion = false;
+        $this->totalesPorInstitucion = collect();
+        
+        if ($this->concepto_id) {
+            $conceptoFiltrado = CajaConcepto::find($this->concepto_id);
+            if ($conceptoFiltrado && $conceptoFiltrado->requiere_institucion) {
+                $mostrarTotalesInstitucion = true;
+                
+                $queryTotales = TesCfe::where('tes_caja_concepto_id', $this->concepto_id)
+                    ->whereNull('deleted_at');
+
+                if ($this->filtroAno && (int) $this->filtroAno !== 0) {
+                    $queryTotales->whereYear('fecha', (int) $this->filtroAno);
+                }
+
+                if (!empty($this->filtroMeses)) {
+                    $queryTotales->where(function ($query) {
+                        foreach ($this->filtroMeses as $mes) {
+                            $query->orWhereMonth('fecha', (int) $mes);
+                        }
+                    });
+                }
+
+                if ($this->search !== '') {
+                    $queryTotales->where(function ($q) {
+                        $term = $this->search;
+                        $q->where('documento_tipo', 'like', "%{$term}%")
+                          ->orWhere('documento_serie', 'like', "%{$term}%")
+                          ->orWhere('documento_numero', 'like', "%{$term}%")
+                          ->orWhere('receptor_nombre_denominacion', 'like', "%{$term}%")
+                          ->orWhereRaw("CONCAT(documento_tipo, ' ', documento_serie, '-', documento_numero) LIKE ?", ["%{$term}%"]);
+
+                        if (is_numeric(str_replace(['.', ','], '', $term))) {
+                            $monto = (float) str_replace(',', '.', str_replace('.', '', $term));
+                            $q->orWhere('total_a_pagar', $monto);
+                        }
+                    });
+                }
+
+                if ($this->dependencia_id !== '') {
+                    $queryTotales->where('siif_distribucion_dependencia_id', $this->dependencia_id);
+                }
+
+                if ($this->monto_desde !== '') {
+                    $queryTotales->where('total_a_pagar', '>=', (float) $this->monto_desde);
+                }
+
+                if ($this->monto_hasta !== '') {
+                    $queryTotales->where('total_a_pagar', '<=', (float) $this->monto_hasta);
+                }
+
+                $this->totalesPorInstitucion = $queryTotales
+                    ->select('institucion_id', \DB::raw('SUM(total_a_pagar) as total_monto'))
+                    ->whereNotNull('institucion_id')
+                    ->groupBy('institucion_id')
+                    ->with('institucion')
+                    ->get();
+            }
+        }
+
         return view('livewire.asesoria-contable.resumen-recaudaciones', [
             'grupos' => $grupos,
             'anosRegistrados' => $anosRegistrados,
+            'mostrarTotalesInstitucion' => $mostrarTotalesInstitucion,
+            'totalesPorInstitucion' => $this->totalesPorInstitucion,
         ]);
     }
 }

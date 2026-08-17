@@ -75,6 +75,14 @@
             @endforeach
           </select>
         </div>
+        <div class="col-6 col-md-4 col-lg-2 mb-2 mb-lg-0">
+          <select wire:model.live="concepto_id" wire:change="$refresh" class="form-control form-control-sm">
+            <option value="">Todos los conceptos</option>
+            @foreach($this->opcionesConceptos as $concepto)
+              <option value="{{ $concepto->id }}">{{ $concepto->caja_concepto }}</option>
+            @endforeach
+          </select>
+        </div>
         <div class="col-6 col-md-4 col-lg-1 mb-2 mb-lg-0">
           <input type="number" step="0.01" wire:model.live="monto_desde" wire:change="$refresh" class="form-control form-control-sm" placeholder="Monto desde">
         </div>
@@ -260,6 +268,45 @@
       @else
         <p class="text-center py-4">No hay recaudaciones para los filtros seleccionados.</p>
       @endif
+
+      {{-- Totales por Institución --}}
+      @if($mostrarTotalesInstitucion && !empty($totalesPorInstitucion) && count($totalesPorInstitucion) > 0)
+        <div class="mt-4 mb-3">
+          <h6 class="mb-2 font-weight-bold text-uppercase">
+            <i class="fas fa-university mr-2"></i>Totales por Institución
+          </h6>
+          <div class="table-responsive">
+            <table class="table table-sm table-bordered table-striped">
+              <thead class="bg-light">
+                <tr>
+                  <th class="align-middle">Institución</th>
+                  <th class="align-middle text-right" style="width: 1%; white-space: nowrap;">Monto Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                @foreach ($totalesPorInstitucion as $total)
+                  <tr>
+                    <td class="align-middle">
+                      {{ $total->institucion ? $total->institucion->descripcion : 'SIN INSTITUCIÓN' }}
+                    </td>
+                    <td class="align-middle text-right font-weight-bold text-nowrap">
+                      $ {{ number_format((float) $total->total_monto, 2, ',', '.') }}
+                    </td>
+                  </tr>
+                @endforeach
+              </tbody>
+              <tfoot class="bg-light">
+                <tr>
+                  <td class="align-middle text-right font-weight-bold">Total General:</td>
+                  <td class="align-middle text-right font-weight-bold text-success text-nowrap">
+                    $ {{ number_format($totalesPorInstitucion->sum('total_monto'), 2, ',', '.') }}
+                  </td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+      @endif
     </div>
   </div>
 </div>
@@ -272,6 +319,16 @@
 
       var targetId = tabActivo.getAttribute('href');
       var contenido = document.querySelector(targetId).innerHTML;
+      
+      // Incluir la tabla de totales por institución si existe
+      var totalesInstitucion = document.querySelector('.mt-4.mb-3 h6');
+      var totalesInstitucionHtml = '';
+      if (totalesInstitucion && totalesInstitucion.textContent.includes('Totales por Institución')) {
+        var divTotales = totalesInstitucion.closest('.mt-4.mb-3');
+        if (divTotales) {
+          totalesInstitucionHtml = divTotales.outerHTML;
+        }
+      }
 
       var ventana = window.open('', '_blank', 'width=800,height=600');
       ventana.document.write('<!DOCTYPE html><html><head><title>Resumen de Recaudaciones</title>');
@@ -294,10 +351,17 @@
       ventana.document.write('.table-active td{background:#f8f9fa}');
       ventana.document.write('.card-body,.card-body *{color:#000!important}');
       ventana.document.write('.form-control{display:none}');
+      ventana.document.write('.mt-4{margin-top:1.5rem!important}.mb-3{margin-bottom:1rem!important}');
+      ventana.document.write('.text-uppercase{text-transform:uppercase}');
+      ventana.document.write('.table-striped tbody tr:nth-of-type(odd){background-color:rgba(0,0,0,.05)}');
+      ventana.document.write('.text-success{color:#28a745!important}');
       ventana.document.write('</style>');
       ventana.document.write('<\/head><body>');
       ventana.document.write('<h4 style="margin-bottom:1rem">Resumen de Recaudaciones</h4>');
       ventana.document.write(contenido);
+      if (totalesInstitucionHtml) {
+        ventana.document.write(totalesInstitucionHtml);
+      }
       ventana.document.write('<\/body><\/html>');
       ventana.document.close();
       ventana.focus();

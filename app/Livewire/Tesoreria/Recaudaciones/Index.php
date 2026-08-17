@@ -10,6 +10,7 @@ use App\Models\Tesoreria\SiifDistribucionTipo;
 use Livewire\Component;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Computed;
+use Illuminate\Support\Collection;
 
 #[Layout('layouts.app')]
 class Index extends Component
@@ -23,6 +24,8 @@ class Index extends Component
     public $concepto_id = '';
     public $monto_desde = '';
     public $monto_hasta = '';
+    
+    public Collection $totalesPorInstitucion;
 
     #[Computed]
     public function opcionesDependencias()
@@ -47,6 +50,7 @@ class Index extends Component
         $this->fecha = null;
         $this->filtroMes = date('n');
         $this->filtroAno = date('Y');
+        $this->totalesPorInstitucion = collect();
     }
 
     public function render()
@@ -241,9 +245,66 @@ class Index extends Component
             ->orderBy('ano', 'desc')
             ->pluck('ano');
 
+        // Calcular totales por institución si el concepto filtrado requiere institución
+        $mostrarTotalesInstitucion = false;
+        $this->totalesPorInstitucion = collect();
+        
+        if ($this->concepto_id) {
+            $conceptoFiltrado = CajaConcepto::find($this->concepto_id);
+            if ($conceptoFiltrado && $conceptoFiltrado->requiere_institucion) {
+                $mostrarTotalesInstitucion = true;
+                
+                $queryTotales = TesCfe::where('tes_caja_concepto_id', $this->concepto_id)
+                    ->whereNull('deleted_at');
+
+                if ($this->fecha) {
+                    $queryTotales->where('fecha', $this->fecha);
+                } else {
+                    $queryTotales->whereMonth('fecha', $this->filtroMes)
+                              ->whereYear('fecha', $this->filtroAno);
+                }
+
+                if ($this->search !== '') {
+                    $queryTotales->where(function ($q) {
+                        $term = $this->search;
+                        $q->where('documento_tipo', 'like', "%{$term}%")
+                          ->orWhere('documento_serie', 'like', "%{$term}%")
+                          ->orWhere('documento_numero', 'like', "%{$term}%")
+                          ->orWhereRaw("CONCAT(documento_tipo, ' ', documento_serie, '-', documento_numero) LIKE ?", ["%{$term}%"]);
+
+                        if (is_numeric(str_replace(['.', ','], '', $term))) {
+                            $monto = (float) str_replace(',', '.', str_replace('.', '', $term));
+                            $q->orWhere('total_a_pagar', $monto);
+                        }
+                    });
+                }
+
+                if ($this->dependencia_id !== '') {
+                    $queryTotales->where('siif_distribucion_dependencia_id', $this->dependencia_id);
+                }
+
+                if ($this->monto_desde !== '') {
+                    $queryTotales->where('total_a_pagar', '>=', (float) $this->monto_desde);
+                }
+
+                if ($this->monto_hasta !== '') {
+                    $queryTotales->where('total_a_pagar', '<=', (float) $this->monto_hasta);
+                }
+
+                $this->totalesPorInstitucion = $queryTotales
+                    ->select('institucion_id', \DB::raw('SUM(total_a_pagar) as total_monto'))
+                    ->whereNotNull('institucion_id')
+                    ->groupBy('institucion_id')
+                    ->with('institucion')
+                    ->get();
+            }
+        }
+
         return view('livewire.tesoreria.recaudaciones.index', [
             'grupos' => $grupos,
             'anosRegistrados' => $anosRegistrados,
+            'mostrarTotalesInstitucion' => $mostrarTotalesInstitucion,
+            'totalesPorInstitucion' => $this->totalesPorInstitucion,
         ]);
     }
 }

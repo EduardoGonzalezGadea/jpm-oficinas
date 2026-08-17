@@ -44,7 +44,7 @@
                 <div class="alert alert-info mb-3 d-flex justify-content-between align-items-center flex-wrap">
                   <div>
                     <i class="fas fa-lightbulb mr-1"></i>
-                    <strong>Saldo sugerido (cierre anterior): </strong>@money($saldo_inicial_sugerido)
+                    <strong>Saldo sugerido (cierre anterior): </strong><span class="text-nowrap">@money($saldo_inicial_sugerido)</span>
                     <small class="d-block text-muted">Puede modificarlo si el fondo de caja es diferente.</small>
                   </div>
                   <button type="button" class="btn btn-info btn-sm mt-2 mt-sm-0" wire:click="cargarDesgloseCajaAnterior" title="Cargar desgloses de la caja anterior">
@@ -78,9 +78,9 @@
                   <table class="table table-sm table-hover">
                     <thead class="thead-light">
                       <tr>
-                        <th>Denominación</th>
-                        <th>Cantidad</th>
-                        <th>Total</th>
+                        <th class="align-middle">Denominación</th>
+                        <th class="align-middle">Cantidad</th>
+                        <th class="align-middle">Total</th>
                       </tr>
                     </thead>
 <tbody>
@@ -92,20 +92,20 @@
                           $tipoAnterior = $denominacion->tipo ?? NULL;
                         @endphp
                         <tr class="{{ $esInvalido ? 'table-warning' : (($denominacion->tipo ?? '') === 'Monedas' ? 'table-secondary' : '') }} {{ $esPrimeraMoneda ? 'fila-separador-monedas' : '' }}">
-                          <td class="text-nowrap">
+                          <td class="text-nowrap align-middle">
                             @if($esInvalido)
                               <i class="fas fa-exclamation-triangle text-warning mr-1" title="Valor no exacto"></i>
                             @endif
-                            @money($denominacion->valor)
+                            <span class="text-nowrap">@money($denominacion->valor)</span>
                             <small class="text-muted">({{ $denominacion->tipo }})</small>
                           </td>
-                          <td style="width: 90px;">
+                          <td style="width: 90px;" class="align-middle">
                             <input type="number" class="form-control form-control-sm tabla-apertura"
                               data-focus-den="{{ $denominacion->id }}" data-focus-campo="cantidad"
                               wire:model.blur="desglose.{{ $denominacion->id }}.cantidad"
                               @if ($modo_calculo === 'total') readonly @endif min="0">
                           </td>
-                          <td style="width: 150px;">
+                          <td style="width: 150px;" class="align-middle">
                             <div class="input-group input-group-sm">
                               <div class="input-group-prepend">
                                 <span class="input-group-text">$</span>
@@ -122,8 +122,8 @@
                     </tbody>
                     <tfoot>
                       <tr class="table-primary font-weight-bold">
-                        <td colspan="2" class="text-right">Total:</td>
-                        <td>@money($saldo_inicial)</td>
+                        <td colspan="2" class="text-right align-middle">Total:</td>
+                        <td class="align-middle">@money($saldo_inicial)</td>
                       </tr>
                     </tfoot>
                   </table>
@@ -176,17 +176,17 @@
               </li>
               <li class="list-group-item d-flex justify-content-between align-items-center py-2">
                 <span><i class="fas fa-long-arrow-alt-down text-success mr-2"></i>Total Entradas (Efectivo)</span>
-                <strong>@money($cajaAbierta->totalIngresos())</strong>
+                <strong><span class="text-nowrap">@money($cajaAbierta->totalIngresos())</span></strong>
               </li>
               <li class="list-group-item d-flex justify-content-between align-items-center py-2">
                 <span><i class="fas fa-long-arrow-alt-up text-danger mr-2"></i>Total Salidas (Efectivo)</span>
-                <strong>@money($cajaAbierta->totalEgresos())</strong>
+                <strong><span class="text-nowrap">@money($cajaAbierta->totalEgresos())</span></strong>
               </li>
               <li class="list-group-item d-flex justify-content-between align-items-center py-2">
                 <span><i class="fas fa-credit-card text-info mr-2"></i>Otros medios (apartes)</span>
                 <small class="text-muted">
-                  E @money($cajaAbierta->totalIngresosOtros()) /
-                  S @money($cajaAbierta->totalEgresosOtros())
+                  E <span class="text-nowrap">@money($cajaAbierta->totalIngresosOtros())</span> /
+                  S <span class="text-nowrap">@money($cajaAbierta->totalEgresosOtros())</span>
                 </small>
               </li>
               <li class="list-group-item d-flex justify-content-between align-items-center py-2">
@@ -256,9 +256,9 @@
                 <table class="table table-sm table-hover">
                   <thead class="thead-light">
                     <tr>
-                      <th>Denominación</th>
-                      <th style="width: 90px;">Cantidad</th>
-                      <th style="width: 150px;">Total $</th>
+                      <th class="align-middle">Denominación</th>
+                      <th style="width: 90px;" class="align-middle">Cantidad</th>
+                      <th style="width: 150px;" class="align-middle">Total $</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -270,14 +270,14 @@
                         $tipoAnterior = $den->tipo ?? NULL;
                       @endphp
                       <tr class="{{ $esInvalido ? 'table-warning' : (($den->tipo ?? '') === 'Monedas' ? 'table-secondary' : '') }} {{ $esPrimeraMoneda ? 'fila-separador-monedas' : '' }}">
-                        <td class="text-nowrap">
+                        <td class="text-nowrap align-middle">
                           @if($esInvalido)
                             <i class="fas fa-exclamation-triangle text-warning mr-1" title="Valor no exacto"></i>
                           @endif
-                          @money($den->valor)
+                          <span class="text-nowrap">@money($den->valor)</span>
                           <small class="text-muted">({{ $den->tipo }})</small>
                         </td>
-                        <td style="width: 90px;">
+                        <td style="width: 90px;" class="align-middle">
                           <input type="number"
                             data-focus-den="{{ $den->id }}" data-focus-campo="cantidad"
                             wire:model.blur="desglose.{{ $den->id }}.cantidad"
@@ -285,7 +285,7 @@
                             @if ($modo_calculo === 'total') readonly @endif
                             min="0">
                         </td>
-                        <td style="width: 150px;">
+                        <td style="width: 150px;" class="align-middle">
                           <div class="input-group input-group-sm">
                             <div class="input-group-prepend">
                               <span class="input-group-text">$</span>
@@ -302,8 +302,8 @@
                   </tbody>
                   <tfoot>
                     <tr class="table-primary font-weight-bold">
-                      <th colspan="2">Total Efectivo Contado</th>
-                      <th>@money($total_efectivo)</th>
+                      <th colspan="2" class="align-middle">Total Efectivo Contado</th>
+                      <th class="align-middle">@money($total_efectivo)</th>
                     </tr>
                   </tfoot>
                 </table>
@@ -318,18 +318,18 @@
                   </h6>
                   <table class="table table-sm table-borderless mb-0">
                     <tr>
-                      <td class="text-muted">Total Efectivo Contado</td>
-                      <td class="text-right font-weight-bold">@money($total_efectivo)</td>
+                      <td class="text-muted align-middle">Total Efectivo Contado</td>
+                      <td class="text-right font-weight-bold align-middle">@money($total_efectivo)</td>
                     </tr>
                     <tr>
-                      <td class="text-muted">Saldo Final Esperado (Libro Diario)</td>
-                      <td class="text-right font-weight-bold">@money($saldo_esperado_ld)</td>
+                      <td class="text-muted align-middle">Saldo Final Esperado (Libro Diario)</td>
+                      <td class="text-right font-weight-bold align-middle">@money($saldo_esperado_ld)</td>
                     </tr>
                     <tr class="font-weight-bold">
-                      <td>
+                      <td class="align-middle">
                         <i class="fas fa-{{ $diferencia == 0 ? 'check-circle text-success' : (abs($diferencia) <= 0.50 ? 'info-circle text-info' : 'exclamation-circle text-danger') }} mr-1"></i>Diferencia
                       </td>
-                      <td class="text-right {{ $diferencia == 0 ? 'text-success' : (abs($diferencia) <= 0.50 ? 'text-info' : 'text-danger') }}">@money($diferencia)</td>
+                      <td class="text-right align-middle {{ $diferencia == 0 ? 'text-success' : (abs($diferencia) <= 0.50 ? 'text-info' : 'text-danger') }}">@money($diferencia)</td>
                     </tr>
                   </table>
                   @if ($diferencia != 0 && abs($diferencia) <= 0.50)

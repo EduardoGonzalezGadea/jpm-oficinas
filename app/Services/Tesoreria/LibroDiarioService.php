@@ -333,6 +333,10 @@ class LibroDiarioService
             $asiento->detalle_id
         );
 
+        // Recalcular también las subcuentas de los asientos hijos asociados,
+        // ya que la confirmación de la entrada base afecta su saldo disponible.
+        $this->recalcularSaldosAsientosAsociados($asiento);
+
         // Si forma parte de una redistribución, el asiento asociado
         // (salida/entrada) debe quedar confirmado de la misma forma.
         $this->sincronizarConfirmacionRedistribucion($asiento, true);
@@ -347,6 +351,9 @@ class LibroDiarioService
             $asiento->concepto_id,
             $asiento->detalle_id
         );
+
+        // Recalcular también las subcuentas de los asientos hijos asociados.
+        $this->recalcularSaldosAsientosAsociados($asiento);
 
         // Si forma parte de una redistribución, el asiento asociado
         // (salida/entrada) debe quedar desconfirmado de la misma forma.
@@ -371,6 +378,11 @@ class LibroDiarioService
             $asiento->concepto_id,
             $asiento->detalle_id
         );
+
+        // Recalcular también las subcuentas de los asientos hijos asociados,
+        // ya que la confirmación/desconfirmación de la entrada base afecta
+        // el saldo disponible del que dependen.
+        $this->recalcularSaldosAsientosAsociados($asiento);
 
         // Si forma parte de una redistribución, el asiento asociado
         // (salida/entrada) debe quedar en el mismo estado de confirmación.
@@ -425,9 +437,19 @@ class LibroDiarioService
                 'concepto_id' => $asiento->concepto_id,
                 'detalle_id' => $asiento->detalle_id,
             ];
+
+            // Incluir también las subcuentas de los asientos hijos asociados.
+            $hijos = LibroDiario::where('asociar', $asiento->id)->get();
+            foreach ($hijos as $hijo) {
+                $subcuentas[] = [
+                    'medio_id' => $hijo->medio_id,
+                    'concepto_id' => $hijo->concepto_id,
+                    'detalle_id' => $hijo->detalle_id,
+                ];
+            }
         }
 
-        // Recalcular saldos de cada subcuenta afectada
+        // Recalcular saldos de cada subcuenta afectada (incluidas las de los hijos)
         $subcuentasUnicas = collect($subcuentas)->unique(function ($item) {
             return $item['medio_id'] . '-' . $item['concepto_id'] . '-' . $item['detalle_id'];
         });
@@ -462,8 +484,19 @@ class LibroDiarioService
                 'concepto_id' => $asiento->concepto_id,
                 'detalle_id' => $asiento->detalle_id,
             ];
+
+            // Incluir también las subcuentas de los asientos hijos asociados.
+            $hijos = LibroDiario::where('asociar', $asiento->id)->get();
+            foreach ($hijos as $hijo) {
+                $subcuentas[] = [
+                    'medio_id' => $hijo->medio_id,
+                    'concepto_id' => $hijo->concepto_id,
+                    'detalle_id' => $hijo->detalle_id,
+                ];
+            }
         }
 
+        // Recalcular saldos de cada subcuenta afectada (incluidas las de los hijos)
         $subcuentasUnicas = collect($subcuentas)->unique(function ($item) {
             return $item['medio_id'] . '-' . $item['concepto_id'] . '-' . $item['detalle_id'];
         });
@@ -662,6 +695,31 @@ class LibroDiarioService
                 ($saldosPorIdentidad[$identidad] ?? 0) + $registro->monto * $registro->signo_efectivo
             );
             $registro->update(['saldo' => round($saldosPorIdentidad[$identidad], 2)]);
+        }
+    }
+
+    /**
+     * Recalcula los saldos de las subcuentas de todos los asientos hijos
+     * (aquellos que referencian al asiento dado mediante el campo 'asociar').
+     * Esto es necesario cuando se confirma o desconfirma una entrada que
+     * actúa como asiento base para salidas vinculadas.
+     */
+    private function recalcularSaldosAsientosAsociados(LibroDiario $asiento): void
+    {
+        $hijos = LibroDiario::where('asociar', $asiento->id)->get();
+
+        $subcuentasHijos = $hijos->map(fn($h) => [
+            'medio_id'    => $h->medio_id,
+            'concepto_id' => $h->concepto_id,
+            'detalle_id'  => $h->detalle_id,
+        ])->unique(fn($item) => $item['medio_id'] . '-' . $item['concepto_id'] . '-' . $item['detalle_id']);
+
+        foreach ($subcuentasHijos as $subcuenta) {
+            $this->recalcularSaldosSubcuenta(
+                $subcuenta['medio_id'],
+                $subcuenta['concepto_id'],
+                $subcuenta['detalle_id']
+            );
         }
     }
 

@@ -6,6 +6,7 @@ use App\Models\Tesoreria\TesPlanillaComun;
 use App\Models\Tesoreria\TesCfe;
 use App\Models\Tesoreria\CajaConcepto;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Collection;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Livewire\Attributes\Layout;
@@ -25,12 +26,14 @@ class Index extends Component
 
     public $mostrarModalPlanilla = false;
     public $planillaVer = null;
+    public Collection $totalesPorInstitucion;
 
     protected $listeners = ['cerrarModalPlanilla', 'anularPlanilla'];
 
     public function mount()
     {
         $this->filtroAno = 0;
+        $this->totalesPorInstitucion = collect();
     }
 
     public function limpiarFiltroMeses()
@@ -72,8 +75,24 @@ class Index extends Component
     {
         $this->planillaVer = TesPlanillaComun::withTrashed()->with([
             'cajaConcepto',
-            'cfes' => fn($q) => $q->orderBy('fecha')->orderBy('documento_numero'),
+            'cfes' => fn($q) => $q->with('institucion')->orderBy('fecha')->orderBy('documento_numero'),
         ])->findOrFail($id);
+
+        // Calcular totales por institución si el concepto requiere institución
+        $this->totalesPorInstitucion = collect();
+        if ($this->planillaVer->cajaConcepto && $this->planillaVer->cajaConcepto->requiere_institucion) {
+            $this->totalesPorInstitucion = $this->planillaVer->cfes
+                ->whereNotNull('institucion_id')
+                ->groupBy('institucion_id')
+                ->map(function ($cfesGrupo) {
+                    return (object) [
+                        'institucion' => $cfesGrupo->first()->institucion,
+                        'total_monto' => $cfesGrupo->sum('total_a_pagar'),
+                    ];
+                })
+                ->sortBy(fn($item) => $item->institucion?->descripcion ?? 'Sin institución')
+                ->values();
+        }
 
         $this->mostrarModalPlanilla = true;
         $this->dispatch('abrir-modal-planilla');
@@ -84,6 +103,7 @@ class Index extends Component
         $this->dispatch('cerrar-modal-planilla');
         $this->mostrarModalPlanilla = false;
         $this->planillaVer = null;
+        $this->totalesPorInstitucion = collect();
     }
 
     public function anularPlanilla($id = null, $motivo = null): void
@@ -134,8 +154,24 @@ class Index extends Component
 
         $this->planillaVer = TesPlanillaComun::withTrashed()->with([
             'cajaConcepto',
-            'cfes' => fn($q) => $q->orderBy('fecha')->orderBy('documento_numero'),
+            'cfes' => fn($q) => $q->with('institucion')->orderBy('fecha')->orderBy('documento_numero'),
         ])->findOrFail($id);
+
+        // Recalcular totales por institución después del toggle
+        $this->totalesPorInstitucion = collect();
+        if ($this->planillaVer->cajaConcepto && $this->planillaVer->cajaConcepto->requiere_institucion) {
+            $this->totalesPorInstitucion = $this->planillaVer->cfes
+                ->whereNotNull('institucion_id')
+                ->groupBy('institucion_id')
+                ->map(function ($cfesGrupo) {
+                    return (object) [
+                        'institucion' => $cfesGrupo->first()->institucion,
+                        'total_monto' => $cfesGrupo->sum('total_a_pagar'),
+                    ];
+                })
+                ->sortBy(fn($item) => $item->institucion?->descripcion ?? 'Sin institución')
+                ->values();
+        }
     }
 
     public function render()

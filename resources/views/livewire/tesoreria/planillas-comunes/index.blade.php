@@ -223,6 +223,9 @@
                 <th>Fecha</th>
                 <th>Receptor</th>
                 <th>Doc. Receptor</th>
+                @if($planillaVer->cajaConcepto && $planillaVer->cajaConcepto->requiere_institucion)
+                  <th>Institución</th>
+                @endif
                 <th class="text-right">Monto</th>
               </tr>
             </thead>
@@ -241,25 +244,67 @@
                   <td class="align-middle">
                     {{ $cfe->receptor_documento_ruc ?: '—' }}
                   </td>
+                  @if($planillaVer->cajaConcepto && $planillaVer->cajaConcepto->requiere_institucion)
+                    <td class="align-middle">
+                      {{ $cfe->institucion ? $cfe->institucion->descripcion : '—' }}
+                    </td>
+                  @endif
                   <td class="align-middle text-right text-nowrap">
                     $ {{ number_format($cfe->total_a_pagar, 2, ',', '.') }}
                   </td>
                 </tr>
               @empty
                 <tr>
-                  <td colspan="5" class="text-center py-2">No hay CFEs asociados.</td>
+                  <td colspan="{{ $planillaVer->cajaConcepto && $planillaVer->cajaConcepto->requiere_institucion ? 6 : 5 }}" class="text-center py-2">No hay CFEs asociados.</td>
                 </tr>
               @endforelse
             </tbody>
             <tfoot class="bg-light font-weight-bold">
               <tr>
-                <td colspan="4" class="text-right">TOTAL GENERAL:</td>
+                <td colspan="{{ $planillaVer->cajaConcepto && $planillaVer->cajaConcepto->requiere_institucion ? 5 : 4 }}" class="text-right">TOTAL GENERAL:</td>
                 <td class="text-right text-success text-nowrap">
                   $ {{ number_format($planillaVer->cfes->sum('total_a_pagar'), 2, ',', '.') }}
                 </td>
               </tr>
             </tfoot>
           </table>
+
+          {{-- Totales por Institución --}}
+          @if($planillaVer->cajaConcepto && $planillaVer->cajaConcepto->requiere_institucion && !empty($totalesPorInstitucion) && count($totalesPorInstitucion) > 0)
+            <div class="mt-4 mb-3">
+              <h6 class="mb-2 font-weight-bold text-uppercase">
+                <i class="fas fa-university mr-2"></i>Totales por Institución
+              </h6>
+              <table class="table table-sm table-bordered table-striped">
+                <thead class="bg-light">
+                  <tr>
+                    <th class="align-middle">Institución</th>
+                    <th class="align-middle text-right" style="width: 1%; white-space: nowrap;">Monto Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @foreach ($totalesPorInstitucion as $total)
+                    <tr>
+                      <td class="align-middle">
+                        {{ $total->institucion ? $total->institucion->descripcion : 'SIN INSTITUCIÓN' }}
+                      </td>
+                      <td class="align-middle text-right font-weight-bold text-nowrap">
+                        $ {{ number_format((float) $total->total_monto, 2, ',', '.') }}
+                      </td>
+                    </tr>
+                  @endforeach
+                </tbody>
+                <tfoot class="bg-light">
+                  <tr>
+                    <td class="align-middle text-right font-weight-bold">Total General:</td>
+                    <td class="align-middle text-right font-weight-bold text-success text-nowrap">
+                      $ {{ number_format($totalesPorInstitucion->sum('total_monto'), 2, ',', '.') }}
+                    </td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          @endif
         </div>
         <div class="modal-footer">
           @can('tesoreria.supervisar')
@@ -315,12 +360,15 @@
         ventana.document.write('.text-nowrap{white-space:nowrap}');
         ventana.document.write('.font-weight-bold{font-weight:700}');
         ventana.document.write('.mb-3{margin-bottom:12px}');
+        ventana.document.write('.mt-4{margin-top:1.5rem}');
         ventana.document.write('.d-flex{display:flex}');
         ventana.document.write('.justify-content-between{justify-content:space-between}');
         ventana.document.write('.justify-content-center{justify-content:center}');
         ventana.document.write('.align-items-start{align-items:flex-start}');
         ventana.document.write('.bg-light{background:#f0f0f0}');
         ventana.document.write('.text-success{color:#28a745}');
+        ventana.document.write('.text-uppercase{text-transform:uppercase}');
+        ventana.document.write('.table-striped tbody tr:nth-of-type(odd){background-color:rgba(0,0,0,.05)}');
         ventana.document.write('.d-print-none,.modal-footer,.close,.custom-control{display:none!important}');
         ventana.document.write('@media print{body{padding:0}}');
         ventana.document.write('<\/style><\/head><body>');
