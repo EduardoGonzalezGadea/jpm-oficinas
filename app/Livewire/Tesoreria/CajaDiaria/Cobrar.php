@@ -11,10 +11,12 @@ use App\Models\Tesoreria\LibroDiario;
 use App\Models\Tesoreria\MedioDePago;
 use App\Services\Tesoreria\LibroDiarioService;
 use Illuminate\Support\Facades\DB;
+use App\Livewire\Concerns\NormalizaDocumentoReferencia;
 use Livewire\Component;
 
 class Cobrar extends Component
 {
+    use NormalizaDocumentoReferencia;
     public $caja_actual = null;
 
     // Filtros del listado
@@ -110,16 +112,6 @@ class Cobrar extends Component
         $this->denominacion = data_get($item, 'denominacion') ?? '';
     }
 
-    public function updatedIdentidad($value)
-    {
-        $this->identidad = mb_strtoupper($value);
-    }
-
-    public function updatedDenominacion($value)
-    {
-        $this->denominacion = mb_strtoupper($value);
-    }
-
     protected function limpiarSeleccion()
     {
         $this->seleccion_id = null;
@@ -171,6 +163,7 @@ class Cobrar extends Component
         $this->identidad = mb_strtoupper($this->identidad ?? '');
         $this->denominacion = mb_strtoupper($this->denominacion ?? '');
         $this->descripcion = mb_strtoupper($this->descripcion ?? '');
+        $this->normalizarDocumentoReferencia();
 
         $this->validate([
             'seleccion_id' => 'required',

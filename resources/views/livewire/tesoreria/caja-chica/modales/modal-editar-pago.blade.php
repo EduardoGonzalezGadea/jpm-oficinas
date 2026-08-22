@@ -1,6 +1,5 @@
 <div>
-  <div class="modal-backdrop fade @if($show) show d-block @else d-none @endif" style="z-index: 1040;"></div>
-  <div id="modalEditarPago" class="modal fade @if($show) show d-block @endif" tabindex="-1" role="dialog" aria-hidden="{{ $show ? 'false' : 'true' }}" style="z-index: 1050; {{ $show ? 'background-color: rgba(0,0,0,0.5);' : 'display: none;' }}">
+  <div wire:ignore.self id="modalEditarPago" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true" style="z-index: 1050;">
     <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable" role="document">
       <div class="modal-content modal-animate-in border-0 shadow">
         <div class="modal-header bg-light border-bottom-0 pb-2">
@@ -202,3 +201,15 @@
       </div>
     </div>
   </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      Livewire.on('modal-editar-pago-opened', () => {
+        $('#modalEditarPago').modal('show');
+      });
+      Livewire.on('modal-editar-pago-closed', () => {
+        $('#modalEditarPago').modal('hide');
+      });
+    });
+  </script>
+</div>

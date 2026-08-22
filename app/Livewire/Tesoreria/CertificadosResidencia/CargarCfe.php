@@ -343,7 +343,7 @@ class CargarCfe extends Component
             $this->certificadosEncontrados = [];
             $this->certificadoSeleccionadoId = null;
 
-            session()->flash('message', 'Certificado de Residencia marcado como entregado exitosamente.');
+            $this->dispatch('alert', type: 'success', message: 'Certificado de Residencia marcado como entregado exitosamente.');
             return redirect()->route('tesoreria.certificados-residencia.index');
         } catch (\Exception $e) {
             $this->mensajeError = "Error al registrar la entrega: " . $e->getMessage();
@@ -543,7 +543,7 @@ class CargarCfe extends Component
             $this->certificadosEncontrados = [];
             $this->certificadoSeleccionadoId = null;
 
-            session()->flash('message', 'Certificado de Residencia creado y entregado exitosamente.');
+            $this->dispatch('alert', type: 'success', message: 'Certificado de Residencia creado y entregado exitosamente.');
             return redirect()->route('tesoreria.certificados-residencia.index');
         } catch (\Exception $e) {
             DB::rollBack();

@@ -122,7 +122,7 @@
           </button>
         </div>
         <div class="col-auto d-print-none">
-          <select wire:model.live="perPage" class="form-control form-control-sm">
+          <select wire:model="perPage" class="form-control form-control-sm">
             <option value="50">50</option>
             <option value="100">100</option>
             <option value="-1">Todos</option>
@@ -231,7 +231,7 @@
   </div>
 
   @if($isOpen)
-  <div class="modal fade show" style="display: block;" tabindex="-1" role="dialog">
+  <div wire:ignore.self class="modal fade" id="modalMulta" tabindex="-1" role="dialog">
     <div class="modal-dialog modal-lg" role="document">
       <div class="modal-content">
         <div class="modal-header py-2">
@@ -263,7 +263,7 @@
             <div class="row">
               <div class="col-md-3 form-group mb-2">
                 <label for="moneda" class="mb-1 small"><strong>Moneda <span class="text-danger">*</span></strong></label>
-                <select wire:model.live="moneda" class="form-control form-control-sm @error('moneda') is-invalid @enderror" id="moneda">
+                <select wire:model="moneda" class="form-control form-control-sm @error('moneda') is-invalid @enderror" id="moneda">
                   <option value="UR">UR</option>
                   <option value="USD">USD</option>
                   <option value="UYU">UYU</option>
@@ -302,12 +302,16 @@
       </div>
     </div>
   </div>
-  <div class="modal-backdrop fade show"></div>
   @endif
 </div>
 
 @push('scripts')
 <script>
+  document.addEventListener('livewire:init', function () {
+    Livewire.on('abrir-modal-multa', () => { $('#modalMulta').modal('show'); });
+    Livewire.on('cerrar-modal-multa', () => { $('#modalMulta').modal('hide'); });
+  });
+
   function confirmDelete(id) {
     Swal.fire({
       title: '¿Está seguro?',

@@ -189,7 +189,7 @@ $this->mensajeError = "Error al procesar el PDF: " . $e->getMessage();
             $this->datosExtraidos = null;
             $this->archivo = null;
 
-            session()->flash('message', 'Arrendamiento cargado exitosamente desde CFE.');
+            $this->dispatch('alert', type: 'success', message: 'Arrendamiento cargado exitosamente desde CFE.');
             return redirect()->route('tesoreria.arrendamientos.index');
         } catch (\Exception $e) {
             DB::rollBack();

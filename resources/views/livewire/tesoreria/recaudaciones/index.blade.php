@@ -69,7 +69,7 @@
         @else
           <div class="col-6 col-md-3 col-lg-auto mb-2 mb-lg-0">
             <label class="small mb-1">Mes</label>
-            <select class="form-control form-control-sm" wire:model.live="filtroMes" wire:change="$refresh">
+            <select class="form-control form-control-sm" wire:model="filtroMes" wire:change="$refresh">
               @php $meses = [1 => 'Enero', 2 => 'Febrero', 3 => 'Marzo', 4 => 'Abril', 5 => 'Mayo', 6 => 'Junio', 7 => 'Julio', 8 => 'Agosto', 9 => 'Septiembre', 10 => 'Octubre', 11 => 'Noviembre', 12 => 'Diciembre']; @endphp
               @foreach($meses as $num => $nombre)
                 <option value="{{ $num }}">{{ $nombre }}</option>
@@ -78,7 +78,7 @@
           </div>
           <div class="col-6 col-md-2 col-lg-auto mb-2 mb-lg-0">
             <label class="small mb-1">Año</label>
-            <select class="form-control form-control-sm" wire:model.live="filtroAno" wire:change="$refresh">
+            <select class="form-control form-control-sm" wire:model="filtroAno" wire:change="$refresh">
               @foreach($anosRegistrados as $ano)
                 <option value="{{ $ano }}">{{ $ano }}</option>
               @endforeach
@@ -92,7 +92,7 @@
         @endif
         <div class="col-6 col-md-4 col-lg-2 mb-2 mb-lg-0">
           <label class="small mb-1">Dependencia</label>
-          <select class="form-control form-control-sm" wire:model.live="dependencia_id" wire:change="$refresh">
+          <select class="form-control form-control-sm" wire:model="dependencia_id" wire:change="$refresh">
             <option value="">Todas</option>
             @foreach($this->opcionesDependencias as $dep)
               <option value="{{ $dep->id }}">{{ $dep->abreviatura ?? $dep->dependencia }}</option>
@@ -101,7 +101,7 @@
         </div>
         <div class="col-6 col-md-4 col-lg-2 mb-2 mb-lg-0">
           <label class="small mb-1">Tipo</label>
-          <select class="form-control form-control-sm" wire:model.live="tipo_id" wire:change="$refresh">
+          <select class="form-control form-control-sm" wire:model="tipo_id" wire:change="$refresh">
             <option value="">Todos</option>
             @foreach($this->opcionesTipos as $tipo)
               <option value="{{ $tipo->id }}">{{ $tipo->tipo }}</option>
@@ -110,7 +110,7 @@
         </div>
         <div class="col-6 col-md-4 col-lg-2 mb-2 mb-lg-0">
           <label class="small mb-1">Concepto de caja</label>
-          <select class="form-control form-control-sm" wire:model.live="concepto_id" wire:change="$refresh">
+          <select class="form-control form-control-sm" wire:model="concepto_id" wire:change="$refresh">
             <option value="">Todos</option>
             @foreach($this->opcionesConceptos as $concepto)
               <option value="{{ $concepto->id }}">{{ $concepto->caja_concepto }}</option>

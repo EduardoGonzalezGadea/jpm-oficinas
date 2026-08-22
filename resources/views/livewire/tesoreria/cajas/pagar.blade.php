@@ -24,7 +24,7 @@
           </div>
           <div class="col-md-3 mb-2 mb-md-0">
             <label class="mb-0 small font-weight-bold">Concepto</label>
-            <select wire:model.live="concepto_id" class="form-control form-control-sm py-1">
+            <select wire:model="concepto_id" class="form-control form-control-sm py-1">
               <option value="">Todos los conceptos</option>
               @foreach ($conceptos as $concepto)
                 <option value="{{ $concepto->id }}">{{ $concepto->nombre }}</option>
@@ -33,7 +33,7 @@
           </div>
           <div class="col-md-3 mb-2 mb-md-0">
             <label class="mb-0 small font-weight-bold">Detalle</label>
-            <select wire:model.live="detalle_id" class="form-control form-control-sm py-1" {{ !$concepto_id ? 'disabled' : '' }}>
+            <select wire:model="detalle_id" class="form-control form-control-sm py-1" {{ !$concepto_id ? 'disabled' : '' }}>
               <option value="">@if ($concepto_id) Todos los detalles @else Seleccione concepto primero @endif</option>
               @foreach ($detalles as $detalle)
                 <option value="{{ $detalle->id }}">{{ $detalle->nombre }}</option>
@@ -42,7 +42,7 @@
           </div>
           <div class="col-md-2 mb-2 mb-md-0">
             <label class="mb-0 small font-weight-bold">Medio</label>
-            <select wire:model.live="medio_id" class="form-control form-control-sm py-1">
+            <select wire:model="medio_id" class="form-control form-control-sm py-1">
               <option value="">Todos los medios</option>
               @foreach ($medios as $medio)
                 <option value="{{ $medio->id }}">{{ $medio->nombre }}</option>

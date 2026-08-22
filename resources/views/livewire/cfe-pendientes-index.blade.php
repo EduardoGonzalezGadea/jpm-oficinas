@@ -57,15 +57,15 @@
                                     <button
                                         wire:click="verDetalles({{ $cfe->id }})"
                                         class="btn btn-sm btn-primary"
-                                        data-bs-toggle="modal"
-                                        data-bs-target="#cfePendienteModal">
+                                        data-toggle="modal"
+                                        data-target="#cfePendienteModal">
                                         Ver Detalles
                                     </button>
                                     <button
                                         wire:click="$dispatch('review-cfe', { id: {{ $cfe->id }} })"
                                         class="btn btn-sm btn-info ms-1"
-                                        data-bs-toggle="modal"
-                                        data-bs-target="#reviewModal">
+                                        data-toggle="modal"
+                                        data-target="#reviewModal">
                                         Revisar y Confirmar
                                     </button>
                                 @endif
@@ -93,7 +93,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="cfePendienteModalLabel">Detalles del CFE</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 @if($cfePendienteToConfirm)
@@ -144,9 +144,9 @@
                     <button type="button" class="btn btn-success" wire:click="confirmarCfe">Confirmar y Crear CFE</button>
                     <button type="button" class="btn btn-info" wire:click="marcarEnRevision">Marcar En Revisión</button>
                     <button type="button" class="btn btn-danger" wire:click="abrirModalRechazo">Rechazar</button>
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
                 @else
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
                 @endif
             </div>
         </div>
@@ -159,7 +159,7 @@
         <div class="modal-content">
             <div class="modal-header bg-danger text-white">
                 <h5 class="modal-title" id="rechazoModalLabel">Rechazar CFE</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close btn-close-white" data-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <p>¿Está seguro de rechazar este CFE?</p>
@@ -178,7 +178,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-danger" wire:click="rechazarCfe">Confirmar Rechazo</button>
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
             </div>
         </div>
     </div>
@@ -187,7 +187,7 @@
 <script>
     document.addEventListener('livewire:init', function() {
         // Inicializar tooltips
-        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle]'));
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-toggle]'));
         tooltipTriggerList.map(function (tooltipTriggerEl) {
             return new bootstrap.Tooltip(tooltipTriggerEl);
         });

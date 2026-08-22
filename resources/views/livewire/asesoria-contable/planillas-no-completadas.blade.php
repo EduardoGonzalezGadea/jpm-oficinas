@@ -68,7 +68,7 @@
                     </div>
                 </div>
                 <div class="mr-2" style="width: 170px;">
-                    <select wire:model.live="filtroAno" class="form-control">
+                    <select wire:model="filtroAno" class="form-control">
                         <option value="0">— Todos los años —</option>
                         @foreach($anosRegistrados as $ano)
                             <option value="{{ $ano }}">{{ $ano }}</option>

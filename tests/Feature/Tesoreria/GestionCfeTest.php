@@ -3,6 +3,7 @@
 namespace Tests\Feature\Tesoreria;
 
 use App\Models\Tesoreria\CajaConcepto;
+use App\Models\Tesoreria\SiifDistribucion;
 use App\Models\Tesoreria\SiifDistribucionDependencia;
 use App\Models\Tesoreria\SiifDistribucionTipo;
 use App\Models\Tesoreria\TesCfe;
@@ -28,7 +29,13 @@ class GestionCfeTest extends TestCase
     {
         parent::setUp();
 
-        foreach (['tesoreria.cfe.ver', 'tesoreria.supervisar'] as $permiso) {
+        $permisos = [
+            'tesoreria.cfe.ver', 'tesoreria.supervisar', 'tesoreria.acceso',
+            'asesoria_contable.acceso', 'usuarios.ver', 'sistema.acceso.administrador',
+            'sistema.auditoria', 'sistema.backups',
+        ];
+
+        foreach ($permisos as $permiso) {
             Permission::firstOrCreate(['name' => $permiso, 'guard_name' => 'web']);
         }
 
@@ -58,12 +65,12 @@ class GestionCfeTest extends TestCase
     /** @test */
     public function can_see_paginated_list_of_cfes(): void
     {
-        TesCfe::factory()->count(3)->create([
+        $cfes = TesCfe::factory()->count(3)->create([
             'tes_caja_concepto_id' => $this->concepto->id,
         ]);
 
         Livewire::test(\App\Livewire\Tesoreria\GestionCfe\Index::class)
-            ->assertSee('E-Factura Cobranza');
+            ->assertSee($cfes->first()->documento_numero);
     }
 
     /** @test */
@@ -333,5 +340,196 @@ class GestionCfeTest extends TestCase
             'tes_cfe_id' => $cfe->id,
             'confirmado' => 0,
         ]);
+    }
+
+    /** @test */
+    public function multas_con_distribucion_soa_emite_advertencia_de_concepto_por_monto(): void
+    {
+        $tipoMultas = SiifDistribucionTipo::create(['tipo' => 'Multas Tipo']);
+        $conceptoMultas = CajaConcepto::create([
+            'caja_concepto' => 'MULTAS DE TRÁNSITO',
+            'requiere_distribucion' => true,
+            'requiere_confirmacion' => false,
+            'siif_distribucion_tipo_id' => $tipoMultas->id,
+        ]);
+
+        $soa = SiifDistribucion::create([
+            'tipo_id' => $tipoMultas->id,
+            'dependencia_id' => $this->dependencia->id,
+            'concepto' => 'Multa por circular sin seguro obligatorio automotor (SOA)',
+            'distribucion' => 'Multa por circular sin seguro obligatorio automotor (SOA)',
+            'porcentaje' => 100,
+        ]);
+
+        Livewire::test(\App\Livewire\Tesoreria\GestionCfe\Index::class)
+            ->call('nuevoCfe')
+            ->set('nuevoDocumentoTipo', 'E-Ticket')
+            ->set('nuevoDocumentoNumero', 'SOA001')
+            ->set('nuevoFecha', now()->format('Y-m-d'))
+            ->set('nuevoReceptorNombre', 'Test SOA')
+            ->set('nuevoCajaConceptoSeleccionado', $conceptoMultas->id)
+            ->set('nuevoSiifDependenciaSeleccionado', $this->dependencia->id)
+            ->set('nuevoItems.0.detalle', 'MULTA CARECER DE SOA')
+            ->set('nuevoItems.0.importe', 1500)
+            ->set('nuevoItemDistribuciones.0', $soa->id)
+            ->call('guardarNuevo')
+            ->assertDispatched('swal:confirmar-concepto-nuevo-nuevo');
+
+        $this->assertDatabaseMissing('tes_cfes', ['documento_numero' => 'SOA001']);
+    }
+
+    /** @test */
+    public function multas_sin_distribucion_soa_no_emite_advertencia_de_concepto_por_monto(): void
+    {
+        $tipoMultas = SiifDistribucionTipo::create(['tipo' => 'Multas Tipo']);
+        $conceptoMultas = CajaConcepto::create([
+            'caja_concepto' => 'MULTAS DE TRÁNSITO',
+            'requiere_distribucion' => true,
+            'requiere_confirmacion' => false,
+            'siif_distribucion_tipo_id' => $tipoMultas->id,
+        ]);
+
+        $noSoa = SiifDistribucion::create([
+            'tipo_id' => $tipoMultas->id,
+            'dependencia_id' => $this->dependencia->id,
+            'concepto' => 'Multa por otra infracción',
+            'distribucion' => 'Multa por otra infracción',
+            'porcentaje' => 100,
+        ]);
+
+        Livewire::test(\App\Livewire\Tesoreria\GestionCfe\Index::class)
+            ->call('nuevoCfe')
+            ->set('nuevoDocumentoTipo', 'E-Ticket')
+            ->set('nuevoDocumentoNumero', 'NOSOA001')
+            ->set('nuevoFecha', now()->format('Y-m-d'))
+            ->set('nuevoReceptorNombre', 'Test No SOA')
+            ->set('nuevoCajaConceptoSeleccionado', $conceptoMultas->id)
+            ->set('nuevoSiifDependenciaSeleccionado', $this->dependencia->id)
+            ->set('nuevoItems.0.detalle', 'MULTA OTRA INFRACCION')
+            ->set('nuevoItems.0.importe', 1500)
+            ->set('nuevoItemDistribuciones.0', $noSoa->id)
+            ->call('guardarNuevo')
+            ->assertNotDispatched('swal:confirmar-concepto-nuevo-nuevo')
+            ->assertDispatched('swal:toast-success');
+
+        $this->assertDatabaseHas('tes_cfes', ['documento_numero' => 'NOSOA001']);
+    }
+
+    /** @test */
+    public function confirmar_carga_de_multas_soa_emite_advertencia_de_concepto(): void
+    {
+        $tipoMultas = SiifDistribucionTipo::create(['tipo' => 'Multas Tipo']);
+        $conceptoMultas = CajaConcepto::create([
+            'caja_concepto' => 'MULTAS DE TRÁNSITO',
+            'requiere_distribucion' => true,
+            'requiere_confirmacion' => false,
+            'siif_distribucion_tipo_id' => $tipoMultas->id,
+        ]);
+
+        $soa = SiifDistribucion::create([
+            'tipo_id' => $tipoMultas->id,
+            'dependencia_id' => $this->dependencia->id,
+            'concepto' => 'Multa por circular sin seguro obligatorio automotor (SOA)',
+            'distribucion' => 'Multa por circular sin seguro obligatorio automotor (SOA)',
+            'porcentaje' => 100,
+        ]);
+
+        Livewire::test(\App\Livewire\Tesoreria\GestionCfe\Index::class)
+            ->set('cajaConceptoSeleccionado', $conceptoMultas->id)
+            ->set('siifDependenciaSeleccionado', $this->dependencia->id)
+            ->set('datosExtraidos', [
+                'documento_tipo' => 'E-Ticket',
+                'documento_numero' => 'SOA-PDF',
+                'items' => [
+                    ['detalle' => 'MULTA CARECER DE SOA', 'importe' => 1500],
+                ],
+                'medios_pago' => [],
+                'referencias' => '',
+                'adenda' => '',
+            ])
+            ->set('itemDistribuciones', ['0' => $soa->id])
+            ->call('confirmarCarga')
+            ->assertDispatched('swal:confirmar-concepto-nuevo');
+    }
+
+    /** @test */
+    public function confirmar_carga_sin_concepto_emite_toast_error(): void
+    {
+        Livewire::test(\App\Livewire\Tesoreria\GestionCfe\Index::class)
+            ->set('cajaConceptoSeleccionado', null)
+            ->set('datosExtraidos', [
+                'documento_tipo' => 'E-Ticket',
+                'documento_numero' => '12345',
+                'items' => [['detalle' => 'Item 1', 'importe' => 100]],
+            ])
+            ->call('confirmarCarga')
+            ->assertDispatched('swal:toast-error');
+    }
+
+    /** @test */
+    public function confirmar_carga_sin_institucion_requerida_emite_toast_error(): void
+    {
+        $conceptoConInst = CajaConcepto::create([
+            'caja_concepto' => 'EVENTUALES CON INSTITUCION',
+            'requiere_institucion' => true,
+            'requiere_distribucion' => false,
+        ]);
+
+        Livewire::test(\App\Livewire\Tesoreria\GestionCfe\Index::class)
+            ->set('cajaConceptoSeleccionado', $conceptoConInst->id)
+            ->set('confirmacionInstitucionSeleccionada', null)
+            ->set('datosExtraidos', [
+                'documento_tipo' => 'E-Ticket',
+                'documento_numero' => '12345',
+                'items' => [['detalle' => 'Item 1', 'importe' => 100]],
+            ])
+            ->call('confirmarCarga')
+            ->assertDispatched('swal:toast-error');
+    }
+
+    /** @test */
+    public function confirmar_carga_con_advertencias_multiples_se_ejecuta_secuencialmente(): void
+    {
+        $tipoThata = \App\Models\Tesoreria\SiifDistribucionTipo::create(['tipo' => 'THATA_SEC']);
+        $conceptoThata = CajaConcepto::create([
+            'caja_concepto' => 'TÍTULO DE HABILITACIÓN Y TENENCIA DE ARMAS (THATA)',
+            'requiere_distribucion' => false,
+            'siif_distribucion_tipo_id' => $tipoThata->id,
+        ]);
+
+        // CFE existente con Orden de Cobro 998877
+        TesCfe::create([
+            'documento_tipo' => 'E-Ticket',
+            'documento_serie' => 'A',
+            'documento_numero' => '1001',
+            'fecha' => '2026-08-01',
+            'total_a_pagar' => 500,
+            'referencias' => 'O/C 998877',
+            'moneda' => 'UYU',
+        ]);
+
+        // Nuevo CFE que tiene la misma OC (998877) Y un monto nuevo (7777)
+        $component = Livewire::test(\App\Livewire\Tesoreria\GestionCfe\Index::class)
+            ->set('cajaConceptoSeleccionado', $conceptoThata->id)
+            ->set('siifDependenciaSeleccionado', $this->dependencia->id)
+            ->set('datosExtraidos', [
+                'documento_tipo' => 'E-Ticket',
+                'documento_numero' => '2002',
+                'items' => [
+                    ['detalle' => 'TÍTULO DE HABILITACIÓN', 'importe' => 7777],
+                ],
+                'medios_pago' => [],
+                'referencias' => 'Orden de Cobro 998877',
+                'adenda' => '',
+            ])
+            ->set('itemDistribuciones', []);
+
+        // 1. Primera llamada: debe advertir sobre la orden de cobro duplicada
+        $component->call('confirmarCarga')
+            ->assertDispatched('swal:confirmar-orden-cobro-duplicada');
+
+        // 2. Al aceptar la OC duplicada (ignorar duplicados): debe advertir sobre el concepto/monto no habitual
+        $component->call('confirmarCargaIgnorarDuplicados')
+            ->assertDispatched('swal:confirmar-concepto-nuevo');
     }
 }

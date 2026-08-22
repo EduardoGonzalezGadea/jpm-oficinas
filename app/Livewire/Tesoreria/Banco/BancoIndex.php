@@ -14,6 +14,8 @@ class BancoIndex extends Component
 
     public string $search = '';
 
+    protected $listeners = ['destroy' => 'destroy', 'resetInput' => 'resetInput', 'refreshComponent' => '$refresh'];
+
     // Formulario crear / editar
     public ?int $bancoId = null;
     public string $nombre = '';

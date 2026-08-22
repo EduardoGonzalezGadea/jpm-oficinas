@@ -1,6 +1,6 @@
 <div>
   @if ($showModal)
-  <div class="modal fade show" id="modalRecuperar" tabindex="-1" role="dialog" style="display: block;"
+  <div wire:ignore.self class="modal fade" id="modalRecuperar" tabindex="-1" role="dialog"
     aria-modal="true">
     <div class="modal-dialog modal-lg" role="document">
       <div class="modal-content modal-animate-in">
@@ -108,7 +108,17 @@
       </div>
     </div>
   </div>
-  <div class="modal-backdrop fade show"></div>
   @endif
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      Livewire.on('modal-recuperar-saldos-opened', () => {
+        $('#modalRecuperar').modal('show');
+      });
+      Livewire.on('modal-recuperar-saldos-closed', () => {
+        $('#modalRecuperar').modal('hide');
+      });
+    });
+  </script>
 </div>
 

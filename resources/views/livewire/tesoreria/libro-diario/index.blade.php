@@ -96,7 +96,7 @@
         </div>
         <div class="col-md-1">
           <label class="small mb-0">Tipo</label>
-          <select class="form-control form-control-sm" wire:model.live="filtro_tipo_id">
+          <select class="form-control form-control-sm" wire:model="filtro_tipo_id">
             <option value="">Todos</option>
             @foreach ($tipos as $tipo)
               <option value="{{ $tipo->id }}">{{ $tipo->nombre }}</option>
@@ -105,7 +105,7 @@
         </div>
         <div class="col-md-2">
           <label class="small mb-0">Detalle</label>
-          <select class="form-control form-control-sm" wire:model.live="filtro_detalle_id">
+          <select class="form-control form-control-sm" wire:model="filtro_detalle_id">
             <option value="">Todos</option>
             @foreach ($detallesAgrupados as $conceptoNombre => $grupoDetalles)
               <optgroup label="{{ $conceptoNombre }}">
@@ -673,7 +673,7 @@
                   <p class="small text-muted">Defina la subcuenta que recibirá el importe.</p>
                   <div class="form-group">
                     <label for="rd_concepto_id">Concepto destino *</label>
-                    <select class="form-control @error('rd_concepto_id') is-invalid @enderror" wire:model.live="rd_concepto_id" id="rd_concepto_id">
+                    <select class="form-control @error('rd_concepto_id') is-invalid @enderror" wire:model="rd_concepto_id" id="rd_concepto_id">
                       <option value="">Seleccione...</option>
                       @foreach ($conceptos as $concepto)<option value="{{ $concepto->id }}">{{ $concepto->nombre }}</option>@endforeach
                     </select>
@@ -681,7 +681,7 @@
                   </div>
                   <div class="form-group">
                     <label for="rd_detalle_id">Detalle destino *</label>
-                    <select class="form-control @error('rd_detalle_id') is-invalid @enderror" wire:model.live="rd_detalle_id" id="rd_detalle_id" {{ !$rd_concepto_id ? 'disabled' : '' }}>
+                    <select class="form-control @error('rd_detalle_id') is-invalid @enderror" wire:model="rd_detalle_id" id="rd_detalle_id" {{ !$rd_concepto_id ? 'disabled' : '' }}>
                       <option value="">Seleccione un concepto primero...</option>
                       @foreach ($rd_detalles as $detalle)<option value="{{ $detalle->id }}">{{ $detalle->nombre }}</option>@endforeach
                     </select>

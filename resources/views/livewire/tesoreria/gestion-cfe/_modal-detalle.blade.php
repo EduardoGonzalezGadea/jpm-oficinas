@@ -1,6 +1,6 @@
 @php $simbolo = $cfe->moneda === 'UYU' ? '$' : $cfe->moneda; @endphp
 <div class="modal fade" id="modalCfe{{ $cfe->id }}" tabindex="-1" role="dialog" aria-hidden="true" wire:ignore.self>
-  <div class="modal-dialog modal-full-width" role="document">
+  <div class="modal-dialog modal-full-width modal-dialog-scrollable" role="document">
     <div class="modal-content border-0 shadow">
 
       <div class="modal-header bg-info text-white p-2">

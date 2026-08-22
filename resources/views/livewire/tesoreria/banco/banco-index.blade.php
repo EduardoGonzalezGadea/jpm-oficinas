@@ -110,31 +110,11 @@
 
   @push('scripts')
     <script>
-      window.addEventListener('swal:confirm', event => {
-        const d = event.detail;
-        Swal.fire({
-          title: d.title,
-          text: d.text,
-          icon: 'warning',
-          showCancelButton: true,
-          confirmButtonColor: '#d33',
-          cancelButtonColor: '#6c757d',
-          confirmButtonText: d.confirmButtonText,
-          cancelButtonText: 'Cancelar',
-        }).then(result => {
-          if (result.isConfirmed) {
-            @this.call(d.method, d.id);
-          }
-        });
-      });
-
-      window.addEventListener('close-modal', () => {
-        $('#bancoModal').modal('hide');
-      });
-
       $(document).ready(function () {
         $('#bancoModal').on('hidden.bs.modal', function () {
-          @this.call('resetInput');
+          if (window.Livewire) {
+            Livewire.dispatch('resetInput');
+          }
         });
       });
     </script>

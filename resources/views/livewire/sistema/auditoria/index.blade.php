@@ -29,7 +29,7 @@
 
                 {{-- Filtro por evento --}}
                 <div class="col-md-2 mb-2">
-                    <select wire:model.live="event" class="form-control">
+                    <select wire:model="event" class="form-control">
                         <option value="">Todos los eventos</option>
                         <option value="created">Creado</option>
                         <option value="updated">Actualizado</option>
@@ -42,7 +42,7 @@
 
                 {{-- Filtro por tipo de registro --}}
                 <div class="col-md-2 mb-2">
-                    <select wire:model.live="subjectType" class="form-control">
+                    <select wire:model="subjectType" class="form-control">
                         <option value="">Todos los tipos</option>
                         @foreach($subjectTypes as $type)
                         <option value="{{ $type['value'] }}">{{ $type['label'] }}</option>
@@ -52,7 +52,7 @@
 
                 {{-- Filtro por usuario --}}
                 <div class="col-md-2 mb-2">
-                    <select wire:model.live="causerId" class="form-control">
+                    <select wire:model="causerId" class="form-control">
                         <option value="">Todos los usuarios</option>
                         @foreach($users as $user)
                         <option value="{{ $user['id'] }}">{{ $user['name'] }}</option>
@@ -62,7 +62,7 @@
 
                 {{-- Registros por página --}}
                 <div class="col-md-2 mb-2">
-                    <select wire:model.live="perPage" class="form-control">
+                    <select wire:model="perPage" class="form-control">
                         <option value="10">10 por página</option>
                         <option value="25">25 por página</option>
                         <option value="50">50 por página</option>
@@ -95,7 +95,7 @@
 
                 {{-- Filtro por módulo/log --}}
                 <div class="col-md-3 mb-2">
-                    <select wire:model.live="logName" class="form-control">
+                    <select wire:model="logName" class="form-control">
                         <option value="">Todos los módulos</option>
                         @foreach($logNames as $name)
                         <option value="{{ $name }}">{{ ucfirst($name) }}</option>
@@ -185,8 +185,7 @@
 
     {{-- Modal de Detalle --}}
     @if($selectedActivity)
-    <div class="modal fade show" id="detailModal" tabindex="-1" role="dialog"
-        style="display: {{ $showDetailModal ? 'block' : 'none' }}; background: rgba(0,0,0,0.5);">
+    <div wire:ignore.self class="modal fade" id="detailModal" tabindex="-1" role="dialog">
         <div class="modal-dialog modal-lg modal-dialog-scrollable" role="document">
             <div class="modal-content">
                 <div class="modal-header bg-dark text-white">
@@ -347,21 +346,19 @@
     @endif
 
     <style>
-        /* Asegurar que el modal manual sea scrolleable si es muy largo */
-        #detailModal {
-            overflow-y: auto !important;
-        }
     </style>
 </div>
 
 @push('scripts')
 <script>
-    window.addEventListener('show-detail-modal', event => {
-        document.body.classList.add('modal-open');
-    });
+    document.addEventListener('livewire:init', function() {
+      Livewire.on('show-detail-modal', () => {
+        $('#detailModal').modal('show');
+      });
 
-    window.addEventListener('close-detail-modal', event => {
-        document.body.classList.remove('modal-open');
+      Livewire.on('close-detail-modal', () => {
+        $('#detailModal').modal('hide');
+      });
     });
 </script>
 @endpush

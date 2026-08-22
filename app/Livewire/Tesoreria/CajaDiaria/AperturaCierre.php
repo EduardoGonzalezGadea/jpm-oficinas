@@ -232,6 +232,7 @@ class AperturaCierre extends Component
     public function updatedModoCalculo()
     {
         $this->recalcularSaldoInicial();
+        $this->recalcular();
     }
 
     protected function recalcularSaldoInicial()
@@ -286,8 +287,12 @@ class AperturaCierre extends Component
 
             if ($this->modo_calculo === 'total') {
                 $this->total_efectivo += $total;
+                $this->desglose[$denId]['cantidad'] = $total > 0
+                    ? floor($total / (float) $den->valor)
+                    : 0;
             } else {
                 $this->total_efectivo += $cantidad * (float) $den->valor;
+                $this->desglose[$denId]['total'] = $cantidad * (float) $den->valor;
             }
         }
 
@@ -296,7 +301,7 @@ class AperturaCierre extends Component
         }
 
         // Obtener saldo esperado según Libro Diario
-        $this->saldo_esperado_ld = $this->cajaAbierta->obtenerSaldoActual();
+        $this->saldo_esperado_ld = (float) $this->cajaAbierta->obtenerSaldoActual();
         
         // La diferencia compara efectivo contado contra el saldo esperado en efectivo
         $this->diferencia = $this->total_efectivo - $this->saldo_esperado_ld;

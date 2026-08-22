@@ -71,11 +71,13 @@ class ModalNuevoFondo extends Component
         $this->monto = $ultimoFondo ? $this->formatearMonto($ultimoFondo->montoCajaChica) : null;
 
         $this->mostrarModal = true;
+        $this->dispatch('mostrarModalNuevoFondo');
     }
 
     public function cerrarModal()
     {
         $this->mostrarModal = false;
+        $this->dispatch('cerrarModalNuevoFondo');
         $this->dispatch('cerrar-y-refrescar-fondo');
     }
 

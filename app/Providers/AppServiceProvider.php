@@ -36,7 +36,7 @@ class AppServiceProvider extends ServiceProvider
         Paginator::useBootstrap();
 
         // Detectar automáticamente la URL base
-        if (request()->getHost()) {
+        if (request()->getHost() && !app()->runningUnitTests()) {
             $protocol = request()->isSecure() ? 'https://' : 'http://';
             $host = request()->getHost();
             $port = request()->getPort();

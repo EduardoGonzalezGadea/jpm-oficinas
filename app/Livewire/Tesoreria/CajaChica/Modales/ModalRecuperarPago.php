@@ -49,6 +49,7 @@ class ModalRecuperarPago extends Component
             ];
 
             $this->showModal = true;
+            $this->dispatch('modal-recuperar-pago-opened');
         } catch (\Exception $e) {
             $this->dispatch('swal', icon: 'error', text: 'Pago no encontrado o error al cargar datos.', toast: true, position: 'top-end', timer: 5000);
         }
@@ -82,7 +83,7 @@ class ModalRecuperarPago extends Component
             $service->guardarRecuperacionPago($this->recuperarPagoData);
 
             $this->cerrarModal();
-            session()->flash('message', 'Recuperación de pago guardada exitosamente.');
+            $this->dispatch('alert', type: 'success', message: 'Recuperación de pago guardada exitosamente.');
             return redirect()->route('tesoreria.caja-chica.index');
         } catch (\Exception $e) {
             session()->flash('error', 'Error al guardar la recuperación del pago: ' . $e->getMessage());
@@ -93,6 +94,7 @@ class ModalRecuperarPago extends Component
     public function cerrarModal()
     {
         $this->showModal = false;
+        $this->dispatch('modal-recuperar-pago-closed');
         $this->reset('recuperarPagoData');
         $this->resetErrorBag();
     }

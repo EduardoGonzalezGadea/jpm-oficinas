@@ -1,3 +1,6 @@
+// Cargar polyfills PRIMERO para compatibilidad con navegadores antiguos
+require('./polyfills');
+
 window._ = require('lodash');
 
 /**

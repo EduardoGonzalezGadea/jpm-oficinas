@@ -196,7 +196,7 @@ trait WithAnulacionCfe
         if ($record) {
             $record->delete();
             Cache::flush();
-            session()->flash('message', 'Registro ' . $this->anulacionPendiente['orden_cobro'] . ' eliminado exitosamente.');
+            $this->dispatch('alert', type: 'success', message: 'Registro ' . $this->anulacionPendiente['orden_cobro'] . ' eliminado exitosamente.');
         }
 
         $this->anulacionPendiente = null;

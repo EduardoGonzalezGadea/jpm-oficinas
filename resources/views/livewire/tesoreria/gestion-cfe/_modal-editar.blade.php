@@ -1,5 +1,6 @@
-<div class="modal fade" id="modalEditarCfe" tabindex="-1" role="dialog" aria-hidden="true" wire:ignore.self>
-<div class="modal-dialog modal-full-width" role="document">
+@if($mostrarModalEditar && $cfeEditarId)
+<div class="modal fade show" id="modalEditarCfe" tabindex="-1" role="dialog" aria-modal="true" style="display: block;">
+<div class="modal-dialog modal-full-width modal-dialog-scrollable" role="document">
   <div class="modal-content border-0 shadow">
 
     <div class="modal-header bg-warning text-dark p-2">
@@ -36,7 +37,7 @@
             <i class="fas fa-tag mr-1 text-primary"></i> Concepto de Caja
           </h6>
           <div class="form-group mb-0">
-            <select wire:model.live="editCajaConceptoSeleccionado"
+            <select wire:model="editCajaConceptoSeleccionado"
               class="form-control @error('editCajaConceptoSeleccionado') is-invalid @enderror">
               <option value="">— Seleccione concepto —</option>
               @foreach($cajaConceptos as $concepto)
@@ -53,7 +54,7 @@
             <i class="fas fa-sitemap mr-1 text-primary"></i> Dependencia
           </h6>
           <div class="form-group mb-0">
-            <select wire:model.live="editSiifDependenciaSeleccionado"
+            <select wire:model="editSiifDependenciaSeleccionado"
               class="form-control @error('editSiifDependenciaSeleccionado') is-invalid @enderror">
               <option value="">— Seleccione dep. SIIF —</option>
               @foreach($siifDependencias as $dep)
@@ -159,3 +160,5 @@
   </div>
 </div>
 </div>
+<div class="modal-backdrop fade show"></div>
+@endif

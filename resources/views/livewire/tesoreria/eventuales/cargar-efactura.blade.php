@@ -121,15 +121,6 @@
           </div>
         </div>
 
-        @if (session()->has('message'))
-        <div class="alert alert-success py-1 px-2 mt-1 mb-0 small alert-dismissible fade show text-center" role="alert">
-          <i class="fas fa-check-circle mr-1"></i> {{ session('message') }}
-          <button type="button" class="close py-1" data-dismiss="alert" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-          </button>
-        </div>
-        @endif
-
         @error('archivo')
         <div class="alert alert-danger py-1 px-2 mt-1 mb-0 small text-center">
           <i class="fas fa-exclamation-circle mr-1"></i> {{ $message }}

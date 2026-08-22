@@ -9,6 +9,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\TestCase;
 use Spatie\Permission\Models\Permission;
+use PHPUnit\Framework\Attributes\Test;
 
 class MultasCobradasTest extends TestCase
 {
@@ -37,7 +38,7 @@ class MultasCobradasTest extends TestCase
         return $user;
     }
 
-    /** @test */
+    #[Test]
     public function usuario_puede_crear_multa_manualmente(): void
     {
         $this->withoutExceptionHandling();
@@ -79,17 +80,53 @@ class MultasCobradasTest extends TestCase
         ]);
     }
 
-    /** @test */
+    #[Test]
     public function usuario_sin_permiso_no_puede_acceder_a_multas_cobradas()
     {
         $user = User::factory()->create();
         $this->assertFalse($user->hasPermissionTo('tesoreria.acceso'));
     }
 
-    /** @test */
+    #[Test]
     public function usuario_con_permiso_tiene_acceso_a_multas_cobradas()
     {
         $user = $this->crearUsuarioConPermiso('tesoreria.acceso');
         $this->assertTrue($user->hasPermissionTo('tesoreria.acceso'));
     }
+
+    #[Test]
+    public function usuario_puede_abrir_modal_informes(): void
+    {
+        $user = $this->crearUsuarioConPermiso('tesoreria.acceso');
+        $this->actingAs($user, 'web');
+
+        Livewire::test(MultasCobradas::class)
+            ->call('openPrintModal')
+            ->assertSet('showPrintModal', true)
+            ->assertSee('Seleccionar Rango de Fechas');
+    }
+
+    #[Test]
+    public function usuario_puede_abrir_modal_editar(): void
+    {
+        $user = $this->crearUsuarioConPermiso('tesoreria.acceso');
+        $this->actingAs($user, 'web');
+
+        $multa = TesMultasCobradas::create([
+            'recibo' => 'REC-999',
+            'nombre' => 'Test Contribuyente',
+            'fecha' => '2026-08-20',
+            'monto' => 2000.00,
+            'forma_pago' => 'Efectivo',
+            'created_by' => $user->id,
+        ]);
+
+        Livewire::test(MultasCobradas::class)
+            ->call('edit', $multa->id)
+            ->assertSet('editMode', true)
+            ->assertSet('showModal', true)
+            ->assertSet('recibo', 'REC-999')
+            ->assertSee('Editar Cobro');
+    }
 }
+

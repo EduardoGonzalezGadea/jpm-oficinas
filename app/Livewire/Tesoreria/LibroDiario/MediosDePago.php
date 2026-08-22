@@ -32,7 +32,7 @@ class MediosDePago extends Component
     public function create()
     {
         $this->resetInput();
-        $this->dispatch('show-modal', ['id' => 'modal']);
+        $this->dispatch('show-modal', id: 'modal');
     }
 
     public function store()
@@ -81,7 +81,7 @@ class MediosDePago extends Component
         $this->es_recaudacion = $item->es_recaudacion;
         $this->orden = $item->orden;
 
-        $this->dispatch('show-modal', ['id' => 'modal']);
+        $this->dispatch('show-modal', id: 'modal');
     }
 
     public function update()

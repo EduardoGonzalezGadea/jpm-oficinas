@@ -129,7 +129,10 @@
                       <span class="mr-3"><strong>Egresos N°:</strong> {{ $p->egresos_numero ?? '—' }}</span>
                       <span class="mr-3"><strong>Ingresos N°:</strong> {{ $p->ingresos_numero ?? '—' }}</span>
                       <span class="mr-3"><strong>Transf. Fecha:</strong> {{ $p->transferencia_fecha ? $p->transferencia_fecha->format('d/m/Y') : '—' }}</span>
-                      <span><strong>Conf. Transf.:</strong> {{ $p->transferencia_confirmacion ?? '—' }}</span>
+                      <span class="mr-3"><strong>Conf. Transf.:</strong> {{ $p->transferencia_confirmacion ?? '—' }}</span>
+                      @if($p->observaciones)
+                        <span><strong>Observaciones:</strong> {{ $p->observaciones }}</span>
+                      @endif
                     </div>
                   </td>
                 </tr>
@@ -152,8 +155,9 @@
   </div>
 
   {{-- Modal Nueva Planilla --}}
-  <div class="modal fade" id="modalNuevaPlanilla" tabindex="-1" role="dialog" aria-hidden="true" wire:ignore.self>
-    <div class="modal-dialog modal-full-width" role="document">
+  @if($mostrarModalNueva)
+  <div wire:ignore.self class="modal fade" id="modalNuevaPlanilla" tabindex="-1" role="dialog" aria-modal="true">
+    <div class="modal-dialog modal-full-width modal-dialog-scrollable" role="document">
       <div class="modal-content border-0 shadow">
         <div class="modal-header bg-info text-white p-2">
           <h5 class="modal-title m-0">
@@ -264,15 +268,17 @@
       </div>
     </div>
   </div>
+  @endif
 
   {{-- Modal Detalles de Planilla --}}
-  <div class="modal fade" id="modalDetallesPlanilla" tabindex="-1" role="dialog" aria-hidden="true" wire:ignore.self>
-    <div class="modal-dialog modal-full-width" role="document">
+  @if($mostrarModalDetalles && $planillaDetalles)
+  <div wire:ignore.self class="modal fade" id="modalDetallesPlanilla" tabindex="-1" role="dialog" aria-modal="true">
+    <div class="modal-dialog modal-full-width modal-dialog-scrollable" role="document">
       <div class="modal-content border-0 shadow">
-        <div class="modal-header {{ $planillaDetalles?->trashed() ? 'bg-danger' : 'bg-info' }} text-white p-2">
+        <div class="modal-header {{ $planillaDetalles->trashed() ? 'bg-danger' : 'bg-info' }} text-white p-2">
           <h5 class="modal-title m-0">
-            <i class="fas fa-list mr-2"></i><strong>Detalles — Planilla {{ $planillaDetalles?->numero ?? '' }}</strong>
-            @if($planillaDetalles?->trashed())
+            <i class="fas fa-list mr-2"></i><strong>Detalles — Planilla {{ $planillaDetalles->numero ?? '' }}</strong>
+            @if($planillaDetalles->trashed())
               <span class="badge badge-light ml-2">ANULADA</span>
             @endif
           </h5>
@@ -281,7 +287,6 @@
             <span aria-hidden="true">&times;</span>
           </button>
         </div>
-        @if($planillaDetalles)
         <div class="modal-body p-3">
           @if($planillaDetalles->trashed())
           <div class="alert alert-danger py-2 mb-3">
@@ -355,7 +360,9 @@
                     $porSerie = [];
                     foreach ($docsKeys as $k) {
                       $parts = explode('-', $k, 2);
-                      $porSerie[$parts[0]][] = (int) ($parts[1] ?? 0);
+                      $serie = $parts[0] ?? '';
+                      $num = (int) ($parts[1] ?? 0);
+                      $porSerie[$serie][] = $num;
                     }
                     $rangos = [];
                     foreach ($porSerie as $s => $nums) {
@@ -364,12 +371,12 @@
                       $prev = $nums[0];
                       for ($i = 1; $i < count($nums); $i++) {
                         if ($nums[$i] !== $prev + 1) {
-                          $rangos[] = $inicio === $prev ?"$s-$inicio" :"$s-$inicio/$prev";
+                          $rangos[] = $inicio === $prev ? "$s-$inicio" : "$s-$inicio al $s-$prev";
                           $inicio = $nums[$i];
                         }
                         $prev = $nums[$i];
                       }
-                      $rangos[] = $inicio === $prev ?"$s-$inicio" :"$s-$inicio/$prev";
+                      $rangos[] = $inicio === $prev ? "$s-$inicio" : "$s-$inicio al $s-$prev";
                     }
                     $docsHeader = implode(', ', $rangos);
                   }
@@ -447,19 +454,20 @@
             <i class="fas fa-print mr-1"></i> Imprimir
           </button>
         </div>
-        @endif
       </div>
     </div>
   </div>
+  @endif
 
   {{-- Modal Ver Planilla --}}
-  <div class="modal fade" id="modalPlanilla" tabindex="-1" role="dialog" aria-hidden="true" wire:ignore.self>
-    <div class="modal-dialog modal-full-width" role="document">
+  @if($mostrarModalPlanilla && $planillaVer)
+  <div wire:ignore.self class="modal fade" id="modalPlanilla" tabindex="-1" role="dialog" aria-modal="true">
+    <div class="modal-dialog modal-full-width modal-dialog-scrollable" role="document">
       <div class="modal-content border-0 shadow">
-        <div class="modal-header {{ $planillaVer?->trashed() ? 'bg-danger' : 'bg-info' }} text-white p-2">
+        <div class="modal-header {{ $planillaVer->trashed() ? 'bg-danger' : 'bg-info' }} text-white p-2">
           <h5 class="modal-title m-0">
-            <i class="fas fa-file-alt mr-2"></i><strong>Planilla {{ $planillaVer?->numero ?? '' }}</strong>
-            @if($planillaVer?->trashed())
+            <i class="fas fa-file-alt mr-2"></i><strong>Planilla {{ $planillaVer->numero ?? '' }}</strong>
+            @if($planillaVer->trashed())
               <span class="badge badge-light ml-2">ANULADA</span>
             @endif
           </h5>
@@ -468,7 +476,6 @@
             <span aria-hidden="true">&times;</span>
           </button>
         </div>
-        @if($planillaVer)
         <div class="modal-body p-3">
           @if($planillaVer->trashed())
           <div class="alert alert-danger py-2 mb-3">
@@ -645,6 +652,10 @@
                 <td class="align-middle small text-nowrap font-weight-bold" style="width: 1%; white-space: nowrap;">Transf. Confirmación</td>
                 <td class="align-middle small">{{ $planillaVer->transferencia_confirmacion }}</td>
               </tr>
+              <tr>
+                <td class="align-middle small text-nowrap font-weight-bold" style="width: 1%; white-space: nowrap;">Observaciones</td>
+                <td class="align-middle small">{{ $planillaVer->observaciones ?? '—' }}</td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -670,70 +681,88 @@
           </button>
           @endif
         </div>
-      @endif
       </div>
     </div>
   </div>
+  @endif
 
   {{-- Modal Editar Planilla --}}
-  <div class="modal fade" id="modalEditarPlanilla" tabindex="-1" role="dialog" aria-hidden="true" wire:ignore.self>
-    <div class="modal-dialog modal-full-width" role="document">
-      <div class="modal-content border-0 shadow">
+  @if($mostrarModalEditar && $planillaEditar)
+  <div wire:ignore.self class="modal fade" id="modalEditarPlanilla" tabindex="-1" role="dialog" aria-modal="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable" role="document">
+      <form wire:submit.prevent="guardarPlanilla" class="modal-content border-0 shadow">
         <div class="modal-header bg-warning text-dark p-2">
           <h5 class="modal-title m-0">
-            <i class="fas fa-edit mr-2"></i><strong>Editar Planilla {{ $planillaEditar?->numero ?? '' }}</strong>
+            <i class="fas fa-edit mr-2"></i><strong>Editar Planilla {{ $planillaEditar->numero ?? '' }}</strong>
           </h5>
           <button type="button" class="close" aria-label="Close"
             wire:click="cerrarModalEditar">
             <span aria-hidden="true">&times;</span>
           </button>
         </div>
-        <form wire:submit.prevent="guardarPlanilla">
-          <div class="modal-body p-3">
-            <div class="small text-muted mb-3">
-              <strong>N°:</strong> {{ $planillaEditar?->numero ?? '—' }} &mdash;
-              <strong>Tipo:</strong> {!! App\Helpers\FormatHelper::renderTipo($planillaEditar?->tipo?->tipo ?? '—', $planillaEditar?->tipo_id) !!} &mdash;
-              <strong>Dependencia:</strong> {{ $planillaEditar?->dependencia?->dependencia ?? '—' }} &mdash;
-              <strong>Turno:</strong> {{ $planillaEditar?->turno ?? '—' }} &mdash;
-              <strong>Fecha:</strong> {{ $planillaEditar?->fecha?->format('d/m/Y') ?? '—' }}
-            </div>
+        <div class="modal-body p-3" style="max-height: calc(100vh - 200px); overflow-y: auto;">
+          <div class="small text-muted mb-3 p-2 bg-light rounded border">
+            <strong>N°:</strong> {{ $planillaEditar->numero ?? '—' }} &mdash;
+            <strong>Tipo:</strong> {!! App\Helpers\FormatHelper::renderTipo($planillaEditar->tipo?->tipo ?? '—', $planillaEditar->tipo_id) !!} &mdash;
+            <strong>Dependencia:</strong> {{ $planillaEditar->dependencia?->dependencia ?? '—' }} &mdash;
+            <strong>Turno:</strong> {{ $planillaEditar->turno ?? '—' }} &mdash;
+            <strong>Fecha:</strong> {{ $planillaEditar->fecha?->format('d/m/Y') ?? '—' }}
+          </div>
 
-            <div class="form-group">
-              <label class="small mb-1">Estado de Recaudación N°</label>
-              <input type="text" class="form-control form-control-sm" wire:model="edit_er_numero">
-            </div>
-            <div class="form-group">
-              <label class="small mb-1">Egresos N°</label>
-              <input type="text" class="form-control form-control-sm" wire:model="edit_egresos_numero">
-            </div>
-            <div class="form-group">
-              <label class="small mb-1">Ingresos N°</label>
-              <input type="text" class="form-control form-control-sm" wire:model="edit_ingresos_numero">
-            </div>
-            <div class="form-group">
-              <label class="small mb-1">Transferencia Fecha</label>
-              <input type="date" class="form-control form-control-sm" wire:model="edit_transferencia_fecha">
-            </div>
-            <div class="form-group">
-              <label class="small mb-1">Transf. Confirmación</label>
-              <input type="text" class="form-control form-control-sm" wire:model="edit_transferencia_confirmacion">
-            </div>
+          <div class="form-group">
+            <label class="small mb-1 font-weight-bold">Estado de Recaudación N°</label>
+            <input type="text" class="form-control form-control-sm" wire:model="edit_er_numero">
           </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" wire:click="cerrarModalEditar">
-              Cancelar
-            </button>
-            <button type="submit" class="btn btn-warning">
-              <i class="fas fa-save mr-1"></i> Guardar
-            </button>
+          <div class="form-group">
+            <label class="small mb-1 font-weight-bold">Egresos N°</label>
+            <input type="text" class="form-control form-control-sm" wire:model="edit_egresos_numero">
           </div>
-        </form>
-      </div>
+          <div class="form-group">
+            <label class="small mb-1 font-weight-bold">Ingresos N°</label>
+            <input type="text" class="form-control form-control-sm" wire:model="edit_ingresos_numero">
+          </div>
+          <div class="form-group">
+            <label class="small mb-1 font-weight-bold">Transferencia Fecha</label>
+            <input type="date" class="form-control form-control-sm" wire:model="edit_transferencia_fecha">
+          </div>
+          <div class="form-group">
+            <label class="small mb-1 font-weight-bold">Transf. Confirmación</label>
+            <input type="text" class="form-control form-control-sm" wire:model="edit_transferencia_confirmacion">
+          </div>
+          <div class="form-group mb-0">
+            <label class="small mb-1 font-weight-bold">Observaciones</label>
+            <textarea class="form-control form-control-sm" wire:model="edit_observaciones" rows="3"
+              placeholder="Observaciones (opcional)"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer py-2">
+          <button type="button" class="btn btn-secondary btn-sm" wire:click="cerrarModalEditar">
+            Cancelar
+          </button>
+          <button type="submit" class="btn btn-warning btn-sm">
+            <i class="fas fa-save mr-1"></i> Guardar
+          </button>
+        </div>
+      </form>
     </div>
   </div>
+  @endif
 
 </div>
 @push('scripts')
+    <script>
+      document.addEventListener('livewire:init', () => {
+        Livewire.on('abrir-modal-nueva-planilla', () => { $('#modalNuevaPlanilla').modal('show'); });
+        Livewire.on('cerrar-modal-nueva', () => { $('#modalNuevaPlanilla').modal('hide'); });
+        Livewire.on('abrir-modal-detalles', () => { $('#modalDetallesPlanilla').modal('show'); });
+        Livewire.on('cerrar-modal-detalles', () => { $('#modalDetallesPlanilla').modal('hide'); });
+        Livewire.on('abrir-modal-planilla', () => { $('#modalPlanilla').modal('show'); });
+        Livewire.on('cerrar-modal-planilla', () => { $('#modalPlanilla').modal('hide'); });
+        Livewire.on('abrir-modal-editar', () => { $('#modalEditarPlanilla').modal('show'); });
+        Livewire.on('cerrar-modal-editar', () => { $('#modalEditarPlanilla').modal('hide'); });
+      });
+    </script>
+
     <script>
       function imprimirPlanilla() {
         var modalBody = document.getElementById('modalPlanilla').querySelector('.modal-body');
@@ -868,50 +897,6 @@
           }
         });
       }
-
-      function bindModalEvents() {
-        const show = (selector) => $(selector).modal('show');
-        const hide = (selector) => $(selector).modal('hide');
-
-        window.addEventListener('abrir-modal-nueva-planilla', () => show('#modalNuevaPlanilla'));
-        window.addEventListener('abrir-modal-detalles', () => show('#modalDetallesPlanilla'));
-        window.addEventListener('abrir-modal-planilla', () => show('#modalPlanilla'));
-        window.addEventListener('abrir-modal-editar', () => show('#modalEditarPlanilla'));
-
-        window.addEventListener('cerrar-modal-editar', () => hide('#modalEditarPlanilla'));
-        window.addEventListener('cerrar-modal-planilla', () => hide('#modalPlanilla'));
-        window.addEventListener('cerrar-modal-nueva', () => hide('#modalNuevaPlanilla'));
-        window.addEventListener('cerrar-modal-detalles', () => hide('#modalDetallesPlanilla'));
-
-        if (typeof Livewire !== 'undefined') {
-          Livewire.on('abrir-modal-nueva-planilla', () => show('#modalNuevaPlanilla'));
-          Livewire.on('abrir-modal-detalles', () => show('#modalDetallesPlanilla'));
-          Livewire.on('abrir-modal-planilla', () => show('#modalPlanilla'));
-          Livewire.on('abrir-modal-editar', () => show('#modalEditarPlanilla'));
-
-          Livewire.on('cerrar-modal-editar', () => hide('#modalEditarPlanilla'));
-          Livewire.on('cerrar-modal-planilla', () => hide('#modalPlanilla'));
-          Livewire.on('cerrar-modal-nueva', () => hide('#modalNuevaPlanilla'));
-          Livewire.on('cerrar-modal-detalles', () => hide('#modalDetallesPlanilla'));
-        }
-
-        $('#modalNuevaPlanilla').on('hidden.bs.modal', function () {
-          if (typeof Livewire !== 'undefined') Livewire.dispatch('cerrarModalNueva');
-        });
-        $('#modalDetallesPlanilla').on('hidden.bs.modal', function () {
-          if (typeof Livewire !== 'undefined') Livewire.dispatch('cerrarModalDetalles');
-        });
-        $('#modalEditarPlanilla').on('hidden.bs.modal', function () {
-          if (typeof Livewire !== 'undefined') Livewire.dispatch('cerrarModalEditar');
-        });
-      }
-
-      if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', bindModalEvents);
-      } else {
-        bindModalEvents();
-      }
-      document.addEventListener('livewire:init', bindModalEvents);
     </script>
 
     <script>

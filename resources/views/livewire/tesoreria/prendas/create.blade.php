@@ -126,25 +126,23 @@
 
 @push('scripts')
 <script>
-  document.addEventListener('livewire:init', function() {
-    Livewire.on('swal:confirm-duplicate-create', (payload) => {
-      const data = Array.isArray(payload) ? payload[0] : payload;
-      Swal.fire({
-        title: data.title || 'Transferencia Duplicada',
-        text: data.text || 'El número de transferencia ya existe. ¿Desea continuar?',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#3085d6',
-        cancelButtonColor: '#d33',
-        confirmButtonText: 'Sí, continuar',
-        cancelButtonText: 'Cancelar'
-      }).then((result) => {
-        if (result.isConfirmed) {
-          window.Livewire.dispatch('confirmStore');
-        }
-      });
+  window.addEventListener('swal:confirm-duplicate-create', function(event) {
+    var data = window.LiveEvent ? window.LiveEvent(event) : (event.detail || {});
+    Swal.fire({
+      title: data.title || 'Transferencia Duplicada',
+      text: data.text || 'El número de transferencia ya existe. ¿Desea continuar?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Sí, continuar',
+      cancelButtonText: 'Cancelar'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        Livewire.dispatch('confirmStore');
+      }
     });
-});
+  });
 
     // Autofocus al abrir el modal
     $('#createModal').on('shown.bs.modal', function () {

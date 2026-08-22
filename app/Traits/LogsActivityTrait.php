@@ -10,6 +10,15 @@ trait LogsActivityTrait
     use LogsActivity;
 
     /**
+     * Campos sensibles que NUNCA deben registrarse en el activity log.
+     */
+    protected static array $sensitiveProperties = [
+        'password', 'password_confirmation', 'remember_token',
+        'two_factor_secret', 'two_factor_recovery_codes',
+        'token', 'api_token', 'secret', 'secret_key',
+    ];
+
+    /**
      * Configuración de opciones de log de actividad.
      * Los modelos pueden sobrescribir este método para personalizar la configuración.
      */
@@ -19,6 +28,7 @@ trait LogsActivityTrait
             ->logAll()                              // Registrar todos los atributos
             ->logOnlyDirty()                        // Solo registrar atributos que cambiaron
             ->dontSubmitEmptyLogs()                 // No registrar logs vacíos
+            ->logExcept(static::$sensitiveProperties)           // Excluir campos sensibles
             ->useLogName($this->getLogName())       // Nombre del log (módulo)
             ->setDescriptionForEvent(fn(string $eventName) => $this->getActivityDescription($eventName));
     }

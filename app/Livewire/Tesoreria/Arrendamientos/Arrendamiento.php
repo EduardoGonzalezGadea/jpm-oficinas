@@ -293,7 +293,7 @@ class Arrendamiento extends Component
             $arrendamiento->delete();
             $this->clearCache();
             DB::commit();
-            session()->flash('message', 'Arrendamiento eliminado con éxito.');
+            $this->dispatch('alert', type: 'success', message: 'Arrendamiento eliminado con éxito.');
         } catch (\Exception $e) {
             DB::rollBack();
             $this->dispatch('alert', type: 'error', message: 'Hubo un error al eliminar el arrendamiento. Por favor, inténtalo nuevamente.');

@@ -135,7 +135,7 @@ class Index extends Component
             $this->libretaSeleccionada = $libreta;
             $this->resetEntregaInput();
             $this->showEntregaModal = true;
-            $this->dispatch('modalOpened');
+            $this->dispatch('open-modal', id: 'modalEntregaLibreta');
         }
     }
 
@@ -158,6 +158,7 @@ class Index extends Component
             $this->dispatch('swal', title: 'Éxito', text: 'Entrega de libreta registrada correctamente.', type: 'success');
 
             $this->showEntregaModal = false;
+            $this->dispatch('close-modal', id: 'modalEntregaLibreta');
             $this->libretaSeleccionada = null;
         } catch (\Exception $e) {
             $this->addError('servicio_entrega_id', $e->getMessage());
@@ -167,6 +168,7 @@ class Index extends Component
     public function closeEntregaModal()
     {
         $this->showEntregaModal = false;
+        $this->dispatch('close-modal', id: 'modalEntregaLibreta');
         $this->libretaSeleccionada = null;
         $this->resetEntregaInput();
     }
@@ -274,6 +276,7 @@ class Index extends Component
     {
         $this->resetInput();
         $this->showModal = true;
+        $this->dispatch('open-modal', id: 'modalIngresoLibreta');
     }
 
     public function save(ValoresService $valoresService)
@@ -289,6 +292,7 @@ class Index extends Component
             $this->dispatch('swal', title: 'Éxito', text: $this->cantidad_libretas . ' libreta(s) de valores registrada(s) correctamente.', type: 'success');
 
             $this->showModal = false;
+            $this->dispatch('close-modal', id: 'modalIngresoLibreta');
         } catch (\Exception $e) {
             $this->dispatch('swal', title: 'Error', text: 'Ocurrió un error al registrar las libretas: ' . $e->getMessage(), type: 'error');
         }
@@ -298,6 +302,7 @@ class Index extends Component
     {
         $this->showModal = false;
         $this->resetInput();
+        $this->dispatch('close-modal', id: 'modalIngresoLibreta');
     }
 
     private function resetInput()

@@ -21,7 +21,7 @@
               </div>
             </div>
             <div class="mr-2" style="width: 220px;">
-              <select wire:model.live="filtroTipo" class="form-control form-control-sm">
+              <select wire:model="filtroTipo" class="form-control form-control-sm">
                 <option value="">— Todos los tipos —</option>
                 @foreach($tipos as $tipo)
                   <option value="{{ $tipo->id }}">{{ $tipo->tipo }}</option>
@@ -29,7 +29,7 @@
               </select>
             </div>
             <div class="mr-2" style="width: 220px;">
-              <select wire:model.live="filtroDependencia" class="form-control form-control-sm">
+              <select wire:model="filtroDependencia" class="form-control form-control-sm">
                 <option value="">— Todas las dependencias —</option>
                 @foreach($dependencias as $dep)
                   <option value="{{ $dep->id }}">{{ $dep->dependencia }} ({{ $dep->abreviatura }})</option>

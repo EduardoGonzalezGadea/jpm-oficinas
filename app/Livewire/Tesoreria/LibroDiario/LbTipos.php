@@ -37,7 +37,7 @@ class LbTipos extends Component
     public function create()
     {
         $this->resetInput();
-        $this->dispatch('show-modal', ['id' => 'modal']);
+        $this->dispatch('show-modal', id: 'modal');
     }
 
     public function store()
@@ -65,7 +65,7 @@ class LbTipos extends Component
         $this->nombre = $item->nombre;
         $this->signo = $item->signo;
 
-        $this->dispatch('show-modal', ['id' => 'modal']);
+        $this->dispatch('show-modal', id: 'modal');
     }
 
     public function update()

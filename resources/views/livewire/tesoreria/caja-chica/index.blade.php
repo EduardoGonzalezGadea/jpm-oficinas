@@ -16,7 +16,7 @@
       <div class="d-flex align-items-center">
         <!-- Selectores de Mes y Año -->
         <div class="form-inline mr-3">
-          <select id="mesSelector" class="form-control form-control-sm mr-2" wire:model.live="mesActual">
+          <select id="mesSelector" class="form-control form-control-sm mr-2" wire:model="mesActual">
             <option value="enero">Enero</option>
             <option value="febrero">Febrero</option>
             <option value="marzo">Marzo</option>

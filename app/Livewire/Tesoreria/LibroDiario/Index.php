@@ -9,10 +9,13 @@ use App\Models\Tesoreria\MedioDePago;
 use App\Models\Tesoreria\LibroDiario;
 use App\Models\Tesoreria\TesCfe;
 use App\Services\Tesoreria\LibroDiarioService;
+use App\Livewire\Concerns\NormalizaDocumentoReferencia;
+use Livewire\Attributes\On;
 use Livewire\Component;
 
 class Index extends Component
 {
+    use NormalizaDocumentoReferencia;
     protected LibroDiarioService $service;
 
     public $search = '';
@@ -376,7 +379,8 @@ class Index extends Component
                     $asiento->medio_id,
                     $asiento->concepto_id,
                     $asiento->detalle_id,
-                    $asiento->identidad ?? ''
+                    $asiento->identidad ?? '',
+                    $asiento->denominacion ?? ''
                 );
                 $this->rd_medio_id = $asiento->medio_id;
             } else {
@@ -389,21 +393,12 @@ class Index extends Component
         }
     }
 
-    public function updatedIdentidad($value)
-    {
-        $this->identidad = mb_strtoupper($value);
-    }
-
-    public function updatedDenominacion($value)
-    {
-        $this->denominacion = mb_strtoupper($value);
-    }
-
     public function store()
     {
         $this->identidad = mb_strtoupper($this->identidad ?? '');
         $this->denominacion = mb_strtoupper($this->denominacion ?? '');
         $this->descripcion = mb_strtoupper($this->descripcion ?? '');
+        $this->normalizarDocumentoReferencia();
         $this->validate([
             'fecha' => 'required|date',
             'tipo_id' => 'required|exists:tes_lb_tipos,id',
@@ -665,7 +660,8 @@ class Index extends Component
             $asientoOrigen->medio_id,
             $asientoOrigen->concepto_id,
             $asientoOrigen->detalle_id,
-            $asientoOrigen->identidad ?? ''
+            $asientoOrigen->identidad ?? '',
+            $asientoOrigen->denominacion ?? ''
         );
 
         if ((float) $this->rd_monto > $saldoOrigen) {
@@ -772,6 +768,7 @@ class Index extends Component
         }
     }
 
+    #[On('confirmarEliminarAsientoConCfe')]
     public function confirmarEliminarAsientoConCfe($id)
     {
         try {

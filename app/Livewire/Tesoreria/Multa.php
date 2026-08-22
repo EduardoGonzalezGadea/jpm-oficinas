@@ -198,11 +198,13 @@ class Multa extends Component
     public function openModal()
     {
         $this->isOpen = true;
+        $this->dispatch('abrir-modal-multa');
     }
 
     public function closeModal()
     {
         $this->isOpen = false;
+        $this->dispatch('cerrar-modal-multa');
     }
 
     private function resetInputFields()

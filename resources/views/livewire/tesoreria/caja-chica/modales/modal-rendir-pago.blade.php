@@ -1,5 +1,5 @@
 <div>
-  <div class="modal fade @if($showModal) show d-block @endif" id="modalRendirPago" tabindex="-1" role="dialog" aria-labelledby="modalRendirPagoLabel" aria-hidden="{{ $showModal ? 'false' : 'true' }}" style="{{ $showModal ? 'background-color: rgba(0,0,0,0.5);' : 'display: none;' }}">
+  <div wire:ignore.self class="modal fade" id="modalRendirPago" tabindex="-1" role="dialog" aria-labelledby="modalRendirPagoLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
       <div class="modal-content">
         <div class="modal-header bg-info text-white">
@@ -92,7 +92,14 @@
       </div>
     </div>
   </div>
-  @if($showModal)
-    <div class="modal-backdrop fade show"></div>
-  @endif
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      Livewire.on('modal-rendir-pago-opened', () => {
+        $('#modalRendirPago').modal('show');
+      });
+      Livewire.on('modal-rendir-pago-closed', () => {
+        $('#modalRendirPago').modal('hide');
+      });
+    });
+  </script>
 </div>

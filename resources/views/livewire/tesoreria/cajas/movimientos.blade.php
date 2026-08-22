@@ -25,7 +25,7 @@
 
               <div class="form-group mb-2">
                 <label class="mb-0 small font-weight-bold">Tipo <span class="text-danger">*</span></label>
-                <select wire:model.live="tipo_id" class="form-control form-control-sm py-1">
+                <select wire:model="tipo_id" class="form-control form-control-sm py-1">
                   <option value="">— Seleccione —</option>
                   @foreach ($tipos as $tipo)
                     <option value="{{ $tipo->id }}">{{ $tipo->nombre }}</option>
@@ -36,7 +36,7 @@
 
               <div class="form-group mb-2">
                 <label class="mb-0 small font-weight-bold">Concepto <span class="text-danger">*</span></label>
-                <select wire:model.live="concepto_id" class="form-control form-control-sm py-1">
+                <select wire:model="concepto_id" class="form-control form-control-sm py-1">
                   <option value="">— Seleccione —</option>
                   @foreach ($conceptos as $concepto)
                     <option value="{{ $concepto->id }}">{{ $concepto->nombre }}</option>
@@ -47,7 +47,7 @@
 
               <div class="form-group mb-2">
                 <label class="mb-0 small font-weight-bold">Detalle <span class="text-danger">*</span></label>
-                <select wire:model.live="detalle_id" class="form-control form-control-sm py-1" {{ !$concepto_id ? 'disabled' : '' }}>
+                <select wire:model="detalle_id" class="form-control form-control-sm py-1" {{ !$concepto_id ? 'disabled' : '' }}>
                   <option value="">— Seleccione concepto primero —</option>
                   @foreach ($detalles as $detalle)
                     <option value="{{ $detalle->id }}">{{ $detalle->nombre }}</option>
@@ -58,7 +58,7 @@
 
               <div class="form-group mb-2">
                 <label class="mb-0 small font-weight-bold">Medio de Pago <span class="text-danger">*</span></label>
-                <select wire:model.live="medio_id" class="form-control form-control-sm py-1" {{ $asiento_base_id ? 'disabled' : '' }}>
+                <select wire:model="medio_id" class="form-control form-control-sm py-1" {{ $asiento_base_id ? 'disabled' : '' }}>
                   <option value="">— Seleccione —</option>
                   @foreach ($medios as $medio)
                     <option value="{{ $medio->id }}">{{ $medio->nombre }}</option>
@@ -73,7 +73,7 @@
                     <i class="fas fa-landmark text-primary mr-1 small"></i>
                     <span class="small font-weight-bold">Usar saldo existente</span>
                   </div>
-                  <select class="form-control form-control-sm py-1 @error('asiento_base_id') is-invalid @enderror" wire:model.live="asiento_base_id">
+                  <select class="form-control form-control-sm py-1 @error('asiento_base_id') is-invalid @enderror" wire:model="asiento_base_id">
                     <option value="">Agregar importe e identificación manualmente...</option>
                     @foreach ($asientos_base as $asientoBase)
                       <option value="{{ data_get($asientoBase, 'id') }}">
@@ -201,7 +201,7 @@
           <div class="card-body">
             <div class="row mb-3">
               <div class="col-md-4 mb-2 mb-md-0">
-                <select wire:model.live="filtroTipo" class="form-control form-control-sm">
+                <select wire:model="filtroTipo" class="form-control form-control-sm">
                   <option value="">Todos los tipos</option>
                   <option value="INGRESO">Entradas</option>
                   <option value="EGRESO">Salidas</option>

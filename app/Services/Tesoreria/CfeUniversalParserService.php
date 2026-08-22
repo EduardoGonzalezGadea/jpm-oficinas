@@ -5,6 +5,7 @@ namespace App\Services\Tesoreria;
 use Smalot\PdfParser\Parser;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Log;
 
 class CfeUniversalParserService
 {
@@ -18,6 +19,11 @@ class CfeUniversalParserService
     public function parsePdf(string $rutaAbsoluta): array
     {
         $content = file_get_contents($rutaAbsoluta);
+        if ($content === false) {
+            Log::warning('CfeParser: No se pudo leer el archivo PDF', ['ruta' => $rutaAbsoluta]);
+            return $this->datosVacios();
+        }
+
         if (str_starts_with($content, "\xEF\xBB\xBF")) {
             $content = substr($content, 3);
         }
@@ -29,9 +35,18 @@ class CfeUniversalParserService
             $content = $trimmedContent . 'F';
         }
 
-        $pdf = $this->parser->parseContent($content);
-        $texto = $pdf->getText();
+        try {
+            $pdf = $this->parser->parseContent($content);
+            $texto = $pdf->getText();
+        } catch (\Exception $e) {
+            Log::error('CfeParser: Error al parsear PDF', [
+                'ruta' => $rutaAbsoluta,
+                'error' => $e->getMessage(),
+            ]);
+            return $this->datosVacios();
+        }
 
+        $texto = $this->sanitizarTexto($texto);
         $datos = $this->extraerDatos($texto);
 
         // Extracción geométrica precisa para Receptor (separa Nombre y Domicilio que están en celdas adyacentes)
@@ -99,7 +114,18 @@ class CfeUniversalParserService
                 }
             }
         } catch (\Exception $e) {
-            // Si falla la extracción geométrica, se conserva el resultado de la extracción por RegEx
+            Log::warning('CfeParser: Error en extracción geométrica, usando regex', [
+                'error' => $e->getMessage(),
+            ]);
+        }
+
+        $erroresValidacion = $this->validarDatos($datos);
+        if (!empty($erroresValidacion)) {
+            Log::warning('CfeParser: Extracción con advertencias', [
+                'errores' => $erroresValidacion,
+                'tipo_documento' => $datos['documento_tipo'] ?? 'desconocido',
+                'numero_documento' => $datos['documento_numero'] ?? 'N/A',
+            ]);
         }
 
         return $datos;
@@ -366,5 +392,119 @@ class CfeUniversalParserService
     private function parseMonto(string $monto): float
     {
         return (float) str_replace(['.', ','], ['', '.'], $monto);
+    }
+
+    /**
+     * Elimina caracteres no imprimibles, de control y patrones sospechosos
+     * del texto extraído del PDF antes de pasar a los extractores regex.
+     */
+    private function sanitizarTexto(string $texto): string
+    {
+        // Eliminar caracteres de control excepto tab, newline y carriage return
+        $texto = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/u', '', $texto);
+
+        // Eliminar secuencias de escape ANSI
+        $texto = preg_replace('/\x1B\[[0-9;]*[a-zA-Z]/u', '', $texto);
+
+        // Eliminar bytes nulos
+        $texto = str_replace("\0", '', $texto);
+
+        // Normalizar saltos de línea
+        $texto = str_replace(["\r\n", "\r"], "\n", $texto);
+
+        // Eliminar múltiples espacios en blanco consecutivos (preservando saltos de línea)
+        $texto = preg_replace('/[^\S\n]+/', ' ', $texto);
+
+        // Eliminar líneas que solo contienen espacios en blanco
+        $texto = preg_replace('/^\s+$/m', '', $texto);
+
+        return trim($texto);
+    }
+
+    /**
+     * Retorna un array con datos vacíos/por defecto cuando la extracción falla.
+     */
+    private function datosVacios(): array
+    {
+        return [
+            'emisor_nombre' => '',
+            'emisor_direccion' => '',
+            'emisor_localidad' => '',
+            'emisor_telefono' => '',
+            'emisor_correo' => '',
+            'emisor_ruc' => '',
+            'documento_tipo' => '',
+            'documento_serie' => '',
+            'documento_numero' => '',
+            'forma_pago' => '',
+            'vencimiento' => null,
+            'comprobante_tipo' => '',
+            'receptor_documento_ruc' => '',
+            'receptor_nombre_denominacion' => '',
+            'receptor_domicilio_fiscal' => '',
+            'periodo' => '',
+            'nro_compra' => '',
+            'fecha' => null,
+            'moneda' => 'UYU',
+            'items' => [],
+            'medios_pago' => [],
+            'monto_no_facturable' => 0.0,
+            'monto_total' => 0.0,
+            'total_a_pagar' => 0.0,
+            'referencias' => '',
+            'adenda' => '',
+        ];
+    }
+
+    /**
+     * Valida los datos extraídos del CFE y retorna errores encontrados.
+     */
+    public function validarDatos(array $datos): array
+    {
+        $errores = [];
+
+        if (empty($datos['documento_tipo'])) {
+            $errores[] = 'No se pudo detectar el tipo de documento CFE';
+        }
+
+        if (empty($datos['documento_numero'])) {
+            $errores[] = 'No se pudo extraer el número de documento';
+        }
+
+        if (empty($datos['emisor_ruc']) || !preg_match('/^\d{12}$/', $datos['emisor_ruc'])) {
+            $errores[] = 'RUC del emisor inválido o no detectado';
+        }
+
+        if ($datos['total_a_pagar'] <= 0 && $datos['monto_total'] <= 0) {
+            $errores[] = 'No se pudo extraer el monto total a pagar';
+        }
+
+        $fecha = $datos['fecha'] ?? $datos['vencimiento'] ?? null;
+        if ($fecha !== null && $fecha !== '') {
+            try {
+                // Intentar parsear en múltiples formatos
+                if (\Carbon\Carbon::hasFormat($fecha, 'Y-m-d')) {
+                    \Carbon\Carbon::createFromFormat('Y-m-d', $fecha);
+                } elseif (\Carbon\Carbon::hasFormat($fecha, 'd/m/Y')) {
+                    \Carbon\Carbon::createFromFormat('d/m/Y', $fecha);
+                } else {
+                    \Carbon\Carbon::parse($fecha);
+                }
+            } catch (\Exception $e) {
+                $errores[] = 'Fecha extraída inválida: ' . $fecha;
+            }
+        }
+
+        $serie = $datos['documento_serie'] ?? '';
+        if (!empty($serie) && !preg_match('/^[A-Z]$/', $serie)) {
+            $errores[] = 'Serie del documento inválida: ' . $serie;
+        }
+
+        $numero = $datos['documento_numero'] ?? '';
+        if (!empty($numero) && !preg_match('/^\d+$/', $numero)) {
+            $errores[] = 'Número del documento inválido: ' . $numero;
+        }
+
+        return $errores;
     }
 }

@@ -243,6 +243,7 @@ class MovimientosPendiente extends Component
     public function cerrarModal()
     {
         $this->showModal = false;
+        $this->dispatch('modal-closed');
         $this->resetForm();
         $this->resetErrorBag();
         $this->loading = false;
@@ -283,12 +284,14 @@ class MovimientosPendiente extends Component
     {
         $this->movimientoAEliminar = $id;
         $this->showDeleteModal = true;
+        $this->dispatch('modal-confirmar-eliminacion-opened');
     }
 
     public function cancelarEliminacion()
     {
         $this->movimientoAEliminar = null;
         $this->showDeleteModal = false;
+        $this->dispatch('modal-confirmar-eliminacion-closed');
     }
 
     public function confirmarEliminarMovimiento()

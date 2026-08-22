@@ -46,7 +46,7 @@
                 <div class="input-group-prepend">
                   <span class="input-group-text">Mes y Año</span>
                 </div>
-                <select id="mesSelector" class="form-control form-control-sm" wire:model.live="mes">
+                <select id="mesSelector" class="form-control form-control-sm" wire:model="mes">
                   <option value="1">Enero</option>
                   <option value="2">Febrero</option>
                   <option value="3">Marzo</option>

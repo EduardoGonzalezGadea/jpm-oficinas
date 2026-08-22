@@ -2,7 +2,7 @@
   <form wire:submit="save">
     <div class="form-group">
       <label for="banco_id">Banco</label>
-      <select wire:model.live="banco_id" class="form-control" id="banco_id" required>
+      <select wire:model="banco_id" class="form-control" id="banco_id" required>
         <option value="">Seleccionar banco...</option>
         @foreach($bancos as $banco)
           <option value="{{ $banco->id }}">{{ $banco->nombre }}</option>
@@ -17,7 +17,7 @@
     </div>
     <div class="form-group">
       <label for="tipo">Tipo de Cuenta</label>
-      <select wire:model.live="tipo" class="form-control" id="tipo" required>
+      <select wire:model="tipo" class="form-control" id="tipo" required>
         <option value="Corriente">Corriente</option>
         <option value="Ahorro">Ahorro</option>
         <option value="Plazo Fijo">Plazo Fijo</option>

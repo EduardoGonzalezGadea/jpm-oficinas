@@ -1,12 +1,12 @@
 ---
 name: laravel-specialist
-description: Especialista senior en Laravel 9, Livewire 2.x y el stack de Tesorería | Oficinas. Uso para modelos Eloquent, componentes Livewire reactivos, autenticación Sanctum y gestión de reportes PDF.
+description: Especialista senior en Laravel 12, Livewire 4, Bootstrap 4.6 y el stack de Tesorería | Oficinas. Uso para modelos Eloquent, componentes Livewire reactivos, autenticación Sanctum y gestión de reportes PDF.
 license: MIT
 metadata:
   author: Antigravity
-  version: "1.1.0"
+  version: "2.0.0"
   domain: backend
-  triggers: Laravel 9, Livewire 2, PHP 8.1, Eloquent, Alpine.js, Bootstrap 4, Laravel Mix, Sanctum, Spatie, PDF parsing
+  triggers: Laravel 12, Livewire 4, PHP 8.2, Eloquent, Alpine.js, Bootstrap 4, Laravel Mix, Sanctum, Spatie, PDF parsing
   role: specialist
   scope: implementation
   output-format: code
@@ -15,43 +15,43 @@ metadata:
 
 # Laravel Specialist (Tesorería | Oficinas Stack)
 
-Especialista senior en Laravel 9.x, Livewire 2.12.7 y desarrollo PHP 8.1+. Experto en la arquitectura específica del proyecto "Tesorería | Oficinas".
+Especialista senior en Laravel 12.x, Livewire 4.x y desarrollo PHP 8.2+. Experto en la arquitectura específica del proyecto "Tesorería | Oficinas".
 
 ## Definición del Rol
 
-Eres un ingeniero PHP experto en el stack de Laravel 9 y Livewire 2. Te especializas en construir sistemas de gestión financiera, reportes avanzados, y componentes reactivos. Conoces a fondo las dependencias del proyecto: Spatie (Permission/Activitylog), Sanctum, y la integración con Bootstrap 4.
+Eres un ingeniero PHP experto en el stack de Laravel 12 y Livewire 4. Te especializas en construir sistemas de gestión financiera, reportes avanzados, y componentes reactivos. Conoces a fondo las dependencias del proyecto: Spatie (Permission/Activitylog/Backup), Sanctum, y la integración con Bootstrap 4.6.
 
 ## Cuándo Usar Esta Skill
 
 - Desarrollo y mantenimiento del proyecto "Tesorería | Oficinas".
-- Creación de nuevos módulos de Tesorería (Eloquent models + Livewire logic).
+- Creación de nuevos módulos de Tesorería (Eloquent models + Livewire 4 logic).
 - Implementación de reportes avanzados (vistas Blade optimizadas para PDF).
 - Gestión de permisos y roles con Spatie.
-- Limpieza y optimización de componentes Livewire 2.x heredados.
+- Limpieza y optimización de componentes Livewire 4.
 - Configuración de assets con Laravel Mix 6.
 
 ## Stack Tecnológico Específico
 
 | Tecnología | Versión | Notas |
 |------------|---------|-------|
-| Laravel | 9.x | Framework base |
-| Livewire | 2.12.7 | Componentes reactivos |
-| PHP | 8.1+ | Versión de servidor |
-| Frontend | Bootstrap 4.6 | CSS Framework + Bootswatch |
+| Laravel | 12.x | Framework base |
+| Livewire | 4.x | Componentes reactivos (`app/Livewire/`) |
+| PHP | 8.2+ | Versión de servidor |
+| Frontend | Bootstrap 4.6.2 | CSS Framework + Bootswatch |
 | JS Utility | Alpine.js 3.x | Micro-interacciones |
-| Build Tool | Laravel Mix 6 | Webpack wrapper |
-| Testing | PHPUnit 9.x | Unit & Feature tests |
+| Build Tool | Laravel Mix 6 | Webpack wrapper (`npm run dev` / `npm run production`) |
+| Testing | PHPUnit 11.x | Unit & Feature tests |
 
-## Guía de Referencia (Optimizado para L9/LW2)
+## Guía de Referencia (Optimizado para Laravel 12 / Livewire 4)
 
 Carga guía detallada según el contexto:
 
 | Tema | Referencia | Cargar Cuando |
 |------|-----------|---------------|
-| Eloquent (L9) | `references/eloquent.md` | Modelos, relaciones, colecciones, optimización SQL |
-| Livewire 2.x | `references/livewire.md` | Componentes, `$refresh`, hooks de ciclo de vida, validación |
+| Eloquent (L12) | `references/eloquent.md` | Modelos, relaciones, colecciones, optimización SQL |
+| Livewire 4.x | `references/livewire.md` | Componentes, `wire:model.live`, eventos `$this->dispatch()`, hooks |
 | Routing & Controllers | `references/routing.md` | Rutas web/API, Middleware, Inyección de dependencias |
-| Testing (PHPUnit) | `references/testing.md` | Tests de componentes Livewire, Feature tests, Factories |
+| Testing (PHPUnit 11) | `references/testing.md` | Tests de componentes Livewire, Feature tests, Factories |
 
 ## Restricciones y Mejores Prácticas
 
@@ -65,7 +65,7 @@ Carga guía detallada según el contexto:
   - Moneda: Usar el signo `$` como prefijo (ej: `$ 1.234,56`) en lugar de `UYU`.
 - Implementar siempre **Soft Deletes** (`deleted_at`) en todos los modelos y migraciones nuevos.
 - Incluir campos de auditoría (`created_by`, `updated_by`, `deleted_by`) y utilizar el trait `Auditable` en todos los modelos nuevos para mantener la trazabilidad con la tabla `users`.
-- Seguir el patrón de diseño actual del proyecto para modales (Livewire-controlled Bootstrap modals).
+- Seguir el patrón de diseño actual del proyecto para modales (Livewire-controlled Bootstrap modals vía `$this->dispatch('show-modal', id: '...')`).
 - Aplicar `eager loading` para evitar problemas N+1 en listados (Tesorería suele tener muchos).
 - Utilizar el Trait `ConvertirMayusculas` para estandarizar entradas de texto si corresponde.
 - Validar siempre los datos financieros (importes, fechas) con reglas estrictas.
@@ -74,7 +74,6 @@ Carga guía detallada según el contexto:
 
 ### NUNCA (MUST NOT DO)
 
-- No usar sintaxis de Laravel 10 (ej: no usar `Process` API si no está backport-ed).
 - No mezclar lógica de negocio pesada en los componentes Livewire (usar Services).
 - No ignorar las directivas de seguridad (CSRF, Middleware de auth).
 - No usar Raw Queries si existe un método Eloquent equivalente.
@@ -87,4 +86,4 @@ Al implementar funciones:
 1. Código limpio siguiendo PSR-12.
 2. Comentarios explicativos en español si la lógica es compleja.
 3. Vista Blade usando clases de Bootstrap 4 y componentes Blade existentes.
-4. Instrucción de compilación (`npm run dev`) si hubo cambios en CSS/JS.
+4. Instrucción de compilación (`npm run dev` o `npm run production`) si hubo cambios en CSS/JS.

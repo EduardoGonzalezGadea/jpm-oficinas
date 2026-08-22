@@ -24,6 +24,7 @@ class TesPlanillaEr extends Model
         'er_numero',
         'egresos_numero',
         'ingresos_numero',
+        'observaciones',
         'transferencia_fecha',
         'transferencia_confirmacion',
         'confirmada',

@@ -635,6 +635,10 @@
                 <td class="align-middle small text-nowrap font-weight-bold w-25">Transf. Confirmación</td>
                 <td class="align-middle small">{{ $planilla->transferencia_confirmacion ?? '—' }}</td>
               </tr>
+              <tr>
+                <td class="align-middle small text-nowrap font-weight-bold w-25">Observaciones</td>
+                <td class="align-middle small">{{ $planilla->observaciones ?? '—' }}</td>
+              </tr>
             </tbody>
           </table>
           </div>

@@ -1,7 +1,7 @@
 <div>
   @if ($showModal)
-  <div class="modal fade show" id="modalEditarFondo" tabindex="-1" role="dialog"
-    aria-labelledby="modalEditarFondoLabel" style="display: block;" aria-modal="true">
+  <div wire:ignore.self class="modal fade" id="modalEditarFondo" tabindex="-1" role="dialog"
+    aria-labelledby="modalEditarFondoLabel" aria-modal="true">
     <div class="modal-dialog modal-dialog-centered" role="document">
       <div class="modal-content modal-animate-in">
         <div class="modal-header modal-header-premium shadow-sm">
@@ -61,7 +61,17 @@
       </div>
     </div>
   </div>
-  <div class="modal-backdrop fade show"></div>
   @endif
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      Livewire.on('modal-editar-fondo-opened', () => {
+        $('#modalEditarFondo').modal('show');
+      });
+      Livewire.on('modal-editar-fondo-closed', () => {
+        $('#modalEditarFondo').modal('hide');
+      });
+    });
+  </script>
 </div>
 

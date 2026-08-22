@@ -167,7 +167,7 @@
 
   {{-- Modal para crear/editar movimiento --}}
   @if ($showModal)
-  <div class="modal fade show" style="display: block; background-color: rgba(0,0,0,0.5);" tabindex="-1"
+  <div wire:ignore.self class="modal fade" id="modalCrearEditarMovimiento" tabindex="-1"
     role="dialog">
     <div class="modal-dialog modal-lg modal-dialog-scrollable" role="document">
       <div class="modal-content">
@@ -379,7 +379,7 @@
 
   {{-- Modal de confirmación para eliminar --}}
   @if ($showDeleteModal)
-  <div class="modal fade show" style="display: block; background-color: rgba(0,0,0,0.5);" tabindex="-1"
+  <div wire:ignore.self class="modal fade" id="modalConfirmarEliminacion" tabindex="-1"
     role="dialog">
     <div class="modal-dialog modal-dialog-centered" role="document">
       <div class="modal-content">
@@ -415,21 +415,30 @@
   {{-- Scripts para mejorar UX --}}
   <script>
     document.addEventListener('DOMContentLoaded', function() {
-      // Auto-focus en el primer campo cuando se abre el modal
-      window.addEventListener('modal-opened', function() {
+      Livewire.on('modal-opened', () => {
+        $('#modalCrearEditarMovimiento').modal('show');
         setTimeout(function() {
-          const modal = document.querySelector('.modal.show');
-          const firstInput = modal?.querySelector('#fechaMovimientos');
+          const firstInput = document.querySelector('#modalCrearEditarMovimiento #fechaMovimientos');
           if (firstInput) {
             firstInput.focus();
-
-            // Scroll al top del modal body si es necesario
-            const modalBody = modal.querySelector('.modal-body');
+            const modalBody = document.querySelector('#modalCrearEditarMovimiento .modal-body');
             if (modalBody) {
               modalBody.scrollTop = 0;
             }
           }
         }, 150);
+      });
+
+      Livewire.on('modal-closed', () => {
+        $('#modalCrearEditarMovimiento').modal('hide');
+      });
+
+      Livewire.on('modal-confirmar-eliminacion-opened', () => {
+        $('#modalConfirmarEliminacion').modal('show');
+      });
+
+      Livewire.on('modal-confirmar-eliminacion-closed', () => {
+        $('#modalConfirmarEliminacion').modal('hide');
       });
     });
   </script>

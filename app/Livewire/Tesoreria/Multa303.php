@@ -171,11 +171,13 @@ class Multa303 extends Component
     public function openModal()
     {
         $this->isOpen = true;
+        $this->dispatch('abrir-modal-multa303');
     }
 
     public function closeModal()
     {
         $this->isOpen = false;
+        $this->dispatch('cerrar-modal-multa303');
     }
 
     private function resetInputFields()

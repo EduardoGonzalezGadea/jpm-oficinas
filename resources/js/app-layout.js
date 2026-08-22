@@ -1,19 +1,148 @@
 (function() {
     'use strict';
 
-// Helper para leer event.detail compatible con Livewire v2 y v3.
-  // En v3, dispatch('event', key: val) llega como event.detail = [{key: val}].
-  // En v2 llegaba como event.detail = {key: val}.
-  function detail(event) {
-    var d = event.detail;
-    return (Array.isArray(d) && d.length > 0) ? d[0] : (d || {});
-  }
+    // Helper para leer event.detail compatible con Livewire v2, v3 y v4.
+    function detail(event) {
+        if (!event) return {};
+        var d = event.detail !== undefined ? event.detail : event;
+        return (Array.isArray(d) && d.length > 0) ? d[0] : (d || {});
+    }
 
-  // Helper global para las vistas: des-envuelve el payload de un evento Livewire
-  // sin importar si llega envuelto (v3) u objeto directo (v2).
-  window.LiveEvent = function (event) {
-    return detail(event);
-  };
+    // Helper global para las vistas: des-envuelve el payload de un evento Livewire
+    window.LiveEvent = function (event) {
+        return detail(event);
+    };
+
+    // --- Fix para compatibilidad entre Bootstrap 4 Modal y SweetAlert2 ---
+    // Evita que el mecanismo _enforceFocus de Bootstrap 4 secuestre el foco cuando SweetAlert2 está visible.
+    if (window.jQuery && window.jQuery.fn && window.jQuery.fn.modal && window.jQuery.fn.modal.Constructor) {
+        var proto = window.jQuery.fn.modal.Constructor.prototype;
+        proto._enforceFocus = function () {
+            var self = this;
+            $(document)
+                .off('focusin.bs.modal')
+                .on('focusin.bs.modal', function (event) {
+                    // Si el foco está dentro de un contenedor de SweetAlert2, no intervenir
+                    if ($(event.target).closest('.swal2-container').length) {
+                        return;
+                    }
+                    if (document !== event.target &&
+                        self._element !== event.target &&
+                        !$(self._element).has(event.target).length) {
+                        self._element.focus();
+                    }
+                });
+        };
+    }
+
+    // --- Manejo seguro de apertura y cierre de modales de Bootstrap ---
+    function safeShowModal(modalId) {
+        if (!modalId) return;
+        var id = String(modalId).replace(/^#/, '');
+        var $el = $('#' + id);
+        if (!$el.length) return;
+
+        if ($('.modal.show').length === 0) {
+            $('.modal-backdrop').remove();
+        }
+
+        var bsModal = $el.data('bs.modal');
+        if (bsModal && bsModal._isTransitioning) {
+            bsModal._isTransitioning = false;
+        }
+
+        setTimeout(function() {
+            if (!$el.hasClass('show')) {
+                $el.modal('show');
+            }
+        }, 20);
+    }
+
+    function safeHideModal(modalId) {
+        if (!modalId) {
+            $('.modal.show').each(function() {
+                var bsModal = $(this).data('bs.modal');
+                if (bsModal && bsModal._isTransitioning) {
+                    bsModal._isTransitioning = false;
+                }
+                $(this).modal('hide');
+            });
+            setTimeout(function() {
+                if ($('.modal.show').length === 0) {
+                    $('.modal-backdrop').remove();
+                    $('body').removeClass('modal-open').css('padding-right', '');
+                }
+            }, 100);
+            return;
+        }
+        var id = String(modalId).replace(/^#/, '');
+        var $el = $('#' + id);
+        if (!$el.length) return;
+
+        var bsModal = $el.data('bs.modal');
+        if (bsModal && bsModal._isTransitioning) {
+            bsModal._isTransitioning = false;
+        }
+
+        setTimeout(function() {
+            if ($el.hasClass('show') || $el.is(':visible')) {
+                $el.modal('hide');
+            }
+            setTimeout(function() {
+                if ($('.modal.show').length === 0) {
+                    $('.modal-backdrop').remove();
+                    $('body').removeClass('modal-open').css('padding-right', '');
+                }
+            }, 100);
+        }, 20);
+    }
+
+    // Limpieza global de backdrops y restauración de scroll al cerrar modales
+    $(document).on('hidden.bs.modal', '.modal', function () {
+        if (document.activeElement) {
+            document.activeElement.blur();
+        }
+        // Si aún queda otro modal abierto, mantener la clase modal-open
+        setTimeout(function() {
+            if ($('.modal.show').length > 0) {
+                $('body').addClass('modal-open');
+            } else {
+                $('body').removeClass('modal-open').css('padding-right', '');
+                $('.modal-backdrop').remove();
+            }
+        }, 50);
+    });
+
+    // Limpieza al navegar entre rutas con Livewire
+    document.addEventListener('livewire:navigating', function () {
+        $('.modal').modal('hide');
+        $('.modal-backdrop').remove();
+    });
+
+    // Limpieza de backdrop para modales declarativos de Livewire
+    // Los modales @if no disparan hidden.bs.modal, por lo que debemos
+    // observar el DOM y limpiar cuando el modal desaparece.
+    (function() {
+        var cleanupTimer = null;
+        var observer = new MutationObserver(function() {
+            clearTimeout(cleanupTimer);
+            cleanupTimer = setTimeout(function() {
+                // Si no hay ningún modal visible ni abriéndose
+                var hasVisibleModal = $('.modal.show').length > 0 || 
+                                     document.querySelectorAll('.modal[style*="display: block"]').length > 0;
+                
+                if (!hasVisibleModal) {
+                    var hasBackdrops = document.querySelectorAll('.modal-backdrop').length > 0;
+                    var hasModalOpen = document.body.classList.contains('modal-open');
+                    if (hasBackdrops || hasModalOpen) {
+                        $('.modal-backdrop').remove();
+                        $('body').removeClass('modal-open').css('padding-right', '');
+                    }
+                }
+            }, 300);
+        });
+        observer.observe(document.body, { childList: true, subtree: true });
+    })();
 
     // --- Loader (solo para formularios y links normales, no Livewire) ---
     document.addEventListener('DOMContentLoaded', function() {
@@ -50,8 +179,7 @@
         });
     });
 
-    // --- Livewire v3: hook para manejo de errores HTTP ---
-    // Livewire v3 no tiene onError(); se usa el hook 'request' para capturar fallos.
+    // --- Livewire: hook para manejo de errores HTTP y listeners de modales ---
     document.addEventListener('livewire:init', function() {
         Livewire.hook('request', function(ref) {
             var fail = ref.fail;
@@ -85,39 +213,152 @@
             }
         });
 
-        // Escuchar eventos de modal via Livewire.on (recibe params directamente en v3)
-        Livewire.on('show-modal', function(params) {
-            var modalId = (Array.isArray(params) ? params[0] : params)?.id
-                       || (Array.isArray(params) ? params[0] : params)?.modal
-                       || (typeof params === 'string' ? params : null);
-            if (modalId) {
-                var id = modalId.replace(/^#/, '');
-                $('#' + id).modal('show');
-            }
-        });
-
-        Livewire.on('hide-modal', function(params) {
-            var modalId = (Array.isArray(params) ? params[0] : params)?.id
-                       || (typeof params === 'string' ? params : null);
-            if (modalId) {
-                var id = modalId.replace(/^#/, '');
-                $('#' + id).modal('hide');
-            }
-        });
-
-        // openInNewTab via Livewire.on (v3)
+        // openInNewTab via Livewire.on
         Livewire.on('openInNewTab', function(data) {
             var url = Array.isArray(data) ? data[0] : data;
             if (url) window.open(url, '_blank');
         });
+
+        // Listeners de modales registrados directamente en Livewire
+        Livewire.on('show-modal', function(data) {
+            var d = Array.isArray(data) ? (data[0] || {}) : (data || {});
+            var modalId = d.id || d.modal || (typeof d === 'string' ? d : null);
+            safeShowModal(modalId);
+        });
+
+        Livewire.on('hide-modal', function(data) {
+            var d = Array.isArray(data) ? (data[0] || {}) : (data || {});
+            var modalId = d.id || d.modal || (typeof d === 'string' ? d : null);
+            safeHideModal(modalId);
+        });
+
+        Livewire.on('close-modal', function(data) {
+            var d = Array.isArray(data) ? (data[0] || {}) : (data || {});
+            var modalId = d.id || d.modal || (typeof d === 'string' ? d : null);
+            safeHideModal(modalId);
+        });
+
+        Livewire.on('showEditarModal', function() { safeShowModal('editarChequeModal'); });
+        Livewire.on('hideEditarModal', function() { safeHideModal('editarChequeModal'); });
+        Livewire.on('cajaConceptoStore', function() { safeHideModal('cajaConceptoModal'); });
+        Livewire.on('cajaConceptoUpdate', function() { safeHideModal('cajaConceptoModal'); });
+        Livewire.on('eventualStore', function() { safeHideModal('eventualModal'); });
+        Livewire.on('eventualUpdate', function() { safeHideModal('eventualModal'); safeHideModal('ingresoModal'); });
+        Livewire.on('chequeEmitido', function() { safeHideModal('emitirChequeModal'); });
+        Livewire.on('chequeAnulado', function() { safeHideModal('anularChequeModal'); });
+        Livewire.on('chequeEditado', function() { safeHideModal('editarChequeModal'); });
+        Livewire.on('bancoStore', function() { safeHideModal('modalBanco'); safeHideModal('modal'); });
+        Livewire.on('bancoUpdate', function() { safeHideModal('modalBanco'); safeHideModal('modal'); });
+        Livewire.on('cuentaStore', function() { safeHideModal('modalCuenta'); safeHideModal('modal'); });
+        Livewire.on('cuentaUpdate', function() { safeHideModal('modalCuenta'); safeHideModal('modal'); });
     });
 
-    // --- SweetAlert Listeners ---
+    // --- Escuchadores de eventos para Modales (Window Custom Events) ---
+    window.addEventListener('show-modal', function(event) {
+        var d = detail(event);
+        var modalId = d.id || d.modal || (typeof d === 'string' ? d : null);
+        safeShowModal(modalId);
+    });
+
+    window.addEventListener('hide-modal', function(event) {
+        var d = detail(event);
+        var modalId = d.id || d.modal || (typeof d === 'string' ? d : null);
+        safeHideModal(modalId);
+    });
+
+    window.addEventListener('close-modal', function(event) {
+        var d = detail(event);
+        var modalId = d.id || d.modal || (typeof d === 'string' ? d : null);
+        safeHideModal(modalId);
+    });
+
+    // Compatibilidad con eventos clásicos de CRUD
+    window.addEventListener('itemStore', function() {
+        safeHideModal('modal');
+    });
+
+    window.addEventListener('itemUpdated', function() {
+        safeHideModal('modal');
+    });
+
+    window.addEventListener('itemDeleted', function() {
+        safeHideModal('modal');
+    });
+
+    // --- SweetAlert2: Listener genérico 'swal' (compatibilidad con componentes legacy) ---
+    // Usado por Cheques, Valores, CajaChica y otros que hacen dispatch('swal', ...)
+    window.addEventListener('swal', function(event) {
+        var d = detail(event);
+        var isToast = d.toast === true;
+        var icon = d.icon || d.type || 'info';
+        var title = d.title || '';
+        var text = d.text || d.message || '';
+
+        if (isToast) {
+            var Toast = Swal.mixin({
+                toast: true,
+                position: d.position || 'top-end',
+                showConfirmButton: d.showConfirmButton !== undefined ? d.showConfirmButton : false,
+                timer: d.timer || 3000,
+                timerProgressBar: true,
+                didOpen: function(toast) {
+                    toast.addEventListener('mouseenter', Swal.stopTimer);
+                    toast.addEventListener('mouseleave', Swal.resumeTimer);
+                }
+            });
+            Toast.fire({ icon: icon, title: title || text, text: title ? text : '' });
+        } else {
+            Swal.fire({
+                icon: icon,
+                title: title || (icon === 'error' ? 'Error' : icon === 'success' ? 'Éxito' : icon === 'warning' ? 'Advertencia' : 'Aviso'),
+                text: text,
+                confirmButtonText: 'Cerrar',
+                confirmButtonColor: icon === 'error' ? '#d33' : '#3085d6'
+            });
+        }
+    });
+
+    // --- SweetAlert2: Listener Global para 'alert' (Toast / Modal) ---
+
+    window.addEventListener('alert', function(event) {
+        var d = detail(event);
+        var type = d.type || 'info';
+        var message = d.message || d.title || '';
+        var isToast = d.toast !== false; // por defecto toast
+
+        if (isToast) {
+            var Toast = Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3500,
+                timerProgressBar: true,
+                didOpen: function(toast) {
+                    toast.addEventListener('mouseenter', Swal.stopTimer);
+                    toast.addEventListener('mouseleave', Swal.resumeTimer);
+                }
+            });
+            Toast.fire({
+                icon: type,
+                title: message,
+            });
+        } else {
+            Swal.fire({
+                icon: type,
+                title: d.title || (type === 'error' ? 'Error' : 'Aviso'),
+                text: message,
+                confirmButtonText: 'Aceptar',
+                confirmButtonColor: '#3085d6'
+            });
+        }
+    });
+
+    // --- SweetAlert Listeners Complementarios ---
     window.addEventListener('swal:success', function(event) {
         var d = detail(event);
         var Toast = Swal.mixin({
             toast: true, position: 'top-end', showConfirmButton: false,
-            timer: 4000, timerProgressBar: true,
+            timer: 3500, timerProgressBar: true,
             didOpen: function(toast) {
                 toast.addEventListener('mouseenter', Swal.stopTimer);
                 toast.addEventListener('mouseleave', Swal.resumeTimer);
@@ -126,7 +367,7 @@
         if (d && typeof d === 'object') {
             Toast.fire({ icon: 'success', title: d.title || 'Éxito', text: d.text || '' });
         } else {
-            Toast.fire({ icon: 'success', title: event.detail });
+            Toast.fire({ icon: 'success', title: String(d) });
         }
     });
 
@@ -134,7 +375,7 @@
         var d = detail(event);
         var Toast = Swal.mixin({
             toast: true, position: 'top-end', showConfirmButton: false,
-            timer: 4000, timerProgressBar: true,
+            timer: 3500, timerProgressBar: true,
             didOpen: function(toast) {
                 toast.addEventListener('mouseenter', Swal.stopTimer);
                 toast.addEventListener('mouseleave', Swal.resumeTimer);
@@ -148,8 +389,9 @@
         Swal.fire({
             icon: 'error',
             title: d.title || 'Error',
-            text: d.text || '',
-            confirmButtonText: 'Cerrar'
+            text: d.text || d.message || '',
+            confirmButtonText: 'Cerrar',
+            confirmButtonColor: '#d33'
         });
     });
 
@@ -158,11 +400,12 @@
         Swal.fire({
             icon: d.type || 'info',
             title: d.title || '',
-            text: d.text || '',
-            confirmButtonText: 'Cerrar'
+            text: d.text || d.message || '',
+            confirmButtonText: 'Cerrar',
+            confirmButtonColor: '#3085d6'
         }).then(function() {
             if (d.modalToClose) {
-                $('#' + d.modalToClose).modal('hide');
+                safeHideModal(d.modalToClose);
             }
         });
     });
@@ -171,39 +414,88 @@
         var d = detail(event);
         var Toast = Swal.mixin({
             toast: true, position: 'top-end', showConfirmButton: false,
-            timer: 3000, timerProgressBar: true,
+            timer: 4500, timerProgressBar: true,
             didOpen: function(toast) {
                 toast.addEventListener('mouseenter', Swal.stopTimer);
                 toast.addEventListener('mouseleave', Swal.resumeTimer);
             }
         });
-        Toast.fire({ icon: 'error', title: d.text || '' });
+        Toast.fire({ icon: 'error', title: d.text || d.message || 'Error en la operación.' });
+    });
+
+    window.addEventListener('swal:toast-success', function(event) {
+        var d = detail(event);
+        var Toast = Swal.mixin({
+            toast: true, position: 'top-end', showConfirmButton: false,
+            timer: 3500, timerProgressBar: true,
+            didOpen: function(toast) {
+                toast.addEventListener('mouseenter', Swal.stopTimer);
+                toast.addEventListener('mouseleave', Swal.resumeTimer);
+            }
+        });
+        Toast.fire({ icon: 'success', title: d.text || d.message || 'Operación completada correctamente.' });
+    });
+
+    window.addEventListener('swal:modal', function(event) {
+        var d = detail(event);
+        Swal.fire({
+            icon: d.type || 'info',
+            title: d.title || 'Información',
+            text: d.text || d.message || '',
+            confirmButtonText: 'Aceptar',
+            confirmButtonColor: '#3085d6'
+        });
+    });
+
+    window.addEventListener('swal:modal-error', function(event) {
+        var d = detail(event);
+        Swal.fire({
+            icon: 'error',
+            title: d.title || 'Error',
+            text: d.text || d.message || '',
+            confirmButtonText: 'Cerrar',
+            confirmButtonColor: '#d33'
+        });
+    });
+
+    window.addEventListener('swal:warning', function(event) {
+        var d = detail(event);
+        Swal.fire({
+            icon: 'warning',
+            title: d.title || 'Advertencia',
+            text: d.text || d.message || '',
+            confirmButtonText: 'Aceptar',
+            confirmButtonColor: '#f39c12'
+        });
+    });
+
+    window.addEventListener('swal:toast', function(event) {
+        var d = detail(event);
+        var Toast = Swal.mixin({
+            toast: true, position: 'top-end', showConfirmButton: false,
+            timer: 3500, timerProgressBar: true,
+            didOpen: function(toast) {
+                toast.addEventListener('mouseenter', Swal.stopTimer);
+                toast.addEventListener('mouseleave', Swal.resumeTimer);
+            }
+        });
+        Toast.fire({
+            icon: d.type || d.icon || 'info',
+            title: d.text || d.message || d.title || ''
+        });
     });
 
     window.addEventListener('swal:toast-warning', function(event) {
         var d = detail(event);
         var Toast = Swal.mixin({
             toast: true, position: 'top-end', showConfirmButton: false,
-            timer: 3000, timerProgressBar: true,
+            timer: 3500, timerProgressBar: true,
             didOpen: function(toast) {
                 toast.addEventListener('mouseenter', Swal.stopTimer);
                 toast.addEventListener('mouseleave', Swal.resumeTimer);
             }
         });
-        Toast.fire({ icon: 'warning', title: d.text || '' });
-    });
-
-    // --- Modal Bootstrap 4 via Livewire dispatch ---
-    window.addEventListener('show-modal', function(event) {
-        var d = detail(event);
-        var modalId = d.id || (typeof event.detail === 'string' ? event.detail : null);
-        if (modalId) $('#' + modalId).modal('show');
-    });
-
-    window.addEventListener('hide-modal', function(event) {
-        var d = detail(event);
-        var modalId = d.id || (typeof event.detail === 'string' ? event.detail : null);
-        if (modalId) $('#' + modalId).modal('hide');
+        Toast.fire({ icon: 'warning', title: d.text || d.message || '' });
     });
 
     // --- swal:confirm ---
@@ -220,10 +512,10 @@
             cancelButtonText: d.cancelButtonText || 'Cancelar'
         }).then(function(result) {
             if (result.isConfirmed) {
-                if (d.componentId) {
-                    Livewire.find(d.componentId).call(d.method, d.id);
-                } else {
-                    // v3: Livewire.dispatch en lugar de window.livewire.emit
+                if (d.componentId && window.Livewire) {
+                    var comp = Livewire.find(d.componentId);
+                    if (comp) comp.call(d.method, d.id);
+                } else if (window.Livewire) {
                     Livewire.dispatch(d.method, { id: d.id });
                 }
             }
@@ -250,9 +542,10 @@
             cancelButtonText: d.cancelButtonText || 'Cancelar'
         }).then(function(result) {
             if (result.isConfirmed) {
-                if (d.componentId) {
-                    Livewire.find(d.componentId).call(d.method, result.value);
-                } else {
+                if (d.componentId && window.Livewire) {
+                    var comp = Livewire.find(d.componentId);
+                    if (comp) comp.call(d.method, result.value);
+                } else if (window.Livewire) {
                     Livewire.dispatch(d.method, { value: result.value });
                 }
             }
@@ -277,31 +570,33 @@
             confirmButtonText: data.swalConfirmBtn || 'Sí, eliminar',
             cancelButtonText: 'Cancelar'
         }).then(function(result) {
-            if (result.isConfirmed) {
-                // v3: usar Livewire.dispatch en lugar de window.livewire.emit
+            if (result.isConfirmed && window.Livewire) {
                 Livewire.dispatch(data.swalMethod, { id: data.swalId });
             }
         });
     });
 
-    // --- openInNewTab vía window event (compatibilidad) ---
+    // --- Spinner global (usado por PlanillaVer y otros) ---
+    window.addEventListener('show-global-spinner', function() {
+        var loader = document.getElementById('loader');
+        if (loader) loader.style.display = 'flex';
+    });
+
+    window.addEventListener('hide-global-spinner', function() {
+        var loader = document.getElementById('loader');
+        if (loader) loader.style.display = 'none';
+    });
+
+    // --- openInNewTab vía window event ---
     window.addEventListener('openInNewTab', function(event) {
         var d = detail(event);
         var url = d.url || (typeof event.detail === 'string' ? event.detail : null);
         if (url) window.open(url, '_blank');
     });
 
-        // --- Backup AJAX (respaldo) ---
+    // --- Backup AJAX (respaldo) ---
     document.addEventListener('DOMContentLoaded', function() {
         var btnRespaldo = document.getElementById('btn-crear-respaldo-menu');
-        
-        // Fix for Chrome warning: Blocked aria-hidden on an element because its descendant retained focus
-        $(document).on('hide.bs.modal', '.modal', function () {
-            if (document.activeElement) {
-                document.activeElement.blur();
-            }
-        });
-
         if (!btnRespaldo) return;
 
         btnRespaldo.addEventListener('click', function(e) {
@@ -350,34 +645,6 @@
                 }
             });
         });
-    });
-
-    // Livewire v3 dispatches PHP events as window events: $this->dispatch('show-modal') -> window 'show-modal'
-    window.addEventListener('show-modal', function(event) {
-        var params = event.detail;
-        var p0 = Array.isArray(params) ? params[0] : params;
-        var modalId = (p0 && p0.id) ? p0.id : ((p0 && p0.modal) ? p0.modal : (typeof params === 'string' ? params : null));
-        
-        if (typeof modalId === 'string') {
-            var id = modalId.replace(/^#/, '');
-            // setTimeout ensures Livewire has finished DOM morphing before Bootstrap modifies the DOM
-            setTimeout(function() {
-                $('#' + id).modal('show');
-            }, 50);
-        }
-    });
-
-    window.addEventListener('hide-modal', function(event) {
-        var params = event.detail;
-        var p0 = Array.isArray(params) ? params[0] : params;
-        var modalId = (p0 && p0.id) ? p0.id : (typeof params === 'string' ? params : null);
-        
-        if (typeof modalId === 'string') {
-            var id = modalId.replace(/^#/, '');
-            setTimeout(function() {
-                $('#' + id).modal('hide');
-            }, 50);
-        }
     });
 
 })();

@@ -1,7 +1,7 @@
 <div>
   @if ($showModal)
-  <div class="modal fade show" id="modalRecuperarPago" tabindex="-1" role="dialog"
-    aria-labelledby="modalRecuperarPagoLabel" style="display: block;" aria-modal="true">
+  <div wire:ignore.self class="modal fade" id="modalRecuperarPago" tabindex="-1" role="dialog"
+    aria-labelledby="modalRecuperarPagoLabel" aria-modal="true">
     <div class="modal-dialog modal-dialog-centered" role="document">
       <div class="modal-content">
         <div class="modal-header bg-info text-white">
@@ -77,7 +77,17 @@
       </div>
     </div>
   </div>
-  <div class="modal-backdrop fade show"></div>
   @endif
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      Livewire.on('modal-recuperar-pago-opened', () => {
+        $('#modalRecuperarPago').modal('show');
+      });
+      Livewire.on('modal-recuperar-pago-closed', () => {
+        $('#modalRecuperarPago').modal('hide');
+      });
+    });
+  </script>
 </div>
 

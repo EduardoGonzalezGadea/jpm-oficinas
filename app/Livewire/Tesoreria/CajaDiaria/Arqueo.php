@@ -156,6 +156,29 @@ class Arqueo extends Component
             - $this->total_cheques;
     }
 
+    /**
+     * Normaliza un valor numérico proveniente de inputs.
+     */
+    protected function numeroDeDesglose($valor): float
+    {
+        if ($valor === null || $valor === '') {
+            return 0.0;
+        }
+
+        if (is_numeric($valor)) {
+            return (float) $valor;
+        }
+
+        if (is_string($valor)) {
+            $normalizado = str_replace([',', ' '], ['.', ''], trim($valor));
+            if (is_numeric($normalizado)) {
+                return (float) $normalizado;
+            }
+        }
+
+        return 0.0;
+    }
+
     public function updatedDesglose()
     {
         $this->validarDesglose();
@@ -175,11 +198,14 @@ class Arqueo extends Component
             $den = $this->denominaciones->firstWhere('id', $denId);
             if (!$den) continue;
 
+            $cantidad = $this->numeroDeDesglose($valores['cantidad'] ?? 0);
+            $total = $this->numeroDeDesglose($valores['total'] ?? 0);
+
             if ($this->modo_calculo === 'cantidad') {
-                $this->desglose[$denId]['total'] = ($valores['cantidad'] ?? 0) * $den->valor;
+                $this->desglose[$denId]['total'] = $cantidad * (float) $den->valor;
             } else {
-                $this->desglose[$denId]['cantidad'] = ($valores['total'] ?? 0) > 0
-                    ? floor(($valores['total'] ?? 0) / $den->valor)
+                $this->desglose[$denId]['cantidad'] = $total > 0
+                    ? floor($total / (float) $den->valor)
                     : 0;
             }
         }
@@ -196,14 +222,14 @@ class Arqueo extends Component
             $esInvalido = false;
 
             if ($this->modo_calculo === 'cantidad') {
-                $cantidad = $valores['cantidad'] ?? 0;
+                $cantidad = $this->numeroDeDesglose($valores['cantidad'] ?? 0);
                 if ($cantidad != floor($cantidad) || $cantidad < 0) {
                     $esInvalido = true;
                 }
             } else {
-                $total = $valores['total'] ?? 0;
+                $total = $this->numeroDeDesglose($valores['total'] ?? 0);
                 if ($total > 0) {
-                    $cociente = $total / $den->valor;
+                    $cociente = $total / (float) $den->valor;
                     if (abs($cociente - round($cociente)) > 0.0001) {
                         $esInvalido = true;
                     }
@@ -215,12 +241,13 @@ class Arqueo extends Component
             }
         }
 
-        $recienInvalidos = array_diff($nuevosInvalidos, $this->desglose_invalido);
-
-        if (!empty($recienInvalidos)) {
+        if (!empty($nuevosInvalidos)) {
+            $campoInvalidado = $this->modo_calculo === 'cantidad' ? 'cantidad' : 'total';
             $this->dispatch('swal:toast:warning', [
                 'title' => 'Valor no exacto',
                 'text'  => 'El monto ingresado no es divisible exactamente por el valor de esa denominación.',
+                'focoDenId' => (int) $nuevosInvalidos[0],
+                'focoCampo' => $campoInvalidado,
             ]);
         }
 
@@ -247,10 +274,10 @@ class Arqueo extends Component
 
             // Guardar desglose del arqueo
             foreach ($this->desglose as $denId => $valores) {
-                $cantidad = (int) ($valores['cantidad'] ?? 0);
+                $cantidad = (int) $this->numeroDeDesglose($valores['cantidad'] ?? 0);
                 if ($cantidad > 0) {
                     $den = $this->denominaciones->firstWhere('id', $denId);
-                    $subtotal = $cantidad * ($den ? $den->valor : 0);
+                    $subtotal = $cantidad * ($den ? (float) $den->valor : 0);
 
                     CajaDesglose::create([
                         'caja_apertura_id' => $this->caja_actual->id,
@@ -281,17 +308,26 @@ class Arqueo extends Component
         foreach ($this->desglose as $denId => $valores) {
             $den = $this->denominaciones->firstWhere('id', $denId);
             if ($den) {
+                $cantidad = $this->numeroDeDesglose($valores['cantidad'] ?? 0);
+                $total = $this->numeroDeDesglose($valores['total'] ?? 0);
+
                 if ($this->modo_calculo === 'total') {
-                    $this->total_efectivo += (float) ($valores['total'] ?? 0);
+                    $this->total_efectivo += $total;
+                    $this->desglose[$denId]['cantidad'] = $total > 0
+                        ? floor($total / (float) $den->valor)
+                        : 0;
                 } else {
-                    $this->total_efectivo += ($valores['cantidad'] ?? 0) * $den->valor;
+                    $this->total_efectivo += $cantidad * (float) $den->valor;
+                    $this->desglose[$denId]['total'] = $cantidad * (float) $den->valor;
                 }
             }
         }
 
         // La diferencia solo compara efectivo contado contra el saldo esperado en efectivo
-        $saldoEsperado = $this->caja_actual->obtenerSaldoActual();
-        $this->diferencia = $this->total_efectivo - $saldoEsperado;
+        if ($this->caja_actual) {
+            $saldoEsperado = (float) $this->caja_actual->obtenerSaldoActual();
+            $this->diferencia = $this->total_efectivo - $saldoEsperado;
+        }
     }
 
     public function render()

@@ -48,7 +48,8 @@ class IndexTest extends TestCase
             'saldo_inicial' => 500,
         ]);
 
-        Livewire::test(Index::class)
+        Livewire::actingAs($this->user)
+            ->test(Index::class)
             ->assertSet('cajaTrabajo.id', $abierta->id);
 
         $this->assertSame('cerrada', $cerrada->fresh()->estado);
@@ -63,7 +64,8 @@ class IndexTest extends TestCase
             'saldo_cierre' => 1000,
         ]);
 
-        Livewire::test(Index::class)
+        Livewire::actingAs($this->user)
+            ->test(Index::class)
             ->assertSet('cajaTrabajo', null)
             ->assertSet('tab', 'cajas');
     }
@@ -75,7 +77,8 @@ class IndexTest extends TestCase
             'fecha_apertura' => now()->subDay()->format('Y-m-d'),
         ]);
 
-        Livewire::test(Index::class)
+        Livewire::actingAs($this->user)
+            ->test(Index::class)
             ->assertSet('cajaTrabajo.id', $abierta->id)
             ->assertSet('tab', 'mi-caja');
     }

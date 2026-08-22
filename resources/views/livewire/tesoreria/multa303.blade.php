@@ -77,7 +77,7 @@
           </span>
         </div>
         <div class="col-auto d-print-none">
-          <select wire:model.live="perPage" class="form-control form-control-sm">
+          <select wire:model="perPage" class="form-control form-control-sm">
             <option value="50">50</option>
             <option value="100">100</option>
             <option value="-1">Todos</option>
@@ -162,7 +162,7 @@
   </div>
 
   @if($isOpen)
-  <div class="modal fade show" style="display: block;" tabindex="-1" role="dialog">
+  <div wire:ignore.self class="modal fade" id="modalMulta303" tabindex="-1" role="dialog">
     <div class="modal-dialog modal-lg" role="document">
       <div class="modal-content">
         <div class="modal-content-border">
@@ -219,12 +219,16 @@
       </div>
     </div>
   </div>
-  <div class="modal-backdrop fade show"></div>
   @endif
 </div>
 
 @push('scripts')
 <script>
+  document.addEventListener('livewire:init', function () {
+    Livewire.on('abrir-modal-multa303', () => { $('#modalMulta303').modal('show'); });
+    Livewire.on('cerrar-modal-multa303', () => { $('#modalMulta303').modal('hide'); });
+  });
+
   function confirmDelete303(id) {
     Swal.fire({
       title: '¿Está seguro de eliminar esta multa?',

@@ -39,6 +39,8 @@ class CfePendientesIndex extends Component
         $this->cfePendienteToConfirm = TesCfePendiente::find($id);
         $this->motivoRechazo = '';
         $this->mostrarModalRechazo = false;
+        
+        // Usar dispatch del navegador en lugar de Alpine
         $this->dispatch('show-modal', id: 'cfePendienteModal');
     }
 

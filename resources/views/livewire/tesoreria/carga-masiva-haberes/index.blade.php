@@ -110,7 +110,7 @@
                   <div class="form-row align-items-end p-2 bg-light border-bottom">
                     <div class="col-md-2">
                       <label class="small mb-0">Mes</label>
-                      <select class="form-control form-control-sm" wire:model.live="filtro_mes">
+                      <select class="form-control form-control-sm" wire:model="filtro_mes">
                         <option value="">Todos</option>
                         @foreach ($mesesDisponibles as $m)
                           <option value="{{ $m }}">{{ $m }}</option>
@@ -119,7 +119,7 @@
                     </div>
                     <div class="col-md-2">
                       <label class="small mb-0">Tipo</label>
-                      <select class="form-control form-control-sm" wire:model.live="filtro_tipo">
+                      <select class="form-control form-control-sm" wire:model="filtro_tipo">
                         <option value="">Todos</option>
                         @foreach ($tiposDisponibles as $t)
                           <option value="{{ $t }}">{{ $t }}</option>
@@ -128,7 +128,7 @@
                     </div>
                     <div class="col-md-2">
                       <label class="small mb-0">Pago</label>
-                      <select class="form-control form-control-sm" wire:model.live="filtro_ventanilla">
+                      <select class="form-control form-control-sm" wire:model="filtro_ventanilla">
                         <option value="">Todos</option>
                         <option value="1">Ventanilla</option>
                         <option value="0">Otros medios</option>
@@ -305,21 +305,26 @@
 
 @push('scripts')
 <script>
-  window.addEventListener('alert', event => {
-    const data = window.LiveEvent(event);
+  window.addEventListener('swal:sin-documento-referencia', event => {
+    const data = window.LiveEvent ? window.LiveEvent(event) : (event.detail || {});
     Swal.fire({
-      toast: true,
-      position: 'top-end',
-      showConfirmButton: false,
-      timer: 3000,
-      timerProgressBar: true,
-      icon: data.type,
-      title: data.message,
+      title: '¿Generar sin Documento de Referencia?',
+      text: `Ha seleccionado ${data.cantidad || 'varios'} ítems sin ingresar un documento de referencia. ¿Desea continuar generando los asientos sin este dato?`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, generar sin referencia',
+      cancelButtonText: 'Cancelar y revisar',
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#6c757d',
+    }).then(result => {
+      if (result.isConfirmed) {
+        Livewire.dispatch('confirmar-generacion-sin-documento');
+      }
     });
   });
 
   window.addEventListener('swal:confirmar-duplicados', event => {
-    const data = window.LiveEvent(event);
+    const data = window.LiveEvent ? window.LiveEvent(event) : (event.detail || {});
     Swal.fire({
       title: 'Registros duplicados',
       html: `Se encontraron <strong>${data.cantidad}</strong> registro(s) que ya existen en el Libro Diario con los mismos datos (identificador, denominación, concepto, detalle y monto).`,
@@ -332,15 +337,15 @@
       reverseButtons: true,
     }).then(result => {
       if (result.isConfirmed) {
-        @this.call('procesarGeneracion', true);
+        Livewire.dispatch('procesar-generacion', { descartarDuplicados: true });
       } else {
-        @this.call('procesarGeneracion', false);
+        Livewire.dispatch('procesar-generacion', { descartarDuplicados: false });
       }
     });
   });
 
   window.addEventListener('swal:items-sin-detalle', event => {
-    const data = window.LiveEvent(event);
+    const data = window.LiveEvent ? window.LiveEvent(event) : (event.detail || {});
     Swal.fire({
       title: 'Ítems sin detalle asignado',
       html: data.html,
@@ -356,9 +361,8 @@
       reverseButtons: true,
     }).then(result => {
       if (result.isConfirmed) {
-        @this.call('procesarGeneracionSinDetalle');
+        Livewire.dispatch('procesar-generacion-sin-detalle');
       }
-      // Si es deny o cancel, no hacer nada (el usuario cancela)
     });
   });
 </script>

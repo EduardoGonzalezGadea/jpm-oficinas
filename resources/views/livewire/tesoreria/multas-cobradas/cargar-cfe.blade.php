@@ -266,43 +266,40 @@
 
 @push('scripts')
 <script>
-  document.addEventListener('livewire:init', function () {
-    window.addEventListener('swal:confirm-discrepancia-multas', function (event) {
-      var data = window.LiveEvent(event);
-      var fmt = function (v) {
-        return '$ ' + Number(v || 0).toLocaleString('es-UY', {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2
-        });
-      };
-
-      Swal.fire({
-        title: '¡Discrepancia de Montos!',
-        html: 'El total a pagar (<b>' + fmt(data.monto) + '</b>) no coincide con la suma de los importes de los medios de pago (<b>' + fmt(data.sumaMedios) + '</b>).<br><br>¿Qué deseas hacer?',
-        icon: 'warning',
-        showDenyButton: true,
-        showCancelButton: true,
-        confirmButtonColor: '#28a745',
-        denyButtonColor: '#3085d6',
-        cancelButtonColor: '#dc3545',
-        confirmButtonText: 'Continuar como está',
-        denyButtonText: 'Hacer cambios en los importes',
-        cancelButtonText: 'Cancelar',
-        reverseButtons: true
-      }).then(function (result) {
-        if (result.isConfirmed) {
-          @this.call('guardarRegistro', true);
-        } else if (result.isDenied) {
-          // Hacer cambios en los importes: llevar al usuario a la sección de medios de pago
-          var mediosSection = document.getElementById('seccion-medios-pago');
-          if (mediosSection) {
-            mediosSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            var primerInput = mediosSection.querySelector('input');
-            if (primerInput) primerInput.focus();
-          }
-        }
-        // cancel (cancelar): no se guarda, el usuario permanece en la pantalla de datos detectados.
+  window.addEventListener('swal:confirm-discrepancia-multas', function (event) {
+    var data = window.LiveEvent ? window.LiveEvent(event) : (event.detail || {});
+    var fmt = function (v) {
+      return '$ ' + Number(v || 0).toLocaleString('es-UY', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
       });
+    };
+
+    Swal.fire({
+      title: '¡Discrepancia de Montos!',
+      html: 'El total a pagar (<b>' + fmt(data.monto) + '</b>) no coincide con la suma de los importes de los medios de pago (<b>' + fmt(data.sumaMedios) + '</b>).<br><br>¿Qué deseas hacer?',
+      icon: 'warning',
+      showDenyButton: true,
+      showCancelButton: true,
+      confirmButtonColor: '#28a745',
+      denyButtonColor: '#3085d6',
+      cancelButtonColor: '#dc3545',
+      confirmButtonText: 'Continuar como está',
+      denyButtonText: 'Hacer cambios en los importes',
+      cancelButtonText: 'Cancelar',
+      reverseButtons: true
+    }).then(function (result) {
+      if (result.isConfirmed) {
+        Livewire.dispatch('guardar-registro-multas', { force: true });
+      } else if (result.isDenied) {
+        // Hacer cambios en los importes: llevar al usuario a la sección de medios de pago
+        var mediosSection = document.getElementById('seccion-medios-pago');
+        if (mediosSection) {
+          mediosSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          var primerInput = mediosSection.querySelector('input');
+          if (primerInput) primerInput.focus();
+        }
+      }
     });
   });
 </script>

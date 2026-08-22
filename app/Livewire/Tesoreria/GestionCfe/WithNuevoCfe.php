@@ -151,7 +151,25 @@ trait WithNuevoCfe
         );
     }
 
-    public function guardarNuevo(): void
+    #[On('guardar-nuevo-forzado')]
+    public function guardarNuevoForzado(): void
+    {
+        $this->guardarNuevo(true);
+    }
+
+    #[On('guardar-nuevo-ignorar-duplicados')]
+    public function guardarNuevoIgnorarDuplicados(): void
+    {
+        $this->guardarNuevo(false, true, false);
+    }
+
+    #[On('guardar-nuevo-ignorar-concepto')]
+    public function guardarNuevoIgnorarConcepto(): void
+    {
+        $this->guardarNuevo(false, false, true);
+    }
+
+    public function guardarNuevo(bool $force = false, bool $ignorarDuplicados = false, bool $ignorarConcepto = false): void
     {
         $rules = [
             'nuevoDocumentoTipo' => 'required|string|max:50',
@@ -210,6 +228,25 @@ trait WithNuevoCfe
             'nuevoItemDistribuciones.*.exists' => 'La distribución SIIF seleccionada no existe.',
         ]);
 
+        if (!$force) {
+            $advertencia = $this->detectarAdvertenciasPrevias(
+                (int) $this->nuevoCajaConceptoSeleccionado,
+                $this->nuevoItems ?? [],
+                $this->nuevoMediosPago ?? [],
+                $this->nuevoReferencias ?? '',
+                $this->nuevoAdenda ?? '',
+                $this->nuevoItemDistribuciones,
+                '-nuevo',
+                $ignorarDuplicados,
+                $ignorarConcepto
+            );
+
+            if ($advertencia) {
+                $this->dispatch($advertencia['evento'], ...$advertencia['parametros']);
+                return;
+            }
+        }
+
         try {
             $data = new CfeData(
                 documento_tipo: $this->nuevoDocumentoTipo,
@@ -227,6 +264,7 @@ trait WithNuevoCfe
                 referencias: $this->nuevoReferencias ?: null,
                 adenda: $this->nuevoAdenda ?: null,
                 moneda: 'UYU',
+                force: $force,
             );
 
             $this->cfeCreator->createManual($data);

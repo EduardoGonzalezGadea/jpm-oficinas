@@ -33,7 +33,7 @@ class LbConceptos extends Component
     public function create()
     {
         $this->resetInput();
-        $this->dispatch('show-modal', ['id' => 'modal']);
+        $this->dispatch('show-modal', id: 'modal');
     }
 
     public function store()
@@ -58,7 +58,7 @@ class LbConceptos extends Component
         $this->item_id = $id;
         $this->nombre = $item->nombre;
 
-        $this->dispatch('show-modal', ['id' => 'modal']);
+        $this->dispatch('show-modal', id: 'modal');
     }
 
     public function update()

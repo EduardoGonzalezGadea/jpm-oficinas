@@ -88,6 +88,7 @@ class ModalEditarPago extends Component
         ];
 
         $this->show = true;
+        $this->dispatch('modal-editar-pago-opened');
         $this->resetErrorBag();
     }
 
@@ -202,9 +203,10 @@ class ModalEditarPago extends Component
             DB::commit();
 
             $this->show = false;
+            $this->dispatch('modal-editar-pago-closed');
             $this->resetErrorBag();
 
-            session()->flash('message', 'Pago actualizado correctamente.');
+            $this->dispatch('alert', type: 'success', message: 'Pago actualizado correctamente.');
 
             return redirect()->route('tesoreria.caja-chica.index');
         } catch (\Exception $e) {
@@ -239,7 +241,7 @@ class ModalEditarPago extends Component
 
             DB::commit();
 
-            session()->flash('message', 'Rendición eliminada correctamente.');
+            $this->dispatch('alert', type: 'success', message: 'Rendición eliminada correctamente.');
             return redirect()->route('tesoreria.caja-chica.index');
         } catch (\Exception $e) {
             DB::rollBack();
@@ -266,7 +268,7 @@ class ModalEditarPago extends Component
 
             DB::commit();
 
-            session()->flash('message', 'Recuperación eliminada correctamente.');
+            $this->dispatch('alert', type: 'success', message: 'Recuperación eliminada correctamente.');
             return redirect()->route('tesoreria.caja-chica.index');
         } catch (\Exception $e) {
             DB::rollBack();
@@ -292,7 +294,7 @@ class ModalEditarPago extends Component
 
             DB::commit();
 
-            session()->flash('message', 'Datos BSE eliminados correctamente.');
+            $this->dispatch('alert', type: 'success', message: 'Datos BSE eliminados correctamente.');
             return redirect()->route('tesoreria.caja-chica.index');
         } catch (\Exception $e) {
             DB::rollBack();
@@ -304,6 +306,7 @@ class ModalEditarPago extends Component
     public function cerrarModal()
     {
         $this->show = false;
+        $this->dispatch('modal-editar-pago-closed');
         $this->resetErrorBag();
     }
 

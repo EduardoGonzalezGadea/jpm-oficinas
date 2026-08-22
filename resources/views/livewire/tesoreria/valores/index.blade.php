@@ -38,7 +38,7 @@
         </div>
         <!-- Tipo de Libreta (Más espacio) -->
         <div class="mr-1" style="flex: 2;">
-          <select wire:model.live="selectedTipo" class="form-control">
+          <select wire:model="selectedTipo" class="form-control">
             <option value="">Todos los tipos</option>
             @foreach($tiposLibreta as $tipo)
             <option value="{{ $tipo->id }}">{{ $tipo->nombre }}</option>
@@ -47,7 +47,7 @@
         </div>
         <!-- Estado -->
         <div class="mr-1" style="flex: 1;">
-          <select wire:model.live="estado" class="form-control">
+          <select wire:model="estado" class="form-control">
             <option value="">Todos los estados</option>
             <option value="en_stock">En Stock</option>
             <option value="asignada">Asignada</option>
@@ -57,7 +57,7 @@
         <!-- Año y Limpieza (Integrados) -->
         <div class="input-group" style="width: {{ $estado !== 'en_stock' ? '140px' : '38px' }};">
           @if($estado !== 'en_stock')
-          <select wire:model.live="year" class="form-control">
+          <select wire:model="year" class="form-control">
             @foreach($years as $y)
             <option value="{{ $y }}">{{ $y }}</option>
             @endforeach
@@ -128,7 +128,7 @@
 
   <!-- Modal Ingreso -->
   @if($showModal)
-  <div class="modal fade show" id="modalIngresoLibreta" style="display: block;" tabindex="-1" role="dialog">
+  <div wire:ignore.self class="modal fade" id="modalIngresoLibreta" tabindex="-1" role="dialog">
     <div class="modal-dialog modal-dialog-scrollable" role="document">
       <div class="modal-content">
         <div class="modal-header">
@@ -140,7 +140,7 @@
         <div class="modal-body">
           <div class="form-group">
             <label for="tipo_libreta_id">Tipo de Libreta</label>
-            <select wire:model.live="tipo_libreta_id" id="tipo_libreta_id" class="form-control @error('tipo_libreta_id') is-invalid @enderror" autofocus>
+            <select wire:model="tipo_libreta_id" id="tipo_libreta_id" class="form-control @error('tipo_libreta_id') is-invalid @enderror" autofocus>
               <option value="">Seleccione un tipo...</option>
               @foreach($tiposLibreta as $tipo)
               <option value="{{ $tipo->id }}">{{ $tipo->nombre }} ({{ $tipo->cantidad_recibos }} recibos)</option>
@@ -193,12 +193,11 @@
       </div>
     </div>
   </div>
-  <div class="modal-backdrop fade show"></div>
   @endif
 
   <!-- Modal Entregar Libreta -->
   @if($showEntregaModal)
-  <div class="modal fade show" id="modalEntregaLibreta" style="display: block;" tabindex="-1" role="dialog">
+  <div wire:ignore.self class="modal fade" id="modalEntregaLibreta" tabindex="-1" role="dialog">
     <div class="modal-dialog modal-lg modal-dialog-scrollable" role="document">
       <div class="modal-content">
         <div class="modal-header">
@@ -253,15 +252,21 @@
       </div>
     </div>
   </div>
-
-  @if($showEntregaModal)
-  <div class="modal-backdrop fade show"></div>
-  @endif
   @endif
 
   @push('scripts')
   <script>
     document.addEventListener('livewire:init', function() {
+      Livewire.on('open-modal', (params) => {
+        const id = Array.isArray(params) ? params[0]?.id : params?.id;
+        if (id) $('#' + id).modal('show');
+      });
+
+      Livewire.on('close-modal', (params) => {
+        const id = Array.isArray(params) ? params[0]?.id : params?.id;
+        if (id) $('#' + id).modal('hide');
+      });
+
       const modalId = 'modalIngresoLibreta';
       const modalEntregaId = 'modalEntregaLibreta';
 

@@ -27,14 +27,14 @@
                         @if (session('success'))
                             <div class="alert alert-success alert-dismissible fade show" role="alert">
                                 {{ session('success') }}
-                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                <button type="button" class="btn-close" data-dismiss="alert"></button>
                             </div>
                         @endif
 
                         @if (session('error'))
                             <div class="alert alert-danger alert-dismissible fade show" role="alert">
                                 {{ session('error') }}
-                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                <button type="button" class="btn-close" data-dismiss="alert"></button>
                             </div>
                         @endif
 
@@ -230,7 +230,7 @@
                                                     @if ($usersWithRolePermission->count() > 12)
                                                         <div class="col-12 mt-2">
                                                             <button class="btn btn-sm btn-outline-primary" type="button"
-                                                                data-bs-toggle="collapse" data-bs-target="#allUsers">
+                                                                data-toggle="collapse" data-target="#allUsers">
                                                                 Ver todos los {{ $usersWithRolePermission->count() }}
                                                                 usuarios
                                                             </button>
@@ -272,7 +272,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">Confirmar eliminación</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <button type="button" class="btn-close" data-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <div class="alert alert-warning">
@@ -289,7 +289,7 @@
                     @endif
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
                     <form id="deleteForm" method="POST" style="display: inline;">
                         @csrf
                         @method('DELETE')

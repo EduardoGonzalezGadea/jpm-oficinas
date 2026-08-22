@@ -15,7 +15,22 @@ class TesCfeItem extends Model
 
     protected $table = 'tes_cfe_items';
 
-    protected $guarded = ['id'];
+    protected $fillable = [
+        'tes_cfe_id',
+        'siif_distribucion_id',
+        'detalle',
+        'descripcion',
+        'cantidad',
+        'precio',
+        'descuento',
+        'recargo',
+        'importe',
+        'confirmado',
+        'planilla_er_id',
+        'created_by',
+        'updated_by',
+        'deleted_by',
+    ];
 
     protected $casts = [
         'cantidad' => 'decimal:2',

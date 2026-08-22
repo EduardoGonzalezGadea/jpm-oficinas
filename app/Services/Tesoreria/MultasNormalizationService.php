@@ -196,7 +196,7 @@ class MultasNormalizationService
 
             return (object) [
                 'articulo' => $group['articulo'],
-                'articulo_sort' => is_numeric($group['articulo']) ? (int)$group['articulo'] : 999999,
+                'articulo_sort' => $this->extraerNumeroArticulo($group['articulo']),
                 'apartado' => $group['apartado'],
                 'descripcion_display' => $description,
                 'cantidad' => $group['cantidad'],
@@ -215,6 +215,23 @@ class MultasNormalizationService
     function stringify_float($float)
     {
         return (string)round($float, 2);
+    }
+
+    /**
+     * Extrae el número de artículo para ordenamiento.
+     * Acepta tanto "123" como "COD. 21".
+     */
+    private function extraerNumeroArticulo(string $articulo): int
+    {
+        if (is_numeric($articulo)) {
+            return (int) $articulo;
+        }
+
+        if (preg_match('/\d+/', $articulo, $matches)) {
+            return (int) $matches[0];
+        }
+
+        return 999999;
     }
 
     // Kept for backward compatibility or potential future use, though currently unused in favor of dynamic description
@@ -277,6 +294,17 @@ class MultasNormalizationService
             $articulo = $matches[1];
             if (isset($matches[2]) && $matches[2] !== '') {
                 $apartado = 'Ap. ' . $matches[2];
+            }
+        }
+
+        // --- 3b. Code Detection (COD. 21.3.1) ---
+        // Nuevo formato de identificación de multas por código (D.677/007):
+        // se toma el texto "COD." + los números antes del primer punto como
+        // artículo y el resto de números y puntos como apartado.
+        elseif (preg_match('/COD\.?\s*(\d+)(?:\.\s*([0-9A-Z]+(?:\.[0-9A-Z]+)*))?/i', $searchableText, $matches)) {
+            $articulo = 'COD. ' . $matches[1];
+            if (isset($matches[2]) && $matches[2] !== '') {
+                $apartado = $matches[2];
             }
         }
 

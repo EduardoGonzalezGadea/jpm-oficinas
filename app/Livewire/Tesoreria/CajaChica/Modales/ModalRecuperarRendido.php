@@ -59,6 +59,7 @@ class ModalRecuperarRendido extends Component
         ];
 
         $this->showModal = true;
+        $this->dispatch('modal-recuperar-rendido-opened');
     }
 
     public function saveRecuperarRendido()
@@ -71,7 +72,7 @@ class ModalRecuperarRendido extends Component
             $service->guardarRecuperacionRendido($this->recuperarRendidoData, $fechaHastaStr);
 
             $this->cerrarModal();
-            session()->flash('message', 'Dinero rendido recuperado exitosamente.');
+            $this->dispatch('alert', type: 'success', message: 'Dinero rendido recuperado exitosamente.');
             return redirect()->route('tesoreria.caja-chica.index');
         } catch (\Exception $e) {
             session()->flash('error', 'Error al guardar la recuperación del dinero rendido: ' . $e->getMessage());
@@ -82,6 +83,7 @@ class ModalRecuperarRendido extends Component
     public function cerrarModal()
     {
         $this->showModal = false;
+        $this->dispatch('modal-recuperar-rendido-closed');
         $this->reset(['recuperarRendidoData', 'selectedPendienteId', 'fechaHastaGlobal']);
         $this->resetErrorBag();
     }

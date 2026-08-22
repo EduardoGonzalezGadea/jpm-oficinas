@@ -3,7 +3,7 @@
 ## Component Patterns
 
 ```php
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -475,22 +475,24 @@ class PostForm extends Component
 }
 ```
 
-## Performance Tips
-
-1. **Use wire:model.defer** - Batch updates on form submit (LW2 best practice)
-2. **Lazy load components** - Use `wire:init` for heavy operations
-3. **Use Computed properties manually** - Livewire 2 doesn't have #[Computed], use public properties or methods.
-4. **Disable polling when hidden** - Use `wire:poll.visible`
-5. **Optimize queries** - Eager load relationships
-6. **Use wire:key** - Prevent re-rendering entire lists
-7. **Debounce input** - Use `wire:model.debounce.Xms`
-8. **Use pagination** - Don't load all records at once
-
+## Performance Tips (Livewire 4)
+ 
+1. **`wire:model` diferido por defecto** - En Livewire 4 `wire:model` no envía peticiones en cada tecla salvo que uses `wire:model.live` o `wire:model.blur`.
+2. **Uso de `#[Computed]`** - Utiliza el atributo nativo `#[Computed]` para memorizar consultas y cálculos pesados.
+3. **Lazy load components** - Usa componentes perezosos `#[Lazy]` o carga diferida para operaciones pesadas.
+4. **Desactivar polling cuando no es visible** - Usa `wire:poll.visible`.
+5. **Optimizar queries** - Eager loading con `with()` para prevenir N+1.
+6. **Uso de `wire:key`** - Obligatorio en bucles y elementos dinámicos para el morphing del DOM.
+7. **Debounce en búsquedas** - Usa `wire:model.live.debounce.300ms="search"`.
+8. **Paginación** - Pagina siempre las colecciones de datos financieros.
+ 
 ```php
+use Livewire\Attributes\Computed;
+
 class PostList extends Component
 {
-    // Livewire 2 approach for "computed" data
-    public function getPostsProperty()
+    #[Computed]
+    public function posts()
     {
         return Post::with('user')->paginate(10);
     }
@@ -503,8 +505,10 @@ class PostList extends Component
 ```
 
 ```blade
-{{-- Accessing "calculated/computed" property in Livewire 2 --}}
+{{-- Accediendo a propiedad computada en Livewire 4 --}}
 @foreach($this->posts as $post)
-    <!-- content -->
+    <div wire:key="post-{{ $post->id }}">
+        <!-- content -->
+    </div>
 @endforeach
 ```

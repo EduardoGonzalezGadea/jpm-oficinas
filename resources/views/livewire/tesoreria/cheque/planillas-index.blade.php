@@ -7,7 +7,7 @@
         </h4>
         <div class="form-inline">
           <label for="añoSeleccionado" class="mr-2">Año:</label>
-          <select wire:model.live="añoSeleccionado" class="form-control form-control-sm">
+          <select wire:model="añoSeleccionado" class="form-control form-control-sm">
             @foreach($this->getAñosDisponibles() as $año)
             <option value="{{ $año }}">{{ $año }}</option>
             @endforeach

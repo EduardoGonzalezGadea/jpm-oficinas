@@ -47,7 +47,7 @@ class LbDetalle extends Component
     public function create()
     {
         $this->resetInput();
-        $this->dispatch('show-modal', ['id' => 'modal']);
+        $this->dispatch('show-modal', id: 'modal');
     }
 
     public function seleccionarTodasAdicionales(bool $valor): void
@@ -184,7 +184,7 @@ class LbDetalle extends Component
         $this->nombre = $item->nombre;
         $this->concepto_id = $item->concepto_id;
 
-        $this->dispatch('show-modal', ['id' => 'modal']);
+        $this->dispatch('show-modal', id: 'modal');
     }
 
     public function update()

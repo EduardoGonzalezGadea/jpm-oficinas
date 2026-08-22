@@ -5,7 +5,7 @@
       <div class="col-12">
         <div class="form-group">
           <label for="cuenta_bancaria_id">Cuenta Bancaria</label>
-          <select wire:model.live="cuenta_bancaria_id" class="form-control @error('cuenta_bancaria_id') is-invalid @enderror">
+          <select wire:model="cuenta_bancaria_id" class="form-control @error('cuenta_bancaria_id') is-invalid @enderror">
             <option value="">Seleccionar cuenta...</option>
             @foreach($cuentas as $cuenta)
               <option value="{{ $cuenta->id }}">{{ $cuenta->banco->nombre }} - {{ $cuenta->numero_cuenta }}</option>

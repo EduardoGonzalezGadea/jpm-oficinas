@@ -48,6 +48,7 @@ class Index extends Component
     {
         $this->resetInput();
         $this->showModal = true;
+        $this->dispatch('open-modal', id: 'modalRegistrarEntrega');
     }
 
     public function save()
@@ -87,12 +88,14 @@ class Index extends Component
         $this->dispatch('swal', title: 'Éxito', text: 'Entrega de libreta registrada correctamente.', type: 'success');
 
         $this->showModal = false;
+        $this->dispatch('close-modal', id: 'modalRegistrarEntrega');
     }
 
     public function confirmAnular($id)
     {
         $this->entregaIdToAnular = $id;
         $this->showAnularModal = true;
+        $this->dispatch('open-modal', id: 'modalAnularEntrega');
     }
 
     public function anular()
@@ -109,6 +112,7 @@ class Index extends Component
 
         $this->dispatch('swal:success', text: 'Entrega anulada correctamente.');
         $this->showAnularModal = false;
+        $this->dispatch('close-modal', id: 'modalAnularEntrega');
         $this->entregaIdToAnular = null;
     }
 
@@ -116,11 +120,13 @@ class Index extends Component
     {
         $this->showModal = false;
         $this->resetInput();
+        $this->dispatch('close-modal', id: 'modalRegistrarEntrega');
     }
 
     public function closeAnularModal()
     {
         $this->showAnularModal = false;
+        $this->dispatch('close-modal', id: 'modalAnularEntrega');
         $this->entregaIdToAnular = null;
     }
 

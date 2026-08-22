@@ -31,8 +31,6 @@ class Create extends Component
     public $mediosPago;
     public $showDuplicateAlert = false;
 
-    protected $listeners = ['showCreateModal', 'confirmStore'];
-
     protected $rules = [
         'recibo_serie' => 'required|string|max:255',
         'recibo_numero' => 'required|string|max:255',
@@ -54,6 +52,7 @@ class Create extends Component
         $this->recibo_fecha = date('Y-m-d');
     }
 
+    #[On('showCreateModal')]
     public function showCreateModal()
     {
         $this->resetInput();
@@ -104,6 +103,7 @@ class Create extends Component
         $this->confirmStore();
     }
 
+    #[On('confirmStore')]
     public function confirmStore()
     {
         Prenda::create([

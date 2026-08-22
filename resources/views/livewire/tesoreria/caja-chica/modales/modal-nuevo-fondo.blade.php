@@ -1,7 +1,7 @@
 <div>
   @if ($mostrarModal)
-  <div class="modal fade show d-block" id="modalNuevoFondo" tabindex="-1" role="dialog"
-    style="background-color: rgba(0,0,0,0.5);" aria-modal="true">
+  <div wire:ignore.self class="modal fade" id="modalNuevoFondo" tabindex="-1" role="dialog"
+    aria-modal="true">
     <div class="modal-dialog" role="document">
       <div class="modal-content">
         <form wire:submit="guardar">
@@ -19,12 +19,6 @@
             @if (session()->has('error'))
             <div class="alert alert-danger alert-dismissible fade show" role="alert">
               {{ session('error') }}<button type="button" class="close" data-dismiss="alert"
-                aria-label="Close"><span aria-hidden="true">&times;</span></button>
-            </div>
-            @endif
-            @if (session()->has('message'))
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-              {{ session('message') }}<button type="button" class="close" data-dismiss="alert"
                 aria-label="Close"><span aria-hidden="true">&times;</span></button>
             </div>
             @endif
@@ -80,4 +74,14 @@
   </div>
   @endif
 
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      Livewire.on('mostrarModalNuevoFondo', () => {
+        $('#modalNuevoFondo').modal('show');
+      });
+      Livewire.on('cerrarModalNuevoFondo', () => {
+        $('#modalNuevoFondo').modal('hide');
+      });
+    });
+  </script>
 </div>

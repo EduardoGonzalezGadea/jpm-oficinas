@@ -299,7 +299,7 @@
           <div class="row">
             <div class="col-md-4 form-group">
               <label class="small font-weight-bold">Tipo Documento <span class="text-danger">*</span></label>
-              <select wire:model.live="nuevoCertificado.titular_tipo_documento" class="form-control form-control-sm @error('nuevoCertificado.titular_tipo_documento') is-invalid @enderror">
+              <select wire:model="nuevoCertificado.titular_tipo_documento" class="form-control form-control-sm @error('nuevoCertificado.titular_tipo_documento') is-invalid @enderror">
                 <option value="Cédula">Cédula</option>
                 <option value="Cédula Extranjera">Cédula Extranjera</option>
                 <option value="Pasaporte">Pasaporte</option>

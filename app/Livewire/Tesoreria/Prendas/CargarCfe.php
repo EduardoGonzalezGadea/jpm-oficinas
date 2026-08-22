@@ -384,7 +384,7 @@ class CargarCfe extends Component
             $this->archivo = null;
 
             // Redirigir al índice de prendas con indicación de abrir modal de edición
-            session()->flash('message', 'Prenda cargada exitosamente desde CFE.');
+            $this->dispatch('alert', type: 'success', message: 'Prenda cargada exitosamente desde CFE.');
             session()->flash('edit_prenda_id', $prenda->id);
             return redirect()->route('tesoreria.prendas.index');
         } catch (\Exception $e) {

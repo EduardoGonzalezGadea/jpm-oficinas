@@ -17,9 +17,9 @@ use Livewire\Component;
 class Index extends Component
 {
     public $fechaSeleccionada;
-    public $cajaTrabajo = null;
+    public ?CajaApertura $cajaTrabajo = null;
     public $tab = 'mi-caja'; // 'mi-caja' | 'cajas' | 'movimientos'
-    public $cajaSeleccionada = null;
+    public ?CajaApertura $cajaSeleccionada = null;
     public $movimientosCaja = [];
 
     protected LibroDiarioService $service;
@@ -52,6 +52,20 @@ class Index extends Component
     public function irAHoy()
     {
         $this->fechaSeleccionada = today()->format('Y-m-d');
+        $this->cargarCajaTrabajo();
+    }
+
+    public function diaAnterior()
+    {
+        $this->fechaSeleccionada = \Carbon\Carbon::parse($this->fechaSeleccionada)->subDay()->format('Y-m-d');
+        $this->cajaTrabajo = null;
+        $this->cargarCajaTrabajo();
+    }
+
+    public function diaSiguiente()
+    {
+        $this->fechaSeleccionada = \Carbon\Carbon::parse($this->fechaSeleccionada)->addDay()->format('Y-m-d');
+        $this->cajaTrabajo = null;
         $this->cargarCajaTrabajo();
     }
 

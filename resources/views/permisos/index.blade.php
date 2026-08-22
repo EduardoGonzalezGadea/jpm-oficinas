@@ -21,8 +21,8 @@
                         <a href="{{ route('permissions.create') }}" class="btn btn-primary">
                             <i class="fas fa-plus"></i> Crear Permiso
                         </a>
-                        <!-- <button type="button" class="btn btn-info" data-bs-toggle="modal"
-                                data-bs-target="#bulkCreateModal">
+                        <!-- <button type="button" class="btn btn-info" data-toggle="modal"
+                                data-target="#bulkCreateModal">
                                 <i class="fas fa-layer-group"></i> Crear en Lote
                             </button> -->
                     </div>
@@ -32,14 +32,14 @@
                     @if (session('success'))
                     <div class="alert alert-success alert-dismissible fade show" role="alert">
                         {{ session('success') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        <button type="button" class="btn-close" data-dismiss="alert"></button>
                     </div>
                     @endif
 
                     @if (session('error'))
                     <div class="alert alert-danger alert-dismissible fade show" role="alert">
                         {{ session('error') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        <button type="button" class="btn-close" data-dismiss="alert"></button>
                     </div>
                     @endif
 
@@ -147,13 +147,13 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Confirmar eliminación</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close" data-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 ¿Está seguro de que desea eliminar este permiso?
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
                 <form id="deleteForm" method="POST" style="display: inline;">
                     @csrf
                     @method('DELETE')
@@ -170,7 +170,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Crear Permisos en Lote</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close" data-dismiss="modal"></button>
             </div>
             <form method="POST" action="{{ route('permissions.bulk.create') }}">
                 @csrf
@@ -210,7 +210,7 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
                     <button type="submit" class="btn btn-primary">Crear Permisos</button>
                 </div>
             </form>

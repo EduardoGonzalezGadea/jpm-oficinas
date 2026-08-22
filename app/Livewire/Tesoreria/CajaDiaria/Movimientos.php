@@ -10,10 +10,12 @@ use App\Models\Tesoreria\LbTipo;
 use App\Models\Tesoreria\MedioDePago;
 use App\Services\Tesoreria\LibroDiarioService;
 use Illuminate\Support\Facades\DB;
+use App\Livewire\Concerns\NormalizaDocumentoReferencia;
 use Livewire\Component;
 
 class Movimientos extends Component
 {
+    use NormalizaDocumentoReferencia;
     public $caja_actual = null;
 
     // Filtros del listado
@@ -140,16 +142,6 @@ class Movimientos extends Component
         }
     }
 
-    public function updatedIdentidad($value)
-    {
-        $this->identidad = mb_strtoupper($value);
-    }
-
-    public function updatedDenominacion($value)
-    {
-        $this->denominacion = mb_strtoupper($value);
-    }
-
     public function registrarMovimiento()
     {
         $this->caja_actual = $this->cajaOperable();
@@ -161,6 +153,7 @@ class Movimientos extends Component
         $this->identidad   = mb_strtoupper($this->identidad ?? '');
         $this->denominacion = mb_strtoupper($this->denominacion ?? '');
         $this->descripcion  = mb_strtoupper($this->descripcion ?? '');
+        $this->normalizarDocumentoReferencia();
 
         $this->validate([
             'tipo_id'     => 'required|exists:tes_lb_tipos,id',

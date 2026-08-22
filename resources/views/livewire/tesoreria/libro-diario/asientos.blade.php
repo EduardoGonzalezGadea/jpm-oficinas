@@ -45,7 +45,7 @@
             </div>
             <div class="col-md-2">
               <label class="small mb-0">Tipo</label>
-              <select class="form-control form-control-sm" wire:model.live="filtro_tipo_id">
+              <select class="form-control form-control-sm" wire:model="filtro_tipo_id">
                 <option value="">Todos</option>
                 @foreach ($tipos as $tipo)
                   <option value="{{ $tipo->id }}">{{ $tipo->nombre }}</option>
@@ -54,7 +54,7 @@
             </div>
             <div class="col-md-2">
               <label class="small mb-0">Concepto</label>
-              <select class="form-control form-control-sm" wire:model.live="filtro_concepto_id">
+              <select class="form-control form-control-sm" wire:model="filtro_concepto_id">
                 <option value="">Todos</option>
                 @foreach ($conceptos as $concepto)
                   <option value="{{ $concepto->id }}">{{ $concepto->nombre }}</option>
@@ -492,16 +492,30 @@
     <script>
       const getEventDataAsientos = (event) => Array.isArray(event.detail) ? event.detail[0] : event.detail;
 
+      document.addEventListener('livewire:init', function() {
+        Livewire.on('show-modal', (data) => {
+          const d = Array.isArray(data) ? data[0] : data;
+          const id = typeof d === 'string' ? d : (d.id || d);
+          if (id) $('#' + id).modal('show');
+        });
+
+        Livewire.on('close-modal', (data) => {
+          const d = Array.isArray(data) ? data[0] : data;
+          const id = typeof d === 'string' ? d : (d.id || d);
+          if (id) $('#' + id).modal('hide');
+        });
+      });
+
       window.addEventListener('show-modal', event => {
         const data = getEventDataAsientos(event);
         const id = typeof data === 'string' ? data : (data.id || data);
-        $('#' + id).modal('show');
+        if (id) $('#' + id).modal('show');
       });
 
       window.addEventListener('close-modal', event => {
         const data = getEventDataAsientos(event);
         const id = typeof data === 'string' ? data : (data.id || data);
-        $('#' + id).modal('hide');
+        if (id) $('#' + id).modal('hide');
       });
 
       window.addEventListener('swal:confirm', event => {

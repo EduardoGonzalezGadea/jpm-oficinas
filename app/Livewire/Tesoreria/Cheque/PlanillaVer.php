@@ -18,12 +18,9 @@ class PlanillaVer extends Component
     {
         // Verificar que la planilla no esté anulada
         if ($this->planilla->estado === 'anulada') {
-            $this->dispatch('swal', title: 'Planilla ya anulada', type: 'warning');
+            $this->dispatch('swal:alert', type: 'warning', title: 'Planilla ya anulada', text: 'Esta planilla ya se encuentra anulada.');
             return;
         }
-
-        // Mostrar loader
-        $this->dispatch('show-global-spinner');
 
         // Mostrar modal personalizado para ingresar motivo
         $this->dispatch('swal:confirm-with-input',
@@ -42,9 +39,6 @@ class PlanillaVer extends Component
                 'minlength' => 10
             ]
         );
-
-        // Ocultar loader cuando se cancele
-        $this->dispatch('hide-global-spinner');
     }
 
     public function confirmarAnularPlanilla($motivo = null)
@@ -55,7 +49,7 @@ class PlanillaVer extends Component
         try {
             // Validar que se proporcione un motivo
             if (!$motivo || trim($motivo) === '') {
-                $this->dispatch('swal', title: 'Motivo requerido', text: 'Debe proporcionar un motivo para anular la planilla.', type: 'error');
+                $this->dispatch('swal:alert', type: 'error', title: 'Motivo requerido', text: 'Debe proporcionar un motivo para anular la planilla.');
                 $this->dispatch('hide-global-spinner');
                 return;
             }
@@ -98,7 +92,7 @@ class PlanillaVer extends Component
             $this->planilla = \App\Models\Tesoreria\PlanillaCheque::with('cheques.cuentaBancaria.banco')->findOrFail($this->planilla->id);
 
         } catch (\Exception $e) {
-            $this->dispatch('swal', title: 'Error', text: 'Ocurrió un error al anular la planilla.', type: 'error');
+            $this->dispatch('swal:alert', type: 'error', title: 'Error', text: 'Ocurrió un error al anular la planilla.');
         } finally {
             // Ocultar loader
             $this->dispatch('hide-global-spinner');

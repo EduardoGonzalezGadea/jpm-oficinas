@@ -22,22 +22,24 @@ La aplicación está pensada para cubrir la operativa diaria de una oficina admi
 
 | Componente | Versión |
 |---|---|
-| Laravel | 10.x |
-| PHP | ^8.1 |
-| Livewire | 3.8 |
-| Laravel Sanctum | 3.3 |
-| JWT Auth | 2.8 (`php-open-source-saver/jwt-auth`) |
-| Spatie Permission | 5.11 |
-| Spatie Activitylog | 4.12 |
-| Spatie Backup | 8.8 |
-| PhpSpreadsheet | 5.8 |
-| Smalot PDF Parser | 2.12 |
-| Google2FA | 2.3 (`pragmarx/google2fa-laravel`) |
-| Intervention Image | 3.11 |
-| Bacon QR Code | 3.1 |
-| Doctrine DBAL | 3.10 |
-| Ziggy | 2.6 (`tightenco/ziggy`) |
-| Laravel Mix | 6 |
+| Laravel | 12.x (`^12.0`) |
+| PHP | ^8.2 |
+| Livewire | 4.x (`^4.0`) |
+| Frontend UI | Bootstrap 4.6 (Bootswatch) |
+| Laravel Sanctum | ^4.0 |
+| JWT Auth | ^2.7 (`php-open-source-saver/jwt-auth`) |
+| Spatie Permission | ^6.3 |
+| Spatie Activitylog | ^4.8 |
+| Spatie Backup | ^9.0 |
+| PhpSpreadsheet | ^2.0 |
+| Smalot PDF Parser | ^2.0 |
+| Google2FA | ^2.3 (`pragmarx/google2fa-laravel`) |
+| Intervention Image | ^3.11 |
+| Bacon QR Code | ^3.0 |
+| Doctrine DBAL | ^4.0 |
+| Ziggy | ^2.5 (`tightenco/ziggy`) |
+| Laravel Mix | 6 (Webpack) |
+| PHPUnit | ^11.0 |
 | JavaScript | Axios, Lodash y Flatpickr |
 | Base de datos | MySQL por defecto; soporte para MariaDB, PostgreSQL y SQLite |
 
@@ -215,10 +217,10 @@ Nota: la cobertura automatizada aún es baja pero está en crecimiento.
 
 ### Requisitos
 
-- PHP 8.1 o superior
+- PHP 8.2 o superior
 - Composer
 - Node.js y npm
-- Base de datos compatible con Laravel 10 (MySQL o MariaDB; también hay configuración para PostgreSQL y SQLite)
+- Base de datos compatible con Laravel 12 (MySQL o MariaDB; también hay configuración para PostgreSQL y SQLite)
 
 ### Instalación
 

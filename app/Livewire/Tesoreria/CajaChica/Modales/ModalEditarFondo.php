@@ -44,6 +44,7 @@ class ModalEditarFondo extends Component
             ];
 
             $this->showModal = true;
+            $this->dispatch('modal-editar-fondo-opened');
         } catch (\Exception $e) {
             $this->dispatch('swal', type: 'error', text: 'Error al cargar los datos del fondo: ' . $e->getMessage());
         }
@@ -64,7 +65,7 @@ class ModalEditarFondo extends Component
 
             if (!$resultado) {
                 $this->cerrarModal();
-                session()->flash('message', 'No se realizaron cambios en el monto del fondo.');
+                $this->dispatch('alert', type: 'success', message: 'No se realizaron cambios en el monto del fondo.');
                 return redirect()->route('tesoreria.caja-chica.index');
             }
 
@@ -76,7 +77,7 @@ class ModalEditarFondo extends Component
                 number_format($resultado['montoNuevo'], 2, ',', '.')
             );
 
-            session()->flash('message', $mensaje);
+            $this->dispatch('alert', type: 'success', message: $mensaje);
             return redirect()->route('tesoreria.caja-chica.index');
 
         } catch (\Exception $e) {
@@ -88,6 +89,7 @@ class ModalEditarFondo extends Component
     public function cerrarModal()
     {
         $this->showModal = false;
+        $this->dispatch('modal-editar-fondo-closed');
         $this->reset('editandoFondo');
         $this->resetErrorBag();
     }

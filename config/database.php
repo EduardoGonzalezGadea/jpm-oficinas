@@ -62,7 +62,7 @@ return [
                 PDO::ATTR_CASE => PDO::CASE_NATURAL,
             ]),
             'dump' => [
-                'mysql_binary_path' => env('DB_DUMP_BINARY_PATH', '/usr/bin'),
+                'dump_binary_path' => env('DB_DUMP_BINARY_PATH', '/usr/bin'),
             ],
         ],
 

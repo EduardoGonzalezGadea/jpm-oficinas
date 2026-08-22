@@ -2,16 +2,12 @@
 
 namespace App\Livewire\Tesoreria\Prendas;
 
-use Livewire\Component;
 use App\Models\Tesoreria\MedioDePago;
 use App\Models\Tesoreria\Prenda;
 use App\Traits\WithOrdenCobroValidation;
+use Livewire\Attributes\On;
+use Livewire\Component;
 
-/**
- * Componente Livewire: Editar Prenda
- *
- * Maneja la edición de prendas existentes.
- */
 class Edit extends Component
 {
     use WithOrdenCobroValidation;
@@ -54,6 +50,7 @@ class Edit extends Component
         $this->mediosPago = MedioDePago::where('activo', true)->get();
     }
 
+    #[On('showEditModal')]
     public function showEditModal($id)
     {
         $prenda = Prenda::find($id);
@@ -132,6 +129,7 @@ class Edit extends Component
         $this->confirmUpdate();
     }
 
+    #[On('confirmUpdate')]
     public function confirmUpdate()
     {
         if (!$this->prenda_id) {

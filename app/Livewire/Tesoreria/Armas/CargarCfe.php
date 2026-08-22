@@ -426,7 +426,7 @@ class CargarCfe extends Component
             $this->datosExtraidos = null;
             $this->archivo = null;
 
-            session()->flash('message', 'Registro de ' . ucfirst($tipoMódulo) . ' cargado exitosamente.');
+            $this->dispatch('alert', type: 'success', message: 'Registro de ' . ucfirst($tipoMódulo) . ' cargado exitosamente.');
             session()->flash('edit_id', $nuevoRegistro->id);
 
             // Redirigir a la pestaña correspondiente

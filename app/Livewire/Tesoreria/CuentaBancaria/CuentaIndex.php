@@ -15,6 +15,8 @@ class CuentaIndex extends Component
 
     public string $search = '';
 
+    protected $listeners = ['destroy' => 'destroy', 'resetInput' => 'resetInput', 'refreshComponent' => '$refresh'];
+
     // Formulario
     public ?int $cuentaId     = null;
     public ?int $banco_id     = null;

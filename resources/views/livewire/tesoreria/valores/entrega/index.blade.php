@@ -28,7 +28,7 @@
           <input type="date" wire:model.live="fecha_hasta" class="form-control" placeholder="Fecha hasta">
         </div>
         <div>
-          <select wire:model.live="servicio_filtro" class="form-control">
+          <select wire:model="servicio_filtro" class="form-control">
             <option value="">Todos los servicios</option>
             @foreach($servicios as $servicio)
               <option value="{{ $servicio->id }}">{{ $servicio->nombre }}</option>
@@ -84,7 +84,7 @@
 
   <!-- Modal Registrar Entrega -->
   @if($showModal)
-  <div class="modal fade show" id="modalRegistrarEntrega" style="display: block;" tabindex="-1" role="dialog">
+  <div wire:ignore.self class="modal fade" id="modalRegistrarEntrega" tabindex="-1" role="dialog">
     <div class="modal-dialog modal-lg modal-dialog-scrollable" role="document">
       <div class="modal-content">
         <div class="modal-header">
@@ -96,7 +96,7 @@
         <div class="modal-body">
           <div class="form-group">
             <label for="libreta_valor_id">Libreta a Entregar</label>
-            <select wire:model.live="libreta_valor_id" id="libreta_valor_id" class="form-control @error('libreta_valor_id') is-invalid @enderror" autofocus>
+            <select wire:model="libreta_valor_id" id="libreta_valor_id" class="form-control @error('libreta_valor_id') is-invalid @enderror" autofocus>
               <option value="">Seleccione una libreta...</option>
               @foreach($libretasDisponibles as $libreta)
                 <option value="{{ $libreta->id }}">
@@ -146,12 +146,11 @@
       </div>
     </div>
   </div>
-  <div class="modal-backdrop fade show"></div>
   @endif
 
   <!-- Modal Anular Entrega -->
   @if($showAnularModal)
-  <div class="modal fade show" style="display: block;" tabindex="-1" role="dialog">
+  <div wire:ignore.self class="modal fade" id="modalAnularEntrega" tabindex="-1" role="dialog">
     <div class="modal-dialog modal-dialog-scrollable" role="document">
       <div class="modal-content">
         <div class="modal-header">
@@ -170,13 +169,22 @@
       </div>
     </div>
   </div>
-  <div class="modal-backdrop fade show"></div>
   @endif
 </div>
 
   @push('scripts')
   <script>
     document.addEventListener('livewire:init', function () {
+      Livewire.on('open-modal', (params) => {
+        const id = Array.isArray(params) ? params[0]?.id : params?.id;
+        if (id) $('#' + id).modal('show');
+      });
+
+      Livewire.on('close-modal', (params) => {
+        const id = Array.isArray(params) ? params[0]?.id : params?.id;
+        if (id) $('#' + id).modal('hide');
+      });
+
       const modalId = 'modalRegistrarEntrega';
       const formElements = [
         'libreta_valor_id',

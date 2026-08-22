@@ -42,7 +42,7 @@
                 <div class="input-group-prepend">
                   <span class="input-group-text">Mes y Año</span>
                 </div>
-                <select id="mesSelector" class="form-control form-control-sm" wire:model.live="mes">
+                <select id="mesSelector" class="form-control form-control-sm" wire:model="mes">
                   <option value="1">Enero</option>
                   <option value="2">Febrero</option>
                   <option value="3">Marzo</option>
@@ -423,6 +423,24 @@
 
   @push('scripts')
   <script>
+    (function() {
+      var _pendingScrollRestore = null;
+
+      Livewire.hook('commit', function(ref) {
+        var component = ref.component;
+        var succeed = ref.succeed;
+        if (component && component.name && component.name.indexOf('planillas-manager') !== -1) {
+          _pendingScrollRestore = window.scrollY;
+          succeed(function() {
+            if (_pendingScrollRestore !== null) {
+              window.scrollTo(0, _pendingScrollRestore);
+              _pendingScrollRestore = null;
+            }
+          });
+        }
+      });
+    })();
+
     window.addEventListener('revertCheckbox', event => {
       const d = window.LiveEvent(event);
       const checkbox = document.getElementById('confirmado-' + d.id);

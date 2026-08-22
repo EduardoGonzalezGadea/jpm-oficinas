@@ -41,11 +41,17 @@ class BackupController extends Controller
     public function create(Request $request)
     {
         try {
-            // En Spatie Backup 9.x, ejecutamos el comando Artisan directamente
-            Artisan::call('backup:run', [
+            // En Spatie Backup 9.x, ejecutamos el comando Artisan directamente.
+            // El comando captura sus propias excepciones y devuelve un código de
+            // salida distinto de 0 cuando falla, por lo que hay que validarlo.
+            $exitCode = Artisan::call('backup:run', [
                 '--only-db' => true,
                 '--disable-notifications' => true,
             ]);
+
+            if ($exitCode !== 0) {
+                throw new \Exception('El comando de respaldo falló. Salida: ' . Artisan::output());
+            }
 
             $output = Artisan::output();
 
@@ -141,6 +147,7 @@ class BackupController extends Controller
 
             // Configuración de la base de datos
             $host = config('database.connections.mysql.host');
+            $port = config('database.connections.mysql.port');
             $database = config('database.connections.mysql.database');
             $username = config('database.connections.mysql.username');
             $password = config('database.connections.mysql.password');
@@ -148,7 +155,7 @@ class BackupController extends Controller
             $sqlFilePath = $tempPath . '/' . $sqlFile;
 
             // Get the path to the mysql executable from the config
-            $mysqlPath = config('database.connections.mysql.dump.mysql_binary_path');
+            $mysqlPath = config('database.connections.mysql.dump.dump_binary_path');
             if ($mysqlPath) {
                 $mysqlPath = rtrim($mysqlPath, '/\\') . DIRECTORY_SEPARATOR;
             } else {
@@ -159,13 +166,22 @@ class BackupController extends Controller
             $mysqlBinary = $mysqlPath . 'mysql';
 
             // Construir el comando usando argumentos separados para evitar inyección
-            $process = new Process([
+            $commandArgs = [
                 $mysqlBinary,
                 '-h', $host,
+            ];
+
+            if (!empty($port)) {
+                $commandArgs[] = '--port=' . $port;
+            }
+
+            $commandArgs = array_merge($commandArgs, [
                 '-u', $username,
                 sprintf('--password=%s', $password),
                 $database,
             ]);
+
+            $process = new Process($commandArgs);
 
             // Redirigir el contenido del archivo SQL como entrada estándar
             $process->setInput(file_get_contents($sqlFilePath));

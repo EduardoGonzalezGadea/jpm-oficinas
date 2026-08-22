@@ -49,8 +49,12 @@ class JWTVerify
     {
         if ($request->expectsJson() || $request->is('api/*')) {
             Auth::guard('web')->logout();
-            $request->session()->invalidate();
-            $request->session()->regenerateToken();
+            
+            // Solo invalidar sesión si está disponible
+            if ($request->hasSession()) {
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+            }
 
             return response()->json([
                 'error' => $message,

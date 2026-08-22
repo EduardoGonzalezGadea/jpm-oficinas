@@ -1,9 +1,5 @@
 <div>
   <style>
-    [x-cloak] {
-      display: none !important;
-    }
-
     .text-nowrap-custom {
       white-space: nowrap;
     }
@@ -77,15 +73,6 @@
           </div>
         </div>
         <div class="card-body pt-1 px-2">
-          @if (session()->has('message'))
-          <div class="alert alert-success alert-dismissible fade show" role="alert">
-            <i class="fas fa-check-circle mr-2"></i> {{ session('message') }}
-            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-              <span aria-hidden="true">&times;</span>
-            </button>
-          </div>
-          @endif
-
           <!-- Selector de Mes/Año y Búsqueda -->
           <div class="form-row mb-1">
             <div class="col-md-5">
@@ -93,7 +80,7 @@
                 <div class="input-group-prepend">
                   <span class="input-group-text">Mes/Año</span>
                 </div>
-                <select id="mesSelector" class="form-control" wire:model.live="mes">
+                <select id="mesSelector" class="form-control" wire:model="mes">
                   <option value="1">Enero</option>
                   <option value="2">Febrero</option>
                   <option value="3">Marzo</option>
@@ -295,10 +282,8 @@
 
   <!-- Modal Formulario -->
   @if($showModal)
-  <div class="modal fade show" style="display: block;" tabindex="-1" role="dialog" wire:ignore.self
-    x-cloak
+  <div wire:ignore.self class="modal fade" id="modalMultasCobradas" tabindex="-1" role="dialog" aria-modal="true"
     x-data="{
-    isClosing: false,
     mediosAgregados: [],
     nuevoMedio: '',
     nuevoMonto: '',
@@ -309,16 +294,8 @@
       this.$nextTick(() => {
         const el = document.getElementById('input-recibo');
         if (el) el.focus();
-        // Ensure calculation runs after everything is ready
         this.calculateTotalItems();
       });
-    },
-
-    closeModal() {
-      this.isClosing = true;
-      setTimeout(() => {
-        $wire.set('showModal', false);
-      }, 200);
     },
 
     parseNumber(val) {
@@ -339,7 +316,6 @@
     },
 
     calculateTotalItems() {
-      // Use querySelectorAll to find all current inputs in the DOM
       let inputs = document.querySelectorAll('.item-importe');
       this.totalItems = Array.from(inputs).reduce((sum, el) => {
         return sum + this.parseNumber(el.value);
@@ -426,7 +402,6 @@
           if (result.isConfirmed) {
             $wire.save(true);
           }
-          // deny (hacer cambios) o cancel: se mantiene el formulario para ajustar los importes
         });
       } else {
         $wire.save();
@@ -434,7 +409,6 @@
     }
   }">
     <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable modal-animate-in"
-      :class="{'modal-animate-out': isClosing}"
       role="document" style="max-width: 95%;">
       <div class="modal-content shadow-lg border-0"
         @click="calculateTotalItems()"
@@ -445,7 +419,7 @@
             <i class="fas {{ $editMode ? 'fa-edit text-primary' : 'fa-plus-circle text-success' }} mr-2"></i>
             {{ $editMode ? 'Editar Cobro' : 'Nuevo Cobro' }}
           </h6>
-          <button type="button" class="close text-muted outline-none" @click="closeModal()" aria-label="Cerrar">
+          <button type="button" class="close text-muted outline-none" wire:click="cerrarModal" aria-label="Cerrar">
             <span aria-hidden="true">&times;</span>
           </button>
         </div>
@@ -657,7 +631,7 @@
             <span class="text-uppercase font-weight-bold"><i class="fas fa-shield-alt mr-1"></i> Auditoría activa</span>
           </div>
           <div>
-            <button type="button" class="btn btn-light btn-sm px-4 mr-2 border font-weight-bold" @click="closeModal()">
+            <button type="button" class="btn btn-light btn-sm px-4 mr-2 border font-weight-bold" wire:click="cerrarModal">
               Cancelar
             </button>
             <button type="button" class="btn btn-primary btn-sm px-4 font-weight-bold shadow-sm" @click="confirmSave()" wire:loading.attr="disabled">
@@ -669,7 +643,6 @@
       </div>
     </div>
   </div>
-  <div class="modal-backdrop fade show backdrop-animate-in"></div>
   @endif
 
   <datalist id="sugerencias-detalle">
@@ -685,30 +658,9 @@
   </datalist>
 
   <!-- Modal Detalle Mejorado -->
-  @if($showDetailModal)
-  <div class="modal fade show" style="display: block;" tabindex="-1" role="dialog"
-    x-data="{
-      isClosing: false,
-      closeDetail() {
-        this.isClosing = true;
-        setTimeout(() => {
-          $wire.set('showDetailModal', false);
-        }, 200);
-      },
-      editFromDetail(id) {
-        const wire = $wire;
-        this.isClosing = true;
-        setTimeout(() => {
-          wire.set('showDetailModal', false);
-          setTimeout(() => {
-            wire.edit(id);
-          }, 300);
-        }, 250);
-      }
-    }">
-    <div class="modal-dialog modal-xl modal-dialog-scrollable modal-animate-in"
-      :class="{'modal-animate-out': isClosing}"
-      role="document">
+  @if($showDetailModal && $selectedRegistro)
+  <div wire:ignore.self class="modal fade" id="modalDetalleMultasCobradas" tabindex="-1" role="dialog" aria-modal="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable modal-animate-in" role="document">
       <div class="modal-content border-0 shadow" style="max-height: 90vh;">
         <!-- Cabecera Ultra-Compacta Horizontal -->
         <div class="modal-header bg-light border-bottom py-2 px-3 d-flex align-items-center justify-content-between">
@@ -726,13 +678,12 @@
               </div>
             </div>
           </div>
-          <button type="button" class="close text-muted" @click="closeDetail()" aria-label="Cerrar">
+          <button type="button" class="close text-muted" wire:click="cerrarModalDetalle" aria-label="Cerrar">
             <span aria-hidden="true">&times;</span>
           </button>
         </div>
 
         <div class="modal-body p-0" style="overflow-y: auto;">
-          @if($selectedRegistro)
           <!-- Sección de Contribuyente -->
           <div class="px-4 pb-3 border-bottom">
             <h6 class="text-uppercase text-muted font-weight-bold mb-3" style="font-size: 0.75rem; letter-spacing: 0.5px;">Datos del Contribuyente</h6>
@@ -787,8 +738,6 @@
             <div class="small text-dark font-italic">{{ $selectedRegistro->adenda }}</div>
           </div>
           @endif
-
-          @endif
         </div>
 
         <!-- Footer Minimalista -->
@@ -800,7 +749,7 @@
             <button class="btn btn-light border" onclick="window.print()">
               <i class="fas fa-print"></i> Imprimir
             </button>
-            <button class="btn btn-primary shadow-sm" @click="editFromDetail({{ $selectedRegistro->id ?? 0 }})">
+            <button class="btn btn-primary shadow-sm" wire:click="edit({{ $selectedRegistro->id }})">
               <i class="fas fa-edit mr-1"></i> Editar
             </button>
           </div>
@@ -808,23 +757,12 @@
       </div>
     </div>
   </div>
-  <div class="modal-backdrop fade show backdrop-animate-in"></div>
   @endif
 
   <!-- Modal Borrar -->
-  @if($showDeleteModal)
-  <div class="modal fade show" style="display: block;" tabindex="-1" role="dialog"
-    x-data="{
-      isClosing: false,
-      closeDelete() {
-        this.isClosing = true;
-        setTimeout(() => {
-          $wire.set('showDeleteModal', false);
-        }, 200);
-      }
-    }">
+  @if($showDeleteModal && $registroAEliminar)
+  <div wire:ignore.self class="modal fade" id="modalBorrarMultasCobradas" tabindex="-1" role="dialog" aria-modal="true">
     <div class="modal-dialog modal-dialog-scrollable modal-lg modal-animate-in"
-      :class="{'modal-animate-out': isClosing}"
       role="document" style="max-height: 90vh; display: flex; align-items: center;">
       <div class="modal-content shadow-lg border-0" style="max-height: 90vh; display: flex; flex-direction: column;">
         <div class="modal-header bg-danger text-white flex-shrink-0">
@@ -832,12 +770,11 @@
             <i class="fas fa-exclamation-triangle mr-2"></i>
             Confirmar Eliminación
           </h5>
-          <button type="button" class="close text-white" @click="closeDelete()">
+          <button type="button" class="close text-white" wire:click="cerrarModalEliminar">
             <span>&times;</span>
           </button>
         </div>
         <div class="modal-body" style="overflow-y: auto; max-height: calc(90vh - 130px);">
-          @if($registroAEliminar)
           <div class="alert alert-warning">
             <strong>¿Estás seguro de eliminar este registro?</strong>
             <p class="mb-0">Esta acción no se puede deshacer.</p>
@@ -873,10 +810,9 @@
               @endif
             </div>
           </div>
-          @endif
         </div>
         <div class="modal-footer flex-shrink-0">
-          <button type="button" class="btn btn-secondary" @click="closeDelete()">
+          <button type="button" class="btn btn-secondary" wire:click="cerrarModalEliminar">
             <i class="fas fa-times mr-1"></i> Cancelar
           </button>
           <button type="button" class="btn btn-danger" wire:click="delete">
@@ -886,28 +822,16 @@
       </div>
     </div>
   </div>
-  <div class="modal-backdrop fade show backdrop-animate-in"></div>
   @endif
 
   <!-- Modal Selección de Fechas para Imprimir -->
   @if($showPrintModal)
-  <div class="modal fade show" style="display: block;" tabindex="-1" role="dialog"
-    x-data="{
-      isClosing: false,
-      closePrint() {
-        this.isClosing = true;
-        setTimeout(() => {
-          $wire.set('showPrintModal', false);
-        }, 200);
-      }
-    }">
-    <div class="modal-dialog modal-md modal-animate-in"
-      :class="{'modal-animate-out': isClosing}"
-      role="document">
+  <div wire:ignore.self class="modal fade" id="modalPrintMultasCobradas" tabindex="-1" role="dialog" aria-modal="true">
+    <div class="modal-dialog modal-md modal-animate-in" role="document">
       <div class="modal-content shadow-lg border-0">
         <div class="modal-header bg-info text-white py-2">
           <h5 class="modal-title font-weight-bold mb-0 text-white"><i class="fas fa-calendar-alt mr-2"></i> Seleccionar Rango de Fechas</h5>
-          <button type="button" class="close text-white" @click="closePrint()">
+          <button type="button" class="close text-white" wire:click="cerrarModalPrint">
             <span aria-hidden="true">&times;</span>
           </button>
         </div>
@@ -975,14 +899,13 @@
           </div>
         </div>
         <div class="modal-footer py-2 bg-light border-top">
-          <button type="button" class="btn btn-secondary btn-sm px-4 shadow-sm" @click="closePrint()">
+          <button type="button" class="btn btn-secondary btn-sm px-4 shadow-sm" wire:click="cerrarModalPrint">
             <i class="fas fa-times mr-1"></i> Cerrar
           </button>
         </div>
       </div>
     </div>
   </div>
-  <div class="modal-backdrop fade show backdrop-animate-in"></div>
   @endif
 
 
@@ -1010,6 +933,16 @@
     });
 
     document.addEventListener('livewire:init', function() {
+      Livewire.on('open-modal', (params) => {
+        const id = Array.isArray(params) ? params[0]?.id : params?.id;
+        if (id) $('#' + id).modal('show');
+      });
+
+      Livewire.on('close-modal', (params) => {
+        const id = Array.isArray(params) ? params[0]?.id : params?.id;
+        if (id) $('#' + id).modal('hide');
+      });
+
       initTooltips();
     });
 

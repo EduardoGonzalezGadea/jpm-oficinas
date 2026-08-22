@@ -41,8 +41,12 @@ class DbDumperServiceProvider extends ServiceProvider
                 return;
             }
 
-            // Leer primero desde config, luego desde env
-            $path = config('backup.db_dump_binary_path') ?? env('DB_DUMP_BINARY_PATH', '');
+            // Leer primero desde la configuración de la conexión (clave oficial de Spatie 9.x),
+            // luego desde claves de respaldo y finalmente desde env.
+            $path = config('database.connections.mysql.dump.dump_binary_path')
+                ?? config('database.connections.mysql.dump.mysql_binary_path')
+                ?? config('backup.db_dump_binary_path')
+                ?? env('DB_DUMP_BINARY_PATH', '');
 
             if (empty($path)) {
                 $possible = [

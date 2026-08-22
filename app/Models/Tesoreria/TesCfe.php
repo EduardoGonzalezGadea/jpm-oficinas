@@ -17,7 +17,41 @@ class TesCfe extends Model
 
     protected $table = 'tes_cfes';
 
-    protected $guarded = ['id'];
+    protected $fillable = [
+        'emisor_nombre',
+        'emisor_direccion',
+        'emisor_localidad',
+        'emisor_telefono',
+        'emisor_correo',
+        'emisor_ruc',
+        'documento_tipo',
+        'documento_serie',
+        'documento_numero',
+        'forma_pago',
+        'vencimiento',
+        'comprobante_tipo',
+        'receptor_documento_ruc',
+        'receptor_nombre_denominacion',
+        'receptor_domicilio_fiscal',
+        'periodo',
+        'nro_compra',
+        'fecha',
+        'moneda',
+        'monto_no_facturable',
+        'monto_total',
+        'total_a_pagar',
+        'referencias',
+        'adenda',
+        'archivo_pdf_path',
+        'tes_caja_concepto_id',
+        'siif_distribucion_tipo_id',
+        'siif_distribucion_dependencia_id',
+        'institucion_id',
+        'planilla_comun_id',
+        'created_by',
+        'updated_by',
+        'deleted_by',
+    ];
 
     protected $casts = [
         'vencimiento' => 'date',

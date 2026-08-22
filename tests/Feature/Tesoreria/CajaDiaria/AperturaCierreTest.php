@@ -232,4 +232,30 @@ class AperturaCierreTest extends TestCase
                 ->count()
         );
     }
+
+    /** @test */
+    public function al_cambiar_cantidad_recalcula_total_de_fila_y_saldo_inicial(): void
+    {
+        $c = $this->setUpComponenteConDesgloseInicial();
+
+        $c->set('modo_calculo', 'cantidad')
+            ->set('desglose.' . $this->bil->id . '.cantidad', 3)
+            ->set('desglose.' . $this->moneda->id . '.cantidad', 5)
+            ->assertSet('desglose.' . $this->bil->id . '.total', 3000)
+            ->assertSet('desglose.' . $this->moneda->id . '.total', 5)
+            ->assertSet('saldo_inicial', 3005);
+    }
+
+    /** @test */
+    public function al_cambiar_modo_calculo_sincroniza_valores(): void
+    {
+        $c = $this->setUpComponenteConDesgloseInicial();
+
+        $c->set('modo_calculo', 'cantidad')
+            ->set('desglose.' . $this->bil->id . '.cantidad', 4)
+            ->assertSet('saldo_inicial', 4000)
+            ->set('modo_calculo', 'total')
+            ->assertSet('desglose.' . $this->bil->id . '.total', 4000)
+            ->assertSet('desglose.' . $this->bil->id . '.cantidad', 4);
+    }
 }

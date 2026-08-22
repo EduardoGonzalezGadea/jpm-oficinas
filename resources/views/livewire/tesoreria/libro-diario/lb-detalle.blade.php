@@ -1,4 +1,4 @@
-﻿<div>
+<div>
   <div class="row">
     <div class="col-md-12">
       <div class="card">
@@ -25,7 +25,7 @@
               </div>
             </div>
             <div class="col-md-4">
-              <select class="form-control" wire:model.live="filtros.concepto_id" id="filtros_concepto_id">
+              <select class="form-control" wire:model="filtros.concepto_id" id="filtros_concepto_id">
                 <option value="">Todos los conceptos</option>
                 @foreach ($conceptos as $concepto)
                   <option value="{{ $concepto->id }}" {{ (old('filtros.concepto_id') ?? $filtros['concepto_id'] ?? null) == $concepto->id ? 'selected' : '' }}>{{ $concepto->nombre }}</option>

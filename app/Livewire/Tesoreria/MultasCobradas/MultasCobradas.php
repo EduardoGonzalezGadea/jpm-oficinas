@@ -167,6 +167,7 @@ class MultasCobradas extends Component
         $this->fechaDesde  = date('Y-m-d');
         $this->fechaHasta  = date('Y-m-d');
         $this->showPrintModal = true;
+        $this->dispatch('open-modal', id: 'modalPrintMultasCobradas');
     }
 
     public function generarReporte()
@@ -176,6 +177,7 @@ class MultasCobradas extends Component
             'fechaDesde' => $this->fechaDesde, 'fechaHasta' => $this->fechaHasta,
         ]));
         $this->showPrintModal = false;
+        $this->dispatch('close-modal', id: 'modalPrintMultasCobradas');
     }
 
     public function generarReporteResumen()
@@ -185,6 +187,7 @@ class MultasCobradas extends Component
             'fechaDesde' => $this->fechaDesde, 'fechaHasta' => $this->fechaHasta,
         ]));
         $this->showPrintModal = false;
+        $this->dispatch('close-modal', id: 'modalPrintMultasCobradas');
     }
 
     public function generarPdfDetallado()
@@ -194,6 +197,7 @@ class MultasCobradas extends Component
             'fechaDesde' => $this->fechaDesde, 'fechaHasta' => $this->fechaHasta, 'pdf' => 1,
         ]));
         $this->showPrintModal = false;
+        $this->dispatch('close-modal', id: 'modalPrintMultasCobradas');
     }
 
     public function generarPdfResumen()
@@ -203,6 +207,7 @@ class MultasCobradas extends Component
             'fechaDesde' => $this->fechaDesde, 'fechaHasta' => $this->fechaHasta, 'pdf' => 1,
         ]));
         $this->showPrintModal = false;
+        $this->dispatch('close-modal', id: 'modalPrintMultasCobradas');
     }
 
     // =========================================================================
@@ -246,11 +251,13 @@ class MultasCobradas extends Component
         $this->resetForm();
         $this->editMode  = false;
         $this->showModal = true;
+        $this->dispatch('open-modal', id: 'modalMultasCobradas');
     }
 
     public function edit($id)
     {
         $this->showDetailModal   = false;
+        $this->dispatch('close-modal', id: 'modalDetalleMultasCobradas');
         $this->selectedRegistro  = null;
 
         $registro = TesMultasCobradas::with('items')->findOrFail($id);
@@ -283,6 +290,7 @@ class MultasCobradas extends Component
 
         $this->editMode  = true;
         $this->showModal = true;
+        $this->dispatch('open-modal', id: 'modalMultasCobradas');
     }
 
     public function save(MultasCobradasService $service, $force = false)
@@ -323,13 +331,14 @@ class MultasCobradas extends Component
             if ($this->editMode) {
                 $cobro = TesMultasCobradas::findOrFail($this->registro_id);
                 $service->actualizar($cobro, $datos, $this->items_form, auth()->id());
-                session()->flash('message', 'Multa cobrada actualizada exitosamente.');
+                $this->dispatch('alert', type: 'success', message: 'Multa cobrada actualizada exitosamente.');
             } else {
                 $service->crear($datos, $this->items_form, auth()->id());
-                session()->flash('message', 'Multa cobrada registrada exitosamente.');
+                $this->dispatch('alert', type: 'success', message: 'Multa cobrada registrada exitosamente.');
             }
 
             $this->showModal = false;
+            $this->dispatch('close-modal', id: 'modalMultasCobradas');
             $this->resetForm();
             $this->cargarAuxiliares();
             $service->invalidarCache();
@@ -345,6 +354,7 @@ class MultasCobradas extends Component
         $this->deleteId           = $id;
         $this->registroAEliminar  = TesMultasCobradas::with('items')->find($id);
         $this->showDeleteModal    = true;
+        $this->dispatch('open-modal', id: 'modalBorrarMultasCobradas');
     }
 
     public function delete(MultasCobradasService $service)
@@ -352,10 +362,11 @@ class MultasCobradas extends Component
         $registro = TesMultasCobradas::find($this->deleteId);
         if ($registro) {
             $service->eliminar($registro, auth()->id());
-            session()->flash('message', 'Registro eliminado correctamente.');
+            $this->dispatch('alert', type: 'success', message: 'Registro eliminado correctamente.');
         }
         $this->showDeleteModal   = false;
         $this->registroAEliminar = null;
+        $this->dispatch('close-modal', id: 'modalBorrarMultasCobradas');
         $this->cargarAuxiliares();
         $service->invalidarCache();
     }
@@ -364,6 +375,35 @@ class MultasCobradas extends Component
     {
         $this->selectedRegistro  = TesMultasCobradas::with('items', 'creator')->findOrFail($id);
         $this->showDetailModal   = true;
+        $this->dispatch('open-modal', id: 'modalDetalleMultasCobradas');
+    }
+
+    public function cerrarModal(): void
+    {
+        $this->showModal = false;
+        $this->dispatch('close-modal', id: 'modalMultasCobradas');
+        $this->resetForm();
+    }
+
+    public function cerrarModalDetalle(): void
+    {
+        $this->showDetailModal = false;
+        $this->dispatch('close-modal', id: 'modalDetalleMultasCobradas');
+        $this->selectedRegistro = null;
+    }
+
+    public function cerrarModalEliminar(): void
+    {
+        $this->showDeleteModal = false;
+        $this->dispatch('close-modal', id: 'modalBorrarMultasCobradas');
+        $this->registroAEliminar = null;
+        $this->deleteId = null;
+    }
+
+    public function cerrarModalPrint(): void
+    {
+        $this->showPrintModal = false;
+        $this->dispatch('close-modal', id: 'modalPrintMultasCobradas');
     }
 
     // =========================================================================

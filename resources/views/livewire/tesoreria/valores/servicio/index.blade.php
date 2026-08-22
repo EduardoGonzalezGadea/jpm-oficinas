@@ -77,7 +77,7 @@
 
   <!-- Modal Crear/Editar -->
   @if($showModal)
-  <div class="modal fade show" style="display: block;" tabindex="-1" role="dialog">
+  <div wire:ignore.self class="modal fade" id="modalServicio" tabindex="-1" role="dialog">
     <div class="modal-dialog modal-dialog-scrollable" role="document">
       <div class="modal-content">
         <div class="modal-header">
@@ -111,12 +111,11 @@
       </div>
     </div>
   </div>
-  <div class="modal-backdrop fade show"></div>
   @endif
 
   <!-- Modal Borrar -->
   @if($showDeleteModal)
-  <div class="modal fade show" style="display: block;" tabindex="-1" role="dialog">
+  <div wire:ignore.self class="modal fade" id="modalBorrarServicio" tabindex="-1" role="dialog">
     <div class="modal-dialog modal-dialog-scrollable" role="document">
       <div class="modal-content">
         <div class="modal-header">
@@ -135,6 +134,21 @@
       </div>
     </div>
   </div>
-  <div class="modal-backdrop fade show"></div>
   @endif
+
+  @push('scripts')
+  <script>
+    document.addEventListener('livewire:init', function () {
+      Livewire.on('open-modal', (params) => {
+        const id = Array.isArray(params) ? params[0]?.id : params?.id;
+        if (id) $('#' + id).modal('show');
+      });
+
+      Livewire.on('close-modal', (params) => {
+        const id = Array.isArray(params) ? params[0]?.id : params?.id;
+        if (id) $('#' + id).modal('hide');
+      });
+    });
+  </script>
+  @endpush
 </div>

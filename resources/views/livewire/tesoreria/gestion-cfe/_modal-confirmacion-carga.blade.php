@@ -1,21 +1,6 @@
-<div class="modal fade" id="modalConfirmacionCfe" tabindex="-1" role="dialog" aria-hidden="true" 
-  wire:ignore.self
-  x-data="{ mostrar: @entangle('mostrarModalConfirmacion') }"
-  x-init="
-    $watch('mostrar', value => {
-      console.log('mostrarModalConfirmacion cambió a:', value);
-      if (value) {
-        setTimeout(() => {
-          console.log('Abriendo modal por x-data');
-          $('#modalConfirmacionCfe').modal('show');
-        }, 150);
-      } else {
-        $('#modalConfirmacionCfe').modal('hide');
-      }
-    })
-  "
->
-  <div class="modal-dialog modal-full-width" role="document">
+@if($mostrarModalConfirmacion && !empty($datosExtraidos))
+<div class="modal fade show" id="modalConfirmacionCfe" tabindex="-1" role="dialog" aria-modal="true" style="display: block;">
+  <div class="modal-dialog modal-full-width modal-dialog-scrollable" role="document">
     <div class="modal-content border-0 shadow">
 
       <div class="modal-header bg-primary text-white p-2">
@@ -103,7 +88,7 @@
                   <i class="fas fa-tag mr-1 text-primary"></i> Concepto de Caja
                 </h6>
                 <div class="form-group mb-0">
-                  <select wire:model.live="cajaConceptoSeleccionado" id="selectorCajaConcepto"
+                  <select wire:model="cajaConceptoSeleccionado" id="selectorCajaConcepto"
                     class="form-control @error('cajaConceptoSeleccionado') is-invalid @enderror">
                     <option value="">— Seleccione concepto —</option>
                     @foreach($cajaConceptos as $concepto)
@@ -121,7 +106,7 @@
                   <i class="fas fa-sitemap mr-1 text-primary"></i> Dependencia
                 </h6>
                 <div class="form-group mb-0">
-                  <select wire:model.live="siifDependenciaSeleccionado" id="selectorSiifDependencia"
+                  <select wire:model="siifDependenciaSeleccionado" id="selectorSiifDependencia"
                     class="form-control @error('siifDependenciaSeleccionado') is-invalid @enderror">
                     <option value="">— Seleccione dep. SIIF —</option>
                     @foreach($siifDependencias as $dep)
@@ -298,3 +283,5 @@
     </div>
   </div>
 </div>
+<div class="modal-backdrop fade show"></div>
+@endif

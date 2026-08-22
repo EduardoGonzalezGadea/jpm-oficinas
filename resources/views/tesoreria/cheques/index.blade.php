@@ -12,7 +12,7 @@
                         <strong><i class="fas fa-money-check mr-2"></i>Gestión de Cheques</strong>
                     </h4>
                     <div class="d-print-none">
-                        <button class="btn btn-primary" data-toggle="modal" data-target="#modalIngresoCheque">
+                        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#modalIngresoCheque">
                             <i class="fas fa-book mr-1"></i>Ingreso de Cheques
                         </button>
                     </div>
@@ -48,7 +48,7 @@
 </div>
 
 <!-- Modal Ingreso Cheque -->
-<div class="modal fade" id="modalIngresoCheque" tabindex="-1" role="dialog" aria-labelledby="modalIngresoChequeLabel" aria-hidden="true">
+<div wire:ignore.self class="modal fade" id="modalIngresoCheque" tabindex="-1" role="dialog" aria-labelledby="modalIngresoChequeLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
@@ -68,47 +68,30 @@
 @push('scripts')
 <script>
     $(document).ready(function() {
-        const libretaFormSelector = '#libreta form';
+        const libretaFormSelector = '#modalIngresoCheque form';
 
         function setupLibretaFormNavigation() {
-            console.log('Setting up libreta form navigation.');
             const form = $(libretaFormSelector);
-            if (!form.length) {
-                console.log('Libreta form not found.');
-                return;
-            }
+            if (!form.length) return;
 
-            // Detach any existing listener to avoid duplicates
             form.off('keydown.libretaNav');
-            console.log('Existing keydown.libretaNav listener detached.');
-
-            // Attach the new listener
             form.on('keydown.libretaNav', function(e) {
-                console.log('Keydown event in libreta form. Key:', e.key, 'Target:', e.target);
                 if (e.key === 'Enter') {
                     const focusable = form.find('input:not([readonly]), select, button[type="submit"]');
                     const currentElement = $(document.activeElement);
                     const currentIndex = focusable.index(currentElement);
 
                     if (currentElement.is('button[type="submit"]')) {
-                        console.log('Enter pressed on submit button. Allowing default.');
-                        // Allow form submission if Enter is pressed on the button
                         return;
                     }
 
                     e.preventDefault();
-                    console.log('Prevented default. Moving focus.');
-
                     if (currentIndex > -1 && (currentIndex + 1) < focusable.length) {
                         const nextElement = focusable.eq(currentIndex + 1);
                         nextElement.focus();
-                        console.log('Focused next element:', nextElement);
-                    } else {
-                        console.log('No next element to focus.');
                     }
                 }
             });
-            console.log('New keydown.libretaNav listener attached.');
         }
 
         function getActiveTab() {
@@ -143,26 +126,29 @@
             refreshTabData(tabName);
         });
 
-        // También actualizar navegación tras cada commit del componente libreta
-        if (typeof Livewire !== 'undefined') {
-            // Livewire v3: hook 'commit' reemplaza 'message.processed'
-            Livewire.hook('commit', ({ component, succeed }) => {
-                succeed(() => {
-                    if (component.name === 'tesoreria.cheque.cheque-libreta') {
-                        queueMicrotask(setupLibretaFormNavigation);
-                    }
-                });
-            });
+        $('#modalIngresoCheque').on('shown.bs.modal', function() {
+            setupLibretaFormNavigation();
+        });
+    });
 
-            // Livewire v3: Livewire.on con payload como primer argumento
-            document.addEventListener('livewire:init', function() {
-                Livewire.on('close-modal', (payload) => {
-                    const modalId = window.LiveEvent({ detail: payload });
-                    const id = typeof modalId === 'string' ? modalId : (modalId && modalId.modalId);
-                    $('#' + id).modal('hide');
-                });
+    document.addEventListener('livewire:init', function() {
+        Livewire.hook('commit', ({ component, succeed }) => {
+            succeed(() => {
+                if (component.name === 'tesoreria.cheque.cheque-libreta') {
+                    queueMicrotask(function() {
+                        const form = $('#modalIngresoCheque form');
+                        if (form.length) form.trigger('focus');
+                    });
+                }
             });
-        }
+        });
+
+        Livewire.on('close-modal', (payload) => {
+            const modalId = typeof payload === 'string' ? payload : (payload && payload.modalId);
+            if (modalId) {
+                $('#' + modalId).modal('hide');
+            }
+        });
     });
 </script>
 @endpush

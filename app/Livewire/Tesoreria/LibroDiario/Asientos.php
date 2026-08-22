@@ -9,6 +9,7 @@ use App\Models\Tesoreria\MedioDePago;
 use App\Models\Tesoreria\LibroDiario;
 use App\Models\Tesoreria\TesCfe;
 use App\Services\Tesoreria\LibroDiarioService;
+use Livewire\Attributes\On;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -115,16 +116,6 @@ class Asientos extends Component
     {
         $this->resetRedistribucionForm();
         $this->dispatch('show-modal', ['id' => 'redistribucionModal']);
-    }
-
-    public function updatedIdentidad($value)
-    {
-        $this->identidad = mb_strtoupper($value);
-    }
-
-    public function updatedDenominacion($value)
-    {
-        $this->denominacion = mb_strtoupper($value);
     }
 
     public function updatedTipoId()
@@ -303,6 +294,7 @@ class Asientos extends Component
         }
     }
 
+    #[On('confirmarEliminarAsientoConCfe')]
     public function confirmarEliminarAsientoConCfe($id)
     {
         try {

@@ -294,7 +294,7 @@ class Eventuales extends Component
             $eventual->delete();
             $this->clearCache();
             DB::commit();
-            session()->flash('message', 'Eventual eliminado con éxito.');
+            $this->dispatch('alert', type: 'success', message: 'Eventual eliminado con éxito.');
         } catch (\Exception $e) {
             DB::rollBack();
             $this->dispatch('alert', type: 'error', message: 'Error al eliminar el eventual: ' . $e->getMessage());

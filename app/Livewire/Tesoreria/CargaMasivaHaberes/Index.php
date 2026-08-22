@@ -3,16 +3,19 @@
 namespace App\Livewire\Tesoreria\CargaMasivaHaberes;
 
 use App\Models\Tesoreria\LbConcepto;
+use App\Models\Tesoreria\LbDetalle;
 use App\Models\Tesoreria\LbTipo;
 use App\Models\Tesoreria\MedioDePago;
 use App\Models\Tesoreria\LibroDiario;
 use App\Services\Tesoreria\CargaMasivaHaberesService;
 use App\Services\Tesoreria\LibroDiarioService;
+use App\Livewire\Concerns\NormalizaDocumentoReferencia;
 use Livewire\Component;
 
 class Index extends Component
 {
-    public string $ruta = 'C:\OFICINA\HABERES\INFO. CONTABILIDAD\LISTINES';
+    use NormalizaDocumentoReferencia;
+    public string $ruta = '';
 
     public bool $cargando = false;
     public bool $procesado = false;
@@ -56,6 +59,12 @@ class Index extends Component
     /** Opciones de detalle del concepto "Boletos en ventanilla" */
     public array $opcionesDetalle = [];
 
+    /** Nombre para nuevo detalle a crear desde el modal */
+    public string $nuevoDetalleNombre = '';
+
+    public array $opcionesAdicionales = [];
+    public array $adicionalesSeleccionados = [];
+
     /** Mensaje de éxito tras generar asientos */
     public ?string $mensajeExito = null;
 
@@ -81,7 +90,65 @@ class Index extends Component
     public function mount(): void
     {
         $this->fechaAsiento = now()->format('Y-m-d');
+        $this->ruta = $this->obtenerRutaDefault();
         $this->cargarOpcionesDetalle();
+    }
+
+    /**
+     * Obtiene la ruta inicial por defecto según el sistema operativo (Windows / Linux).
+     * En ambos sistemas comienza en la carpeta de Documentos / Mis Documentos y dentro de ella en 'LISTINES'.
+     * En Linux busca preferentemente /home/jpmontevideo/Documentos/LISTINES.
+     */
+    public function obtenerRutaDefault(): string
+    {
+        $isWindows = strtoupper(substr(PHP_OS, 0, 3)) === 'WIN';
+
+        if ($isWindows) {
+            $userProfile = getenv('USERPROFILE') ?: (getenv('HOMEDRIVE') . getenv('HOMEPATH'));
+            $candidatos = [];
+
+            if ($userProfile) {
+                $candidatos[] = $userProfile . DIRECTORY_SEPARATOR . 'Documents' . DIRECTORY_SEPARATOR . 'LISTINES';
+                $candidatos[] = $userProfile . DIRECTORY_SEPARATOR . 'Documentos' . DIRECTORY_SEPARATOR . 'LISTINES';
+                $candidatos[] = $userProfile . DIRECTORY_SEPARATOR . 'Mis Documentos' . DIRECTORY_SEPARATOR . 'LISTINES';
+            }
+            $candidatos[] = 'C:\\Users\\Usuario\\Documents\\LISTINES';
+
+            foreach ($candidatos as $candidato) {
+                if (is_dir($candidato)) {
+                    return $candidato;
+                }
+            }
+
+            if ($userProfile) {
+                if (is_dir($userProfile . DIRECTORY_SEPARATOR . 'Documentos')) {
+                    return $userProfile . DIRECTORY_SEPARATOR . 'Documentos' . DIRECTORY_SEPARATOR . 'LISTINES';
+                }
+                if (is_dir($userProfile . DIRECTORY_SEPARATOR . 'Mis Documentos')) {
+                    return $userProfile . DIRECTORY_SEPARATOR . 'Mis Documentos' . DIRECTORY_SEPARATOR . 'LISTINES';
+                }
+                return $userProfile . DIRECTORY_SEPARATOR . 'Documents' . DIRECTORY_SEPARATOR . 'LISTINES';
+            }
+
+            return 'C:\\Users\\Usuario\\Documents\\LISTINES';
+        } else {
+            // Linux / Unix: /home/jpmontevideo/Documentos/LISTINES
+            $home = getenv('HOME') ?: '/home/jpmontevideo';
+            $candidatos = [
+                '/home/jpmontevideo/Documentos/LISTINES',
+                '/home/jpmontevideo/Documents/LISTINES',
+                $home . '/Documentos/LISTINES',
+                $home . '/Documents/LISTINES',
+            ];
+
+            foreach ($candidatos as $candidato) {
+                if (is_dir($candidato)) {
+                    return $candidato;
+                }
+            }
+
+            return '/home/jpmontevideo/Documentos/LISTINES';
+        }
     }
 
     /**
@@ -101,11 +168,48 @@ class Index extends Component
     }
 
     /**
-     * Autocomplete: lista las subcarpetas que coincidan con la ruta parcial que escribe el usuario.
+     * Autocomplete multiplataforma: lista las subcarpetas que coincidan con la ruta parcial que escribe el usuario.
      */
     public function updatedRuta(): void
     {
         $this->autocompletarRuta();
+    }
+
+    /**
+     * Cuando se selecciona un detalle de Libro Diario para un ítem,
+     * se establece consecuentemente el mismo detalle para los restantes ítems que no tengan
+     * aún un detalle asignado y cuyos valores de TIPO + ARCHIVO + PAGO sean iguales.
+     */
+    public function updatedDetalleAsignado($value, $key): void
+    {
+        if (empty($value) || !isset($this->detalle[$key])) {
+            return;
+        }
+
+        $itemBase = $this->detalle[$key];
+        $tipoBase = $itemBase['tipo'] ?? null;
+        $archivoBase = $itemBase['archivo'] ?? null;
+        $pagoBase = $itemBase['es_ventanilla'] ?? null;
+
+        foreach ($this->detalle as $otherIdx => $otherItem) {
+            if ((string)$otherIdx === (string)$key) {
+                continue;
+            }
+
+            // Solo aplicar a ítems que NO tengan aún un detalle asignado
+            if (!empty($this->detalleAsignado[$otherIdx])) {
+                continue;
+            }
+
+            // Comparar TIPO + ARCHIVO + PAGO
+            if (
+                ($otherItem['tipo'] ?? null) === $tipoBase &&
+                ($otherItem['archivo'] ?? null) === $archivoBase &&
+                ($otherItem['es_ventanilla'] ?? null) === $pagoBase
+            ) {
+                $this->detalleAsignado[$otherIdx] = $value;
+            }
+        }
     }
 
     public function autocompletarRuta(): void
@@ -113,20 +217,31 @@ class Index extends Component
         $this->sugerencias = [];
         $this->mostrarSugerencias = false;
 
-        $ruta = str_replace('/', '\\', trim($this->ruta));
-
+        $ruta = trim($this->ruta);
         if ($ruta === '') {
             return;
         }
 
-        // Si la ruta termina en \ buscamos dentro de esa carpeta
-        if (str_ends_with($ruta, '\\') && is_dir($ruta)) {
-            $dir = rtrim($ruta, '\\');
+        $isWindows = strtoupper(substr(PHP_OS, 0, 3)) === 'WIN';
+        $ds = $isWindows ? '\\' : '/';
+        $altDs = $isWindows ? '/' : '\\';
+
+        // Normalizar separadores según el sistema operativo
+        $rutaNorm = str_replace($altDs, $ds, $ruta);
+
+        // Si la ruta termina en separador de directorios y es un directorio existente
+        if ((str_ends_with($rutaNorm, '/') || str_ends_with($rutaNorm, '\\')) && is_dir($rutaNorm)) {
+            $dir = rtrim($rutaNorm, '/\\');
             $filtro = '';
         } else {
-            // Buscamos en el directorio padre con el último segmento como filtro
-            $dir = dirname($ruta);
-            $filtro = mb_strtolower(basename($ruta));
+            $dir = dirname($rutaNorm);
+            $filtro = mb_strtolower(basename($rutaNorm));
+        }
+
+        // Si dirname() devolvió '.' o directorio no válido, intentar evaluar si $rutaNorm es un directorio existente completo
+        if (!is_dir($dir) && is_dir($rutaNorm)) {
+            $dir = rtrim($rutaNorm, '/\\');
+            $filtro = '';
         }
 
         if (!is_dir($dir)) {
@@ -145,7 +260,7 @@ class Index extends Component
                     continue;
                 }
 
-                $rutaCompleta = $dir . '\\' . $item;
+                $rutaCompleta = rtrim($dir, '/\\') . $ds . $item;
                 if (!is_dir($rutaCompleta)) {
                     continue;
                 }
@@ -259,6 +374,33 @@ class Index extends Component
             $this->dispatch('alert', ['type' => 'error', 'message' => $this->error, 'toast' => true]);
             return;
         }
+
+        // Advertir si hay más de un ítem seleccionado y no se ingresó Documento de referencia
+        $cantidadSeleccionados = count(array_filter($this->seleccionados));
+        if ($cantidadSeleccionados > 1 && empty(trim($this->documento_referencia ?? ''))) {
+            $this->dispatch('swal:sin-documento-referencia', [
+                'cantidad' => $cantidadSeleccionados,
+            ]);
+            return;
+        }
+
+        $this->ejecutarGeneracionAsientos();
+    }
+
+    /**
+     * Continúa la generación de asientos sin documento de referencia (tras confirmación del usuario).
+     */
+    public function confirmarGeneracionSinDocumento(): void
+    {
+        $this->ejecutarGeneracionAsientos();
+    }
+
+    /**
+     * Lógica central de generación de asientos reutilizable.
+     */
+    private function ejecutarGeneracionAsientos(): void
+    {
+        $this->error = null;
 
         // Obtener IDs fijos
         $tipoEntrada = LbTipo::where('nombre', 'Entrada')->first();
@@ -379,10 +521,12 @@ class Index extends Component
     /**
      * Ejecuta la generación de asientos, descartando o no los duplicados detectados.
      */
-    public function procesarGeneracion(bool $descartarDuplicados): void
+    #[On('procesar-generacion')]
+    public function procesarGeneracion(bool $descartarDuplicados = false): void
     {
         $this->error = null;
         $this->mensajeExito = null;
+        $this->normalizarDocumentoReferencia();
 
         $tipoEntrada = LbTipo::where('nombre', 'Entrada')->first();
         $concepto = LbConcepto::where('nombre', 'like', '%Boletos en ventanilla%')->first();
@@ -442,10 +586,12 @@ class Index extends Component
      * Genera asientos descartando los ítems sin detalle asignado.
      * Invocado desde SweetAlert2 cuando el usuario confirma continuar.
      */
+    #[On('procesar-generacion-sin-detalle')]
     public function procesarGeneracionSinDetalle(): void
     {
         $this->error = null;
         $this->mensajeExito = null;
+        $this->normalizarDocumentoReferencia();
 
         $tipoEntrada = LbTipo::where('nombre', 'Entrada')->first();
         $concepto = LbConcepto::where('nombre', 'like', '%Boletos en ventanilla%')->first();
@@ -644,6 +790,134 @@ class Index extends Component
                 $this->detalleAsignado[$idx] = $detalleId;
             }
         }
+    }
+
+    /**
+     * Devuelve las plantillas de variantes adicionales para el concepto Boletos en ventanilla.
+     */
+    private function getOpcionesAdicionales(): array
+    {
+        return [
+            '{detalle} (rechazo BROU)',
+            '{detalle} (rechazo otros bancos)',
+            '{detalle} (con quitas)',
+            'Retención Judicial de {detalle}',
+            'Retención Judicial de {detalle} (rechazo BROU)',
+            'Retención Judicial de {detalle} (rechazo otros bancos)',
+            'Retención Judicial de {detalle} (con quitas)',
+            'Aguinaldo de {detalle}',
+            'Aguinaldo de {detalle} (rechazo BROU)',
+            'Aguinaldo de {detalle} (rechazo otros bancos)',
+            'Aguinaldo de {detalle} (con quitas)',
+            'Retención Judicial de Aguinaldo de {detalle}',
+            'Retención Judicial de Aguinaldo de {detalle} (rechazo BROU)',
+            'Retención Judicial de Aguinaldo de {detalle} (rechazo otros bancos)',
+            'Retención Judicial de Aguinaldo de {detalle} (con quitas)',
+        ];
+    }
+
+    /**
+     * Selecciona o deselecciona todas las opciones adicionales de variantes.
+     */
+    public function seleccionarTodasAdicionales(bool $valor): void
+    {
+        $this->adicionalesSeleccionados = array_fill(0, count($this->opcionesAdicionales), $valor);
+    }
+
+    /**
+     * Abre el modal para crear un nuevo detalle de Libro Diario con sus variantes.
+     */
+    public function abrirModalNuevoDetalle(): void
+    {
+        $this->resetErrorBag();
+        $this->nuevoDetalleNombre = '';
+        $this->opcionesAdicionales = $this->getOpcionesAdicionales();
+        $this->adicionalesSeleccionados = array_fill(0, count($this->opcionesAdicionales), false);
+        $this->dispatch('show-modal', id: 'modalNuevoDetalle');
+    }
+
+    /**
+     * Guarda el detalle principal y las variantes adicionales seleccionadas asociadas al concepto "Boletos en ventanilla".
+     */
+    public function guardarNuevoDetalle(): void
+    {
+        $this->validate([
+            'nuevoDetalleNombre' => 'required|string|max:100',
+        ], [
+            'nuevoDetalleNombre.required' => 'El nombre del detalle es obligatorio.',
+            'nuevoDetalleNombre.max' => 'El nombre no puede superar los 100 caracteres.',
+        ]);
+
+        $concepto = LbConcepto::where('nombre', 'like', '%Boletos en ventanilla%')->first();
+
+        if (!$concepto) {
+            $this->dispatch('alert', [
+                'type' => 'error',
+                'message' => 'No se encontró el concepto "Boletos en ventanilla".',
+                'toast' => true,
+            ]);
+            return;
+        }
+
+        $nombre = trim($this->nuevoDetalleNombre);
+        $creados = 0;
+        $yaExistentes = 0;
+        $nuevoId = null;
+
+        // Crear o encontrar el detalle principal
+        $detallePrincipal = LbDetalle::where('concepto_id', $concepto->id)
+            ->where('nombre', $nombre)
+            ->first();
+
+        if (!$detallePrincipal) {
+            $detallePrincipal = LbDetalle::create([
+                'concepto_id' => $concepto->id,
+                'nombre' => $nombre,
+            ]);
+            $creados++;
+        } else {
+            $yaExistentes++;
+        }
+        $nuevoId = $detallePrincipal->id;
+
+        // Crear variantes adicionales seleccionadas
+        if (!empty($this->adicionalesSeleccionados)) {
+            foreach ($this->adicionalesSeleccionados as $idx => $seleccionado) {
+                if ($seleccionado && isset($this->opcionesAdicionales[$idx])) {
+                    $nombreAdicional = str_replace('{detalle}', $nombre, $this->opcionesAdicionales[$idx]);
+
+                    if (!LbDetalle::where('concepto_id', $concepto->id)->where('nombre', $nombreAdicional)->exists()) {
+                        LbDetalle::create([
+                            'concepto_id' => $concepto->id,
+                            'nombre' => $nombreAdicional,
+                        ]);
+                        $creados++;
+                    } else {
+                        $yaExistentes++;
+                    }
+                }
+            }
+        }
+
+        // Recargar opciones de detalle para que estén disponibles en el selector
+        $this->cargarOpcionesDetalle();
+
+        $msg = "Se crearon {$creados} registro(s)";
+        if ($yaExistentes > 0) {
+            $msg .= ", {$yaExistentes} ya existían y fueron omitidos";
+        }
+        $msg .= '.';
+
+        $this->dispatch('alert', [
+            'type' => $creados > 0 ? 'success' : 'info',
+            'message' => $msg,
+            'toast' => true,
+        ]);
+
+        $this->nuevoDetalleNombre = '';
+        $this->opcionesAdicionales = [];
+        $this->adicionalesSeleccionados = [];
+        $this->dispatch('hide-modal', id: 'modalNuevoDetalle');
     }
 
     public function render()

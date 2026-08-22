@@ -305,7 +305,7 @@ class CargarEfactura extends Component
         if ($record) {
             $record->delete();
             $this->clearCache();
-            session()->flash('message', 'Registro ' . $this->anulacionPendiente['orden_cobro'] . ' eliminado exitosamente.');
+            $this->dispatch('alert', type: 'success', message: 'Registro ' . $this->anulacionPendiente['orden_cobro'] . ' eliminado exitosamente.');
         }
 
         $this->anulacionPendiente = null;
@@ -364,7 +364,7 @@ class CargarEfactura extends Component
 
             DB::commit();
             $this->clearCache();
-            session()->flash('message', 'eFactura cargada como eventual exitosamente.');
+            $this->dispatch('alert', type: 'success', message: 'eFactura cargada como eventual exitosamente.');
             session()->flash('edit_eventual_id', $nuevoEventual->id);
             return redirect()->route('tesoreria.eventuales.index', ['edit_id' => $nuevoEventual->id]);
         } catch (\Exception $e) {

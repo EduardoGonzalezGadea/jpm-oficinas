@@ -4,6 +4,7 @@ namespace App\Livewire\Tesoreria\MultasCobradas;
 
 use Livewire\Component;
 use Livewire\WithFileUploads;
+use Livewire\Attributes\On;
 use Smalot\PdfParser\Parser;
 use App\Models\Tesoreria\TesMultasCobradas;
 use App\Models\Tesoreria\TesMultasItems;
@@ -315,6 +316,7 @@ class CargarCfe extends Component
         return $datos;
     }
 
+    #[On('guardar-registro-multas')]
     public function guardarRegistro($force = false)
     {
         if (!$this->datosExtraidos || empty($this->datosExtraidos['items'])) {
@@ -409,7 +411,7 @@ class CargarCfe extends Component
             $this->datosExtraidos = null;
             $this->archivo = null;
 
-            session()->flash('message', 'Multa y sus ' . count($cobro->items) . ' ítems cargados exitosamente.');
+            $this->dispatch('alert', type: 'success', message: 'Multa y sus ' . count($cobro->items) . ' ítems cargados exitosamente.');
             return redirect()->route('tesoreria.multas-cobradas.index');
         } catch (\Exception $e) {
             DB::rollBack();

@@ -86,7 +86,7 @@ class LibroDiarioService
                 'es_contra_asiento' => $data['es_contra_asiento'] ?? false,
                 'documento_referencia' => isset($data['documento_referencia']) ? mb_strtoupper($data['documento_referencia']) : null,
                 'confirmado' => $esConfirmado,
-                'fecha_confirmacion' => $esConfirmado ? now() : null,
+                'fecha_confirmacion' => $esConfirmado ? $fecha : null,
             ]);
 
             $this->recalcularSaldosSubcuenta(
@@ -187,13 +187,21 @@ class LibroDiarioService
                 $asiento->medio_id,
                 $asiento->concepto_id,
                 $asiento->detalle_id,
-                $this->normalizarIdentidad($asiento->identidad),
+                $this->normalizarTexto($asiento->identidad),
+                $this->normalizarTexto($asiento->denominacion),
             ]));
 
         if (array_key_exists('identidad', $filtros)) {
-            $identidad = $this->normalizarIdentidad($filtros['identidad']);
+            $identidad = $this->normalizarTexto($filtros['identidad']);
             $grupos = $grupos->filter(
-                fn (Collection $asientos) => $this->normalizarIdentidad($asientos->first()->identidad) === $identidad
+                fn (Collection $asientos) => $this->normalizarTexto($asientos->first()->identidad) === $identidad
+            );
+        }
+
+        if (array_key_exists('denominacion', $filtros)) {
+            $denominacion = $this->normalizarTexto($filtros['denominacion']);
+            $grupos = $grupos->filter(
+                fn (Collection $asientos) => $this->normalizarTexto($asientos->first()->denominacion) === $denominacion
             );
         }
 
@@ -239,10 +247,13 @@ class LibroDiarioService
     public function registrarRedistribucion(array $origen, array $destino): array
     {
         // Validación preventiva: verificar saldo ANTES de iniciar la transacción.
-        // El saldo disponible se evalúa sobre la misma identidad del origen.
+        // El saldo disponible se evalúa sobre la misma identidad y denominación del origen.
         $saldoOrigen = $this->saldoActualFlujo(
-            $origen['medio_id'], $origen['concepto_id'], $origen['detalle_id'],
-            $this->normalizarIdentidad($origen['identidad'] ?? null)
+            $origen['medio_id'],
+            $origen['concepto_id'],
+            $origen['detalle_id'],
+            $this->normalizarTexto($origen['identidad'] ?? null),
+            $this->normalizarTexto($origen['denominacion'] ?? null)
         );
 
         if ((float) $origen['monto'] > $saldoOrigen) {
@@ -272,7 +283,7 @@ class LibroDiarioService
                 'saldo' => 0,
                 'grupo_redistribucion_id' => $grupoId,
                 'confirmado' => true,
-                'fecha_confirmacion' => now(),
+                'fecha_confirmacion' => $fecha,
             ]);
 
             $registroEntrada = LibroDiario::create([
@@ -290,7 +301,7 @@ class LibroDiarioService
                 'asociar' => $registroSalida->id,
                 'grupo_redistribucion_id' => $grupoId,
                 'confirmado' => true,
-                'fecha_confirmacion' => now(),
+                'fecha_confirmacion' => $fecha,
             ]);
 
             $registroSalida->update(['asociar' => $registroEntrada->id]);
@@ -306,18 +317,27 @@ class LibroDiarioService
         });
     }
 
-    public function saldoActualFlujo(int $medioId, int $conceptoId, int $detalleId, ?string $identidad = null): float
-    {
+    public function saldoActualFlujo(
+        int $medioId,
+        int $conceptoId,
+        int $detalleId,
+        ?string $identidad = null,
+        ?string $denominacion = null
+    ): float {
         $filtros = [
             'medio_id' => $medioId,
             'concepto_id' => $conceptoId,
             'detalle_id' => $detalleId,
         ];
 
-        // Si se indica una identidad, se filtra por esa identidad; si es null
-        // se suman todas las identidades del flujo.
+        // Si se indica una identidad/denominación, se filtra por ellas; si es null
+        // se suman todos los registros del flujo.
         if ($identidad !== null) {
             $filtros['identidad'] = $identidad;
+        }
+
+        if ($denominacion !== null) {
+            $filtros['denominacion'] = $denominacion;
         }
 
         return (float) $this->saldosActualesPorFlujo($filtros)->sum('saldo_actual');
@@ -725,23 +745,33 @@ class LibroDiarioService
 
     /**
      * Determina si el asiento base pertenece al mismo flujo que los datos de
-     * la salida (mismo medio, concepto, detalle e identidad normalizada).
+     * la salida (mismo medio, concepto, detalle, identidad y denominación normalizadas).
      */
     private function flujosCoinciden(LibroDiario $asientoBase, array $data): bool
     {
         return (int) $asientoBase->medio_id === (int) $data['medio_id']
             && (int) $asientoBase->concepto_id === (int) $data['concepto_id']
             && (int) $asientoBase->detalle_id === (int) $data['detalle_id']
-            && $this->normalizarIdentidad($asientoBase->identidad)
-                === $this->normalizarIdentidad($data['identidad'] ?? null);
+            && $this->normalizarTexto($asientoBase->identidad)
+                === $this->normalizarTexto($data['identidad'] ?? null)
+            && $this->normalizarTexto($asientoBase->denominacion)
+                === $this->normalizarTexto($data['denominacion'] ?? null);
     }
 
     /**
-     * Normaliza la identidad para agrupar saldos: NULL y vacío se tratan como
-     * "sin identidad" y se eliminan espacios en blanco.
+     * Normaliza un campo de texto (identidad, denominación) para agrupar saldos o comparar flujos:
+     * NULL y vacío se tratan como "" y se eliminan espacios en blanco al inicio y final.
+     */
+    private function normalizarTexto(?string $texto): string
+    {
+        return mb_strtoupper(trim((string) ($texto ?? '')));
+    }
+
+    /**
+     * @deprecated Usar normalizarTexto
      */
     private function normalizarIdentidad(?string $identidad): string
     {
-        return mb_strtoupper(trim((string) ($identidad ?? '')));
+        return $this->normalizarTexto($identidad);
     }
 }

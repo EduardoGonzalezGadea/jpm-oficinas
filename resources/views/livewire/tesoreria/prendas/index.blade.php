@@ -29,7 +29,7 @@
             </div>
             <input type="text" wire:model.live.debounce.300ms="search" class="form-control" placeholder="Buscar por titular, cédula, recibo, transferencia...">
             <div class="input-group-append">
-              <select wire:model.live="selectedYear" class="custom-select" style="border-radius: 0;">
+              <select wire:model="selectedYear" class="custom-select" style="border-radius: 0;">
                 @foreach($years as $year)
                 <option value="{{ $year }}">{{ $year }}</option>
                 @endforeach

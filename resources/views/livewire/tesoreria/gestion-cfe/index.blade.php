@@ -99,7 +99,7 @@
           </div>
         </div>
         <div class="mr-2" style="width: 230px;">
-          <select wire:model.live="filtroConcepto" class="form-control">
+          <select wire:model="filtroConcepto" class="form-control">
             <option value="">— Filtrar por concepto —</option>
             @foreach($cajaConceptos as $concepto)
               <option value="{{ $concepto->id }}">{{ $concepto->caja_concepto }}</option>
@@ -139,7 +139,7 @@
           </div>
         </div>
         <div class="mr-2" style="width: 110px;">
-          <select wire:model.live="filtroAno" class="form-control">
+          <select wire:model="filtroAno" class="form-control">
             <option value="0">— Todos los años —</option>
             @foreach($anosRegistrados as $ano)
               <option value="{{ $ano }}">{{ $ano }}</option>

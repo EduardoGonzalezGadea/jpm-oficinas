@@ -15,7 +15,15 @@ class TesCfeMedioPago extends Model
 
     protected $table = 'tes_cfe_medios_pago';
 
-    protected $guarded = ['id'];
+    protected $fillable = [
+        'tes_cfe_id',
+        'medio_pago_tipo',
+        'medio_pago_id',
+        'medio_pago_valor',
+        'created_by',
+        'updated_by',
+        'deleted_by',
+    ];
 
     protected $casts = [
         'medio_pago_valor' => 'decimal:2',

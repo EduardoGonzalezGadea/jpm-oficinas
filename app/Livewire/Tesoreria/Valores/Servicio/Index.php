@@ -73,6 +73,7 @@ class Index extends Component
     {
         $this->resetInput();
         $this->showModal = true;
+        $this->dispatch('open-modal', id: 'modalServicio');
     }
 
     public function edit($id)
@@ -83,6 +84,7 @@ class Index extends Component
         $this->valor_ui = $servicio->valor_ui;
         $this->activo = $servicio->activo;
         $this->showModal = true;
+        $this->dispatch('open-modal', id: 'modalServicio');
     }
 
     public function save()
@@ -108,30 +110,35 @@ class Index extends Component
         $this->dispatch('swal', title: 'Éxito', text: 'Servicio guardado correctamente.', type: 'success');
 
         $this->showModal = false;
+        $this->dispatch('close-modal', id: 'modalServicio');
     }
 
     public function closeModal()
     {
         $this->showModal = false;
         $this->resetInput();
+        $this->dispatch('close-modal', id: 'modalServicio');
     }
 
     public function confirmDelete($id)
     {
         $this->servicioIdToDelete = $id;
         $this->showDeleteModal = true;
+        $this->dispatch('open-modal', id: 'modalBorrarServicio');
     }
 
     public function closeDeleteModal()
     {
         $this->showDeleteModal = false;
         $this->servicioIdToDelete = null;
+        $this->dispatch('close-modal', id: 'modalBorrarServicio');
     }
 
     public function destroy()
     {
         Servicio::find($this->servicioIdToDelete)->delete();
         $this->showDeleteModal = false;
+        $this->dispatch('close-modal', id: 'modalBorrarServicio');
 
         $this->dispatch('swal', title: 'Éxito', text: 'Servicio eliminado correctamente.', type: 'success');
     }

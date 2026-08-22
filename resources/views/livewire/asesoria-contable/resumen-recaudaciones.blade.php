@@ -60,7 +60,7 @@
           </div>
         </div>
         <div class="col-6 col-md-4 col-lg-2 mb-2 mb-lg-0">
-          <select wire:model.live="dependencia_id" wire:change="$refresh" class="form-control form-control-sm">
+          <select wire:model="dependencia_id" wire:change="$refresh" class="form-control form-control-sm">
             <option value="">Todas las dependencias</option>
             @foreach($this->opcionesDependencias as $dep)
               <option value="{{ $dep->id }}">{{ $dep->abreviatura ?? $dep->dependencia }}</option>
@@ -68,7 +68,7 @@
           </select>
         </div>
         <div class="col-6 col-md-4 col-lg-2 mb-2 mb-lg-0">
-          <select wire:model.live="tipo_id" wire:change="$refresh" class="form-control form-control-sm">
+          <select wire:model="tipo_id" wire:change="$refresh" class="form-control form-control-sm">
             <option value="">Todos los tipos</option>
             @foreach($this->opcionesTipos as $tipo)
               <option value="{{ $tipo->id }}">{{ $tipo->tipo }}</option>
@@ -76,7 +76,7 @@
           </select>
         </div>
         <div class="col-6 col-md-4 col-lg-2 mb-2 mb-lg-0">
-          <select wire:model.live="concepto_id" wire:change="$refresh" class="form-control form-control-sm">
+          <select wire:model="concepto_id" wire:change="$refresh" class="form-control form-control-sm">
             <option value="">Todos los conceptos</option>
             @foreach($this->opcionesConceptos as $concepto)
               <option value="{{ $concepto->id }}">{{ $concepto->caja_concepto }}</option>
@@ -118,7 +118,7 @@
           </div>
         </div>
         <div class="col-6 col-md-2 col-lg-1 mb-2 mb-lg-0">
-          <select wire:model.live="filtroAno" class="form-control form-control-sm">
+          <select wire:model="filtroAno" class="form-control form-control-sm">
             <option value="0">— Todos —</option>
             @foreach($anosRegistrados as $ano)
               <option value="{{ $ano }}">{{ $ano }}</option>

@@ -16,6 +16,12 @@ use Illuminate\Support\Facades\Log;
 
 trait WithConfirmacionCarga
 {
+    private const CONCEPTOS_CON_VALIDACION_DE_MONTO = [
+        'TÍTULO DE HABILITACIÓN Y TENENCIA DE ARMAS (THATA)',
+        'PORTE DE ARMAS',
+        'CERTIFICADO DE RESIDENCIA',
+    ];
+
     public bool $mostrarModalConfirmacion = false;
     public array $datosExtraidos = [];
     public string $nombreArchivoOriginal = '';
@@ -200,8 +206,35 @@ trait WithConfirmacionCarga
         );
     }
 
-    public function confirmarCarga($ignorarAdvertencias = false): void
+    #[On('confirmar-carga-forzado')]
+    public function confirmarCargaForzado(): void
     {
+        $this->confirmarCarga(true);
+    }
+
+    #[On('confirmar-carga-ignorar-duplicados')]
+    public function confirmarCargaIgnorarDuplicados(): void
+    {
+        $this->confirmarCarga(false, true, false);
+    }
+
+    #[On('confirmar-carga-ignorar-concepto')]
+    public function confirmarCargaIgnorarConcepto(): void
+    {
+        $this->confirmarCarga(false, false, true);
+    }
+
+    public function confirmarCarga($ignorarAdvertencias = false, bool $ignorarDuplicados = false, bool $ignorarConcepto = false): void
+    {
+        Log::info('confirmarCarga: llamado', [
+            'ignorarAdvertencias' => $ignorarAdvertencias,
+            'ignorarDuplicados' => $ignorarDuplicados,
+            'ignorarConcepto' => $ignorarConcepto,
+            'cajaConceptoSeleccionado' => $this->cajaConceptoSeleccionado,
+            'mostrarModal' => $this->mostrarModalConfirmacion,
+            'datosExtraidos_keys' => array_keys($this->datosExtraidos ?? []),
+        ]);
+
         $force = (bool) $ignorarAdvertencias;
 
         if (empty($this->cajaConceptoSeleccionado)) {
@@ -250,75 +283,39 @@ trait WithConfirmacionCarga
             $rules['itemDistribuciones.*'] = 'nullable|integer|exists:siif_distribucions,id';
         }
 
-        $this->validate($rules, [
-            'cajaConceptoSeleccionado.required' => 'Debe seleccionar un concepto de caja antes de confirmar.',
-            'cajaConceptoSeleccionado.min' => 'Debe seleccionar un concepto de caja válido.',
-            'cajaConceptoSeleccionado.exists' => 'El concepto de caja seleccionado no existe.',
-            'siifDependenciaSeleccionado.exists' => 'La dependencia de distribución SIIF seleccionada no existe.',
-            'confirmacionInstitucionSeleccionada.required' => 'Debe seleccionar una institución.',
-            'confirmacionInstitucionSeleccionada.exists' => 'La institución seleccionada no existe.',
-            'itemDistribuciones.*.required' => 'Debe seleccionar una distribución para todos los ítems.',
-            'itemDistribuciones.*.exists' => 'La distribución SIIF seleccionada no existe.',
-        ]);
-
-        if (!$force) {
-            $ordenCobro = $this->extraerOrdenCobro();
-            if ($ordenCobro !== null) {
-                $cfeOcExistente = $this->buscarOrdenCobroDuplicada($ordenCobro);
-                if ($cfeOcExistente) {
-                    $documentoIdentificador = "{$cfeOcExistente->documento_tipo} {$cfeOcExistente->documento_serie}-{$cfeOcExistente->documento_numero}";
-                    $this->dispatch('swal:confirmar-orden-cobro-duplicada', ordenCobro: $ordenCobro, documentoExistente: $documentoIdentificador);
-                    return;
-                }
-            }
+        try {
+            $this->validate($rules, [
+                'cajaConceptoSeleccionado.required' => 'Debe seleccionar un concepto de caja antes de confirmar.',
+                'cajaConceptoSeleccionado.min' => 'Debe seleccionar un concepto de caja válido.',
+                'cajaConceptoSeleccionado.exists' => 'El concepto de caja seleccionado no existe.',
+                'siifDependenciaSeleccionado.exists' => 'La dependencia de distribución SIIF seleccionada no existe.',
+                'confirmacionInstitucionSeleccionada.required' => 'Debe seleccionar una institución.',
+                'confirmacionInstitucionSeleccionada.exists' => 'La institución seleccionada no existe.',
+                'itemDistribuciones.*.required' => 'Debe seleccionar una distribución para todos los ítems.',
+                'itemDistribuciones.*.exists' => 'La distribución SIIF seleccionada no existe.',
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            $errores = collect($e->errors())->flatten()->first();
+            Log::warning('confirmarCarga: validación fallida', $e->errors());
+            $this->dispatch('swal:toast-error', text: $errores ?: 'Error de validación al confirmar la carga.');
+            return;
         }
 
-        $referencia = trim($this->datosExtraidos['referencias'] ?? '');
-        if (!$force && $referencia !== '') {
-            $refCompleta = '';
-            $cfeExistente = null;
+        if (!$force) {
+            $advertencia = $this->detectarAdvertenciasPrevias(
+                (int) $this->cajaConceptoSeleccionado,
+                $this->datosExtraidos['items'] ?? [],
+                $this->datosExtraidos['medios_pago'] ?? [],
+                $this->datosExtraidos['referencias'] ?? '',
+                $this->datosExtraidos['adenda'] ?? '',
+                $this->itemDistribuciones,
+                '',
+                $ignorarDuplicados,
+                $ignorarConcepto
+            );
 
-            if (preg_match(
-                '/(e[- ]?(?:Factura|Ticket|Boleta)(?:[- ]Cobranza)?|Nota[- ]de[- ]Cr[ée]dito)\s*[-–\s]*([A-Z])?\s*[-–\s]*(\d+)\b/iu',
-                $referencia,
-                $m
-            )) {
-                $refTipo = $m[1];
-                $refSerie = !empty($m[2]) ? mb_strtoupper($m[2], 'UTF-8') : null;
-                $refNumero = $m[3];
-                $tipoNorm = $this->normalizarTipoDoc($refTipo);
-
-                // Buscar por numero en el campo referencias de TesCfe
-                $candidatos = TesCfe::where('referencias', 'like', '%' . $refNumero . '%')
-                    ->whereNull('deleted_at')
-                    ->get();
-
-                foreach ($candidatos as $cfe) {
-                    $refCfe = $cfe->referencias ?? '';
-                    $docTipoNorm = $this->normalizarTipoDoc($cfe->documento_tipo ?? '');
-
-                    // Verificar serie: buscar patron "A1167", "A-1167" o "A 1167"
-                    if ($refSerie && !preg_match('/' . preg_quote($refSerie, '/') . '\s*-?\s*' . $refNumero . '/u', $refCfe)) {
-                        continue;
-                    }
-
-                    // Verificar tipo: coincidencia flexible (ej. "efactura" ≈ "efacturacobranza")
-                    if (!str_contains($docTipoNorm, $tipoNorm) && !str_contains($tipoNorm, $docTipoNorm)) {
-                        continue;
-                    }
-
-                    $cfeExistente = $cfe;
-                    break;
-                }
-
-                if ($cfeExistente) {
-                    $refCompleta = $refTipo . ($refSerie ? "-{$refSerie}" : "") . "-{$refNumero}";
-                }
-            }
-
-            if ($cfeExistente) {
-                $documentoIdentificador = "{$cfeExistente->documento_tipo} {$cfeExistente->documento_serie}-{$cfeExistente->documento_numero}";
-                $this->dispatch('swal:confirmar-guardar-referencia-duplicada', documentoReferencia: $refCompleta, documentoExistente: $documentoIdentificador);
+            if ($advertencia) {
+                $this->dispatch($advertencia['evento'], ...$advertencia['parametros']);
                 return;
             }
         }
@@ -361,9 +358,10 @@ trait WithConfirmacionCarga
 
             $this->cfeCreator->createFromPdf($data, $archivoPath);
 
+            $nombreArchivo = $this->nombreArchivoOriginal;
             $this->cancelarCarga();
 
-            $this->dispatch('swal:toast-success', text: "Archivo {$this->nombreArchivoOriginal} procesado y guardado correctamente.");
+            $this->dispatch('swal:toast-success', text: "Archivo {$nombreArchivo} procesado y guardado correctamente.");
 
         } catch (CfeDuplicateException | CfeValidationException | \InvalidArgumentException $e) {
             $this->dispatch('swal:toast-error', text: $e->getMessage());
@@ -386,23 +384,258 @@ trait WithConfirmacionCarga
         $this->dispatch('cerrar-modal-confirmacion-cfe');
     }
 
-    private function extraerOrdenCobro(): ?string
-    {
-        $marcadores = ['O/C', 'O.C.', 'Orden de Cobro', 'Orden Cobro'];
-
-        $texto = '';
-        foreach (['referencias', 'adenda'] as $c) {
-            $texto .= ($this->datosExtraidos[$c] ?? '') . "\n";
+    private function detectarAdvertenciasPrevias(
+        int $cajaConceptoId,
+        array $items,
+        array $mediosPago,
+        string $referencias,
+        string $adenda,
+        array $itemDistribuciones = [],
+        string $sufijoEvento = '',
+        bool $ignorarDuplicados = false,
+        bool $ignorarConcepto = false
+    ): ?array {
+        if (!$ignorarDuplicados) {
+            $advertenciaDuplicados = $this->detectarAdvertenciaDuplicados($referencias, $adenda, $items, $sufijoEvento);
+            if ($advertenciaDuplicados) {
+                return $advertenciaDuplicados;
+            }
         }
-        foreach ($this->datosExtraidos['items'] ?? [] as $item) {
+
+        if (!$ignorarConcepto) {
+            $totalAPagar = $this->calcularTotalAPagar($items, $mediosPago);
+            $advertenciaConcepto = $this->detectarAdvertenciaConceptoDeCaja($cajaConceptoId, $totalAPagar, $itemDistribuciones, $sufijoEvento);
+            if ($advertenciaConcepto) {
+                return $advertenciaConcepto;
+            }
+        }
+
+        return null;
+    }
+
+    private function detectarAdvertenciaConceptoDeCaja(int $cajaConceptoId, float $totalAPagar, array $itemDistribuciones = [], string $sufijoEvento = ''): ?array
+    {
+        if ($totalAPagar <= 0) {
+            return null;
+        }
+
+        $concepto = CajaConcepto::find($cajaConceptoId);
+        $nombreConcepto = $concepto?->caja_concepto ?? '';
+        $totalFormateado = '$ ' . number_format($totalAPagar, 2, ',', '.');
+        $esSeleccionadoEspecial = $this->esConceptoConValidacionDeMonto($cajaConceptoId, $itemDistribuciones);
+
+        // a) ¿El Total a Pagar ya existe en los últimos 50 registros?
+        $ultimosCincuenta = TesCfe::whereNull('deleted_at')
+            ->orderByDesc('fecha')
+            ->orderByDesc('id')
+            ->limit(50)
+            ->get();
+
+        $existeValor = $ultimosCincuenta->contains(fn ($c) => abs((float) $c->total_a_pagar - $totalAPagar) < 0.01);
+
+        if (!$existeValor) {
+            // Valor nuevo: sólo se pide confirmación si el concepto seleccionado es uno de los especiales
+            if (!$esSeleccionadoEspecial) {
+                return null;
+            }
+
+            return [
+                'evento' => 'swal:confirmar-concepto-nuevo' . $sufijoEvento,
+                'parametros' => ['totalAPagar' => $totalFormateado, 'concepto' => $nombreConcepto],
+            ];
+        }
+
+        // b) En las últimas 50 ocurrencias del valor, ¿a qué concepto se asocia con mayor frecuencia?
+        $ocurrenciasValor = TesCfe::whereNull('deleted_at')
+            ->where('total_a_pagar', '>=', $totalAPagar - 0.01)
+            ->where('total_a_pagar', '<=', $totalAPagar + 0.01)
+            ->orderByDesc('fecha')
+            ->orderByDesc('id')
+            ->limit(50)
+            ->get();
+
+        $frecuenciasConcepto = $ocurrenciasValor
+            ->filter(fn ($c) => $c->tes_caja_concepto_id !== null)
+            ->groupBy('tes_caja_concepto_id')
+            ->map->count()
+            ->sortDesc();
+
+        if ($frecuenciasConcepto->isEmpty()) {
+            return null;
+        }
+
+        $maxOcurrencias = $frecuenciasConcepto->first();
+        $ocurrenciasDelSeleccionado = $frecuenciasConcepto->get($cajaConceptoId, 0);
+
+        if ($ocurrenciasDelSeleccionado === $maxOcurrencias) {
+            return null;
+        }
+
+        $conceptoMasFrecuenteId = $frecuenciasConcepto->keys()->first();
+        $conceptoMasFrecuente = CajaConcepto::find($conceptoMasFrecuenteId);
+        $esFrecuenteEspecial = $conceptoMasFrecuente ? $this->esConceptoConValidacionDeMonto($conceptoMasFrecuente->id) : false;
+
+        // Advertir sólo si alguno de los dos conceptos (el seleccionado o el más frecuente) es especial
+        if (!$esSeleccionadoEspecial && !$esFrecuenteEspecial) {
+            return null;
+        }
+
+        return [
+            'evento' => 'swal:confirmar-concepto-diferente' . $sufijoEvento,
+            'parametros' => [
+                'totalAPagar' => $totalFormateado,
+                'concepto' => $nombreConcepto,
+                'conceptoFrecuente' => $conceptoMasFrecuente?->caja_concepto ?? 'Desconocido',
+                'cantidad' => $maxOcurrencias,
+            ],
+        ];
+    }
+
+    private function calcularTotalAPagar(array $items, array $mediosPago): float
+    {
+        $itemsRedondeados = $this->cfeCreator->redondearYCompensarItems($items, $mediosPago);
+
+        if (!empty($mediosPago)) {
+            return (float) collect($mediosPago)->sum(fn ($mp) => (float) ($mp['valor'] ?? 0));
+        }
+
+        return (float) collect($itemsRedondeados)->sum(fn ($i) => (float) ($i['importe'] ?? 0));
+    }
+
+    private function esConceptoConValidacionDeMonto(?int $cajaConceptoId, array $itemDistribuciones = []): bool
+    {
+        if (!$cajaConceptoId) {
+            return false;
+        }
+
+        $concepto = CajaConcepto::find($cajaConceptoId);
+        if (!$concepto) {
+            return false;
+        }
+
+        $nombreNorm = TextoHelper::normalizarConcepto($concepto->caja_concepto);
+
+        if ($nombreNorm === TextoHelper::normalizarConcepto('MULTAS DE TRÁNSITO')) {
+            return $this->tieneDistribucionSoa($itemDistribuciones);
+        }
+
+        foreach (self::CONCEPTOS_CON_VALIDACION_DE_MONTO as $nombre) {
+            if ($nombreNorm === TextoHelper::normalizarConcepto($nombre)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function tieneDistribucionSoa(array $itemDistribuciones): bool
+    {
+        $ids = collect($itemDistribuciones)
+            ->filter(fn ($id) => !empty($id))
+            ->unique();
+
+        if ($ids->isEmpty()) {
+            return false;
+        }
+
+        $soaNombreNorm = TextoHelper::normalizarConcepto('Multa por circular sin seguro obligatorio automotor (SOA)');
+
+        return SiifDistribucion::whereIn('id', $ids)
+            ->whereNull('deleted_at')
+            ->get()
+            ->contains(function ($d) use ($soaNombreNorm) {
+                $conceptoNorm = TextoHelper::normalizarConcepto($d->concepto ?? '');
+                $distribucionNorm = TextoHelper::normalizarConcepto($d->distribucion ?? '');
+
+                return $conceptoNorm === $soaNombreNorm || $distribucionNorm === $soaNombreNorm;
+            });
+    }
+
+    private function detectarAdvertenciaDuplicados(string $referencias, string $adenda, array $items, string $sufijoEvento = ''): ?array
+    {
+        $texto = $referencias . "\n" . $adenda . "\n";
+        foreach ($items as $item) {
             $texto .= ($item['detalle'] ?? '') . "\n";
             $texto .= ($item['descripcion'] ?? '') . "\n";
         }
+
+        $ordenCobro = $this->extraerOrdenCobro($texto);
+        if ($ordenCobro !== null) {
+            $cfeOcExistente = $this->buscarOrdenCobroDuplicada($ordenCobro);
+            if ($cfeOcExistente) {
+                $documentoIdentificador = "{$cfeOcExistente->documento_tipo} {$cfeOcExistente->documento_serie}-{$cfeOcExistente->documento_numero}";
+                return [
+                    'evento' => 'swal:confirmar-orden-cobro-duplicada' . $sufijoEvento,
+                    'parametros' => ['ordenCobro' => $ordenCobro, 'documentoExistente' => $documentoIdentificador],
+                ];
+            }
+        }
+
+        $referencia = trim($referencias);
+        if ($referencia !== '') {
+            $resultado = $this->buscarReferenciaDuplicada($referencia);
+            if ($resultado) {
+                $documentoIdentificador = "{$resultado['cfe']->documento_tipo} {$resultado['cfe']->documento_serie}-{$resultado['cfe']->documento_numero}";
+                return [
+                    'evento' => 'swal:confirmar-guardar-referencia-duplicada' . $sufijoEvento,
+                    'parametros' => ['documentoReferencia' => $resultado['referencia'], 'documentoExistente' => $documentoIdentificador],
+                ];
+            }
+        }
+
+        return null;
+    }
+
+    private function extraerOrdenCobro(string $texto): ?string
+    {
+        $marcadores = ['O/C', 'O.C.', 'Orden de Cobro', 'Orden Cobro'];
 
         foreach ($marcadores as $marcador) {
             if (preg_match('/' . preg_quote($marcador, '/') . '\s*(\d+)/iu', $texto, $m)) {
                 return $m[1];
             }
+        }
+
+        return null;
+    }
+
+    private function buscarReferenciaDuplicada(string $referencia): ?array
+    {
+        if (!preg_match(
+            '/(e[- ]?(?:Factura|Ticket|Boleta)(?:[- ]Cobranza)?|Nota[- ]de[- ]Cr[ée]dito)\s*[-–\s]*([A-Z])?\s*[-–\s]*(\d+)\b/iu',
+            $referencia,
+            $m
+        )) {
+            return null;
+        }
+
+        $refTipo = $m[1];
+        $refSerie = !empty($m[2]) ? mb_strtoupper($m[2], 'UTF-8') : null;
+        $refNumero = $m[3];
+        $tipoNorm = $this->normalizarTipoDoc($refTipo);
+
+        // Buscar por numero en el campo referencias de TesCfe
+        $candidatos = TesCfe::where('referencias', 'like', '%' . $refNumero . '%')
+            ->whereNull('deleted_at')
+            ->get();
+
+        foreach ($candidatos as $cfe) {
+            $refCfe = $cfe->referencias ?? '';
+            $docTipoNorm = $this->normalizarTipoDoc($cfe->documento_tipo ?? '');
+
+            // Verificar serie: buscar patron "A1167", "A-1167" o "A 1167"
+            if ($refSerie && !preg_match('/' . preg_quote($refSerie, '/') . '\s*-?\s*' . $refNumero . '/u', $refCfe)) {
+                continue;
+            }
+
+            // Verificar tipo: coincidencia flexible (ej. "efactura" ≈ "efacturacobranza")
+            if (!str_contains($docTipoNorm, $tipoNorm) && !str_contains($tipoNorm, $docTipoNorm)) {
+                continue;
+            }
+
+            $refCompleta = $refTipo . ($refSerie ? "-{$refSerie}" : "") . "-{$refNumero}";
+
+            return ['cfe' => $cfe, 'referencia' => $refCompleta];
         }
 
         return null;

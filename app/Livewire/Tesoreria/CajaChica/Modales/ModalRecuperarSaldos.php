@@ -59,6 +59,7 @@ class ModalRecuperarSaldos extends Component
         
         $this->itemsParaRecuperar = $items->toArray();
         $this->showModal = true;
+        $this->dispatch('modal-recuperar-saldos-opened');
     }
 
     public function updatedSeleccionarTodos($value)
@@ -110,7 +111,7 @@ class ModalRecuperarSaldos extends Component
             );
 
             $this->cerrarModal();
-            session()->flash('message', 'Recuperación guardada exitosamente.');
+            $this->dispatch('alert', type: 'success', message: 'Recuperación guardada exitosamente.');
             return redirect()->route('tesoreria.caja-chica.index');
             
         } catch (\Exception $e) {
@@ -122,6 +123,7 @@ class ModalRecuperarSaldos extends Component
     public function cerrarModal()
     {
         $this->showModal = false;
+        $this->dispatch('modal-recuperar-saldos-closed');
         $this->reset(['recuperacion', 'itemsParaRecuperar', 'itemsSeleccionados', 'totalARecuperar', 'seleccionarTodos']);
         $this->resetErrorBag();
     }

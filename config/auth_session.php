@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 /**
  * Configuración compartida de duración de sesión entre Laravel Session y JWT.

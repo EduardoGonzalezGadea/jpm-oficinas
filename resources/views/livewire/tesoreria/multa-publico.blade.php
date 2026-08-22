@@ -68,7 +68,7 @@
           </span>
         </div>
         <div class="col-auto">
-          <select wire:model.live="perPage" class="form-control form-control-sm">
+          <select wire:model="perPage" class="form-control form-control-sm">
             <option value="50">50</option>
             <option value="100">100</option>
             <option value="-1">Todos</option>

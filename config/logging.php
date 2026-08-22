@@ -121,6 +121,21 @@ return [
             'level' => 'warning',
             'days' => 30,
         ],
+
+        'security' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/security.log'),
+            'level' => env('LOG_LEVEL', 'warning'),
+            'days' => 90,
+            'formatter' => \App\Logging\Formatters\SecureLogFormatter::class,
+        ],
+
+        'auth' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/auth.log'),
+            'level' => env('LOG_LEVEL', 'info'),
+            'days' => 90,
+        ],
     ],
 
 ];

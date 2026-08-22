@@ -30,7 +30,7 @@
           <input type="text" class="form-control form-control-sm" wire:model.live.debounce.300ms="search" placeholder="Buscar por número o concepto...">
         </div>
         <div class="mr-2 mb-0" style="width: 150px;">
-          <select class="form-control form-control-sm" wire:model.live="filtroEstado">
+          <select class="form-control form-control-sm" wire:model="filtroEstado">
             <option value="">Todos los estados</option>
             <option value="confirmada">Confirmadas</option>
             <option value="pendiente">Pendientes</option>
@@ -38,7 +38,7 @@
           </select>
         </div>
         <div class="mr-2 mb-0" style="width: 200px;">
-          <select class="form-control form-control-sm" wire:model.live="filtroConcepto">
+          <select class="form-control form-control-sm" wire:model="filtroConcepto">
             <option value="">— Todos los conceptos —</option>
             @foreach($cajaConceptos as $concepto)
               <option value="{{ $concepto->id }}">{{ $concepto->caja_concepto }}</option>
@@ -78,7 +78,7 @@
           </div>
         </div>
         <div class="mr-2 mb-0" style="width: 110px;">
-          <select class="form-control form-control-sm" wire:model.live="filtroAno">
+          <select class="form-control form-control-sm" wire:model="filtroAno">
             <option value="0">— Todos los años —</option>
             @foreach($anosRegistrados as $ano)
               <option value="{{ $ano }}">{{ $ano }}</option>
@@ -179,13 +179,14 @@
   </div>
 
   {{-- Modal Ver Planilla --}}
-  <div class="modal fade" id="modalPlanilla" tabindex="-1" role="dialog" aria-hidden="true" wire:ignore.self>
-    <div class="modal-dialog modal-full-width" role="document">
+  @if($mostrarModalPlanilla && $planillaVer)
+  <div wire:ignore.self class="modal fade" id="modalPlanilla" tabindex="-1" role="dialog" aria-modal="true">
+    <div class="modal-dialog modal-full-width modal-dialog-scrollable" role="document">
       <div class="modal-content border-0 shadow">
-        <div class="modal-header {{ $planillaVer?->trashed() ? 'bg-danger' : 'bg-info' }} text-white p-2">
+        <div class="modal-header {{ $planillaVer->trashed() ? 'bg-danger' : 'bg-info' }} text-white p-2">
           <h5 class="modal-title m-0">
-            <i class="fas fa-folder-open mr-2"></i><strong>Planilla {{ $planillaVer?->numero ?? '' }}</strong>
-            @if($planillaVer?->trashed())
+            <i class="fas fa-folder-open mr-2"></i><strong>Planilla {{ $planillaVer->numero ?? '' }}</strong>
+            @if($planillaVer->trashed())
               <span class="badge badge-light ml-2">ANULADA</span>
             @endif
           </h5>
@@ -194,7 +195,6 @@
             <span aria-hidden="true">&times;</span>
           </button>
         </div>
-        @if($planillaVer)
         <div class="modal-body p-3">
           @if($planillaVer->trashed())
           <div class="alert alert-danger py-2 mb-3">
@@ -328,14 +328,19 @@
           </button>
           @endif
         </div>
-        @endif
       </div>
     </div>
   </div>
+  @endif
 
 </div>
 @push('scripts')
     <script>
+      document.addEventListener('livewire:init', function () {
+        Livewire.on('abrir-modal-planilla', () => { $('#modalPlanilla').modal('show'); });
+        Livewire.on('cerrar-modal-planilla', () => { $('#modalPlanilla').modal('hide'); });
+      });
+
       function imprimirPlanilla() {
         var modalBody = document.getElementById('modalPlanilla').querySelector('.modal-body');
         var wrapper = document.createElement('div');
@@ -374,7 +379,7 @@
         ventana.document.write('<\/style><\/head><body>');
         ventana.document.write(wrapper.innerHTML);
         ventana.document.write('<\/body><\/html>');
-        ventana.document.close();
+        ventana.document.write.close ? ventana.document.close() : null;
         ventana.focus();
         setTimeout(function() { ventana.print(); ventana.close(); }, 500);
       }
@@ -401,29 +406,5 @@
           }
         });
       }
-
-      function bindModalEvents() {
-        const show = (selector) => $(selector).modal('show');
-        const hide = (selector) => $(selector).modal('hide');
-
-        window.addEventListener('abrir-modal-planilla', () => show('#modalPlanilla'));
-        window.addEventListener('cerrar-modal-planilla', () => hide('#modalPlanilla'));
-
-        if (typeof Livewire !== 'undefined') {
-          Livewire.on('abrir-modal-planilla', () => show('#modalPlanilla'));
-          Livewire.on('cerrar-modal-planilla', () => hide('#modalPlanilla'));
-        }
-
-        $('#modalPlanilla').on('hidden.bs.modal', function () {
-          if (typeof Livewire !== 'undefined') Livewire.dispatch('cerrarModalPlanilla');
-        });
-      }
-
-      if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', bindModalEvents);
-      } else {
-        bindModalEvents();
-      }
-      document.addEventListener('livewire:init', bindModalEvents);
     </script>
 @endpush

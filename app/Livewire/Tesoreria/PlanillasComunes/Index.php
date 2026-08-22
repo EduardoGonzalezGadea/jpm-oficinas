@@ -100,10 +100,10 @@ class Index extends Component
 
     public function cerrarModalPlanilla(): void
     {
-        $this->dispatch('cerrar-modal-planilla');
         $this->mostrarModalPlanilla = false;
         $this->planillaVer = null;
         $this->totalesPorInstitucion = collect();
+        $this->dispatch('cerrar-modal-planilla');
     }
 
     public function anularPlanilla($id = null, $motivo = null): void

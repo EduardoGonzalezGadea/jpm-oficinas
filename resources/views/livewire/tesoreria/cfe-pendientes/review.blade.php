@@ -1,11 +1,11 @@
-﻿<div class="modal fade" id="reviewModal" tabindex="-1" aria-labelledby="reviewModalLabel" aria-hidden="true" wire:ignore>
+<div class="modal fade" id="reviewModal" tabindex="-1" aria-labelledby="reviewModalLabel" aria-hidden="true" wire:ignore>
   <div class="modal-dialog modal-xl">
     <div class="modal-content">
       <div class="modal-header bg-primary text-white">
         <h5 class="modal-title" id="reviewModalLabel">
           <i class="fas fa-search-plus me-2"></i>Revisar y Confirmar CFE
         </h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="btn-close btn-close-white" data-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
         @if($pendiente)
@@ -82,7 +82,7 @@
             <button type="button" class="btn btn-success" wire:click="confirmar">
               <i class="fas fa-check me-1"></i>Confirmar y Crear CFE
             </button>
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">
               <i class="fas fa-times me-1"></i>Cancelar
             </button>
           </div>

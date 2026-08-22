@@ -831,3 +831,267 @@ div:where(.swal2-container) input:where(.swal2-input) {
 .caja-diaria-view .table-responsive {
     max-width: 100%;
 }
+
+/* ==========================================================================
+   CAJA DIARIA: SISTEMA DE DISEÑO Y COMPONENTES VISUALES
+   ========================================================================== */
+
+/* Badges Translúcidos Soft */
+.badge-soft-success {
+    background-color: rgba(40, 167, 69, 0.15) !important;
+    color: #28a745 !important;
+    border: 1px solid rgba(40, 167, 69, 0.3) !important;
+}
+.badge-soft-danger {
+    background-color: rgba(220, 53, 69, 0.15) !important;
+    color: #dc3545 !important;
+    border: 1px solid rgba(220, 53, 69, 0.3) !important;
+}
+.badge-soft-primary {
+    background-color: rgba(30, 58, 95, 0.15) !important;
+    color: #1e3a5f !important;
+    border: 1px solid rgba(30, 58, 95, 0.3) !important;
+}
+.badge-soft-info {
+    background-color: rgba(23, 162, 184, 0.15) !important;
+    color: #17a2b8 !important;
+    border: 1px solid rgba(23, 162, 184, 0.3) !important;
+}
+.badge-soft-warning {
+    background-color: rgba(255, 193, 7, 0.2) !important;
+    color: #856404 !important;
+    border: 1px solid rgba(255, 193, 7, 0.4) !important;
+}
+
+.dark-theme .badge-soft-primary {
+    background-color: rgba(123, 163, 201, 0.2) !important;
+    color: #a8d4f5 !important;
+    border-color: rgba(123, 163, 201, 0.4) !important;
+}
+.dark-theme .badge-soft-success {
+    background-color: rgba(40, 167, 69, 0.25) !important;
+    color: #5cd677 !important;
+    border-color: rgba(40, 167, 69, 0.5) !important;
+}
+.dark-theme .badge-soft-danger {
+    background-color: rgba(220, 53, 69, 0.25) !important;
+    color: #ff7683 !important;
+    border-color: rgba(220, 53, 69, 0.5) !important;
+}
+.dark-theme .badge-soft-info {
+    background-color: rgba(23, 162, 184, 0.25) !important;
+    color: #5bc0de !important;
+    border-color: rgba(23, 162, 184, 0.5) !important;
+}
+.dark-theme .badge-soft-warning {
+    background-color: rgba(255, 193, 7, 0.25) !important;
+    color: #ffd659 !important;
+    border-color: rgba(255, 193, 7, 0.5) !important;
+}
+
+/* Tarjetas KPI de Caja Diaria */
+.caja-kpi-card {
+    border-radius: 8px !important;
+    border: 1px solid var(--border-default);
+    background-color: var(--surface-card);
+    transition: transform var(--transition-fast), box-shadow var(--transition-fast), border-color var(--transition-fast);
+    position: relative;
+    overflow: hidden;
+}
+
+.caja-kpi-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md) !important;
+}
+
+.caja-kpi-card .caja-icon-circle {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.15rem;
+    flex-shrink: 0;
+}
+
+.caja-kpi-inicial {
+    border-left: 4px solid #1e3a5f !important;
+}
+.caja-kpi-inicial .caja-icon-circle {
+    background: rgba(30, 58, 95, 0.1);
+    color: #1e3a5f;
+}
+
+.caja-kpi-entradas {
+    border-left: 4px solid #28a745 !important;
+}
+.caja-kpi-entradas .caja-icon-circle {
+    background: rgba(40, 167, 69, 0.12);
+    color: #28a745;
+}
+
+.caja-kpi-salidas {
+    border-left: 4px solid #dc3545 !important;
+}
+.caja-kpi-salidas .caja-icon-circle {
+    background: rgba(220, 53, 69, 0.12);
+    color: #dc3545;
+}
+
+.caja-kpi-saldo {
+    border-left: 4px solid #0d47a1 !important;
+    background: linear-gradient(135deg, var(--surface-card), rgba(13, 71, 161, 0.05));
+}
+.caja-kpi-saldo .caja-icon-circle {
+    background: rgba(13, 71, 161, 0.15);
+    color: #0d47a1;
+}
+
+.dark-theme .caja-kpi-inicial .caja-icon-circle {
+    background: rgba(168, 212, 245, 0.15);
+    color: #a8d4f5;
+}
+.dark-theme .caja-kpi-entradas .caja-icon-circle {
+    background: rgba(40, 167, 69, 0.25);
+    color: #5cd677;
+}
+.dark-theme .caja-kpi-salidas .caja-icon-circle {
+    background: rgba(220, 53, 69, 0.25);
+    color: #ff7683;
+}
+.dark-theme .caja-kpi-saldo .caja-icon-circle {
+    background: rgba(66, 165, 245, 0.25);
+    color: #90caf9;
+}
+
+/* Barra de Navegación de Acciones Rápidas */
+.caja-quick-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.caja-action-btn {
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    padding: 0.35rem 0.75rem;
+    display: inline-flex;
+    align-items: center;
+    transition: all var(--transition-fast);
+}
+
+.caja-action-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
+}
+
+/* Switch Segmentado Moderno */
+.caja-segmented-control {
+    display: flex;
+    background: rgba(0, 0, 0, 0.06);
+    border-radius: 20px;
+    padding: 3px;
+    border: 1px solid var(--border-default);
+}
+
+.dark-theme .caja-segmented-control {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.caja-segmented-btn {
+    flex: 1;
+    text-align: center;
+    border: none;
+    background: transparent;
+    padding: 0.25rem 0.6rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    border-radius: 16px;
+    color: var(--text-muted-themeable);
+    transition: all var(--transition-fast);
+    cursor: pointer;
+}
+
+.caja-segmented-btn.active {
+    background: #ffffff;
+    color: #1e3a5f;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+}
+
+.dark-theme .caja-segmented-btn.active {
+    background: #3b6b9a;
+    color: #ffffff;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+}
+
+/* Tablas de Desglose Monetario */
+.caja-money-table th {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.caja-money-table .badge-denominacion {
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+}
+
+.caja-money-table .separador-tipo-moneda {
+    background-color: rgba(0, 0, 0, 0.04);
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted-themeable);
+    padding: 0.25rem 0.75rem;
+}
+
+.dark-theme .caja-money-table .separador-tipo-moneda {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* Tarjeta de Balance Dinámico */
+.caja-balance-card {
+    border-radius: 8px;
+    border: 1px solid var(--border-default);
+    padding: 0.85rem;
+    transition: all var(--transition-base);
+}
+
+.caja-balance-cuadrado {
+    background: rgba(40, 167, 69, 0.08);
+    border-color: rgba(40, 167, 69, 0.4);
+}
+
+.caja-balance-tolerancia {
+    background: rgba(23, 162, 184, 0.08);
+    border-color: rgba(23, 162, 184, 0.4);
+}
+
+.caja-balance-descuadre {
+    background: rgba(220, 53, 69, 0.08);
+    border-color: rgba(220, 53, 69, 0.4);
+}
+
+/* Tarjetas de Cajeros en "Cajas del Día" */
+.caja-cajero-card {
+    border-radius: 8px;
+    border: 1px solid var(--border-default);
+    background-color: var(--surface-card);
+    transition: all var(--transition-fast);
+}
+
+.caja-cajero-card:hover {
+    box-shadow: var(--shadow-md);
+    border-color: var(--color-brand-mid);
+}
+
+.caja-cajero-card.caja-propia {
+    border-left: 4px solid var(--color-brand-mid);
+}
+

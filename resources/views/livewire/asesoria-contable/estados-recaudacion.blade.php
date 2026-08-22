@@ -46,7 +46,7 @@
                     </div>
                 </div>
                 <div>
-                    <select wire:model.live="filtroTurno" class="form-control form-control-sm" style="width:130px;">
+                    <select wire:model="filtroTurno" class="form-control form-control-sm" style="width:130px;">
                         <option value="">Todos los turnos</option>
                         <option value="diurno">Diurno</option>
                         <option value="nocturno">Nocturno</option>
@@ -84,7 +84,7 @@
                         @endforeach
                     </div>
                 </div>
-                <select wire:model.live="filtroAno" class="form-control form-control-sm" style="width:100px;">
+                <select wire:model="filtroAno" class="form-control form-control-sm" style="width:100px;">
                     <option value="0">Todos</option>
                     @foreach($anosRegistrados as $ano)
                         <option value="{{ $ano }}">{{ $ano }}</option>
@@ -160,19 +160,19 @@
     </div>
 
     {{-- Modal Detalles de Planilla --}}
-    <div class="modal fade" id="modalDetallesPlanilla" tabindex="-1" role="dialog" aria-hidden="true" wire:ignore.self>
-        <div class="modal-dialog modal-full-width" role="document">
+    @if($mostrarModalDetalles && $planillaDetalles)
+    <div wire:ignore.self class="modal fade" id="modalDetallesPlanilla" tabindex="-1" role="dialog" aria-modal="true">
+        <div class="modal-dialog modal-full-width modal-dialog-scrollable" role="document">
             <div class="modal-content border-0 shadow">
                 <div class="modal-header bg-info text-white p-2">
                     <h5 class="modal-title m-0">
-                        <i class="fas fa-list mr-2"></i><strong>Detalles — Planilla {{ $planillaDetalles?->numero ?? '' }}</strong>
+                        <i class="fas fa-list mr-2"></i><strong>Detalles — Planilla {{ $planillaDetalles->numero ?? '' }}</strong>
                     </h5>
                     <button type="button" class="close text-white" aria-label="Close"
                         wire:click="cerrarModalDetalles">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
-                @if($planillaDetalles)
                 <div class="modal-body p-3">
                     <div class="row mb-3 small">
                         <div class="col-auto"><strong>Tipo:</strong> {!! App\Helpers\FormatHelper::renderTipo($planillaDetalles->tipo->tipo ?? '—', $planillaDetalles->tipo_id) !!}</div>
@@ -243,84 +243,75 @@
                                             $porSerie[$parts[0]][] = (int) ($parts[1] ?? 0);
                                         }
                                         $rangos = [];
-                                        foreach ($porSerie as $s => $nums) {
+                                        foreach ($porSerie as $serie => $nums) {
                                             sort($nums);
                                             $inicio = $nums[0];
-                                            $prev = $nums[0];
-                                            for ($i = 1; $i < count($nums); $i++) {
-                                                if ($nums[$i] !== $prev + 1) {
-                                                    $rangos[] = $inicio === $prev ?"$s-$inicio" :"$s-$inicio/$prev";
-                                                    $inicio = $nums[$i];
+                                            $fin = $nums[0];
+                                            for ($n = 1; $n < count($nums); $n++) {
+                                                if ($nums[$n] === $fin + 1) {
+                                                    $fin = $nums[$n];
+                                                } else {
+                                                    $rangos[] = $inicio === $fin ? "$serie-$inicio" : "$serie-$inicio al $serie-$fin";
+                                                    $inicio = $nums[$n];
+                                                    $fin = $nums[$n];
                                                 }
-                                                $prev = $nums[$i];
                                             }
-                                            $rangos[] = $inicio === $prev ?"$s-$inicio" :"$s-$inicio/$prev";
+                                            $rangos[] = $inicio === $fin ? "$serie-$inicio" : "$serie-$inicio al $serie-$fin";
                                         }
-                                        $docsHeader = implode(', ', $rangos);
+                                        $documentosResumen = implode(', ', $rangos);
+                                    } else {
+                                        $documentosResumen = $grupoKey;
                                     }
                                 @endphp
                                 <tr class="table-info font-weight-bold">
-                                    <td colspan="3" class="align-middle small">
-                                        <i class="fas fa-folder-open mr-1"></i> {{ $grupoKey }}
-                                        @if($modoAgrupacionDetalles === 'distribucion' && $docsHeader)
-                                            <span class="font-weight-normal">({{ $docsHeader }})</span>
+                                    <td colspan="3" class="align-middle">
+                                        @if($modoAgrupacionDetalles === 'distribucion')
+                                            <i class="fas fa-layer-group mr-1 text-primary"></i>
+                                            <span>{{ $grupoKey }}</span>
+                                            <span class="text-muted font-weight-normal small ml-2">(Docs: {{ $documentosResumen }})</span>
+                                        @else
+                                            <i class="fas fa-file-invoice mr-1 text-primary"></i>
+                                            <span>Documento: {{ $grupoKey }}</span>
                                         @endif
                                     </td>
-                                    <td class="align-middle small text-right text-nowrap">$ {{ number_format($totalGrupo, 2, ',', '.') }}</td>
+                                    <td class="align-middle text-right text-nowrap">$ {{ number_format($totalGrupo, 2, ',', '.') }}</td>
                                 </tr>
-                                @if($modoAgrupacionDetalles === 'distribucion')
-                                    @php
-                                        $subGrupos = $subGrupos->sortBy(function($items, $key) {
-                                            $parts = explode('-', $key, 2);
-                                            $serie = $parts[0] ?? '';
-                                            $numero = (int) ($parts[1] ?? 0);
-                                            return [$serie, $numero];
-                                        });
-                                    @endphp
-                                    @foreach($subGrupos as $docKey => $docItems)
-                                        @php $subTotal = $docItems->sum('importe'); @endphp
-                                        <tr class="table-secondary font-weight-bold">
-                                            <td colspan="3" class="align-middle small pl-4">
-                                                <i class="fas fa-file mr-1"></i> {{ $docKey }}
-                                            </td>
-                                            <td class="align-middle small text-right text-nowrap">$ {{ number_format($subTotal, 2, ',', '.') }}</td>
-                                        </tr>
-                                        @foreach($docItems as $item)
-                                            <tr>
-                                                <td class="align-middle small pl-5">
-                                                    @if($item->cfe)
-                                                        {{ $item->cfe->documento_tipo }} {{ $item->cfe->documento_serie }}-{{ $item->cfe->documento_numero }}
-                                                    @else
-                                                        —
-                                                    @endif
-                                                </td>
-                                                <td class="align-middle small">{{ $item->detalle }}</td>
-                                                <td class="align-middle small">{{ $item->siifDistribucion->distribucion ?? '—' }}</td>
-                                                <td class="align-middle small text-right text-nowrap">$ {{ number_format($item->importe, 2, ',', '.') }}</td>
-                                            </tr>
-                                        @endforeach
-                                    @endforeach
-                                @else
-                                    @foreach($grupoItems as $item)
-                                        <tr>
-                                            <td class="align-middle small pl-4">
-                                                @if($item->cfe)
-                                                    {{ $item->cfe->documento_tipo }} {{ $item->cfe->documento_serie }}-{{ $item->cfe->documento_numero }}
-                                                @else
-                                                    —
-                                                @endif
-                                            </td>
-                                            <td class="align-middle small">{{ $item->detalle }}</td>
-                                                <td class="align-middle small">{{ $item->siifDistribucion->distribucion ?? '—' }}</td>
-                                            </tr>
-                                        @endforeach
-                                    @endif
-                                @empty
+                                @foreach($grupoItems as $item)
+                                    <tr>
+                                        <td class="align-middle small text-nowrap">
+                                            @if($item->cfe)
+                                                {{ $item->cfe->documento_tipo }} {{ $item->cfe->documento_serie }}-{{ $item->cfe->documento_numero }}
+                                            @else
+                                                —
+                                            @endif
+                                        </td>
+                                        <td class="align-middle small">{{ $item->detalle }}</td>
+                                        <td class="align-middle small">
+                                            @if($item->siifDistribucion)
+                                                {{ $item->siifDistribucion->concepto }}
+                                            @else
+                                                <span class="text-muted">Sin distribución</span>
+                                            @endif
+                                        </td>
+                                        <td class="align-middle small text-right text-nowrap">$ {{ number_format($item->importe, 2, ',', '.') }}</td>
+                                    </tr>
+                                @endforeach
+                            @empty
                                 <tr>
-                                    <td colspan="4" class="text-center py-2">No hay ítems asociados.</td>
+                                    <td colspan="4" class="text-center py-3 text-muted">
+                                        No hay ítems registrados en esta planilla.
+                                    </td>
                                 </tr>
                             @endforelse
                         </tbody>
+                        <tfoot>
+                            <tr class="table-active font-weight-bold">
+                                <td colspan="3" class="text-right align-middle">TOTAL</td>
+                                <td class="align-middle text-right text-nowrap">
+                                    $ {{ number_format($planillaDetalles->items->sum('importe'), 2, ',', '.') }}
+                                </td>
+                            </tr>
+                        </tfoot>
                     </table>
                 </div>
                 <div class="modal-footer">
@@ -331,25 +322,25 @@
                         <i class="fas fa-print mr-1"></i> Imprimir
                     </button>
                 </div>
-                @endif
             </div>
         </div>
     </div>
+    @endif
 
     {{-- Modal Ver Planilla --}}
-    <div class="modal fade" id="modalPlanilla" tabindex="-1" role="dialog" aria-hidden="true" wire:ignore.self>
-        <div class="modal-dialog modal-full-width" role="document">
+    @if($mostrarModalPlanilla && $planillaVer)
+    <div wire:ignore.self class="modal fade" id="modalPlanilla" tabindex="-1" role="dialog" aria-modal="true">
+        <div class="modal-dialog modal-full-width modal-dialog-scrollable" role="document">
             <div class="modal-content border-0 shadow">
                 <div class="modal-header bg-info text-white p-2">
                     <h5 class="modal-title m-0">
-                        <i class="fas fa-file-alt mr-2"></i><strong>Planilla {{ $planillaVer?->numero ?? '' }}</strong>
+                        <i class="fas fa-file-alt mr-2"></i><strong>Planilla {{ $planillaVer->numero ?? '' }}</strong>
                     </h5>
                     <button type="button" class="close text-white" aria-label="Close"
                         wire:click="cerrarModalPlanilla">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
-                @if($planillaVer)
                 <div class="modal-body p-3">
                     <div class="d-flex justify-content-between align-items-start mb-3">
                         <div>
@@ -361,137 +352,197 @@
                             <strong>FECHA: {{ $planillaVer->fecha->format('d/m/Y') }}</strong>
                         </div>
                     </div>
+
                     <div class="text-center mb-3">
-                        <strong>PLANILLA PARA ESTADO DE RECAUDACIÓN</strong>
+                        <h5 class="font-weight-bold mb-0">ESTADO DE RECAUDACIÓN</h5>
+                        <div class="small">
+                            TIPO: {!! App\Helpers\FormatHelper::renderTipo($planillaVer->tipo->tipo ?? '—', $planillaVer->tipo_id) !!} &mdash;
+                            DEPENDENCIA: {{ $planillaVer->dependencia->dependencia ?? '—' }} &mdash;
+                            TURNO: {{ $planillaVer->turno ?? '—' }}
+                        </div>
                     </div>
 
                     @php
-                        $itemsPorDistribucion = $planillaVer->items->sortBy('siif_distribucion_id')->groupBy(function($item) {
-                            return $item->siifDistribucion?->distribucion ?? 'Sin distribución';
-                        });
-                        $totalGeneralAjustado = 0;
+                        $itemsPorDistribucion = $planillaVer->items->sortBy('siif_distribucion_id')->groupBy(fn($i) => $i->siifDistribucion?->concepto ?? 'Sin distribución');
+                        $tipoId = $planillaVer->tipo_id;
+                        $dependenciaId = $planillaVer->dependencia_id;
+                        $combos = [];
+                        foreach ($itemsPorDistribucion as $concepto => $items) {
+                            if ($concepto !== 'Sin distribución' && $items->first()->siifDistribucion) {
+                                $sd = $items->first()->siifDistribucion;
+                                $combos[] = ['tipo_id' => $sd->tipo_id, 'dependencia_id' => $sd->dependencia_id, 'concepto' => $sd->concepto];
+                            }
+                        }
+                        $distribucionesPorCombo = collect();
+                        if (!empty($combos)) {
+                            $distribucionesPorCombo = \App\Models\Tesoreria\SiifDistribucion::whereNull('deleted_at')
+                                ->where(function ($q) use ($combos) {
+                                    $first = true;
+                                    foreach ($combos as $c) {
+                                        if (empty($c['concepto'])) continue;
+                                        if ($first) {
+                                            $q->where('tipo_id', $c['tipo_id'])
+                                              ->where('dependencia_id', $c['dependencia_id'])
+                                              ->where('concepto', $c['concepto']);
+                                            $first = false;
+                                        } else {
+                                            $q->orWhere(function ($q2) use ($c) {
+                                                $q2->where('tipo_id', $c['tipo_id'])
+                                                   ->where('dependencia_id', $c['dependencia_id'])
+                                                   ->where('concepto', $c['concepto']);
+                                            });
+                                        }
+                                    }
+                                })
+                                ->get()
+                                ->groupBy(fn($d) => $d->tipo_id . '|' . $d->dependencia_id . '|' . ($d->concepto ?? ''));
+                        }
                     @endphp
 
-                    @forelse($itemsPorDistribucion as $distribucion => $itemsDist)
+                    @php
+                        $totalGeneralAjustado = 0;
+                    @endphp
+                    @forelse($itemsPorDistribucion as $concepto => $items)
                         @php
-                            $grupoTotal = $itemsDist->sum('importe');
-                            $grupoTotalAjustado = $grupoTotal;
+                            $primerItem = $items->first();
+                            $sd = $primerItem->siifDistribucion;
+                            $grupoTotal = $items->sum('importe');
+                            $distGrupo = collect();
+                            if ($concepto !== 'Sin distribución' && $sd) {
+                                $key = $sd->tipo_id . '|' . $sd->dependencia_id . '|' . $sd->concepto;
+                                $distGrupo = $distribucionesPorCombo->get($key, collect());
+                            }
                         @endphp
+
                         <div class="card mb-3">
-                            <div class="card-header py-1 px-2 border-bottom-0 d-flex align-items-center justify-content-center">
-                                <strong>{{ $distribucion }}</strong>
+                            <div class="card-header py-1 px-2 font-weight-bold">
+                                {{ $concepto }}
                             </div>
                             <div class="card-body p-0">
-                                @if($distribucion !== 'Sin distribución' && $itemsDist->first()->siifDistribucion)
-                                    @php
-                                    $primerItem = $itemsDist->first();
-                                    $distribuciones = \App\Models\Tesoreria\SiifDistribucion::where('tipo_id', $primerItem->siifDistribucion->tipo_id)
-                                        ->where('dependencia_id', $primerItem->siifDistribucion->dependencia_id)
-                                        ->where('distribucion', $distribucion)
-                                        ->whereNull('deleted_at')
-                                        ->get();
-                                    @endphp
-
-                                    @if($distribuciones->isNotEmpty())
-                                        <table class="table table-sm table-bordered mb-0 border-top-0">
-                                            <thead>
-                                                <tr>
-                                                    <th>Recurso</th>
-                                                    <th>Concepto</th>
-                                                    <th class="text-right">%</th>
-                                                    <th class="text-center">Financiación</th>
-                                                    <th class="text-center">Inciso</th>
-                                                    <th class="text-center">Unid.Ejec.</th>
-                                                    <th class="text-right">Importe</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                @php
-                                                    $distGrupos = $distribuciones->groupBy(function($d) {
-                                                        return ($d->recurso ?? '—') . '|' . ($d->financiacion ?? '—') . '|' . ($d->inciso ?? '—') . '|' . ($d->unidad_ejecutora ?? '—') . '|' . ($d->porcentaje ?? '0');
-                                                    })->map(function($grupo) use ($grupoTotal) {
-                                                        $primer = $grupo->first();
+                                @if($distGrupo->isNotEmpty())
+                                    <table class="table table-sm table-bordered mb-0">
+                                        <thead class="thead-light">
+                                            <tr>
+                                                <th>Financ.</th>
+                                                <th>Prog.</th>
+                                                <th>Proy.</th>
+                                                <th>Obj.Gto.</th>
+                                                <th>Aux.</th>
+                                                <th>Denominación</th>
+                                                <th>Inc.</th>
+                                                <th>UE</th>
+                                                <th class="text-right">%</th>
+                                                <th class="text-right">Importe</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @php
+                                                $distAgrupadas = $distGrupo->groupBy(fn($d) => ($d->financiacion ?? '—') . '|' . ($d->inciso ?? '—') . '|' . ($d->unidad_ejecutora ?? '—'))
+                                                    ->map(function ($g) use ($grupoTotal) {
+                                                        $primer = $g->first();
                                                         return (object) [
-                                                            'recurso' => $primer->recurso,
-                                                            'distribucion' => $primer->distribucion,
-                                                            'porcentaje' => $primer->porcentaje,
                                                             'financiacion' => $primer->financiacion,
+                                                            'programa' => $primer->programa,
+                                                            'proyecto' => $primer->proyecto,
+                                                            'objeto_gasto' => $primer->objeto_gasto,
+                                                            'auxiliar' => $primer->auxiliar,
+                                                            'denominacion' => $primer->denominacion,
                                                             'inciso' => $primer->inciso,
                                                             'unidad_ejecutora' => $primer->unidad_ejecutora,
-                                                            'importe_raw' => $grupoTotal * ($primer->porcentaje / 100),
+                                                            'porcentaje' => $g->sum('porcentaje'),
+                                                            'importe_raw' => $grupoTotal * ($g->sum('porcentaje') / 100),
                                                         ];
                                                     });
 
-                                                    $distFinal = $distGrupos->groupBy(function($dg) {
-                                                        return ($dg->recurso ?? '—') . '|' . ($dg->financiacion ?? '—') . '|' . ($dg->inciso ?? '—') . '|' . ($dg->unidad_ejecutora ?? '—');
-                                                    })->map(function($grupo) {
-                                                        $sumaPorc = $grupo->sum('porcentaje');
-                                                        $importeRaw = $grupo->sum('importe_raw');
-                                                        $primer = $grupo->first();
-                                                        return (object) [
-                                                            'recurso' => $primer->recurso,
-                                                            'distribucion' => $primer->distribucion,
-                                                            'porcentaje' => $sumaPorc,
-                                                            'financiacion' => $primer->financiacion,
-                                                            'inciso' => $primer->inciso,
-                                                            'unidad_ejecutora' => $primer->unidad_ejecutora,
-                                                            'importe_raw' => $importeRaw,
-                                                        ];
-                                                    });
+                                                $sumaRedondeada = 0;
+                                                foreach ($distAgrupadas as $d) {
+                                                    $d->importe = round($d->importe_raw, 0);
+                                                    $sumaRedondeada += $d->importe;
+                                                }
 
-                                                    $sumaRedondeada = 0;
-                                                    foreach ($distFinal as $dg) {
-                                                        $dg->importe = round($dg->importe_raw, 0);
-                                                        $sumaRedondeada += $dg->importe;
-                                                    }
-
-                                                    $diferencia = round($grupoTotal - $sumaRedondeada, 0);
-
-                                                    if ($diferencia != 0) {
-                                                        $compensado = false;
-                                                        foreach ($distFinal as $dg) {
-                                                            if ($dg->unidad_ejecutora == '4' && $dg->inciso == '1') {
-                                                            $dg->importe = round($dg->importe + $diferencia, 0);
+                                                $diferencia = round($grupoTotal - $sumaRedondeada, 0);
+                                                if ($diferencia != 0) {
+                                                    $compensado = false;
+                                                    foreach ($distAgrupadas as $d) {
+                                                        if ($d->unidad_ejecutora == '4' && $d->inciso == '1') {
+                                                            $d->importe = round($d->importe + $diferencia, 0);
                                                             $compensado = true;
-                                                                break;
-                                                            }
-                                                        }
-                                                        if (!$compensado) {
-                                                            $dg = $distFinal->first();
-                                                            if ($dg) {
-                                                                $dg->importe = round($dg->importe + $diferencia, 0);
-                                                            }
+                                                            break;
                                                         }
                                                     }
-
-                                                    $grupoTotalAjustado = $distFinal->sum('importe');
-                                                @endphp
-                                                @foreach($distFinal as $dg)
-                                                    <tr>
-                                                        <td class="align-middle">{{ is_numeric($dg->recurso) ? number_format((int)$dg->recurso, 0, ',', '.') : ($dg->recurso ?? '—') }}</td>
-                                                        <td class="align-middle">{{ $dg->distribucion }}</td>
-                                                        <td class="align-middle text-right">{{ rtrim(rtrim(number_format($dg->porcentaje, 3, ',', '.'), '0'), ',') }}%</td>
-                                                        <td class="align-middle text-center">{{ $dg->financiacion ?? '—' }}</td>
-                                                        <td class="align-middle text-center">{{ $dg->inciso ?? '—' }}</td>
-                                                        <td class="align-middle text-center">{{ $dg->unidad_ejecutora ?? '—' }}</td>
-                                                        <td class="align-middle text-right text-nowrap">$&nbsp;{{ number_format($dg->importe, 2, ',', '.') }}</td>
-                                                    </tr>
-                                                @endforeach
-                                            </tbody>
-                                        </table>
-                                    @endif
+                                                    if (!$compensado) {
+                                                        $d = $distAgrupadas->first();
+                                                        if ($d) {
+                                                            $d->importe = round($d->importe + $diferencia, 0);
+                                                        }
+                                                    }
+                                                }
+                                                $totalGrupoAjustado = $distAgrupadas->sum('importe');
+                                                $totalGeneralAjustado += $totalGrupoAjustado;
+                                            @endphp
+                                            @foreach($distAgrupadas as $d)
+                                                <tr>
+                                                    <td class="align-middle small">{{ $d->financiacion ?? '—' }}</td>
+                                                    <td class="align-middle small">{{ $d->programa ?? '—' }}</td>
+                                                    <td class="align-middle small">{{ $d->proyecto ?? '—' }}</td>
+                                                    <td class="align-middle small">{{ $d->objeto_gasto ?? '—' }}</td>
+                                                    <td class="align-middle small">{{ $d->auxiliar ?? '—' }}</td>
+                                                    <td class="align-middle small">{{ $d->denominacion ?? '—' }}</td>
+                                                    <td class="align-middle small text-center">{{ $d->inciso ?? '—' }}</td>
+                                                    <td class="align-middle small text-center">{{ $d->unidad_ejecutora ?? '—' }}</td>
+                                                    <td class="align-middle small text-right">{{ number_format($d->porcentaje, 0) }}%</td>
+                                                    <td class="align-middle small text-right font-weight-bold text-nowrap">$ {{ number_format($d->importe, 2, ',', '.') }}</td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                        <tfoot>
+                                            <tr class="table-secondary font-weight-bold">
+                                                <td colspan="9" class="text-right align-middle">TOTAL {{ $concepto }}</td>
+                                                <td class="align-middle text-right text-nowrap">$ {{ number_format($totalGrupoAjustado, 2, ',', '.') }}</td>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                @else
+                                    @php
+                                        $totalGeneralAjustado += $grupoTotal;
+                                    @endphp
+                                    <table class="table table-sm table-bordered mb-0">
+                                        <thead class="thead-light">
+                                            <tr>
+                                                <th>CFE</th>
+                                                <th>Detalle</th>
+                                                <th class="text-right">Importe</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach($items as $item)
+                                                <tr>
+                                                    <td class="align-middle small text-nowrap">
+                                                        @if($item->cfe)
+                                                            {{ $item->cfe->documento_tipo }} {{ $item->cfe->documento_serie }}-{{ $item->cfe->documento_numero }}
+                                                        @else
+                                                            —
+                                                        @endif
+                                                    </td>
+                                                    <td class="align-middle small">{{ $item->detalle }}</td>
+                                                    <td class="align-middle small text-right text-nowrap">$ {{ number_format($item->importe, 2, ',', '.') }}</td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                        <tfoot>
+                                            <tr class="table-secondary font-weight-bold">
+                                                <td colspan="2" class="text-right align-middle">TOTAL {{ $concepto }}</td>
+                                                <td class="align-middle text-right text-nowrap">$ {{ number_format($grupoTotal, 2, ',', '.') }}</td>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
                                 @endif
-
-                                <div class="d-flex justify-content-end align-items-center py-2 px-3 border-top">
-                                    <div>
-                                        <strong>Total {{ $distribucion }}:</strong> $ {{ number_format($grupoTotalAjustado, 2, ',', '.') }}
-                                    </div>
-                                </div>
-                                @php $totalGeneralAjustado += $grupoTotalAjustado; @endphp
                             </div>
                         </div>
                     @empty
-                        <p class="text-center py-4">No hay ítems asociados a esta planilla.</p>
+                        <div class="text-center py-4 text-muted">
+                            No hay ítems para mostrar en esta planilla.
+                        </div>
                     @endforelse
 
                     <div class="d-flex justify-content-end py-2 px-3 my-3 border rounded">
@@ -520,6 +571,10 @@
                                 <td class="align-middle small text-nowrap font-weight-bold" style="width: 1%; white-space: nowrap;">Transf. Confirmación</td>
                                 <td class="align-middle small">{{ $planillaVer->transferencia_confirmacion }}</td>
                             </tr>
+                            <tr>
+                                <td class="align-middle small text-nowrap font-weight-bold" style="width: 1%; white-space: nowrap;">Observaciones</td>
+                                <td class="align-middle small">{{ $planillaVer->observaciones ?? '—' }}</td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
@@ -533,13 +588,22 @@
                     </button>
                     @endif
                 </div>
-                @endif
             </div>
         </div>
     </div>
+    @endif
+
 </div>
 
 @push('scripts')
+<script>
+    document.addEventListener('livewire:init', function () {
+        Livewire.on('abrir-modal-detalles', () => { $('#modalDetallesPlanilla').modal('show'); });
+        Livewire.on('cerrar-modal-detalles', () => { $('#modalDetallesPlanilla').modal('hide'); });
+        Livewire.on('abrir-modal-planilla', () => { $('#modalPlanilla').modal('show'); });
+        Livewire.on('cerrar-modal-planilla', () => { $('#modalPlanilla').modal('hide'); });
+    });
+</script>
 <script>
     function imprimirPlanilla() {
         var modalBody = document.getElementById('modalPlanilla').querySelector('.modal-body');
@@ -651,28 +715,6 @@
         ventana.focus();
         setTimeout(function() { ventana.print(); ventana.close(); }, 500);
     }
-
-    document.addEventListener('livewire:init', function () {
-        window.addEventListener('abrir-modal-detalles', () => {
-            $('#modalDetallesPlanilla').modal('show');
-        });
-        window.addEventListener('cerrar-modal-detalles', () => {
-            $('#modalDetallesPlanilla').modal('hide');
-        });
-        window.addEventListener('abrir-modal-planilla', () => {
-            $('#modalPlanilla').modal('show');
-        });
-        window.addEventListener('cerrar-modal-planilla', () => {
-            $('#modalPlanilla').modal('hide');
-        });
-
-        $('#modalDetallesPlanilla').on('hidden.bs.modal', function () {
-            @this.call('cerrarModalDetalles');
-        });
-        $('#modalPlanilla').on('hidden.bs.modal', function () {
-            @this.call('cerrarModalPlanilla');
-        });
-    });
 </script>
 
 <script>

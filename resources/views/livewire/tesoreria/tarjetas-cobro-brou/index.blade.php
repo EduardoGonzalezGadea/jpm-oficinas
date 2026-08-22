@@ -28,7 +28,7 @@
 
         <div class="flex-grow-1 {{ $estado !== 'Recibido' ? 'mr-1' : '' }}">
           <div class="input-group">
-            <select wire:model.live="estado" class="form-control">
+            <select wire:model="estado" class="form-control">
               <option value="">Todos los estados</option>
               <option value="Recibido">Recibido</option>
               <option value="Entregado">Entregado</option>
@@ -46,7 +46,7 @@
 
         @if($estado !== 'Recibido')
         <div class="input-group mr-1" style="width: 140px;">
-          <select wire:model.live="year" class="form-control">
+          <select wire:model="year" class="form-control">
             @foreach($years as $y)
             <option value="{{ $y }}">{{ $y }}</option>
             @endforeach

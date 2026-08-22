@@ -62,10 +62,12 @@ class CargaMasivaHaberesService
                     continue;
                 }
 
-                $relative = str_replace($ruta, '', $file->getPathname());
+                $normRuta = rtrim(str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $ruta), DIRECTORY_SEPARATOR);
+                $normFile = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $file->getPathname());
+                $relative = str_replace($normRuta, '', $normFile);
                 $relative = ltrim($relative, '\\/');
 
-                $pathParts = explode(DIRECTORY_SEPARATOR, $file->getPath());
+                $pathParts = preg_split('~[/\\\\]~', $file->getPath());
                 $monthFolder = $this->detectMonthFolder($pathParts);
 
                 $archivos[] = [
@@ -416,12 +418,14 @@ class CargaMasivaHaberesService
         if (str_contains($upper, 'EV. IMM')) return 'EV. IMM';
         if (str_contains($upper, 'ART. 222') || str_contains($upper, 'ART.222') || str_contains($upper, 'AR.2222')) return 'ART. 222';
         if (str_contains($upper, 'LICENCIA')) return 'LICENCIA';
-        if (str_contains($upper, 'AGUINALDO') || str_contains($upper, 'AGLDO')) return 'AGUINALDO';
+        if (str_contains($upper, 'AGUINALDO') || str_contains($upper, 'AGLDO') || str_contains($upper, 'AG. X BAJA')) return 'AGUINALDO';
+        if (str_contains($upper, 'PRE JUBILADO') || str_contains($upper, 'PREJUBILADO')) return 'PRE JUBILADOS';
+        if (str_contains($upper, 'RETENCIÓN JUDICIAL') || str_contains($upper, 'RETENCION JUDICIAL') || str_contains($upper, 'RET. JUD.') || str_contains($upper, 'RJ')) return 'RETENCIÓN JUDICIAL';
+        if (str_contains($upper, 'PARTIDA ALUMNO') || str_contains($upper, 'COMPLEMENTARIA')) return 'PARTIDA ALUMNO';
         if (str_contains($upper, 'PRESUPUESTADOS')) return 'PRESUPUESTADOS';
         if (str_contains($upper, 'PADO')) return 'PADO';
         if (str_contains($upper, 'STIP')) return 'STIP';
         if (str_contains($upper, 'RECHAZO')) return 'RECHAZO';
-        if (str_contains($upper, 'RJ')) return 'RJ';
         if (str_contains($upper, 'VIATICOS')) return 'VIÁTICOS';
         if (str_contains($upper, 'IMPAGOS')) return 'IMPAGOS';
 

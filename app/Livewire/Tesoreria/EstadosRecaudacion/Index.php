@@ -9,6 +9,7 @@ use Livewire\Component;
 use Livewire\WithPagination;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\On;
 use App\Models\Tesoreria\SiifDistribucionTipo;
 use App\Models\Tesoreria\SiifDistribucionDependencia;
 
@@ -46,6 +47,7 @@ class Index extends Component
     public $edit_er_numero;
     public $edit_egresos_numero;
     public $edit_ingresos_numero;
+    public $edit_observaciones;
     public $edit_transferencia_fecha;
     public $edit_transferencia_confirmacion;
 
@@ -127,6 +129,7 @@ class Index extends Component
         return SiifDistribucionDependencia::whereNull('deleted_at')->orderBy('dependencia')->get();
     }
 
+    #[On('cerrarModalNueva')]
     public function cerrarModalNueva()
     {
         $this->dispatch('cerrar-modal-nueva');
@@ -368,6 +371,7 @@ class Index extends Component
         $this->dispatch('abrir-modal-detalles');
     }
 
+    #[On('cerrarModalDetalles')]
     public function cerrarModalDetalles(): void
     {
         $this->dispatch('cerrar-modal-detalles');
@@ -387,6 +391,7 @@ class Index extends Component
         $this->dispatch('abrir-modal-planilla');
     }
 
+    #[On('cerrarModalPlanilla')]
     public function cerrarModalPlanilla(): void
     {
         $this->dispatch('cerrar-modal-planilla');
@@ -394,6 +399,7 @@ class Index extends Component
         $this->planillaVer = null;
     }
 
+    #[On('borrarPlanilla')]
     public function borrarPlanilla(int $id): void
     {
         try {
@@ -415,6 +421,7 @@ class Index extends Component
         }
     }
 
+    #[On('anularPlanilla')]
     public function anularPlanilla($id = null, $motivo = null): void
     {
         if (is_array($id)) {
@@ -475,6 +482,7 @@ class Index extends Component
         $this->edit_er_numero = $this->planillaEditar->er_numero;
         $this->edit_egresos_numero = $this->planillaEditar->egresos_numero;
         $this->edit_ingresos_numero = $this->planillaEditar->ingresos_numero;
+        $this->edit_observaciones = $this->planillaEditar->observaciones;
         $this->edit_transferencia_fecha = $this->planillaEditar->transferencia_fecha?->format('Y-m-d');
         $this->edit_transferencia_confirmacion = $this->planillaEditar->transferencia_confirmacion;
 
@@ -485,18 +493,20 @@ class Index extends Component
     public function guardarPlanilla(): void
     {
         $this->validate([
-            'edit_er_numero' => 'nullable|string|max:255',
-            'edit_egresos_numero' => 'nullable|string|max:255',
-            'edit_ingresos_numero' => 'nullable|string|max:255',
-            'edit_transferencia_fecha' => 'nullable|date',
+            'edit_er_numero'                  => 'nullable|string|max:255',
+            'edit_egresos_numero'             => 'nullable|string|max:255',
+            'edit_ingresos_numero'            => 'nullable|string|max:255',
+            'edit_observaciones'              => 'nullable|string',
+            'edit_transferencia_fecha'        => 'nullable|date',
             'edit_transferencia_confirmacion' => 'nullable|string|max:255',
         ]);
 
         $this->planillaEditar->update([
-            'er_numero' => $this->edit_er_numero,
-            'egresos_numero' => $this->edit_egresos_numero,
-            'ingresos_numero' => $this->edit_ingresos_numero,
-            'transferencia_fecha' => $this->edit_transferencia_fecha,
+            'er_numero'                  => $this->edit_er_numero,
+            'egresos_numero'             => $this->edit_egresos_numero,
+            'ingresos_numero'            => $this->edit_ingresos_numero,
+            'observaciones'              => $this->edit_observaciones,
+            'transferencia_fecha'        => $this->edit_transferencia_fecha,
             'transferencia_confirmacion' => $this->edit_transferencia_confirmacion,
         ]);
 
@@ -506,6 +516,7 @@ class Index extends Component
         $this->cerrarModalEditar();
     }
 
+    #[On('cerrarModalEditar')]
     public function cerrarModalEditar(): void
     {
         $this->dispatch('cerrar-modal-editar');
@@ -514,6 +525,7 @@ class Index extends Component
         $this->edit_er_numero = null;
         $this->edit_egresos_numero = null;
         $this->edit_ingresos_numero = null;
+        $this->edit_observaciones = null;
         $this->edit_transferencia_fecha = null;
         $this->edit_transferencia_confirmacion = null;
     }

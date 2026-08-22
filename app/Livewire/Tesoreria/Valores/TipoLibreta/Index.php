@@ -63,6 +63,7 @@ class Index extends Component
     {
         $this->resetInput();
         $this->showModal = true;
+        $this->dispatch('open-modal', id: 'modalTipoLibreta');
     }
 
     public function edit($id)
@@ -74,6 +75,7 @@ class Index extends Component
         $this->stock_minimo_recibos = $tipoLibreta->stock_minimo_recibos;
         $this->serviciosSeleccionados = $tipoLibreta->servicios->pluck('id')->toArray();
         $this->showModal = true;
+        $this->dispatch('open-modal', id: 'modalTipoLibreta');
     }
 
     public function save()
@@ -101,24 +103,28 @@ class Index extends Component
         $this->dispatch('swal', title: 'Éxito', text: 'Tipo de libreta guardado correctamente.', type: 'success');
 
         $this->showModal = false;
+        $this->dispatch('close-modal', id: 'modalTipoLibreta');
     }
 
     public function closeModal()
     {
         $this->showModal = false;
         $this->resetInput();
+        $this->dispatch('close-modal', id: 'modalTipoLibreta');
     }
 
     public function confirmDelete($id)
     {
         $this->tipoLibretaIdToDelete = $id;
         $this->showDeleteModal = true;
+        $this->dispatch('open-modal', id: 'modalBorrarTipoLibreta');
     }
 
     public function closeDeleteModal()
     {
         $this->showDeleteModal = false;
         $this->tipoLibretaIdToDelete = null;
+        $this->dispatch('close-modal', id: 'modalBorrarTipoLibreta');
     }
 
     public function destroy()
@@ -129,6 +135,7 @@ class Index extends Component
         Cache::forget('tipos_libreta_all');
 
         $this->showDeleteModal = false;
+        $this->dispatch('close-modal', id: 'modalBorrarTipoLibreta');
 
         $this->dispatch('swal', title: 'Éxito', text: 'Tipo de libreta eliminado correctamente.', type: 'success');
     }
